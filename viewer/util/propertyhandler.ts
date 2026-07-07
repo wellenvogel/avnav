@@ -11,8 +11,9 @@ import Requests from "./requests";
 import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './localStorageManager';
 import splitsupport from "./splitsupport";
 import {StoreDataType} from "./store";
-import Helper, {numericEnumValues} from "./helper";
+import Helper, {createOrUpdateStyleSheet, CSSPRIORITIES, numericEnumValues} from "./helper";
 import localStorageManager from "./localStorageManager";
+import globalstore from "./globalstore";
 
 export interface SavedSettingsData{
     settingsVersion:number|string;
@@ -69,13 +70,21 @@ class PropertyHandler {
             Toast("local storage is not available, seems that your browser is not HTML5... - application will not work");
             return;
         }
+        globalStore.register(()=>{
+            this.writeStyles()
+        },[keys.gui.global.propertiesLoaded,keys.gui.global.propertySequence]);
         this.incrementSequence();
         splitsupport.subscribe('reloadSettings',()=>{
             this.resetToSaved();
             this.incrementSequence();
         });
     }
-
+    writeStyles(){
+        let styles=":root{\n";
+        styles+=`  --avnav-font-family: ${globalStore.getData(keys.properties.fontBase)};\n`;
+        styles+="}\n"
+        createOrUpdateStyleSheet(styles,'avnvaPropertyStyles',CSSPRIORITIES.SYSTEM);
+    }
     setPrefixKeys(prefixKeys:string|string[]){
         if (! (prefixKeys instanceof Array)){
             throw new Error("prefix keys must be an array");

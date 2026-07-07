@@ -1382,7 +1382,7 @@ class MapHolder extends DrawingPositionConverter {
         let textStyle = {
             color: 'grey',
             fontSize: 12,
-            fontBase: globalStore.getData(keys.properties.fontBase),
+            fontBase: globalStore.getData(keys.gui.global.fontFamily),
             offsetY: 7, //should compute this from the font...
             fixY: 0
         };

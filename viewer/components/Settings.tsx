@@ -71,7 +71,7 @@ export const settingsSections = {
         keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,
         keys.properties.buttonText,keys.properties.mainBtText,keys.properties.buttonTitleTime,
         keys.properties.buttonIconSet, keys.properties.showDimNavPage, keys.properties.showDimGpsPage],
-    General:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.widgetFontSize,
+    General:     [keys.properties.fontBase,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.widgetFontSize,
         keys.properties.allowTwoWidgetRows,keys.properties.dashboardNum,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
         keys.properties.alarmShowMode,
@@ -92,7 +92,7 @@ export const settingsSections = {
         keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
         keys.properties.mapOnlineUpZoom,
         keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapAlwaysCenter,keys.properties.mapScaleBarText,keys.properties.mapZoomLock,
-        keys.properties.fontBase,keys.properties.fontColor,keys.properties.fontShadowWidth,keys.properties.fontShadowColor,
+        keys.properties.fontColor,keys.properties.fontShadowWidth,keys.properties.fontShadowColor,
         keys.properties.centerColor,keys.properties.centerSize,keys.properties.centerWidth
     ],
     AIS:        [keys.properties.layers.ais,keys.properties.aisDistance,keys.properties.aisCenterMode,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,

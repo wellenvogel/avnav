@@ -276,7 +276,8 @@ const WindGraphics = (props:WindGraphicsProps) => {
         // Create text
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2, height / 2);
-        ctx.font = fontSize + "px "+globalstore.getData(keys.properties.fontBase);
+        const fontFamily=globalstore.getData(keys.gui.global.fontFamily);
+        ctx.font = fontSize + "px "+fontFamily;
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
         const txtDim=ctx.measureText(centerText);
@@ -285,7 +286,7 @@ const WindGraphics = (props:WindGraphicsProps) => {
         if (txtRadius > maxTextRadius) {
             //scale down
             const fontScale= maxTextRadius/txtRadius;
-            ctx.font = (Number(fontSize) *fontScale) + "px "+globalstore.getData(keys.properties.fontBase);
+            ctx.font = (Number(fontSize) *fontScale) + "px "+fontFamily;
             txtRadius = txtRadius*fontScale;
         }
         const circleMiddle=radius-circle_linewidth;

@@ -626,7 +626,7 @@ export const buildOlFontConfig=(settings,add)=>{
     let color=settings[editableOverlayParameters.textColor];
     if (color === undefined) color=editableOverlayParameters.textColor.default;
     return {
-        font:sz + "px " + globalstore.getData(keys.properties.fontBase),
+        font:sz + "px " + globalstore.getData(keys.gui.global.fontFamily),
         stroke: new olStroke({
             color: globalstore.getData(keys.properties.fontShadowColor),
             width: globalstore.getData(keys.properties.fontShadowWidth)

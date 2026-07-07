@@ -98,7 +98,7 @@ const NavLayer=function(mapholder){
     };
     this.measureStyle.image.src=this.measureStyle.src;
     this.setStyle();
-    globalStore.register(this,keys.gui.global.propertySequence);
+    globalStore.register(this,[keys.gui.global.propertySequence,keys.gui.global.fontFamily]);
     this.pixel=[];
     this.measurePixel=[];
     this.drawnMeasure=undefined;
@@ -127,7 +127,7 @@ NavLayer.prototype.setStyle=function() {
         color: this.measureStyle.courseVectorColor?this.measureStyle.courseVectorColor:globalStore.getData(keys.properties.measureColor),
         width: globalStore.getData(keys.properties.fontShadowWidth),
         fontSize: globalStore.getData(keys.properties.aisTextSize),
-        fontBase: globalStore.getData(keys.properties.fontBase),
+        fontBase: globalStore.getData(keys.gui.global.fontFamily),
         offsetY: -20
     }
     this.measureTextStyle={...this.centerMeasureTextStyle,offsetY:20};

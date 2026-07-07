@@ -124,7 +124,7 @@ const RouteLayer=function(mapholder){
         KeyHelper.flattenedKeys(editingRoute.getStoreKeys())
     );
     globalStore.register(()=>this.mapholder.triggerRender(),navStoreKeys);
-    globalStore.register(this,keys.gui.global.propertySequence);
+    globalStore.register(this,[keys.gui.global.propertySequence,keys.gui.global.fontFamily]);
     this.routeDisplay=new RouteDisplay(this.mapholder);
     this.currentCourse=new RouteDisplay(this.mapholder);
     globalStore.register(()=>{
@@ -195,7 +195,7 @@ export const getRouteStyles=(opt_change)=>{
         color: globalStore.getData(keys.properties.fontColor),
         width: globalStore.getData(keys.properties.fontShadowWidth),
         fontSize: globalStore.getData(keys.properties.routingTextSize),
-        fontBase: globalStore.getData(keys.properties.fontBase),
+        fontBase: globalStore.getData(keys.gui.global.fontFamily),
         offsetY: 15
     };
     return rt;

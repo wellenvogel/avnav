@@ -52,7 +52,7 @@ const XteWidget = (props) => {
         let shipUpper = h * 0.45;
         let shipH = h * 0.3;
         let shipw = w * 0.03;
-        context.font = "normal " + Math.ceil(textSize) + "px "+globalstore.getData(keys.properties.fontBase);
+        context.font = "normal " + Math.ceil(textSize) + "px "+globalstore.getData(keys.gui.global.fontFamily);
         context.textAlign = "center";
         context.fillText(xteText, left, textBase);
         context.fillText(xteText, right, textBase);
@@ -103,6 +103,7 @@ XteWidget.propTypes={
 XteWidget.predefined={
     storeKeys:{
         markerXte:  keys.nav.wp.xte,
+        font:  keys.gui.global.fontFamily,
     },
     editableParameters:{
         xteMax:{type:'FLOAT',displayName:"XTE max",default:1,list:[0.01,100], description:'The end points of the XTE graph (1.0).\nAlways provide this in the unit you choose for the formatter'},

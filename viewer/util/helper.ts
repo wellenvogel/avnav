@@ -422,6 +422,7 @@ export const CSSPRIORITIES={
     LAYOUT: 20,
     PLUGIN: 30,
     ADDON: 40,
+    SYSTEM: 50,
 }
 export const avNavVersion=()=>{
     let version=Version;

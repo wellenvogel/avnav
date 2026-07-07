@@ -276,7 +276,7 @@ class AisLayer{
          * @type {boolean}
          */
         this.visible = globalStore.getData(keys.properties.layers.ais);
-        globalStore.register(this, keys.gui.global.propertySequence);
+        globalStore.register(this, [keys.gui.global.propertySequence,keys.gui.global.fontFamily]);
         this.computeTarget = this.computeTarget.bind(this);
         /**
          *
@@ -404,7 +404,7 @@ class AisLayer{
             color: globalStore.getData(keys.properties.fontColor),
             width: globalStore.getData(keys.properties.fontShadowWidth),
             fontSize: globalStore.getData(keys.properties.aisTextSize),
-            fontBase: globalStore.getData(keys.properties.fontBase),
+            fontBase: globalStore.getData(keys.gui.global.fontFamily),
             offsetY: 15,
             align: 'left'
         };

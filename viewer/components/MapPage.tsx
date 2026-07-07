@@ -312,7 +312,11 @@ const MapPage =(iprops:MapPageProps)=>{
                 {sprops.mapFloat && <DynamicTitleIcons rightOffset={buttonWidth}/> }
                 {sprops.mapFloat?<Map mapClass={mapClass} mapOpacity={mapOpacity} rightOffset={hasAddon?buttonWidth:undefined}/>:null}
                 <PageLeft id={sprops.id}>
-                        <div className="leftSection">
+                        <div className="leftSection" ref={(el)=>{
+                            if (! el) return;
+                            const ff=window.getComputedStyle(el).fontFamily;
+                            globalStore.storeData(keys.gui.global.fontFamily,ff);
+                         }}>
                             <WidgetContainer
                                 fontSize={sprops.widgetFontSize + "px"}
                                 panel="left"
