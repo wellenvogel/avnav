@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import {digitHyphen} from "../util/formatter";
 
 export interface ValueProps {
     value: number|string;
@@ -12,7 +13,7 @@ export interface ValueProps {
 const Value=function(props:ValueProps){
     if (! props.value) return null;
     let val=''+props.value;
-    val=val.replace(/[-]/g,'\u2012'); // replace - by digit wide hyphen (figure dash)
+    val=val.replace(/[-]/g,digitHyphen); // replace - by digit wide hyphen (figure dash)
     val=val.replace(/:/g,'\uA789'); // replace : with raised colon, looks better in time format 00:00
     const remain=val.replace(/^ */,'');
     const prfxlen=val.length-remain.length;
