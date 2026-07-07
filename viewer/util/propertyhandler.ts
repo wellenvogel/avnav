@@ -13,7 +13,6 @@ import splitsupport from "./splitsupport";
 import {StoreDataType} from "./store";
 import Helper, {createOrUpdateStyleSheet, CSSPRIORITIES, numericEnumValues} from "./helper";
 import localStorageManager from "./localStorageManager";
-import globalstore from "./globalstore";
 
 export interface SavedSettingsData{
     settingsVersion:number|string;
