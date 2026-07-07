@@ -297,7 +297,9 @@ let widgetList=[
         },
         formatter: 'formatTemperature',
         formatterParameters: 'celsius',
-        unit:false
+        editableParameters: {
+            unit: false
+        }
     },
     {
         name: 'AnchorBearing',
