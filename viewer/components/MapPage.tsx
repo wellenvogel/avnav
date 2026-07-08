@@ -40,6 +40,7 @@ import {addonViewManager} from "./AddonView";
 import {InternalWidgetDefinition} from "../util/types";
 import {ChartSelectDialog} from "./ChartsSelectDialog";
 import ButtonDefs from "./ButtonDefs";
+import {useTimer} from "../util/UiHelper";
 
 const INFO_TYPES={
     eula:STORAGE_NAMES.EULAS,
@@ -222,14 +223,22 @@ const MapPage =(iprops:MapPageProps)=>{
     const [buttonWidth,setButtonWidth]=useState(undefined);
     const buttonsHidden=useRef(false);
     const bottomRef=useRef<HTMLElement>();
+    const maxBottomHeightRef=useRef<number>(0);
     const dialogContext=useDialogContext();
     const layoutPage=getLayoutPage(sprops);
     const mapEvent=useCallback((evdata:MapEvent)=>{
         if (globalStore.getData(keys.gui.global.layoutEditing)) return;
         if (sprops.mapEventCallback) return sprops.mapEventCallback(evdata);
     },[sprops.mapEventCallback]);
+    const timer=useTimer((sequence )=>{
+        alignWidgets();
+        timer.startTimer(sequence);
+    },1000,true,true)
     const alignWidgets=()=>{
-        if (!bottomRef.current) return;
+        if (!bottomRef.current) {
+            maxBottomHeightRef.current=0;
+            return;
+        }
         //check if both containers have the same height
         const children=Array.from(bottomRef.current.children);
         const rectangles=[];
@@ -242,17 +251,24 @@ const MapPage =(iprops:MapPageProps)=>{
                 maxHeight=rect.height;
             }
         }
+        if (maxHeight==maxBottomHeightRef.current) return;
+        maxBottomHeightRef.current=maxHeight;
         for (let i=0;i<children.length;i++){
             const rect=rectangles[i];
+            const widgets=Array.from(children[i].children);
             if (rect?.height < maxHeight){
                 //must enlarge widget
-                const widgets=Array.from(children[i].children);
                 widgets[widgets.length-1].classList.add("expand");
+            }
+            else{
+                for (const widget of widgets){
+                    widget.classList.remove("expand");
+                }
             }
         }
     }
     const computeScalePosition=useCallback(()=>{
-        alignWidgets();
+        maxBottomHeightRef.current=0;
         if (! sprops.mapFloat){
             setBottom('0px');
         }
