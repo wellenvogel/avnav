@@ -45,10 +45,10 @@ export function getParameterValue(parameters:ParametersWithName[], paramValues:a
 const coordPrfx='\u00A0';
 const formatLonLatsDecimal=function(coordinate:number,axis:AxisType,format:CoordinateFormat='DDM',hemFirst:boolean=false){
     if(coordinate==null) {
-      let str=padDef(4)+"\u00B0"+padDef(2)+'.'+padDef(3);
+      let str=padDef(4)+"\u00B0"+padDef(2)+'.'+padDef(3)+"'";
       if(format=='DD') str=padDef(4)+'.'+padDef(5)+"\u00B0"; // use _ to prevent line breaks
       if(format=='DMS') str=padDef(4)+"\u00B0"+padDef(2)+"'"+padDef(2)+"."+digitHyphen+'"';
-      return hemFirst?' '+str:str+' ';
+      return hemFirst?'X'+str:str+'X';
     }
     coordinate = Helper.to180(coordinate); // normalize to ±180°
     const deg = Math.abs(coordinate);
