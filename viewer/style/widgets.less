@@ -28,6 +28,9 @@
 .widget{
   &.horizontal{
     min-width: max-content;
+    &.expand{
+      width: 98%; //expand a widget in the bottom rows 
+    }
   }
   position: relative;
   z-index: 100;
@@ -204,7 +207,7 @@
   color: var(--avnav-widget-fore-color);
   .widgetData {
     line-height: 1em;
-    white-space: pre-wrap;
+    white-space: pre;
   }
   .bigWidget(){
     .widgetData{

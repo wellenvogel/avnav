@@ -228,7 +228,31 @@ const MapPage =(iprops:MapPageProps)=>{
         if (globalStore.getData(keys.gui.global.layoutEditing)) return;
         if (sprops.mapEventCallback) return sprops.mapEventCallback(evdata);
     },[sprops.mapEventCallback]);
+    const alignWidgets=()=>{
+        if (!bottomRef.current) return;
+        //check if both containers have the same height
+        const children=Array.from(bottomRef.current.children);
+        const rectangles=[];
+        for (const c of children){
+            rectangles.push(c.getBoundingClientRect());
+        }
+        let maxHeight=0;
+        for (const rect of rectangles){
+            if (rect.height > maxHeight){
+                maxHeight=rect.height;
+            }
+        }
+        for (let i=0;i<children.length;i++){
+            const rect=rectangles[i];
+            if (rect?.height < maxHeight){
+                //must enlarge widget
+                const widgets=Array.from(children[i].children);
+                widgets[widgets.length-1].classList.add("expand");
+            }
+        }
+    }
     const computeScalePosition=useCallback(()=>{
+        alignWidgets();
         if (! sprops.mapFloat){
             setBottom('0px');
         }
