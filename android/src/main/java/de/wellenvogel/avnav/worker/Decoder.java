@@ -196,7 +196,7 @@ public class Decoder extends Worker  implements INavRequestHandler {
         } else {
             if (st.isGpsEnabled()) {
                 if (v2){
-                    nmea.put("numsat",st.getNumSat());
+                    nmea.put("numview",st.getNumSat());
                     nmea.put("numused",st.getNumUsed());
                 }
                 else {
@@ -295,6 +295,13 @@ public class Decoder extends Worker  implements INavRequestHandler {
     public String getType() {
         return TYPE_DECODER;
     }
+
+    private static void noDataCatch(Runnable run){
+        try{
+            run.run();
+        }catch (DataNotAvailableException i){}
+    }
+
 
     private static class NmeaEntry {
       public Object value;
@@ -421,9 +428,9 @@ public class Decoder extends Worker  implements INavRequestHandler {
     static class GSVStore {
         private GpsFixStatus fixStatus;
         private long lastGsa=0;
-        private double pdop;
-        private double hdop;
-        private double vdop;
+        private Double pdop;
+        private Double hdop;
+        private Double vdop;
 
         static class Sat {
             public int number;
@@ -508,10 +515,14 @@ public class Decoder extends Worker  implements INavRequestHandler {
             }
             cleanupUsed();
             this.lastGsa=SystemClock.uptimeMillis();
-            this.fixStatus=gsa.getFixStatus();
-            this.pdop=gsa.getPositionDOP();
-            this.hdop=gsa.getHorizontalDOP();
-            this.vdop=gsa.getVerticalDOP();
+            this.fixStatus=GpsFixStatus.GPS_NA;
+            this.pdop=null;
+            this.hdop=null;
+            this.vdop=null;
+            noDataCatch(()->this.fixStatus=gsa.getFixStatus());
+            noDataCatch(()->this.pdop=gsa.getPositionDOP());
+            noDataCatch(()->this.hdop=gsa.getHorizontalDOP());
+            noDataCatch(()->this.vdop=gsa.getVerticalDOP());
 
         }
         public synchronized void mergeToNmea(JSONObject o) throws JSONException {
@@ -521,7 +532,7 @@ public class Decoder extends Worker  implements INavRequestHandler {
                 o.put(K_VDOP,this.vdop);
                 o.put(K_HDOP,this.hdop);
                 o.put(K_PDOP,this.pdop);
-                o.put(K_FIX_TYPE,this.fixStatus);
+                o.put(K_FIX_TYPE,this.fixStatus.toInt());
             }
         }
 
