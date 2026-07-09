@@ -469,9 +469,6 @@ const keys:Record<string,KeyType>={
         centerDisplayTimeout: new Property(45000), //ms - auto hide measure display (0 - no auto hide)
         maxGpsErrors: new Property(3), //after that much invalid responses/timeouts the GPS is dead
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
-        fontBase: new Property("Verdana","Font Base",PropertyType.SELECT,["Arial","Verdana","Tahoma","Trebuchet","Times New Roman","Georgia","Garamond"],
-            "The font to be used for any text.\n"+
-            "This setting can be overwritten by style definitions in your user.css or by plugins\n"),
         fontShadowColor: new Property('#fff',"Font Shadow Color", PropertyType.COLOR,undefined,"A color for the shadow of text on the map"),
         fontShadowWidth: new Property(3,"font shadow width(px)",PropertyType.RANGE,[0,10],"the width in pixel for the shadow of text on the map"),
         fontColor: new Property('#000',"font color",PropertyType.COLOR,undefined,"The color for text on the map"),
@@ -572,7 +569,8 @@ const keys:Record<string,KeyType>={
         showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.DELETED),
         startNavPage: new Property(false,"start with last map",PropertyType.DELETED),
         nightModeNavPage: new Property(true,"show night mode on navpage",PropertyType.DELETED),
-        routingServerError: new Property(true, "ServerError", PropertyType.DELETED), //notify comm errors to server
+        routingServerError: new Property(true, "ServerError", PropertyType.DELETED), //notify comm errors to server,
+        fontBase: new Property("Verdana","Font Base",PropertyType.DELETED),
     }
 };
 

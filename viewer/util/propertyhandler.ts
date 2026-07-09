@@ -80,7 +80,7 @@ class PropertyHandler {
     }
     writeStyles(){
         let styles=":root{\n";
-        styles+=`  --avnav-font-family: ${globalStore.getData(keys.properties.fontBase)};\n`;
+        //add any styles computed from properties here
         styles+="}\n"
         createOrUpdateStyleSheet(styles,'avnvaPropertyStyles',CSSPRIORITIES.SYSTEM);
     }

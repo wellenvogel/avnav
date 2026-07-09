@@ -71,7 +71,7 @@ export const settingsSections = {
         keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,
         keys.properties.buttonText,keys.properties.mainBtText,keys.properties.buttonTitleTime,
         keys.properties.buttonIconSet, keys.properties.showDimNavPage, keys.properties.showDimGpsPage],
-    General:     [keys.properties.fontBase,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.widgetFontSize,
+    General:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.widgetFontSize,
         keys.properties.allowTwoWidgetRows,keys.properties.dashboardNum,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
         keys.properties.alarmShowMode,
