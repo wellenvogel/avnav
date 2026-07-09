@@ -362,10 +362,15 @@ public class RequestHandler {
         preferences=AvnUtil.getSharedPreferences(service);
         return preferences;
     }
-
+    static class MimeMap extends HashMap<String,String >{
+        public MimeMap(){
+            super();
+            put("js", "text/javascript");
+            put("mjs", "text/javascript");
+        }
+    }
+    private static MimeMap ownMimeMap=new MimeMap();
     public static String mimeType(String fname){
-        HashMap<String,String> ownMimeMap=new HashMap<String, String>();
-        ownMimeMap.put("js", "text/javascript");
         String ext=fname.replaceAll(".*\\.", "");
         String mimeType=MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
         if (mimeType == null) {
