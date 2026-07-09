@@ -38,6 +38,20 @@ void checkGitVersion(String version){
     logger.info "version $version resolves to $tagCommit"
 }
 
+def OLDRASPI_FILE=file('oldRaspi')
+if (OLDRASPI_FILE.exists()){
+    def shouldBuild="" 
+    OLDRASPI_FILE.withReader{ reader->
+        def line=reader.readLine()
+        if (line != null) shouldBuild=line;
+    }
+    logger.lifecycle("oldRaspi trigger found, content $shouldBuild")
+    if ("1".equals(shouldBuild)){
+        logger.lifecycle("build old raspi triggered by file oldRaspi")
+        project.ext.oldRaspi=true
+    }   
+}
+
 if (project.hasProperty("avnavRelease")){
     project.ext.avnavRelease=true
     logger.lifecycle "setting avnavRelease"
