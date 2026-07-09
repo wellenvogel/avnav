@@ -550,7 +550,10 @@ canvas{
   margin: auto;
 }
 .vertical &{
-  height: 11em;
+  height: calc(var(--avnav-left-widgets-width) * 1.2);
+  .windSpeed{
+    font-size: 1em;
+  }
 }
 }
 &.routePointsWidget {
