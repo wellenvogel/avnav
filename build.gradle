@@ -389,7 +389,7 @@ task uploadDeb(type: UploadTask){
     inputFiles=fileTree("$buildDir/distributions",{
         include ALL_PACKAGES
     })
-    dependsOn releaseDeb
+    dependsOn releaseDeb,raspiDeb
     baseDir="daily/${project.avnavVersion}"
 }
 task uploadZip(type: UploadTask){
