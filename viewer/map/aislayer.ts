@@ -659,7 +659,7 @@ class AisLayer{
         return {scale: scale, style: style, rot: target_hdg};
     }
 
-    computeTextOffsets(drawing:Drawing, targetRot:number, textIndex:number, opt_baseOffset?:boolean | [number,number], opt_iconScale?:number) {
+    computeTextOffsets(drawing:Drawing, targetRot:number, textIndex:number, numLabels:number, opt_baseOffset?:boolean | [number,number], opt_iconScale?:number) {
         const scale = (opt_iconScale === undefined) ? 1 : opt_iconScale;
         const rt = [(typeof opt_baseOffset === 'object' ? opt_baseOffset[0] : 10), (typeof opt_baseOffset === 'object' ? opt_baseOffset[1] : 0)];
         amul(rt, scale);
@@ -677,13 +677,13 @@ class AisLayer{
             rt[1] += (textIndex + 0.5) * hoffset;
         } else {
             if (course >= 90 && course < 180) {
-                rt[1] += -(textIndex + 0.5) * hoffset;
+                rt[1] += -((numLabels-textIndex) + 0.5) * hoffset;
             }
             if (course >= 180 && course < 270) {
                 rt[1] += (textIndex + 0.5) * hoffset;
             }
             if (course >= 270 && course < 360) {
-                rt[1] += -(textIndex + 0.5) * hoffset;
+                rt[1] += -((numLabels-textIndex) + 0.5) * hoffset;
             }
         }
         //as the offsets will be multiplied with devPixelRatio later on we need to devide...
@@ -711,27 +711,18 @@ class AisLayer{
             const drawn = this.drawTargetSymbol(drawing, current);
             if (!drawn) continue;
             const textOffsetScale = drawn.scale;
-            let text = AisFormatter.format(firstLabel, current, true);
-            if (text) {
-                drawing.drawTextToContext(pos, text, {...this.textStyle,
-                    ...this.computeTextOffsets(drawing, drawn.rot, 0, drawn.style.textOffset, textOffsetScale),
+            const aisLables:string[]=[];
+            const text = AisFormatter.format(firstLabel, current, true);
+            if (text) aisLables.push(text);
+            const text2= (secondLabel != firstLabel)?AisFormatter.format(secondLabel, current, true):undefined;
+            if (text2) aisLables.push(text2);
+            const text3= (thirdLabel !== firstLabel && thirdLabel !== secondLabel)?AisFormatter.format(thirdLabel, current, true):undefined;
+            if (text3) aisLables.push(text3);
+            const numLabels=aisLables.length;
+            for (let i=0;i<numLabels;i++){
+                drawing.drawTextToContext(pos, aisLables[i], {...this.textStyle,
+                    ...this.computeTextOffsets(drawing, drawn.rot, i, numLabels,drawn.style.textOffset, textOffsetScale),
                     ...alpha});
-            }
-            if (secondLabel !== firstLabel) {
-                text = AisFormatter.format(secondLabel, current, true);
-                if (text) {
-                    drawing.drawTextToContext(pos, text, {...this.textStyle,
-                        ...this.computeTextOffsets(drawing, drawn.rot, 1, drawn.style.textOffset, textOffsetScale),
-                        ...alpha});
-                }
-            }
-            if (thirdLabel !== firstLabel && thirdLabel !== secondLabel) {
-                text = AisFormatter.format(thirdLabel, current, true);
-                if (text) {
-                    drawing.drawTextToContext(pos, text, {...this.textStyle,
-                        ...this.computeTextOffsets(drawing, drawn.rot, 2, drawn.style.textOffset, textOffsetScale),
-                        ...alpha});
-                }
             }
         }
     }
