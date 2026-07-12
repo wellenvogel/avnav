@@ -29,7 +29,7 @@ import cloneDeep from "clone-deep";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import AisPageButtons from "./AisPageButtons";
 import {ButtonDef, updateButtons} from "../components/Button";
-import {AisItem as AisItemInterface} from '../nav/aisformatter';
+import { AisProxyItem } from '../nav/aistypes';
 import {StoreKeys} from "../api/api.interface";
 
 const aisInfos=[
@@ -91,7 +91,7 @@ const pad=(val:any,len:number)=>{
     return str;
 }
 
-interface AisItemProps extends AisItemInterface {
+interface AisItemProps extends AisProxyItem {
     addClass?: string;
     initialTarget?:boolean;
     warning?:boolean;

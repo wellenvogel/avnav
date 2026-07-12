@@ -2,6 +2,7 @@
  * Created by Andreas on 14.05.2014.
  */
 import {Coordinate as olCoordinate}  from "ol/coordinate";
+import { LatLon } from '../api/geo';
 
 
 /**
@@ -41,7 +42,7 @@ export class Point {
         return point;
     }
 
-    fromPlain(point: { lat: number, lon: number }): Point {
+    fromPlain(point: LatLon): Point {
         this.lon = point.lon;
         this.lat = point.lat;
         return this;
@@ -70,9 +71,7 @@ export class Point {
         return !isNaN(Number(this.lat)) && !isNaN(Number(this.lon))
     }
 }
-export interface PlainPoint{
-    lat?: number;
-    lon?: number;
+export interface PlainPoint extends Partial<LatLon>{
     name?: string;
     routeName?: string;
     idx?: number;

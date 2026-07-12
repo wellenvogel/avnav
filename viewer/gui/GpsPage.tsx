@@ -6,7 +6,7 @@ import {useStoreState} from '../hoc/Dynamic';
 import ItemList, {ItemListProps} from '../components/ItemList';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
-import React, {useCallback, useEffect, useMemo, useRef} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 // @ts-ignore
 import MapHolder from '../map/mapholder.js';
@@ -206,6 +206,7 @@ const GpsPage = (props:Partial<PageProps>) => {
     const history=useHistory();
     useStoreState(keys.gui.global.reloadSequence);
     useStoreState(keys.properties.dashboardNum);
+    const [,setHideSequence]=useState(0);
     const [sequence]=useStoreState(keys.gui.global.layoutSequence);
     const currentButtons=useRef<ButtonDef[]>(null);
     const usedDashboards= layouthandler.getUsedDashboards();
@@ -390,6 +391,7 @@ const GpsPage = (props:Partial<PageProps>) => {
         <PageFrame
             id={props.id}
             autoHideButtons={autohide}
+            hideCallback={()=>setHideSequence((old:number)=>old+1)}
         >
             <PageLeft id={props.id} >
                 {titleIcons && <DynamicTitleIcons/>}

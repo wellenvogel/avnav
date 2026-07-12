@@ -2,6 +2,7 @@
 
 BASE=/usr/lib/avnav/raspberry/network-nm
 FWSCRIPT="$BASE/set-firewall.sh"
+PATCHCMD=$BASE/../../patchServerConfig.py
 $FWSCRIPT -i || true
 for f in 73-usb-net-by-mac.link 99-default.link
 do
@@ -15,4 +16,15 @@ do
 done
 systemctl disable NetworkManager-wait-online || echo ignore
 "$BASE/set-network.py" -i
+if [ -x "$PATCHCMD" ] ; then
+  CONFIG=/home/pi/avnav/data/avnav_server.xml
+  if [ -e "$CONFIG" ] ; then
+    echo "removing AVNWpaHandler from $CONFIG"
+    "$PATCHCMD" -v -f "$CONFIG" -h AVNWpaHandler -d
+  else
+    echo "no avnav config $CONFIG, no need to patch"
+  fi
+else
+  echo "cannot disable old config"
+fi
 

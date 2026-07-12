@@ -24,6 +24,8 @@
  */
 import LatLonSpherical from 'geodesy/latlon-spherical';
 import Dms from 'geodesy/dms';
+import { LatLon } from './geo';
+export { LatLon } from './geo';
 import {UrlFunction} from 'ol/Tile';
 import {Tile} from "ol";
 import {Map as MapLibreMap} from 'maplibre-gl';
@@ -78,10 +80,6 @@ export interface FeatureInfoType{
 }
 export type FeatureInfoKeys = (keyof FeatureInfoType)[];
 export type FeatureFormatterFunction=(data:object,extended:boolean)=>FeatureInfoType;
-export interface LatLon{
-    lat:number;
-    lon:number;
-}
 
 export type StoreKeys=Record<string, string>;
 

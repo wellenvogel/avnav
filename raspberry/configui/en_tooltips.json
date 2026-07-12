@@ -1,5 +1,6 @@
 {
   "info": "You can create a file avnav.conf intended to be stored in the first partition of your SD card.\nAll data will remain in your browser and not being transfered to the server.\nYou should change at least the passwords.",
+  "IMAGE_VERSION":"Select the image type you want to customize. Trixie requires AvNav >= 20260709",
   "AVNAV_SSID": "The name for the Wifi network that the pi will create. Potentially some digit will be appended.",
   "AVNAV_PSK": "The password for the created Wifi network.",
   "AVNAV_PASSWD": "The password for the user pi on the system",

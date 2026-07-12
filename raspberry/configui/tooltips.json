@@ -1,5 +1,6 @@
 {
   "info": "Hier kann eine avnav.conf Datei erzeugt werden, die dann in die erste Partition (boot) der SD Karte für den Pi gespeichert werden muss.\nDie Daten werden nicht auf den Server geladen, sondern verbleiben komplett im Browser.\nAuf jeden Fall sollten die Passworte geändert werden.",
+  "IMAGE_VERSION":"Die Image Version, die angepasst werden soll.Trixie erfordert AvNav >= 20260709",
   "AVNAV_SSID": "Der Name für das WLAN, das durch den Raspberry erzeugt wird. u.U. wird noch eine Ziffer angefügt",
   "AVNAV_PSK": "Das Passwort für das erzeugte WLAN",
   "AVNAV_PASSWD": "Das Passwort für den Nutzer pi im System",
