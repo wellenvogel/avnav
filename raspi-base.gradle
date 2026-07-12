@@ -45,6 +45,7 @@ task build_raspi_base(type:Deb) {
     //release='3'
     os = LINUX // only applied to RPM
     packageGroup='misc'
+    requires('base-files','13',Flags.GREATER|Flags.EQUAL)
     requires 'avnav'
     requires 'parted'
     requires 'bc'
