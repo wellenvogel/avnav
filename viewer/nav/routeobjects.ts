@@ -3,6 +3,7 @@
  */
 
 import {PlainPoint, Point, WayPoint} from './navobjects' ;
+import { LatLon } from '../api/geo';
 // @ts-ignore
 import NavCompute from './navcompute' ;
 import Formatter from '../util/formatter' ;
@@ -677,7 +678,7 @@ export class Route {
      * @returns {WayPoint}
      * @private
      */
-    _toWayPoint(newPoint:WayPoint|{lat:number,lon:number}):WayPoint {
+    _toWayPoint(newPoint:WayPoint|LatLon):WayPoint {
         if (newPoint instanceof WayPoint) return newPoint;
         return  WayPoint.fromPlain(newPoint);
     }

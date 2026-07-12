@@ -6,6 +6,7 @@ import LatLon from 'geodesy/latlon-spherical';
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import base from "../base";
+import {NM} from "./aistypes";
 let NavCompute={
 };
 
@@ -222,7 +223,7 @@ NavCompute.etaFromDiff=function(tdiff){
     if (eta == null || isNaN(eta)) return undefined;
     return new Date(eta);
 }
-NavCompute.NM=1852; //m per NM
+NavCompute.NM=NM; //m per NM
 
 export const unitToFactor=(unit)=>{
     if (unit == 'ft') return 1/3.280839895; // feet

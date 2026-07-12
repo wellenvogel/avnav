@@ -3,6 +3,7 @@
  */
 
 import Formatter from '../util/formatter';
+import {AisProxyItem} from "./aistypes";
 
 export const AIS_CLASSES={
     A:'A',
@@ -11,45 +12,16 @@ export const AIS_CLASSES={
     Aton:'T'
 };
 
-export interface AisItem{
-    type?:number,
-    name?:string,
-    shipname?:string,
-    mmsi?:string,
-    distance?:number,
-    heading?:number,
-    turn?:number,
-    speed?:number,
-    course?:number,
-    headingTo?:number,
-    cpa?:number,
-    tcpa?:number,
-    bcpa?:number,
-    passFront?:number
-    callsign?:string
-    shiptype?:number,
-    status?:number,
-    age?:number,
-    lon?:number,
-    lat?:number,
-    destination?:string,
-    warning?:boolean,
-    nearest?:boolean
-    length?:number,
-    beam?:number,
-    draught?:number,
-    aid_type?:number,
-}
 interface AisFormatterType{
     headline?:string,
-    format:(v:AisItem)=>string,
+    format:(v:AisProxyItem)=>string,
     unit?:string,
     classes?:string[]
 }
 const aisparam:Record<string,AisFormatterType> = {
     nameOrmmsi: {
         headline: 'Name/MMSI',
-        format: function (v:AisItem): string {
+        format: function (v: AisProxyItem): string {
             if (v.type == 21){
                 if (v.name && v.name !== 'unknown') return v.name;
             }
@@ -59,7 +31,7 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     distance: {
         headline: 'DST',
-        format: function (v:AisItem): string {
+        format: function (v: AisProxyItem): string {
             return Formatter.formatDistance(v.distance);
         },
         unit: 'nm'
@@ -67,7 +39,7 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     heading: {
         headline: 'HDT',
-        format: function (v:AisItem): string {
+        format: function (v: AisProxyItem): string {
             return Formatter.formatDirection(v.heading);
         },
         unit: '°',
@@ -75,7 +47,7 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     turn: {
         headline: 'ROT',
-        format: function (v:AisItem): string {
+        format: function (v: AisProxyItem): string {
             return Formatter.formatDecimal(v.turn,2,0);
         },
         unit: '°/min',
@@ -83,7 +55,7 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     speed: {
         headline: 'SOG',
-        format: function (v:AisItem): string {
+        format: function (v: AisProxyItem): string {
             return Formatter.formatSpeed(v.speed);
         },
         unit: 'kn',
@@ -91,7 +63,7 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     course: {
         headline: 'COG',
-        format: function (v:AisItem): string {
+        format: function (v: AisProxyItem): string {
             return Formatter.formatDirection(v.course);
         },
         unit: '°',
@@ -99,35 +71,35 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     headingTo:{
         headline: 'BRG',
-        format: function (v:AisItem): string {
+        format: function (v: AisProxyItem): string {
             return Formatter.formatDirection(v.headingTo);
         },
         unit: '°'
     },
     cpa: {
         headline: 'DCPA',
-            format: function (v:AisItem): string {
+            format: function (v: AisProxyItem): string {
             return Formatter.formatDistance(v.cpa);
         },
         unit: 'nm',
     },
     tcpa: {
         headline: 'TCPA',
-            format: function (v:AisItem) {
+            format: function (v: AisProxyItem) {
               return Formatter.formatDecimal(v.tcpa/60,3,Math.abs(v.tcpa)>60?0:2);
         },
         unit: 'min',
     },
     bcpa: {
         headline: 'BCPA',
-            format: function (v:AisItem ) {
+            format: function (v: AisProxyItem ) {
               return Formatter.formatDirection(v.bcpa);
         },
         unit: '°',
     },
     passFront: {
         headline: 'we pass',
-            format: function (v:AisItem) {
+            format: function (v: AisProxyItem) {
             if (!v.cpa) return "-";
             if (v.passFront !== undefined) {
                 if (v.passFront > 0) return "Front";
@@ -139,7 +111,7 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     shipname: {
         headline: 'Name',
-            format: function (v:AisItem) {
+            format: function (v: AisProxyItem) {
             if ((v.shipname === undefined || v.shipname === 'unknown') && v.type == 21) return v.name;
             return v.shipname;
         },
@@ -147,20 +119,20 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     callsign: {
         headline: 'Callsign',
-            format: function (v:AisItem) {
+            format: function (v: AisProxyItem) {
             return v.callsign;
         },
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     mmsi: {
         headline: 'MMSI',
-            format: function (v:AisItem) {
+            format: function (v: AisProxyItem) {
             return v.mmsi;
         }
     },
     shiptype: {
         headline: 'Type',
-            format: function (v:AisItem) {
+            format: function (v: AisProxyItem) {
             let t = 0;
             try {
                 t = parseInt((v.shiptype || 0)+"");
@@ -191,7 +163,7 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     status:{
         headline: 'Status',
-        format: function(v:AisItem) {
+        format: function(v: AisProxyItem) {
             if (v.status === undefined) return "----";
             const st=parseInt(v.status+"");
             switch (st){
@@ -217,7 +189,7 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     age: {
         headline: 'Age',
-        format: function(v:AisItem){
+        format: function(v: AisProxyItem){
             if (v.age === undefined) return '----';
             return Formatter.formatDecimal(v.age,3,0);
         },
@@ -225,13 +197,13 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     position: {
         headline: 'Position',
-            format: function (v:AisItem) {
+            format: function (v: AisProxyItem) {
             return Formatter.formatLonLats({lon: v.lon, lat: v.lat});
         }
     },
     destination: {
         headline: 'Destination',
-            format: function (v:AisItem) {
+            format: function (v: AisProxyItem) {
             const d = v.destination;
             if (d) return d;
             return "unknown";
@@ -240,19 +212,19 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     warning: {
         headline: 'Warning',
-            format: function (v:AisItem) {
+            format: function (v: AisProxyItem) {
             return (v.warning || false)+""
         }
     },
     nearest: {
         headline: 'Nearest',
-            format: function (v:AisItem) {
+            format: function (v: AisProxyItem) {
             return (v.nearest || false)+""
         }
     },
     clazz: {
         headline: 'Class',
-        format: function(v:AisItem){
+        format: function(v: AisProxyItem){
             if (typeof(v) !== 'object') return '';
             if (v.type == 1 || v.type == 2 || v.type == 3) return AIS_CLASSES.A;
             if (v.type == 18 || v.type == 19) return AIS_CLASSES.B;
@@ -263,21 +235,21 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     length: {
         headline: 'Length',
-        format: function(v:AisItem) {
+        format: function(v: AisProxyItem) {
             return Formatter.formatDecimal(v.length,3)
         },
         unit: 'm'
     },
     beam: {
         headline: 'Beam',
-        format: function(v:AisItem){
+        format: function(v: AisProxyItem){
             return Formatter.formatDecimal(v.beam,3);
         },
         unit: 'm'
     },
     draught: {
         headline: 'Draught',
-        format: function(v:AisItem){
+        format: function(v: AisProxyItem){
             return Formatter.formatDecimal(v.draught,2,1);
         },
         unit: 'm',
@@ -285,7 +257,7 @@ const aisparam:Record<string,AisFormatterType> = {
     },
     aid_type: {
         headline: 'Type',
-        format: function (v:AisItem){
+        format: function (v: AisProxyItem){
             if (v.aid_type === undefined) return '---';
             const type=parseInt(v.aid_type+"");
             switch (type) {
@@ -397,7 +369,7 @@ export const isAisProxy=(obj:any)=>{
  * @param opt_writable
  * @returns {Proxy<AISItem>}
  */
-export const aisproxy=(aisobject:any,opt_writable?:boolean):AisItem=>{
+export const aisproxy=(aisobject:any,opt_writable?:boolean): AisProxyItem=>{
     return opt_writable?new Proxy(aisobject,aisProxyHandler):new Proxy(aisobject,aisProxyHandlerRo);
 }
 
@@ -418,7 +390,7 @@ const AisFormatter={
         if (! d) return ;
         return d.unit;
     },
-    format(key:string,aisobject:AisItem,inlcudeUnit?:boolean):string{
+    format(key:string,aisobject: AisProxyItem,inlcudeUnit?:boolean):string{
         const d=aisparam[key];
         if (! d) return ;
         if (aisobject === undefined) return;
@@ -434,7 +406,7 @@ const AisFormatter={
         }
         return rt;
     },
-    getItemFromList(list:AisItem[],mmsi:string){
+    getItemFromList(list: AisProxyItem[],mmsi:string){
         if (! list) return;
         for (let i=0;i<list.length;i++){
             if (list[i].mmsi == mmsi) return list[i];
@@ -447,7 +419,7 @@ const AisFormatter={
         }
         return rt;
     },
-    filterDisplay(list:AisItem[],item:AisItem){
+    filterDisplay(list: AisProxyItem[],item: AisProxyItem){
         const cl=aisparam.clazz.format(item);
         const rt=[];
         for (const idx in list){
@@ -464,7 +436,7 @@ const AisFormatter={
         }
         return rt;
     },
-    shouldShow(key:string,item:AisItem){
+    shouldShow(key:string,item: AisProxyItem){
         const cl=this.format('clazz',item);
         const param=aisparam[key];
         if (! param) return;

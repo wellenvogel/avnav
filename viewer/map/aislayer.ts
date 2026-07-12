@@ -2,26 +2,80 @@
  * Created by andreas on 18.05.14.
  */
 
-import navobjects from '../nav/navobjects';
-import keys, {KeyHelper} from '../util/keys.ts';
-import globalStore from '../util/globalstore.ts';
-import base from '../base.ts';
-import assign from 'object-assign';
+import navobjects, {Point} from '../nav/navobjects';
+import keys, {KeyHelper} from '../util/keys';
+import globalStore from '../util/globalstore';
+import base from '../base';
+// @ts-ignore
 import NavCompute from '../nav/navcompute.js';
-import AisFormatter, {AIS_CLASSES, aisproxy} from '../nav/aisformatter.ts';
-import Helper from '../util/helper.ts';
-import globalstore from "../util/globalstore";
+import AisFormatter, {AIS_CLASSES, aisproxy} from '../nav/aisformatter';
+import Helper from '../util/helper';
 import tinycolor from "tinycolor2";
+// @ts-ignore
 import atonIcon from '../images/ais-aton.png';
+// @ts-ignore
 import cloneDeep from 'clone-deep';
-import {CourseVector} from "../nav/aiscomputations";
+// @ts-ignore
+import {CourseVector, AisOptionMappings} from "../nav/aiscomputations";
+// @ts-ignore
 import {fillOptions} from "../nav/aisdata";
 import {AisFeatureInfo} from "./featureInfo";
+import {Drawing, LineStyle, MapHolder} from "./maptypes";
+import { LatLon } from '../api/geo';
+import {AisProxyItem} from '../nav/aistypes';
+import {Coordinate} from "ol/coordinate.js";
 
 const DEFAULT_COLOR="#f7c204";
 
+export interface TextStyle{
+    stroke?: string,
+    color?: string,
+    width?: number,
+    fontSize?: number,
+    fontBase?: string
+    offsetY?: number
+    align?: 'left'|'right'
+}
+interface TargetStyle{
+    anchor?: [number, number],
+    size?: [number, number],
+    rotation?: number,
+    rotateWithView?: boolean
+}
+
+/**
+ * AIS-specific display style extending image style with AIS vector properties
+ */
+interface AisDisplayStyle {
+    courseVector?: boolean;      // Whether to draw course vector (true/false)
+    courseVectorColor?: string;  // Color for course vector lines
+    textOffset?: boolean | [number, number];  // Text offset for AIS target labels (true for default or [x, y] tuple)
+    // Inherited from ImageStyle
+    anchor?: [number, number];
+    size?: [number, number];
+    rotation?: number;
+    rotateWithView?: boolean;
+    fixX?: number;
+    fixY?: number;
+    alpha?: number;
+    background?: string;
+    backgroundAlpha?: number;
+    backgroundCircle?: string;
+}
+
+type AisOptions=Partial<Record<keyof AisOptionMappings,any>>;
 class StyleEntry {
-    constructor(colorStyle, src, style, replaceColor) {
+    src: string;
+    private replaceColor: string;
+    private ghostFactor: number;
+    loaded: boolean;
+    private sequence: number;
+    private colorStyle: string;
+    image: HTMLImageElement;
+    ghostImage: HTMLImageElement;
+    private color: string;
+    style: Partial<AisDisplayStyle>;
+    constructor(colorStyle?:string, src?:string, style?:Partial<AisDisplayStyle>, replaceColor?:string) {
         this.src = src;
         this.style = style;
         this.loaded = false;
@@ -34,12 +88,12 @@ class StyleEntry {
         this.colorStyle=colorStyle;
     }
 
-    load(ghostFactor) {
+    load(ghostFactor?:number) {
         if (this.src === undefined) return;
-        let color=globalStore.getData(KeyHelper.keyNodeToString(keys.properties.style)+"."+this.colorStyle);
+        const color=globalStore.getData(KeyHelper.keyNodeToString(keys.properties.style)+"."+this.colorStyle);
         if (! color) return;
         this.sequence++;
-        let sequence=this.sequence;
+        const sequence=this.sequence;
         //what needs to be done?
         //load for the first time
         //or load with changing color or ghostFactor
@@ -121,12 +175,11 @@ class StyleEntry {
     }
 
 }
-const mergeStyles=function(){
-    let rt={
-        style:{}
-    };
-    for (let i=0;i< arguments.length;i++) {
-        let other = arguments[i];
+const mergeStyles=function(...args:StyleEntry[]){
+    const rt:StyleEntry=new StyleEntry();
+    rt.style={};
+    for (let i=0;i< args.length;i++) {
+        const other = args[i];
         if (!other) continue;
         if (other.src !== undefined) {
             //we skip all styles that have a source attribute
@@ -136,12 +189,12 @@ const mergeStyles=function(){
             rt.image = other.image;
             rt.ghostImage = other.ghostImage;
         }
-        assign(rt.style, other.style);
+        Object.assign(rt.style, other.style);
     }
     return rt;
 };
 
-const styleKeyFromItem=(item)=>{
+const styleKeyFromItem=(item:AisProxyItem)=>{
     let rt="normal";
     if (item.mmsi === globalStore.getData(keys.nav.ais.trackedMmsi)){
         rt="tracking";
@@ -159,22 +212,22 @@ const styleKeyFromItem=(item)=>{
 
 };
 
-const adaptIconColor= (src,originalColor,color)=>{
+const adaptIconColor= (src:string,originalColor:string,color:string):Promise<string>=>{
     return new Promise((resolve,reject)=>{
-        let canvas = document.createElement("canvas");
+        const canvas = document.createElement("canvas");
         if (! canvas) {
             reject("no canvas");
             return;
         }
-        let orig=tinycolor(originalColor).toRgb();
-        let target=tinycolor(color).toRgb();
-        let image=new Image();
+        const orig=tinycolor(originalColor).toRgb();
+        const target=tinycolor(color).toRgb();
+        const image=new Image();
         image.onload=()=>{
-            let ctx=canvas.getContext("2d");
+            const ctx=canvas.getContext("2d");
             canvas.height=image.height;
             canvas.width=image.width;
             ctx.drawImage(image,0,0,image.width,image.height);
-            let imgData=ctx.getImageData(0,0,image.width,image.height);
+            const imgData=ctx.getImageData(0,0,image.width,image.height);
             let hasChanges=false;
             for (let i=0;i<imgData.data.length;i+=4){
                 if (imgData.data[i] === orig.r &&
@@ -198,19 +251,19 @@ const adaptIconColor= (src,originalColor,color)=>{
     });
 };
 
-const adaptOpacity = (image, factor) => {
+const adaptOpacity = (image:HTMLImageElement, factor:number):Promise<string> => {
     return new Promise((resolve, reject) => {
-        let canvas = document.createElement("canvas");
+        const canvas = document.createElement("canvas");
         if (!canvas) {
             reject("no canvas");
             return;
         }
-        let ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d");
         canvas.height = image.height;
         canvas.width = image.width;
         ctx.drawImage(image, 0, 0, image.width, image.height);
         if (factor !== 1 && factor > 0) {
-            let imgData = ctx.getImageData(0, 0, image.width, image.height);
+            const imgData = ctx.getImageData(0, 0, image.width, image.height);
             for (let i = 0; i < imgData.data.length; i += 4) {
                 let nv = Math.floor(imgData.data[i + 3] * factor);
                 if (nv > 255) nv = 255;
@@ -226,26 +279,43 @@ const estimatedImageOpacity=()=>{
     return globalStore.getData(keys.properties.aisShowEstimated,false)?
         globalStore.getData(keys.properties.aisEstimatedOpacity,0.4):undefined;
 }
-const styleToProps={
+const styleToProps:Record<string,string>={
     nearest: 'aisNearestColor',
     warning: 'aisWarningColor',
     tracking: 'aisTrackingColor',
     normal: 'aisNormalColor'
 };
-const amul=(arr,fact)=>{
+const amul=(arr:number[],fact:number)=>{
     if (! arr) return;
     for (let i=0;i<arr.length;i++){
         arr[i]=arr[i]*fact;
     }
 }
-
+interface DisplayOptions{
+    classbShrink?:number,
+    scale?:number,
+    useHeading?:boolean,
+    courseVectorWidth?:number
+}
 /**
  * a cover for the layer with the AIS display
  * @param {MapHolder} mapholder
  * @constructor
  */
+type StyleMap=Record<string,StyleEntry>;
 class AisLayer{
-    constructor(mapholder) {
+    private textStyle: TextStyle;
+    private targetStyle: TargetStyle;
+    private targetStyleCourseVector: TargetStyle;
+    private atonStyle: TargetStyle;
+    private mapholder: MapHolder;
+    pixel: { pixel:Coordinate,ais:AisProxyItem }[];
+    private visible: boolean;
+    private symbolStyles:StyleMap;
+    private atonStyles: StyleMap;
+    private displayOptions:DisplayOptions;
+    private aisoptions:AisOptions;
+    constructor(mapholder:MapHolder) {
         /**
          * @private
          * @type {MapHolder}
@@ -295,13 +365,13 @@ class AisLayer{
      * @param useCourseVector
      * @returns {*} - an image data uri
      */
-    createIcon(color, useCourseVector) {
-        let canvas = document.createElement("canvas");
+    createIcon(color:string, useCourseVector:boolean) {
+        const canvas = document.createElement("canvas");
         if (!canvas) return undefined;
-        let offset = useCourseVector ? 0 : 200;
+        const offset = useCourseVector ? 0 : 200;
         canvas.width = 100;
         canvas.height = offset + 100;
-        let ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
         //drawing code created by http://www.professorcloud.com/svg-to-canvas/
         //from ais-nearest.svg
         ctx.strokeStyle = 'rgba(0,0,0,0)';
@@ -342,30 +412,30 @@ class AisLayer{
      * @private
      */
     createInternalIcons() {
-        let style = globalStore.getMultiple(keys.properties.style);
-        let useCourseVector = globalStore.getData(keys.properties.aisUseCourseVector, false);
-        let symbolStyle = useCourseVector ? this.targetStyleCourseVector : this.targetStyle;
-        let baseIcon = this.createIcon(DEFAULT_COLOR, useCourseVector);
-        for (let key in styleToProps) {
+        const style = globalStore.getMultiple(keys.properties.style);
+        const useCourseVector = globalStore.getData(keys.properties.aisUseCourseVector, false);
+        const symbolStyle = useCourseVector ? this.targetStyleCourseVector : this.targetStyle;
+        const baseIcon = this.createIcon(DEFAULT_COLOR, useCourseVector);
+        for (const key in styleToProps) {
             this.symbolStyles["internal" + key] = new StyleEntry(styleToProps[key],
                 baseIcon,
-                assign({}, symbolStyle, {courseVectorColor: style[styleToProps[key]]}),
+                {...symbolStyle, courseVectorColor: style[styleToProps[key]]},
                 DEFAULT_COLOR);
             this.atonStyles["internal" + key] = new StyleEntry(styleToProps[key],
                 atonIcon,
-                assign({}, this.atonStyle, {courseVectorColor: style[styleToProps[key]]}),
+                {...this.atonStyle, courseVectorColor: style[styleToProps[key]]},
                 DEFAULT_COLOR);
         }
     }
 
     computeStyles() {
-        let ghostFactor = estimatedImageOpacity();
-        for (let k in this.symbolStyles) {
-            let style = this.symbolStyles[k];
+        const ghostFactor = estimatedImageOpacity();
+        for (const k in this.symbolStyles) {
+            const style = this.symbolStyles[k];
             style.load(ghostFactor);
         }
-        for (let k in this.atonStyles) {
-            let style = this.atonStyles[k];
+        for (const k in this.atonStyles) {
+            const style = this.atonStyles[k];
             style.load(); //never have a ghost image
         }
     }
@@ -374,20 +444,20 @@ class AisLayer{
      * find the AIS target that has been clicked
      * @param {olCoordinate} pixel the css pixel from the event
      */
-    findFeatures(pixel) {
+    findFeatures(pixel:Coordinate) {
         base.log("findAisTarget " + pixel[0] + "," + pixel[1]);
         if (!this.pixel) return [];
-        let firstLabel = globalStore.getData(keys.properties.aisFirstLabel, '');
-        let tolerance = globalStore.getData(keys.properties.clickTolerance) / 2;
-        let idxlist = this.mapholder.findTargets(pixel, this.pixel, tolerance);
-        const targetList=[];
-        const foundMmsis={};
+        const firstLabel = globalStore.getData(keys.properties.aisFirstLabel, '');
+        const tolerance = globalStore.getData(keys.properties.clickTolerance) / 2;
+        const idxlist = this.mapholder.findTargets(pixel, this.pixel, tolerance);
+        const targetList:AisFeatureInfo[]=[];
+        const foundMmsis:Record<string,boolean>={};
         idxlist.forEach((idx)=>{
             const target=this.pixel[idx];
             if (target && target.ais && target.ais.mmsi){
                 if (foundMmsis[target.ais.mmsi]) return;
                 foundMmsis[target.ais.mmsi]=true;
-                const featureInfo=new AisFeatureInfo({point:target.ais.receivedPos,mmsi:target.ais.mmsi});
+                const featureInfo=new AisFeatureInfo({point:(new Point()).fromPlain(target.ais.receivedPos),mmsi:target.ais.mmsi});
                 featureInfo.title = AisFormatter.format(firstLabel, target.ais, true);
                 const [, symbol, ] = this.getStyleEntry(target.ais);
                 if (symbol && symbol.image) featureInfo.icon=symbol.image;
@@ -433,28 +503,28 @@ class AisLayer{
      * @param item
      * @returns {StyleEntry}
      */
-    getStyleEntry(item) {
+    getStyleEntry(item:AisProxyItem):[AisDisplayStyle,StyleEntry,number] {
         const WILDCARD_STATUS="-status*";
-        let cl = AisFormatter.format('clazz', item);
+        const cl = AisFormatter.format('clazz', item);
         let typeSuffix;
         let statusSuffix;
         if (cl === AIS_CLASSES.A || cl === AIS_CLASSES.B) {
             typeSuffix = "-" + AisFormatter.format('shiptype', item);
-            statusSuffix = (item.status !== undefined) ? "-status" + parseInt(item.status) : undefined;
+            statusSuffix = (item.status !== undefined) ? "-status" + Number(item.status) : undefined;
         }
         if (cl === AIS_CLASSES.Aton) {
             typeSuffix = "-type" + item.aid_type;
         }
-        let base = styleKeyFromItem(item);
-        let styleMap = (cl === AIS_CLASSES.Aton) ? this.atonStyles : this.symbolStyles;
-        let symbol = mergeStyles(styleMap["internal" + base],
+        const base = styleKeyFromItem(item);
+        const styleMap = (cl === AIS_CLASSES.Aton) ? this.atonStyles : this.symbolStyles;
+        const symbol = mergeStyles(styleMap["internal" + base],
             styleMap[base],
             (typeSuffix !== undefined) ? styleMap[base + typeSuffix] : undefined,
             (statusSuffix !== undefined) ? styleMap[base + statusSuffix] : undefined,
             (typeSuffix !== undefined) ? styleMap[base+typeSuffix+WILDCARD_STATUS]:undefined,
             (statusSuffix !== undefined && typeSuffix !== undefined) ? styleMap[base + typeSuffix + statusSuffix] : undefined,
         );
-        let style = cloneDeep(symbol.style);
+        const style = cloneDeep(symbol.style);
         if (!symbol.image || !style.size) {
             //even the internal style has not been loaded yet...
             return [undefined, undefined, 1];
@@ -468,7 +538,7 @@ class AisLayer{
                 if (style.alpha > 1) style.alpha = 1;
             }
         }
-        let hidden = item.hidden || item.lost;
+        const hidden = item.hidden || item.lost;
         if (hidden) {
             style.alpha = 0.2;
         }
@@ -484,7 +554,7 @@ class AisLayer{
             style.rotation = 0;
             style.rotateWithView = false;
         } else {
-            let target_hdg = (this.displayOptions.useHeading && item.heading !== undefined ? item.heading : item.course) || 0;
+            const target_hdg = (this.displayOptions.useHeading && item.heading !== undefined ? item.heading : item.course) || 0;
             style.rotation = Helper.radians(target_hdg);
             style.rotateWithView = true;
         }
@@ -495,21 +565,21 @@ class AisLayer{
     /**
      *
      * @param drawing
-     * @param target {AISItem}
+     * @param target
      * @returns {{rot: (*|number), scale: *, style: *, pix}}
      */
-    drawTargetSymbol(drawing, target) {
+    drawTargetSymbol(drawing:Drawing, target:AisProxyItem) {
         if (!target.shouldHandle) return;
-        let useCourseVector = !!target.courseVector;
-        let target_hdg = (this.displayOptions.useHeading && target.heading !== undefined ? target.heading : target.course) || 0;
-        let [style, symbol, scale] = this.getStyleEntry(target);
+        const useCourseVector = !!target.courseVector;
+        const target_hdg = (this.displayOptions.useHeading && target.heading !== undefined ? target.heading : target.course) || 0;
+        const [style, symbol, scale] = this.getStyleEntry(target);
         if (! style || ! symbol) return;
         if (!target.hidden) {
-            const drawArc = (origin, center, radius, start, angle, style, shift_dir = 0, shift_dst = 0) => {
+            const drawArc = (origin:LatLon, center:LatLon, radius:number, start:number, angle:number, style:LineStyle, shift_dir = 0, shift_dst = 0) => {
                 // pass origin to mitigate error due to projection for large radii
-                let segments = Math.max(3, Math.ceil(Math.abs(angle) / 5));
-                let da = angle / segments, dd = shift_dst / segments;
-                let points = [];
+                const segments = Math.max(3, Math.ceil(Math.abs(angle) / 5));
+                const da = angle / segments, dd = shift_dst / segments;
+                const points = [];
                 for (let i = 0; i <= segments; i++) {
                     let p = i == 0 ? origin : NavCompute.computeTarget(center, start + i * da, radius, this.aisoptions.useRhumbLine);
                     if (shift_dst) p = NavCompute.computeTarget(p, shift_dir, i * dd, this.aisoptions.useRhumbLine);
@@ -580,18 +650,18 @@ class AisLayer{
             }
 
             if (symbol.ghostImage && target.estimated) { // DR position of target
-                let curpix = drawing.drawImageToContext(this.pointToMap(target.estimated), symbol.ghostImage, style);
+                const curpix = drawing.drawImageToContext(this.pointToMap(target.estimated), symbol.ghostImage, style);
                 this.pixel.push({pixel: curpix, ais: target});
             }
         }
-        let curpix = drawing.drawImageToContext(this.pointToMap(target.receivedPos), symbol.image, style);
+        const curpix = drawing.drawImageToContext(this.pointToMap(target.receivedPos), symbol.image, style);
         this.pixel.push({pixel: curpix, ais: target});
         return {scale: scale, style: style, rot: target_hdg};
     }
 
-    computeTextOffsets(drawing, targetRot, textIndex, opt_baseOffset, opt_iconScale) {
-        let scale = (opt_iconScale === undefined) ? 1 : opt_iconScale;
-        let rt = [opt_baseOffset ? opt_baseOffset[0] : 10, opt_baseOffset ? opt_baseOffset[1] : 0];
+    computeTextOffsets(drawing:Drawing, targetRot:number, textIndex:number, opt_baseOffset?:boolean | [number,number], opt_iconScale?:number) {
+        const scale = (opt_iconScale === undefined) ? 1 : opt_iconScale;
+        const rt = [(typeof opt_baseOffset === 'object' ? opt_baseOffset[0] : 10), (typeof opt_baseOffset === 'object' ? opt_baseOffset[1] : 0)];
         amul(rt, scale);
         amul(rt, drawing.getDevPixelRatio()); //images are always scaled
         let hoffset = Math.floor(this.textStyle.fontSize * 1.2); //https://stackoverflow.com/questions/1134586/how-can-you-find-the-height-of-text-on-an-html-canvas
@@ -619,46 +689,52 @@ class AisLayer{
         //as the offsets will be multiplied with devPixelRatio later on we need to devide...
         amul(rt, 1 / drawing.getDevPixelRatio());
         return {offsetX: rt[0], offsetY: rt[1]};
-    };
+    }
 
     /**
      *
      * @param {olCoordinate} center
      * @param {Drawing} drawing
      */
-    onPostCompose(center, drawing) {
+    onPostCompose(_center:Coordinate, drawing:Drawing) {
         if (!this.visible) return;
         let i;
         this.pixel = [];
-        let aisList = globalStore.getData(keys.nav.ais.list, []);
-        let firstLabel = globalStore.getData(keys.properties.aisFirstLabel, '');
-        let secondLabel = globalStore.getData(keys.properties.aisSecondLabel, '');
-        let thirdLabel = globalStore.getData(keys.properties.aisThirdLabel, '');
+        const aisList = globalStore.getData(keys.nav.ais.list, []);
+        const firstLabel = globalStore.getData(keys.properties.aisFirstLabel, '');
+        const secondLabel = globalStore.getData(keys.properties.aisSecondLabel, '');
+        const thirdLabel = globalStore.getData(keys.properties.aisThirdLabel, '');
         for (i in aisList) {
-            let current = aisproxy(aisList[i]);
-            let alpha = {alpha: current.hidden ? 0.2 : undefined};
-            let pos = this.pointToMap(current.receivedPos);
-            let drawn = this.drawTargetSymbol(drawing, current);
+            const current = aisproxy(aisList[i]);
+            const alpha = {alpha: current.hidden ? 0.2 : undefined};
+            const pos = this.pointToMap(current.receivedPos);
+            const drawn = this.drawTargetSymbol(drawing, current);
             if (!drawn) continue;
-            let textOffsetScale = drawn.scale;
+            const textOffsetScale = drawn.scale;
             let text = AisFormatter.format(firstLabel, current, true);
             if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing, drawn.rot, 0, drawn.style.textOffset, textOffsetScale), alpha));
+                drawing.drawTextToContext(pos, text, {...this.textStyle,
+                    ...this.computeTextOffsets(drawing, drawn.rot, 0, drawn.style.textOffset, textOffsetScale),
+                    ...alpha});
             }
             if (secondLabel !== firstLabel) {
                 text = AisFormatter.format(secondLabel, current, true);
                 if (text) {
-                    drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing, drawn.rot, 1, drawn.style.textOffset, textOffsetScale), alpha));
+                    drawing.drawTextToContext(pos, text, {...this.textStyle,
+                        ...this.computeTextOffsets(drawing, drawn.rot, 1, drawn.style.textOffset, textOffsetScale),
+                        ...alpha});
                 }
             }
             if (thirdLabel !== firstLabel && thirdLabel !== secondLabel) {
                 text = AisFormatter.format(thirdLabel, current, true);
                 if (text) {
-                    drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing, drawn.rot, 2, drawn.style.textOffset, textOffsetScale), alpha));
+                    drawing.drawTextToContext(pos, text, {...this.textStyle,
+                        ...this.computeTextOffsets(drawing, drawn.rot, 2, drawn.style.textOffset, textOffsetScale),
+                        ...alpha});
                 }
             }
         }
-    };
+    }
 
     fillOptions() {
         this.displayOptions.classbShrink = globalStore.getData(keys.properties.aisClassbShrink, 1);
@@ -672,13 +748,13 @@ class AisLayer{
      * handle changed properties
      * @param evdata
      */
-    dataChanged(evdata) {
+    dataChanged() {
         this.visible = globalStore.getData(keys.properties.layers.ais);
         this.setStyles();
         this.createInternalIcons();
         this.computeStyles();
         this.fillOptions();
-    };
+    }
 
 
     /**
@@ -689,24 +765,28 @@ class AisLayer{
      * @param {number} course in degrees
      * @param {number} dist in m
      */
-    computeTarget(pos, course, dist) {
+    computeTarget(pos:Coordinate, course:number, dist:number) {
         try {
-            let point = new navobjects.Point();
+            const point = new navobjects.Point();
             point.fromCoord(this.mapholder.transformFromMap(pos));
-            let tp = NavCompute.computeTarget(point, course, dist, globalstore.getData(keys.nav.routeHandler.useRhumbLine));
-            let tpmap = this.mapholder.transformToMap(tp.toCoord());
+            const tp = NavCompute.computeTarget(point, course, dist, globalStore.getData(keys.nav.routeHandler.useRhumbLine));
+            const tpmap = this.mapholder.transformToMap(tp.toCoord());
             return tpmap;
         } catch (e) {
             return [0, 0];
         }
-    };
+    }
 
-    pointToMap(point) {
+    pointToMap(point:LatLon) {
         try {
+            let npoint:Point;
             if (!(point instanceof navobjects.Point)) {
-                point = new navobjects.Point(point.lon, point.lat);
+                npoint = new navobjects.Point(point.lon, point.lat);
             }
-            return this.mapholder.transformToMap(point.toCoord());
+            else{
+                npoint=point;
+            }
+            return this.mapholder.transformToMap(npoint.toCoord());
         } catch (e) {
             //ignore
         }
@@ -735,15 +815,15 @@ class AisLayer{
      * this style will be skipped completely and we fall back to the next matching (ending at the internal basic styles)
      * @param styles - the user images.json data
      */
-    setImageStyles(styles) {
-        let styleMaps = {
-            symbolStyles: '',
-            atonStyles: 'aton'
-        };
-        for (let styleMap in styleMaps) {
-            let stylePrefix = styleMaps[styleMap];
-            let names = ['Normal', 'Warning', 'Nearest', 'Tracking'];
-            let allowedStyles = {
+    setImageStyles(styles:any) {
+        const prefixToStyleMap:Record<string,StyleMap>={
+            '':this.symbolStyles,
+            aton:this.atonStyles,
+        }
+        for (const stylePrefix in prefixToStyleMap) {
+            const currentMap=prefixToStyleMap[stylePrefix];
+            const names = ['Normal', 'Warning', 'Nearest', 'Tracking'];
+            const allowedStyles = {
                 anchor: true,
                 size: true,
                 courseVectorColor: true,
@@ -752,20 +832,20 @@ class AisLayer{
                 alpha: true,
                 textOffset: true
             };
-            let iter = [''].concat(names);
-            for (let i in iter) {
-                let name = iter[i];
-                let styleProp = "ais" + stylePrefix + name + "Image";
-                let re = new RegExp("^" + styleProp);
-                for (let k in styles) {
+            const iter = [''].concat(names);
+            for (const i in iter) {
+                const name = iter[i];
+                const styleProp = "ais" + stylePrefix + name + "Image";
+                const re = new RegExp("^" + styleProp);
+                for (const k in styles) {
                     if (re.exec(k)) {
-                        let suffix = k.replace(re, "");
-                        let prefixes = name === '' ? names : [name];
+                        const suffix = k.replace(re, "");
+                        const prefixes = name === '' ? names : [name];
                         prefixes.forEach((prefix) => {
-                            let styleKey = prefix.toLowerCase() + suffix;
-                            let dstyle = styles[k];
+                            const styleKey = prefix.toLowerCase() + suffix;
+                            const dstyle = styles[k];
                             if (typeof (dstyle) === 'object') {
-                                this[styleMap][styleKey] = new StyleEntry(
+                                currentMap[styleKey] = new StyleEntry(
                                     'ais' + prefix + 'Color',
                                     dstyle.src,
                                     Helper.filteredAssign(allowedStyles, dstyle),

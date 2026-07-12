@@ -6,9 +6,9 @@ import Formatter from '../util/formatter';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import {aisproxy} from './aisformatter';
-import {AisOptionMappings} from "./aiscomputations";
 import Helper from "../util/helper";
 import base from "../base";
+import {AisOptionMappings} from "./aiscomputations";
 
 
 export const fillOptions=()=>{
@@ -332,6 +332,5 @@ class AisData {
         return this.workerErrors.getEntries();
     }
 }
-
 
 export default AisData;

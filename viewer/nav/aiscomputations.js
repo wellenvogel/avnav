@@ -170,25 +170,6 @@ const aisSort=(a,b)=>{
         }
 }
 
-export const AisOptionMappings={
-    minAISspeed: {key:keys.properties.aisMinDisplaySpeed,f:parseFloat},
-    useRhumbLine: keys.nav.routeHandler.useRhumbLine,
-    onlyShowMoving: keys.properties.aisOnlyShowMoving,
-    showA: keys.properties.aisShowA,
-    showB: keys.properties.aisShowB,
-    showOther:keys.properties.aisShowOther,
-    hideTime: {key: keys.properties.aisHideTime,f:parseFloat},
-    cpaEstimated: {key: {useEstimated:keys.properties.aisCpaEstimated,showEstimated:keys.properties.aisShowEstimated},f:(v)=> v.useEstimated && v.showEstimated},
-    warningDist: keys.properties.aisWarningCpa,
-    warningTime: keys.properties.aisWarningTpa,
-    courseVectorTime: keys.properties.navBoatCourseTime,
-    useCourseVector: keys.properties.aisUseCourseVector,
-    lostTime: keys.properties.aisLostTime,
-    curved: keys.properties.aisCurvedVectors,
-    rmvRange: {key:keys.properties.aisRelativeMotionVectorRange,f: (v)=>parseFloat(v)*Navcompute.NM},
-    navUrl: keys.gui.global.navUrl,
-    markAll: keys.properties.aisMarkAllWarning
-}
 
 /**
  * do the computation of the cross point and the closest approach
@@ -533,4 +514,28 @@ export const handleReceivedAisData=(jsonData,boatPos, boatCog, boatSpeed, option
     })
     computeAis(aisItems,boatPos,boatCog,boatSpeed,options);
     return aisItems;
+}
+
+/**
+ * Mapping of option keys to their storage configuration
+ * @type {Object}
+ */
+export const AisOptionMappings={
+    minAISspeed: {key:keys.properties.aisMinDisplaySpeed,f:parseFloat},
+    useRhumbLine: keys.nav.routeHandler.useRhumbLine,
+    onlyShowMoving: keys.properties.aisOnlyShowMoving,
+    showA: keys.properties.aisShowA,
+    showB: keys.properties.aisShowB,
+    showOther:keys.properties.aisShowOther,
+    hideTime: {key: keys.properties.aisHideTime,f:parseFloat},
+    cpaEstimated: {key: {useEstimated:keys.properties.aisCpaEstimated,showEstimated:keys.properties.aisShowEstimated},f:(v)=> v.useEstimated && v.showEstimated},
+    warningDist: keys.properties.aisWarningCpa,
+    warningTime: keys.properties.aisWarningTpa,
+    courseVectorTime: keys.properties.navBoatCourseTime,
+    useCourseVector: keys.properties.aisUseCourseVector,
+    lostTime: keys.properties.aisLostTime,
+    curved: keys.properties.aisCurvedVectors,
+    rmvRange: {key:keys.properties.aisRelativeMotionVectorRange,f: (v)=>Number(v)*Navcompute.NM},
+    navUrl: keys.gui.global.navUrl,
+    markAll: keys.properties.aisMarkAllWarning
 }

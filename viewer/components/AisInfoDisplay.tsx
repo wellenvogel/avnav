@@ -27,7 +27,8 @@
 import NavData from "../nav/navdata";
 import keys from "../util/keys";
 import {useStore} from "../hoc/Dynamic";
-import AisFormatter, {AisItem} from "../nav/aisformatter";
+import { AisProxyItem as AisItem } from '../nav/aistypes';
+import AisFormatter from '../nav/aisformatter';
 import globalStore from "../util/globalstore";
 import React, {SyntheticEvent} from "react";
 // @ts-ignore

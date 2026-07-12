@@ -5,7 +5,8 @@
 import React, {SyntheticEvent} from "react";
 import keys from '../util/keys';
 import PropertyHandler from '../util/propertyhandler';
-import AisFormatter, {AisItem} from '../nav/aisformatter';
+import { AisProxyItem as AisItem } from '../nav/aistypes';
+import AisFormatter from '../nav/aisformatter';
 import {WidgetFrame} from "./WidgetBase";
 import {ResizeStrings, useStringsChanged} from "../hoc/Resizable";
 import {setav} from "../util/helper";
