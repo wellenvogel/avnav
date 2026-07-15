@@ -7,6 +7,16 @@ import re
 import subprocess
 import sys
 
+F_PLAIN='plain'
+F_TABLE='table'
+F_SPARSE='sparse'
+F_PANDOC='pandoc'
+F_BT2ICON='button2icon'
+F_ICONUSAGE='iconusage'
+F_BTEXT="buttontext"
+F_ICONS='icons'
+F_BTOVERVIEW='buttonoverview'
+F_BTJSON='buttonjson'
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
@@ -252,8 +262,11 @@ TICONS=os.path.join('style','icons.less')
 TTEXTS=os.path.join('style','button_text.less')
 ICONBASE=os.path.join('images','icons-new')
 
-WORKDIR=wd=os.path.join(os.path.dirname(__file__),'..','docs')
-
+#if set replace ICONBASE by this in ouput
+ICONPATH=None
+#the relative path from the output directory
+#to the AvNav base dir
+RELPATH=".."
 def relPath(path=None):
     '''
     path from workdir
@@ -261,15 +274,17 @@ def relPath(path=None):
     :return:
     '''
     if path is None:
-        return os.path.join('..', 'viewer')
-    return os.path.join('..','viewer',path)
+        return os.path.join(RELPATH, 'viewer')
+    return os.path.join(RELPATH,'viewer',path)
 
 def iconPath(icon):
+    if ICONPATH is not None:
+        return os.path.join(ICONPATH,icon)
     base=relPath(ICONBASE)
     return os.path.join(base,icon)
 
 def usage():
-    print("usage: python buttonUsage.py [<args>...]",file=sys.stderr)
+    print("usage: python buttonUsage.py [-f format] [-o outfile] [-i iconpath]",file=sys.stderr)
 def err(msg):
     print(msg,file=sys.stderr)
     sys.exit(1)
@@ -280,18 +295,21 @@ def usageEntry(file:str,line:str):
         uname = uname[len(FILEPRFX):]
     return f"[{uname}]({file}#L{line})"
 
-def iconEntry(name,iconDef:IconDef,format='table'):
+def iconEntry(name,iconDef:IconDef,format=F_TABLE,omitName=False,addTitle=False):
     if iconDef is not None:
-        iconStr = f"[{iconDef.name}]({relPath(TICONS)}#L{iconDef.line})"
+        iconStr = f"[{iconDef.name}]({relPath(TICONS)}#L{iconDef.line})" if not omitName else ""
         iconFile=''
         if iconDef.icon:
             for icon in iconDef.icon:
-                if format == 'pandoc':
-                    iconFile += f"|![{icon}]({iconPath(icon)})"+'{width=40px}'
+                if format == F_PANDOC:
+                    title=''
+                    if addTitle:
+                        title=f" title=\"{icon}\""
+                    iconFile += f"|![{icon}]({iconPath(icon)})"+'{width=40px'+title+'}'
                 else:
                     iconFile += f"|<img alt=\"{icon}\" src=\"{iconPath(icon)}\" width=\"40px\"/>"
         return f"{iconStr}{iconFile}"
-    return (name or '')+"||"
+    return (name or '')+"||" if not omitName else "||"
 def defEntry(dfile:str,dname:str,dline:str,bold:bool=False):
     name=dname if not bold else f"__{dname}__"
     if dline is not None:
@@ -316,25 +334,42 @@ def iconUsage(icon:str,buttonDefs,iconGreps):
 if len(sys.argv) < 1:
     usage()
     sys.exit(1)
-
-ALL_FORMATS=['plain','table','sparse','pandoc','button2icon','iconusage','buttontext','icons']
+ALL_FORMATS=[F_PLAIN,F_TABLE,F_SPARSE,F_PANDOC,F_BT2ICON,F_ICONUSAGE,F_BTEXT,F_ICONS,F_BTOVERVIEW,F_BTJSON]
 #after creating the "pandoc" markdow convert to odt
 #from within the docs dir with
 #pandoc -o buttonUsage.odt --embed-resources=true buttonUsage.md
 format=ALL_FORMATS[0]
 
 FILEPRFX='../viewer/'
-
-optlist,args =getopt.getopt(sys.argv[1:],'f:')
+outfile=None
+optlist,args =getopt.getopt(sys.argv[1:],'f:o:i:')
 for o, a in optlist:
     if o == '-f':
         if not a in ALL_FORMATS:
             raise RuntimeError(f'invalid format {a}, allowed formats are {",".join(ALL_FORMATS)}')
         format=a
-
-
+    elif o == '-o':
+        outfile=a
+        logger.info("output to file %s",outfile)
+    elif o == '-i':
+        ICONPATH=a
 dir=os.path.dirname(__file__)
-wd=os.path.join(dir,'..','docs')
+basedir=os.path.realpath(os.path.join(dir,'..'))
+stream=sys.stdout
+if outfile is not None:
+    wd=os.path.dirname(outfile)
+    if not os.path.isdir(wd):
+        print(f"{wd} is not a directory",file=sys.stderr)
+        sys.exit(1)
+    stream=open(outfile,'w')
+else:
+    wd=os.path.join(basedir,'docs')
+logger.info("workdir: %s",wd)
+RELPATH=os.path.relpath(basedir,wd)
+logger.info("relpath: %s",RELPATH)
+if ICONPATH is not None:
+    ICONPATH=os.path.relpath(ICONPATH,wd)
+    logger.info("iconpath: %s",ICONPATH)
 os.chdir(wd)
 defs=grep(relPath())
 buttonDefs=readButtons(relPath(TDEFS))
@@ -342,16 +377,24 @@ iconDefs=readIcons(relPath(TICONS))
 textDefs=readTexts(relPath(TTEXTS))
 iconGreps=grepIcons(relPath())
 
+oprint=print
 
-if format == 'plain':
-    pprint.pprint(defs)
-    pprint.pprint(iconGreps)
-    pprint.pprint(buttonDefs)
-    pprint.pprint(iconDefs)
-    pprint.pprint(textDefs)
+def print(*args,**kwargs):
+    if kwargs and 'file' in kwargs:
+        oprint(*args,**kwargs)
+        return
+    oprint(*args,file=stream,**kwargs)
+
+
+if format == F_PLAIN:
+    pprint.pprint(defs,stream=stream)
+    pprint.pprint(iconGreps,stream=stream)
+    pprint.pprint(buttonDefs,stream=stream)
+    pprint.pprint(iconDefs,stream=stream)
+    pprint.pprint(textDefs,stream=stream)
     sys.exit(0)
-if format == 'table' or format == 'sparse' or format == 'pandoc':
-    handleFirst=format == 'sparse' or format == 'pandoc'
+if format == F_TABLE or format == F_SPARSE or format == F_PANDOC:
+    handleFirst=format == F_SPARSE or format == F_PANDOC
     print("Buttons")
     print("====")
     print("|Name|File|IconName|Icon|IconNew|shortText|longText|")
@@ -409,7 +452,20 @@ if format == 'table' or format == 'sparse' or format == 'pandoc':
         bstr = f"|{iconEntry(k,iconDef,format=format)}|{usage}|"
         print(bstr)
     sys.exit(0)
-elif format == 'button2icon':
+elif format == F_BTOVERVIEW:
+    print("AvNav Buttons")
+    print("====")
+    print("|Name(Class)|Text|LongText|IconOld|IconNew|")
+    print("| --- | --- | --- | --- | --- |")
+    for k in sorted(buttonDefs.keys()):
+        buttonDef = buttonDefs.get(k)
+        textDef = textDefs.get(buttonDef.txt)
+        iconDef = iconDefs.get(buttonDef.icon)
+        txt=f"{textDef.tshort}|{textDef.tlong}" if textDef else ' | '
+        icon=iconEntry(buttonDef.icon,iconDef,format=F_PANDOC,omitName=True,addTitle=True) if iconDef is not None else ''
+        print(f"|{k}|{txt}{icon}|")
+    sys.exit(0)
+elif format == F_BT2ICON:
     '''
     interesting commands afterwards:
     #build an sed command to migrate from old def to new icon based
@@ -422,7 +478,7 @@ elif format == 'button2icon':
         buttonDef = buttonDefs.get(k)
         print(f"{k} {buttonDef.icon}")
     sys.exit(0)
-elif format == 'iconusage':
+elif format == F_ICONUSAGE:
     for k in sorted(iconDefs.keys()):
         iconDef = iconDefs.get(k)
         buttons, code = iconUsage(k, buttonDefs, iconGreps)
@@ -432,7 +488,7 @@ elif format == 'iconusage':
             usage += "code"
         print(f"{k} {usage}")
     sys.exit(0)
-elif format == 'buttontext':
+elif format == F_BTEXT:
     for k in sorted(buttonDefs.keys()):
         buttonDef = buttonDefs.get(k)
         name=buttonDef.txt
@@ -444,7 +500,7 @@ elif format == 'buttontext':
             long=texts.tlong
         print(f"{k},{name},{short},{long},")
     sys.exit(0)
-elif format == 'icons':
+elif format == F_ICONS:
     for k in sorted(iconDefs.keys()):
         iconDef = iconDefs.get(k)
         print(f"{k} {iconDef.icon}")
