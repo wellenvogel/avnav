@@ -1,0 +1,28 @@
+code{
+    white-space: pre;
+}
+
+.icon-default,.icon-legacy{
+    width: 24px;
+    height: 24px;
+    vertical-align: baseline;
+}
+
+body.iconset-default .icon-legacy{
+    display: none;
+}
+body.iconset-legacy .icon-default{
+    display: none;
+}
+
+:root{
+    --md-accent-bg-color: rgb(216, 216, 216);
+}
+.selected{
+    background-color: var(--md-accent-bg-color);
+}
+
+header .md-label{
+    align-self: center ;
+    margin: 0.5em;
+}
