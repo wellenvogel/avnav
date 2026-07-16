@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import getopt
+import json
 import logging
 import os.path
 import pprint
@@ -295,12 +296,16 @@ def usageEntry(file:str,line:str):
         uname = uname[len(FILEPRFX):]
     return f"[{uname}]({file}#L{line})"
 
-def iconEntry(name,iconDef:IconDef,format=F_TABLE,omitName=False,addTitle=False):
+def iconEntry(name,iconDef:IconDef,format=F_TABLE,omitName=False,addTitle=False,useLegacy=False):
     if iconDef is not None:
         iconStr = f"[{iconDef.name}]({relPath(TICONS)}#L{iconDef.line})" if not omitName else ""
         iconFile=''
         if iconDef.icon:
-            for icon in iconDef.icon:
+            if len(iconDef.icon)>1 or not useLegacy:
+                icons=iconDef.icon
+            else:
+                icons=[iconDef.icon[0],iconDef.icon[0]]
+            for icon in icons:
                 if format == F_PANDOC:
                     title=''
                     if addTitle:
@@ -455,15 +460,34 @@ if format == F_TABLE or format == F_SPARSE or format == F_PANDOC:
 elif format == F_BTOVERVIEW:
     print("AvNav Buttons")
     print("====")
-    print("|Name(Class)|Text|LongText|IconOld|IconNew|")
+    print("|Name(Class)|Text|LongText|Legacy|default|")
     print("| --- | --- | --- | --- | --- |")
     for k in sorted(buttonDefs.keys()):
+        anchor='{ #'+k+' }'
         buttonDef = buttonDefs.get(k)
         textDef = textDefs.get(buttonDef.txt)
         iconDef = iconDefs.get(buttonDef.icon)
         txt=f"{textDef.tshort}|{textDef.tlong}" if textDef else ' | '
-        icon=iconEntry(buttonDef.icon,iconDef,format=F_PANDOC,omitName=True,addTitle=True) if iconDef is not None else ''
-        print(f"|{k}|{txt}{icon}|")
+        icon=iconEntry(buttonDef.icon,iconDef,format=F_PANDOC,omitName=True,addTitle=True,useLegacy=True) if iconDef is not None else ''
+        print(f"|{k} {anchor}|{txt}{icon}|")
+    sys.exit(0)
+elif format == F_BTJSON:
+    rt={}
+    for k in sorted(buttonDefs.keys()):
+        buttonDef = buttonDefs.get(k)
+        textDef = textDefs.get(buttonDef.txt)
+        iconDef = iconDefs.get(buttonDef.icon)
+        rt[k]={
+            'shortText': textDef.tshort if textDef else '',
+            'longText': textDef.tlong if textDef else '',
+        }
+        if iconDef is not None:
+            if iconDef.icon is not None:
+                if len(iconDef.icon)>0:
+                    rt[k]['legacy']=iconPath(iconDef.icon[0])
+                if len(iconDef.icon)>1:
+                    rt[k]['default']=iconPath(iconDef.icon[1])
+    print (json.dumps(rt, indent=4))
     sys.exit(0)
 elif format == F_BT2ICON:
     '''
