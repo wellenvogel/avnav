@@ -38,3 +38,4 @@ android/assets/sounds/**
 newDoc/docs/generated
 newDoc/docs/de-test
 newDoc/site
+**/.venv
