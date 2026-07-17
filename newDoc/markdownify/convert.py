@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import json
 import re
+import shutil
 
 from markdownify import markdownify as md, MarkdownConverter, UNDERLINED
 import sys
@@ -16,12 +17,15 @@ def error(s):
 
 BTLISTPATH=re.compile('^\.\./images/icons-new/legacy/')
 OLDPATH=re.compile('.*viewerimages/icons-new/')
+NOCOPY=re.compile('viewerimages')
 class Converter(MarkdownConverter):
-    def __init__(self, imagePath=None,baseDir=None,buttonMappings=None,**options):
+    def __init__(self, imagePath=None,outDir=None,inDir=None,buttonMappings=None,copyImages=False,**options):
         super().__init__(**options)
         self.imagePath = imagePath
-        self.baseDir = baseDir
+        self.outDir = outDir
+        self.inDir = inDir
         self.mappings=buttonMappings
+        self.copyImages=copyImages
 
     def convert_hN(self, n, el, text, parent_tags):
         anchor = None
@@ -55,23 +59,35 @@ class Converter(MarkdownConverter):
                     button=self.mappings.get(icon)
                     if button:
                         return '{{BT("'+button+'")}}'
-                src=os.path.join(imagepath,src)
-                if self.baseDir is not None:
-                    isrc=os.path.join(self.baseDir,src)
-                    if not os.path.exists(isrc):
-                        warn(f"Image src '{isrc}' not found.")
-                el.attrs['src']=src
+                if not OLDPATH.match(src):
+                    tsrc=os.path.join(imagepath,src)
+                    if self.outDir is not None:
+                        isrc=os.path.join(self.outDir,tsrc)
+                        if not os.path.exists(isrc):
+                            if self.copyImages and self.inDir is not None:
+                                srcFile=os.path.join(self.inDir,src)
+                                if os.path.exists(srcFile):
+                                    log(f"copying {srcFile} to {isrc}")
+                                    shutil.copyfile(srcFile,isrc)
+                                else:
+                                    warn(f"source {srcFile} does not exist, cannot create {isrc}")
+                            else:
+                                warn(f"Image src '{isrc}' not found.")
+                    el.attrs['src']=tsrc
         rt=super().convert_img(el,text,parent_tags)
         return rt
 
-ARGS='i:b:'
-USAGE=f"usage: {sys.argv[0]} -i imageDir -b button.json infile outfile"
+ARGS='i:b:c'
+USAGE=f"usage: {sys.argv[0]} -i imageDir [-c] -b button.json infile outfile"
 if __name__ == "__main__":
     optlist,args=getopt.getopt(sys.argv[1:],ARGS)
     imagepath=None
     buttonjson=None
+    copyImages=False
     for o,a in optlist:
-        if o=='-i':
+        if o == '-c':
+            copyImages=True
+        elif o=='-i':
             imagepath=a
         elif o == '-b':
             buttonjson=a
@@ -90,6 +106,7 @@ if __name__ == "__main__":
     if imagepath is not None:
         #compute relpath
         imagepath=os.path.relpath(imagepath,outdir)
+        imagepath=os.path.normpath(imagepath)
         log(f"imagepath: {imagepath}")
     if buttonjson is not None:
         log(f"reading buttonjson: {buttonjson}")
@@ -101,7 +118,18 @@ if __name__ == "__main__":
                     icon=BTLISTPATH.sub("",icon)
                     buttons[icon]=k
     with open(infile, "r") as f:
-        out=Converter(imagePath=imagepath,baseDir=outdir).convert(f.read())
+        indir = os.path.dirname(infile)
+        if not os.path.isdir(outdir):
+            os.makedirs(outdir)
+        if not os.path.isdir(outdir):
+            print(f"creating {outdir} failed",file=sys.stderr)
+            sys.exit(1)
+        out=Converter(imagePath=imagepath,
+                      outDir=outdir,
+                      inDir=indir,
+                      copyImages=copyImages,
+                      buttonMappings=buttons
+                      ).convert(f.read())
         with open(outfile, "w") as fo:
             fo.write(out)
 
