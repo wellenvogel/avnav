@@ -1,3 +1,7 @@
+---
+  tags:
+    - Beta
+---
 ## AvNav Entwickler-Versionen (Beta)
 
 Um zwischen den Release-Versionen Updates schon für einen breiten Test bereitzustellen, gibt es Beta Versionen. Diese sind ggf. nicht vollständig getestet - man muss also eventuell mit Fehlern rechnen.
@@ -14,7 +18,7 @@ Falls man ein [AvNav Image](raspberry.md#images) nutzt kann man dort auch das Re
 
 ## Android
 
-Für Android kann man direkt die APK Datei herunterladen und installieren. Die Applikation heisst dann "AvNav-beta" und kann neben einer normalen AvNav Installation genutzt werdeen.
+Für Android kann man direkt die APK Datei herunterladen und installieren. Die Applikation heisst dann "AvNav-beta" und kann neben einer normalen AvNav Installation genutzt werden.
 
 ## Windows
 

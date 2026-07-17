@@ -11,37 +11,14 @@ Hinweise
 --------
 
 Auf dieser Seite finden sich Informationen zu den einzelnen Release-Versionen.  
-Nicht mit jedem Update werden neue Images bereitgestellt. Zwischen-Updates
-sind entweder [Entwickler-Versionen](../../downloads/daily/) oder [Releases](../../downloads/release/).  
-Um ein solches Update zu installieren, benötigt man eine Kommandozeile auf
-dem pi (oder das [AvNav
-Update Plugin](https://github.com/wellenvogel/avnav-update-plugin)). Von Windows aus geht das z.B. mit [putty](https://www.putty.org/). Dazu die IP Adresse vom pi ermitteln und dann mit putty dorthin
-verbinden. Nutzername: pi, Passwort: raspberry (bzw. so, wie man das für das
-Image angepasst hat).  
-Wie man die Pakete installiert, ist ebenfalls in der [Installationsanleitung](install.md#Packages)
-beschrieben.  
-Anschliessend muss man (Hinweise auf dieser Seite beachten) eventuell noch
-die Konfigurationsdatei  
-```
-/home/pi/avnav/data/avnav_server.xml
-```
-anpassen. Dass kann man z.B. so machen:  
-  
-```
-sudo systemctl stop avnav
-nano /home/pi/avnav/data/avnav_server.xml # dann ändern und speichern
-sudo systemctl start avnav
-```
-  
+Informationen zu Entwickler-Versionen (Betas) findet man unter diesem [Link](beta.md).
 
-Wenn man das [AvNav
-Update Plugin](https://github.com/wellenvogel/avnav-update-plugin) installiert hat, kann man die Konfiguration auch von
-dort bearbeiten ohne die Kommandozeile nutzen zu müssen.
+Die Installation hängt vom verwendeten System ab und ist in den Installationsanleitungen beschrieben:
 
-Auf dieser Seite sind nur Hinweise zu den [release-Versionen](../../downloads/release/)
-enthalten, für [tägliche Builds](../../downloads/daily/) kann man
-die [commits
-auf GitHub](https://github.com/wellenvogel/avnav/commits/master) prüfen.
+* [Raspberry Pi](raspberry.md)
+* [Linux](linux.md)
+* [Android](android.md)
+* [Windows](windows.md)
 
   
 

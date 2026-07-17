@@ -7,6 +7,10 @@ code{
     height: 24px;
     vertical-align: baseline;
 }
+img.inline-image{
+    height: 24px;
+    width: auto;
+}
 
 body.iconset-default .icon-legacy{
     display: none;
