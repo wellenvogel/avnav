@@ -1,4 +1,4 @@
-site_name: AvNav Documentation
+site_name: AvNav Dokumentation
 theme: 
   name: material
   custom_dir: overrides
@@ -6,40 +6,32 @@ theme:
     - search.suggest
     - search.highlight
 nav: 
-  - Willkommen: de/index.md
-  - Beschreibung: 
-    - de/description/what_is_avnav.md
-    - de/description/how_does_it_works.md
-  - Getting started:
-    - de/getting_started/raspi_image.md
-    - de/getting_started/debian.md
-    - de/getting_started/ubuntu.md
-    - de/getting_started/openplotter.md
-    - de/getting_started/windows.md
-    - de/getting_started/android.md
-    - de/getting_started/daily.md
-  - First steps:
-    - de/first_steps/wlan.md
-    - de/first_steps/config_backend.md
-    - de/first_steps/config_frontend.md
-  - Charts:
-    - de/charts/raster.md
-    - de/charts/vector.md
-  - Overlay: de/etc/overlay.md
-  - Plugins: 
-    - de/plugins/mapproxy.md
-    - de/plugins/ocharts.md
-    - de/plugins/ochartsng.md
-  - Technical: 
-    - de/technical/server_configuration.md
-    - de/plugins/plugins.md
-  - Special:
-    - de/special/android.md
-  - Community Support: de/support.md
+  - Konzept: 
+    - concept/opensource.md
+    - concept/dashboards.md
+    - concept/clientserver.md
+    - concept/operatingsystems.md
+  - Installation:
+    - installation/raspberry.md
+    - installation/linux.md
+    - installation/android.md
+    - installation/windows.md
+  - Basisfunktionen:
+    - base/navpage.md
+    - base/routes.md
+    - base/userapps.md
+    - base/settings.md
+    - base/layout.md
+    - base/charts.md
+    - base/ais.md
+  - Details:
+    - special/index.md
 plugins:
   - i18n:
       docs_structure: folder
       fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
       languages:
         - build: true
           default: true
@@ -48,9 +40,10 @@ plugins:
         - build: true
           locale: en
           name: English
+          site_name: AvNav Documentation
           nav_translations:
-            Willkommen: Welcome
-            Beschreibung: Description
+            Konzept: Concept
+            Basisfunktionen: Base Functions
   - autorefs
   - search
   - macros
