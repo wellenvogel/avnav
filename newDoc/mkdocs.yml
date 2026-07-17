@@ -26,6 +26,7 @@ nav:
     - base/ais.md
   - Details:
     - special/index.md
+    - special/tags.md
     - generated/buttons.md
   - Alte Doku:
     - converted/beschreibung.md
@@ -50,6 +51,7 @@ plugins:
   - autorefs
   - search
   - macros
+  - tags
 extra_css:
   - extra/extra.css
 extra_javascript:
