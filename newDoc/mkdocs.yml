@@ -12,6 +12,7 @@ nav:
     - concept/clientserver.md
     - concept/operatingsystems.md
   - Installation:
+    - installation/intro.md
     - installation/raspberry.md
     - installation/linux.md
     - installation/android.md
@@ -56,6 +57,7 @@ extra_css:
   - extra/extra.css
 extra_javascript:
   - extra/extra.js
+use_directory_urls: false
 markdown_extensions:
   - admonition
   - pymdownx.details
