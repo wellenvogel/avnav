@@ -41,6 +41,12 @@ class Converter(MarkdownConverter):
             rt+= " {: #" + anchor + "}"
         return rt
 
+    def convert_a(self, el, text, parent_tags):
+        href=el.attrs.get('href')
+        if href and href.find('.html') != -1:
+            href = href.replace('.html','.md')
+            el.attrs['href'] = href
+        return super().convert_a(el, text, parent_tags)
     def convert_div(self,el,text,parent_tags):
         cl=el.attrs.get('class')
         if isinstance(cl,list) and len(cl)>0 and 'code' in cl:
@@ -60,7 +66,8 @@ class Converter(MarkdownConverter):
                     if button:
                         return '{{BT("'+button+'")}}'
                 if not OLDPATH.match(src):
-                    tsrc=os.path.join(imagepath,src)
+                    splitted=os.path.split(src)
+                    tsrc=os.path.join(imagepath,splitted[1])
                     if self.outDir is not None:
                         isrc=os.path.join(self.outDir,tsrc)
                         if not os.path.exists(isrc):
@@ -68,6 +75,10 @@ class Converter(MarkdownConverter):
                                 srcFile=os.path.join(self.inDir,src)
                                 if os.path.exists(srcFile):
                                     log(f"copying {srcFile} to {isrc}")
+                                    tdir=os.path.dirname(isrc)
+                                    if not os.path.isdir(tdir):
+                                        log(f"creating directory {tdir}")
+                                        os.makedirs(tdir)
                                     shutil.copyfile(srcFile,isrc)
                                 else:
                                     warn(f"source {srcFile} does not exist, cannot create {isrc}")

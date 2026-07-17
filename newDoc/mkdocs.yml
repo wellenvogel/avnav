@@ -26,8 +26,8 @@ nav:
     - base/ais.md
   - Details:
     - special/index.md
-  - Test:
-    - converted/charts/ochartsng.md
+  - Alte Doku:
+    - converted/beschreibung.md
 plugins:
   - i18n:
       docs_structure: folder

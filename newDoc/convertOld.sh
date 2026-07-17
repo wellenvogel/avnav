@@ -20,10 +20,13 @@ if [ "$1" = "" ] ; then
 fi
 rel=`realpath -s --relative-to=$OLDSRC $1`
 echo "relpath=$rel"
+ext="${rel##*.}"
+base="${rel%.*}"
+[ "$ext" != "html" ] && err "can only convert .html files"
 [ ! -x "$SCRIPT" ] && err "$SCRIPT not found/not executable"
 [ ! -e "$BUTTONJSON" ] && err "$BUTTONJSON not found"
 src="$OLDSRC/$rel"
-target="$NEWSRC/$rel"
+target="$NEWSRC/$base.md"
 [ ! -e "$src" ] && err "$src not found"
 echo "converting $src to $target"
 "$SCRIPT" -i "$NEWIMG" -c -b "$BUTTONJSON" "$src" "$target"
