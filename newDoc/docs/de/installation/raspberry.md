@@ -164,7 +164,7 @@ sudo systemctl start avnav-startx
 Ab Version 20230614 wird auf dem Hauptbildschirm immer dann, wen AvNav
 nicht (oder nicht komplett) aktiv ist, ein zusätzliches Panel angezeigt.
 
-![](../img/xui-ffpanel.png)
+![](../img/xui-ffpanel.png){: data-gallery=g1 }
 
 Über dieses Panel können einige Navigationsfunktionen in Firefox
 gesteuert werden, es kann zum 2. Bildschirm (system) gewechselt werden -
