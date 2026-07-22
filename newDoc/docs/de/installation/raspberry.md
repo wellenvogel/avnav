@@ -34,7 +34,7 @@ gepflegt (vielen Dank...). Diese werden mit pi-gen gebaut und enthalten
 AvNav, SignalK und weitere Software. Eine Beschreibung findet sich im [Repository](https://github.com/free-x/AvNav-Image).
 
 Unter Windows/Linux/OSx lädt man das Image [von
-free-x](https://github.com/free-x/AvNav-Image) herunter und transferiert es z.B. mit dem [raspi-imager](https://www.raspberrypi.com/documentation/computers/getting-started.md#raspberry-pi-imager) 
+free-x](https://github.com/free-x/AvNav-Image) herunter und transferiert es z.B. mit dem [raspi-imager](https://www.raspberrypi.com/software/) 
 auf eine SD Karte.  
 Beim Imager dazu unter "CHOOSE OS" "Use Custom" auswählen und die img
 Datei selektieren. Keine "customizations" wählen.
@@ -42,7 +42,8 @@ Datei selektieren. Keine "customizations" wählen.
 Diese Images enthalten
 
 * avnav
-* avnav-raspi
+* avnav-raspi-base
+* avnav-raspi-network
 * [avnav-update-plugin](https://github.com/wellenvogel/avnav-update-plugin)
 * [avnav-ocharts-plugin](hints/ocharts.md)
 * [avnav-mapproxy-plugin](https://github.com/wellenvogel/avnav-mapproxy-plugin)
@@ -87,12 +88,13 @@ Die Bedeutung der Felder:
 | Wifi Password | avnav-secret | Das Passwort für das WLAN-Netzwerk. Das sollte in jedem Falle geändert werden. Jeder, der sich mit dem WLAN verbinden kann, kann damit auch die Navigation beeinflussen! |
 | User pi password | raspberry | Das ist das Passwort für den Nutzer "pi". Dieser Standard- User wird genutzt, wenn man sich per SSH verbindet oder wenn man direkt per Monitor und Tastatur auf den Raspberry zugreift. Das Passwort für den User "pi" sollte ebenfalls unbedingt geändert werden. |
 | Base Board | None | Hier kann man aus unterstützten Basis-Platinen wählen.   * **MCS:** Wenn diese Option aktiviert ist, wird beim   nächsten Bootvorgang die notwendige Software für den [Marine   Control Server von GeDad](https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/) aktiviert. Die Änderung der   Einstellung führt dann zu einem automatischen Reboot, wenn der   Raspberry das erste Mal mit dieser Einstellung startet. * **OBPPLOTTERV3:** Hiermit werden die Einstellungen für den   [Open   Boat Projects Plotter (V3)](https://open-boat-projects.org/de/10-plotter-raspi-4b) gesetzt. |
-| HAT | None | Hier kann man einen unterstützten Pi-HAT auswählen. AvNav wird die entsprechenden Einträge für die Overlays in /boot/config.txt machen und die CAN Netzwerk-Schnittstellen anlegen.   * WAVESHAREB: [Waveshare   RS485 CAN HAT (B)](https://www.waveshare.com/wiki/RS485_CAN_HAT_%28B%29) * WAVESHAREA8: [Waveshare   RS485 CAN HAT (8Mhz)](https://www.waveshare.com/wiki/RS485_CAN_HAT) * WAVESHAREA12: [Waveshare   RS485 CAN HAT (12 Mhz)](https://www.waveshare.com/wiki/RS485_CAN_HAT) * WAVESHARE2CH: [Waveshare   2CH CAN HAT](https://www.waveshare.com/wiki/2-CH_CAN_HAT) * PICANM: [PICAN-M](https://cdn.shopify.com/s/files/1/0563/2029/5107/files/pican-m_UGB_20.pdf?v=1619008196) * MCARTHUR: [MacArthur   HAT](https://github.com/OpenMarine/MacArthur-HAT) |
-| Module RTL8188EU | aus | Wenn eingeschaltet, wird der [Kernel-Treiber](https://github.com/lwfinger/rtl8188eu/tree/v5.2.2.4) für WLAN-Adapter mit dem Chipsatz RTL8188EU per [DKMS](https://manpages.debian.org/unstable/dkms/dkms.8.en.md) eingerichtet.  Wenn der Kernel des Systems aktualisiert wird (Kommandozeile), wird der Treiber neu übersetzt.  Bisher nicht für Bookworm-Images verfügbar, da es diese Treiber nicht gibt. |
-| Module RTL8192EU | aus | Wenn eingeschaltet, wird der [Kernel Treiber](https://github.com/Mange/rtl8192eu-linux-driver) für WLAN-Adapter mit dem Chipsatz RTL8192EU per [DKMS](https://manpages.debian.org/unstable/dkms/dkms.8.en.md) eingerichtet.  Wenn der Kernel des Systems aktualisiert wird (Kommandozeile), wird der Treiber neu übersetzt.  Bisher nicht für Bookworm-Images verfügbar, da es diese Treiber nicht gibt. |
+| HAT {: #configHATS } | None | Hier kann man einen unterstützten Pi-HAT auswählen. AvNav wird die entsprechenden Einträge für die Overlays in /boot/config.txt machen und die CAN Netzwerk-Schnittstellen anlegen.   * WAVESHAREB: [Waveshare   RS485 CAN HAT (B)](https://www.waveshare.com/wiki/RS485_CAN_HAT_%28B%29) * WAVESHAREA8: [Waveshare   RS485 CAN HAT (8Mhz)](https://www.waveshare.com/wiki/RS485_CAN_HAT) * WAVESHAREA12: [Waveshare   RS485 CAN HAT (12 Mhz)](https://www.waveshare.com/wiki/RS485_CAN_HAT) * WAVESHARE2CH: [Waveshare   2CH CAN HAT](https://www.waveshare.com/wiki/2-CH_CAN_HAT) * PICANM: [PICAN-M](https://cdn.shopify.com/s/files/1/0563/2029/5107/files/pican-m_UGB_20.pdf?v=1619008196) * MCARTHUR: [MacArthur   HAT](https://github.com/OpenMarine/MacArthur-HAT) |
+| Module RTL8188EU | aus | Wenn eingeschaltet, wird der [Kernel-Treiber](https://github.com/lwfinger/rtl8188eu/tree/v5.2.2.4) für WLAN-Adapter mit dem Chipsatz RTL8188EU per [DKMS](https://dyn.manpages.debian.org/unstable/dkms/dkms.8.en.html) eingerichtet.  Wenn der Kernel des Systems aktualisiert wird (Kommandozeile), wird der Treiber neu übersetzt.  Bisher nicht für Bookworm-Images (oder neuere) verfügbar, da es diese Treiber nicht gibt. |
+| Module RTL8192EU | aus | Wenn eingeschaltet, wird der [Kernel Treiber](https://github.com/Mange/rtl8192eu-linux-driver) für WLAN-Adapter mit dem Chipsatz RTL8192EU per [DKMS](https://dyn.manpages.debian.org/unstable/dkms/dkms.8.en.html) eingerichtet.  Wenn der Kernel des Systems aktualisiert wird (Kommandozeile), wird der Treiber neu übersetzt.  Bisher nicht für Bookworm-Images om/wiki/RS485
+(oder neuere) verfügbar, da es diese Treiber nicht gibt. |
 | TimeZone | Europe/Berlin | Die Zeitzone, die im Image genutzt werden soll. |
 | WifiCountry | Germany | Das Land (muss für den Wifi Adapter aus rechtlichen Gründen gesetzt werden) |
-| InternalWifi as Client | aus | Wenn eingeschaltet, wird der interne Wifi Adapter des Pi nicht als Access Point definiert, sondern kann sich mit anderen Netzwerken verbinden.  Achtung: Das erfordert eine andere Möglichkeit, um auf den Pi zugreifen zu können - siehe [[Verbinden mit dem Raspberry](#access)]. |
+| InternalWifi as Client | aus | Wenn eingeschaltet, wird der interne Wifi Adapter des Pi nicht als Access Point definiert, sondern kann sich mit anderen Netzwerken verbinden.  Achtung: Das erfordert eine andere Möglichkeit, um auf den Pi zugreifen zu können - siehe [[Verbinden mit dem Raspberry](../special/connecting-pi.md)]. |
 | KeyboardLayout | German | Layout für eine angeschlossene Tastatur (Kommandozeile und X) |
 | KeyboardType | Generic 105-key PC(intl.) | Typ der angeschlossenen Tastatur |
 | TouchSupport  (ab 20220421) | aus | Wenn eingeschaltet, startet ein X-Server mit einem Firefox Browser im Kiosk Modus. Über einen Button in AvNav kann auf einen anderen "Bildschirm" gewechselt werden, über den File Manager, Terminal u.ä. verfügbar sind. |
@@ -128,7 +130,7 @@ Wenn man in der [Vorbereitung](#preparation) die Bildschirm-Unterstützung einge
 für den Nutzer pi mit [openbox](https://openbox.org/help/Contents)
 als Fenster-Manager und Firefox im Kiosk Mode.
 
-Als Bildschirm-Tastatur (On Screen Keyboard) wird [onboard](http://manpages.ubuntu.com/manpages/bionic/man1/onboard.1.md)
+Als Bildschirm-Tastatur (On Screen Keyboard) wird [onboard](http://manpages.ubuntu.com/manpages/bionic/man1/onboard.1.html)
 verwendet.
 
 Auf der AvNav-Hauptseite (und auf einigen anderen Seiten) wird ein
@@ -178,7 +180,7 @@ dem System-Bildschirm (allerdings nur für komplette Neu-Installationen).
 ### Repositories
 
 Auf den AvNav Images sind Debian Repositories vorkonfiguriert, die alle nötigen Pakete enthalten. Siehe dazu unter [Paket Installation](#packages).
-Diese Repositories werden auch vom [AvNav Updater](TODO) benutzt. 
+Diese Repositories werden auch vom [AvNav Updater](https://github.com/wellenvogel/avnav-update-plugin) benutzt. 
 
 
 ## Pakete { #packages}
@@ -198,7 +200,7 @@ Es sind die folgenden AvNav Grundpakete installiert:
 ## OpenPlotter
 
 Wenn man ein komplettes Desktop-System mit vielen weiteren Anwendungen
-haben möchte, kann die [OpenPlotter](#openplotter)-Variante
+haben möchte, kann die OpenPlotter-Variante
 eine gute Basis sein. Dafür empfiehlt sich ein Pi4 oder Pi5 mit 4GB
 Speicher. Auch 2GB Arbeitsspeicher wird ausreichen - dann bleibt aber
 nicht viel Raum für zukünftige Anforderungen.
