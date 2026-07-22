@@ -5,7 +5,7 @@ Add right to create symlinks:
 * run with admin rights `gpedit.msc`
 * goto Local Computer Policy -> Computer Configuration -> Windows Settings -> Security Settings -> Local Policies -> User Rights Assignment
   
-  german: Computerkonfiguration -> Windows-Einstellungen -> Sicherheitseinstellungen -> Zuweisen von Benutzerrechten -> Erstellen symbolischer Verknüpfungen
+  german: Computerkonfiguration -> Windows-Einstellungen -> Sicherheitseinstellungen -> Lokale Richtlinien -> Zuweisen von Benutzerrechten -> Erstellen symbolischer Verknüpfungen
 
   add your account to the allowed users
 
