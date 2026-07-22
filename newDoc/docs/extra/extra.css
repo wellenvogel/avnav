@@ -25,6 +25,11 @@ body.iconset-legacy .icon-default{
 .selected{
     background-color: var(--md-accent-bg-color);
 }
+.glightbox img {
+    width: 800px;
+    max-width: 100%;
+    height: auto;
+}
 
 header .md-label{
     align-self: center ;
