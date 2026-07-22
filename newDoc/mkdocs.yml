@@ -79,7 +79,7 @@ markdown_extensions:
   #          format: !!python/name:pymdownx.superfences.fence_code_format
   #  - def_list
   - attr_list
-  #  - tables
+  - tables
   #  - smarty
   #  - pymdownx.smartsymbols
   #  - pymdownx.critic

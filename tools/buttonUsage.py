@@ -310,7 +310,7 @@ def iconEntry(name,iconDef:IconDef,format=F_TABLE,omitName=False,addTitle=False,
                     title=''
                     if addTitle:
                         title=f" title=\"{icon}\""
-                    iconFile += f"|![{icon}]({iconPath(icon)})"+'{width=40px'+title+'}'
+                    iconFile += f"|![{icon}]({iconPath(icon)})"+'{.button-image width=40px'+title+'}'
                 else:
                     iconFile += f"|<img alt=\"{icon}\" src=\"{iconPath(icon)}\" width=\"40px\"/>"
         return f"{iconStr}{iconFile}"
