@@ -30,3 +30,37 @@ header .md-label{
     align-self: center ;
     margin: 0.5em;
 }
+.avnav-icon{
+    height: 2.5em;
+    width: 2.5em;
+    background-repeat: no-repeat;
+    background-size: 60%;
+    background-position-x: center;
+    display: inline-block;
+    vertical-align: middle;
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    position: relative;
+    cursor:pointer;
+}
+.avnav-icon.dialog-button{
+    width: 5em;
+    background-position-x: left;
+    background-size: 1.2em;
+    background-position-y: center;
+}
+.avnav-icon:after{
+    position: absolute;
+    bottom:0;
+    font-size: 0.6em;
+    left: 0;
+    right: 0;
+    text-align: center;
+}
+.avnav-icon.dialog-button:after{
+    font-size: 0.8em;
+    left: 1.6em;
+    bottom: 0.6em;
+    right: unset;
+    text-align: left;
+}

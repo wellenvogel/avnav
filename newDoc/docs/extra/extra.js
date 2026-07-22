@@ -30,4 +30,10 @@ const update=(initial)=>{
 document$.subscribe(()=>{
     document.body.classList.add('iconset-default');
     update(true);
+    const links=Array.from(document.querySelectorAll('[data-link]'))
+    for (const link of links){
+        link.addEventListener('click',()=>{
+            window.location.href=link.getAttribute('data-link');
+        })
+    }
 })

@@ -53,8 +53,14 @@ plugins:
   - search
   - macros
   - tags
+  - glightbox:
+      skip_classes:
+        - inline-image
+        - icon-default
+        - icon-legacy
 extra_css:
   - extra/extra.css
+  - generated/buttons.css
 extra_javascript:
   - extra/extra.js
 use_directory_urls: false
