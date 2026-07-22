@@ -1,15 +1,19 @@
 #! /bin/bash
 IMAGE="wellenvogel/avnav-doc-build:1.3"
 usage(){
-    echo "usage: $0 [-d] [-h] [-p port] [<command>]"
+    echo "usage: $0 [-b] [-d] [-h] [-p port] [<command>]"
 }
 useDocker=0
 port=8000
 address="127.0.0.1"
 pdir=`dirname $0`
 pdir=`readlink -f $pdir`
-while getopts "dhp:a:" arg; do
+buttonUsage=0
+while getopts "dhp:a:b" arg; do
   case "$arg" in
+    b)
+      buttonUsage=1
+      ;;
     d)
       useDocker=1
       ;;      
@@ -40,20 +44,25 @@ if [ $useDocker = 1 ] ; then
   exit $?
 fi
 
-#build the button usage files
-script="$pdir/../tools/buttonUsage.py"
-[ ! -x "$script" ]  && err "$script not found/not executable"
-gendir="$pdir/docs/generated"
-if [ ! -d "$gendir" ] ; then
-  echo "creating $gendir"
-  mkdir -p "$gendir" || err "unable to create $gendir"
+if [ $buttonUsage = 1 ] ; then
+    #build the button usage files
+    script="$pdir/../tools/buttonUsage.py"
+    [ ! -x "$script" ]  && err "$script not found/not executable"
+    gendir="$pdir/docs/buttons"
+    if [ ! -d "$gendir" ] ; then
+      echo "creating $gendir"
+      mkdir -p "$gendir" || err "unable to create $gendir"
+    fi
+    outfile="$gendir/buttons.md"
+    icondir="$pdir/docs/images/icons-new"
+    $script -f buttonoverview -i "$icondir" -o "$outfile" || err "unable to create $outfile"
+    outfile="$gendir/buttons.json"
+    $script -f buttonjson -i "$icondir" -o "$outfile" || err "unable to create $outfile"
 fi
-outfile="$pdir/docs/generated/buttons.md"
-icondir="$pdir/docs/images/icons-new"
-$script -f buttonoverview -i "$icondir" -o "$outfile" || err "unable to create $outfile"
-outfile="$pdir/docs/generated/buttons.json"
-$script -f buttonjson -i "$icondir" -o "$outfile" || err "unable to create $outfile"
 
+if [ "$command" = none ] ; then
+  exit 0
+fi
 cd $pdir || err ""
 if [ "$command" = "serve" ] ; then
   mkdocs $command --dev-addr $address:$port

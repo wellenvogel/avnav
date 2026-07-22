@@ -2,8 +2,8 @@
 import os
 import sys
 import json
-BTJSON='docs/generated/buttons.json' #source path
-BTDOC='generated/buttons.md'
+BTJSON='docs/buttons/buttons.json' #source path
+BTDOC='buttons/buttons.md'
 def define_env(env):
     print("macro script loading...")
     buttons={}

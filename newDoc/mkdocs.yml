@@ -28,7 +28,7 @@ nav:
   - Details:
     - special/index.md
     - special/tags.md
-    - generated/buttons.md
+    - buttons/buttons.md
   - Alte Doku:
     - converted/beschreibung.md
 plugins:
