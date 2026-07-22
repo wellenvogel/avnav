@@ -11,7 +11,7 @@ Add right to create symlinks:
 
 * in the cloned AvNav directory:
   `git config core.symlinks true`
-* log out and log in again
+* __log out and log in again__
 * in the cloned AvNav directory
   `git checkout -- newDoc\docs\images`
 
