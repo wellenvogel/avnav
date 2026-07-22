@@ -58,6 +58,7 @@ plugins:
         - inline-image
         - icon-default
         - icon-legacy
+        - button-image
 extra_css:
   - extra/extra.css
   - generated/buttons.css
