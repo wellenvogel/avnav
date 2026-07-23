@@ -6,9 +6,10 @@ theme:
     - search.suggest
     - search.highlight
 nav: 
-  - Konzept: 
-    - concept/opensource.md
-    - concept/dashboards.md
+  - Einleitung: 
+    - concept/introduction.md
+    - concept/disclaimer.md
+    - concept/scope.md
     - concept/clientserver.md
     - concept/operatingsystems.md
   - Installation:
