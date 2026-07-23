@@ -74,24 +74,29 @@ einem Texteditor angepasst werden.
 Dort kann auch eingestellt werden, ob ein lokaler Bildschirm genutzt
 werden soll ("Touch Variante")
 
-Einfacher geht es mit einer kleinen Web-Oberfläche [hier](../configGen/index.md).
+Einfacher geht es mit einer kleinen Web-Oberfläche [hier](../../configGen/index.html).
 
-[![](img/ConfigImagesUi.png)](../configGen/index.md)
+[![](../img/ConfigImagesUi.png)](../../configGen/index.html)
 
 Die Bedeutung der Felder:
 
 |  |  |  |
 | --- | --- | --- |
 | Name | Default | Beschreibung |
+| Image Release | trixie | trixie oder bookworm. Wählt die AvNav image version, die angepasst werden soll. |
 | ConfigSequence | 1 | Wenn man erreichen möchte, dass die Einstellungen aus avnav.conf noch einmal neu im System aktiviert werden sollen, kann man diesen Wert erhöhen. AvNav merkt sich sonst, welche Einstellungen bereits aufgesetzt wurden, und setzt diese nicht erneut. |
-| Wifi SSID | avnav | Der Name des WLAN-Netzwerks, das der Raspberry erzeugen soll. Die Images sind so vorbereitet, dass man durch Einstecken von WLAN-Adaptern auch weitere Netzwerke erzeugen kann. Daher wird eine einstellige Nummer an den Namen angefügt. |
+| Wifi SSID | avnav | Der Name des WLAN-Netzwerks, das der Raspberry erzeugen soll. Für bookworm wird eine einstellige Nummer an den Namen angefügt. |
 | Wifi Password | avnav-secret | Das Passwort für das WLAN-Netzwerk. Das sollte in jedem Falle geändert werden. Jeder, der sich mit dem WLAN verbinden kann, kann damit auch die Navigation beeinflussen! |
+| Wifi Country | Genrmany | Setzt das Land für die Wifi Einstellungen. Auswahl aus der Liste |
+| Wifi Interface | wlan0 | (ab trixie) hier kann gewählt werden, welches interface für den Wifi Hotspot genutzt werden soll. Standardmässig wird das interne interface wlan0 genutzt. Falls ein anderes interface (eingesteckter Adapter) genutzt werden soll, muss hier der Name des Interfaces eingetragen werden. Dazu nach dem Einstecken zunächst die Wifi Seite (unter Server) aufrufen und dort die Ip Konfiguration (Info Button) - hier werden alle interface angezeigt. Wenn ein anderes Interface als wlan0 eingetragen wird, kann später wlan0 für client Verbindungen genutzt werden. |
+| Wifi band | bg | (ab trixie) Wifi band für den Hostpot. bg = 2.4 GHz,  a = 5GHz. |
+| Wifi channel | 7 | (ab trixie) Wifi Kanal für den Hotspot |
+| Wifi address | 192.168.30.10/24 | (ab trixie) Die Basisadresse (und der Bereich als Bitmaske) für das Netzwerk, das der Hotspot erzeugt. |
 | User pi password | raspberry | Das ist das Passwort für den Nutzer "pi". Dieser Standard- User wird genutzt, wenn man sich per SSH verbindet oder wenn man direkt per Monitor und Tastatur auf den Raspberry zugreift. Das Passwort für den User "pi" sollte ebenfalls unbedingt geändert werden. |
 | Base Board | None | Hier kann man aus unterstützten Basis-Platinen wählen.   * **MCS:** Wenn diese Option aktiviert ist, wird beim   nächsten Bootvorgang die notwendige Software für den [Marine   Control Server von GeDad](https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/) aktiviert. Die Änderung der   Einstellung führt dann zu einem automatischen Reboot, wenn der   Raspberry das erste Mal mit dieser Einstellung startet. * **OBPPLOTTERV3:** Hiermit werden die Einstellungen für den   [Open   Boat Projects Plotter (V3)](https://open-boat-projects.org/de/10-plotter-raspi-4b) gesetzt. |
 | HAT {: #configHATS } | None | Hier kann man einen unterstützten Pi-HAT auswählen. AvNav wird die entsprechenden Einträge für die Overlays in /boot/config.txt machen und die CAN Netzwerk-Schnittstellen anlegen.   * WAVESHAREB: [Waveshare   RS485 CAN HAT (B)](https://www.waveshare.com/wiki/RS485_CAN_HAT_%28B%29) * WAVESHAREA8: [Waveshare   RS485 CAN HAT (8Mhz)](https://www.waveshare.com/wiki/RS485_CAN_HAT) * WAVESHAREA12: [Waveshare   RS485 CAN HAT (12 Mhz)](https://www.waveshare.com/wiki/RS485_CAN_HAT) * WAVESHARE2CH: [Waveshare   2CH CAN HAT](https://www.waveshare.com/wiki/2-CH_CAN_HAT) * PICANM: [PICAN-M](https://cdn.shopify.com/s/files/1/0563/2029/5107/files/pican-m_UGB_20.pdf?v=1619008196) * MCARTHUR: [MacArthur   HAT](https://github.com/OpenMarine/MacArthur-HAT) |
 | Module RTL8188EU | aus | Wenn eingeschaltet, wird der [Kernel-Treiber](https://github.com/lwfinger/rtl8188eu/tree/v5.2.2.4) für WLAN-Adapter mit dem Chipsatz RTL8188EU per [DKMS](https://dyn.manpages.debian.org/unstable/dkms/dkms.8.en.html) eingerichtet.  Wenn der Kernel des Systems aktualisiert wird (Kommandozeile), wird der Treiber neu übersetzt.  Bisher nicht für Bookworm-Images (oder neuere) verfügbar, da es diese Treiber nicht gibt. |
-| Module RTL8192EU | aus | Wenn eingeschaltet, wird der [Kernel Treiber](https://github.com/Mange/rtl8192eu-linux-driver) für WLAN-Adapter mit dem Chipsatz RTL8192EU per [DKMS](https://dyn.manpages.debian.org/unstable/dkms/dkms.8.en.html) eingerichtet.  Wenn der Kernel des Systems aktualisiert wird (Kommandozeile), wird der Treiber neu übersetzt.  Bisher nicht für Bookworm-Images om/wiki/RS485
-(oder neuere) verfügbar, da es diese Treiber nicht gibt. |
+| Module RTL8192EU | aus | Wenn eingeschaltet, wird der [Kernel Treiber](https://github.com/Mange/rtl8192eu-linux-driver) für WLAN-Adapter mit dem Chipsatz RTL8192EU per [DKMS](https://dyn.manpages.debian.org/unstable/dkms/dkms.8.en.html) eingerichtet.  Wenn der Kernel des Systems aktualisiert wird (Kommandozeile), wird der Treiber neu übersetzt.  Bisher nicht für Bookworm-Images (oder neuere) verfügbar, da es diese Treiber nicht gibt. |
 | TimeZone | Europe/Berlin | Die Zeitzone, die im Image genutzt werden soll. |
 | WifiCountry | Germany | Das Land (muss für den Wifi Adapter aus rechtlichen Gründen gesetzt werden) |
 | InternalWifi as Client | aus | Wenn eingeschaltet, wird der interne Wifi Adapter des Pi nicht als Access Point definiert, sondern kann sich mit anderen Netzwerken verbinden.  Achtung: Das erfordert eine andere Möglichkeit, um auf den Pi zugreifen zu können - siehe [[Verbinden mit dem Raspberry](../special/connecting-pi.md)]. |
