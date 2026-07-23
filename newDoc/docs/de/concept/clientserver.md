@@ -1,3 +1,11 @@
-# Client/Server
-AvNav basiert auf einer Client/Server Architektur.
-![](../../img/overview.png)
+# Systemkonzept: wie funktioniert AvNav
+
+Um AvNav im Alltag richtig bedienen und einrichten zu können, ist es hilfreich, die Grundidee der Software zu verstehen. Ein Geheimnis der Leistungsfähigkeit von AvNav liegt in seiner Trennung von Rechenarbeit und Anzeige – der sogenannten Client-Server-Architektur. 
+
+Bei einem klassischen Kartenplotter oder einer normalen Smartphone-App passieren alle Vorgänge in einem einzigen Gerät. Wenn es abstürzt oder der Akku leer ist, stoppt auch die Navigation, und der Anker-Alarm verstummt. AvNav löst dieses Problem, indem es das System in zwei Komponenten teilt.
+
+Das Herzstück ist der AvNav-Server. Er läuft im Hintergrund, oft auf einem kleinen, fest eingebauten Minicomputer unter Deck. Dieser Server ist die Rechenzentrale: er liest über verschiedenste Schnittstellen die Daten der angeschlossenen Geräte aus: GPS-Antenne, Winddaten, AIS-Signale. Er berechnet laufend die Route, schreibt die Logs und Protokolle, prüft den Anker-Alarm und hält das Kartenmaterial bereit. 
+
+Die zweite Komponente ist der Client, also beispielsweise das Gerät, das Du zur Bedienung in der Hand hältst. Da der Server die ganze rechenintensive Arbeit erledigt, benötigt der Client keine eigene Navigationssoftware mehr. Ein handelsüblicher Webbrowser (wie Safari, Chrome oder Firefox) reicht völlig aus. Du verbindest Dich mit dem WiFi-Netzwerk, welches der Server bereitstellt und rufst auf dem Tablet oder Smartphone einfach die Webadresse des AvNav-Servers auf. Sofort hast Du die vollständige Seekarte samt Instrumentenanzeige vor Dir.
+
+Dieses Konzept bietet im Bordalltag unschlagbare Vorteile. Der offensichtlichste ist die Ausfallsicherheit: wenn das Tablet im Cockpit durch Regenwasser unbedienbar wird oder wegen eines leeren Akkus ausgeht, läuft das System unter Deck einfach weiter. Die Route bleibt aktiv, der Autopilot steuert weiter seinen Kurs und die Ankerwache bleibt scharf. Du kannst jederzeit ein beliebiges anderes Gerät, etwa ein Smartphone, aus der Tasche ziehen, Dich über das bordeigene WLAN mit AvNav verbinden und genau dort weiter navigieren, wo das Tablet aufgehört hat. Zudem können mehrere Crewmitglieder gleichzeitig mit unterschiedlichen Geräten auf das System zugreifen – der Skipper plant am Kartentisch auf dem Laptop die Route für den nächsten Tag, während der Rudergänger draußen auf dem Tablet den aktuellen Kurs überwacht. Alle sehen dabei denselben, stets synchronen Datenbestand.
