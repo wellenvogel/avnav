@@ -136,7 +136,7 @@ def define_env(env):
             return link
         btdoc=btdoc.replace('.md','.html')
         addClass='dialog-button' if dialog else ''
-        return f"<div class=\"avnav-icon {addClass} {name}\" data-link=\"{btdoc}\" title=\"{name}\"></div>"
+        return f"<span class=\"avnav-icon {addClass} {name}\" data-link=\"{btdoc}\" title=\"{name}\"></span>"
     
     @env.macro
     def BT(name):
