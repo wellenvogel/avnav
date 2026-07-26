@@ -31,6 +31,11 @@ body.iconset-legacy .icon-default{
     height: auto;
 }
 
+.videochapter{
+    cursor: pointer;
+    color: var(--md-typeset-a-color);
+}
+
 header .md-label{
     align-self: center ;
     margin: 0.5em;

@@ -53,6 +53,7 @@ plugins:
   - search
   - macros
   - tags
+  - mkdocs-video
   - glightbox:
       skip_classes:
         - inline-image

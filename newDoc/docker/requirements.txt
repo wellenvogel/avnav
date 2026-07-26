@@ -5,4 +5,5 @@ mkdocs-autorefs==1.4.1
 mkdocs-macros-plugin==1.5.0
 mkdocs-glightbox==0.5.2
 markdownify==1.2.3
+mkdocs-video==1.5.0
 google-genai

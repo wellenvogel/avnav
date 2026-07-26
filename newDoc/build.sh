@@ -1,5 +1,5 @@
 #! /bin/bash
-IMAGE="wellenvogel/avnav-doc-build:1.4"
+IMAGE="wellenvogel/avnav-doc-build:1.5"
 usage(){
     echo "usage: $0 [-b] [-d] [-h] [-p port] [<command>]"
 }

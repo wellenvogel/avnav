@@ -36,4 +36,16 @@ document$.subscribe(()=>{
             window.location.href=link.getAttribute('data-link');
         })
     }
+    const videochapters=Array.from(document.querySelectorAll('.videochapter'));
+    for (const vc of videochapters){
+        vc.addEventListener('click',()=>{
+            const url=vc.getAttribute('data-url');
+            const id=vc.getAttribute('data-name');
+            if (!url || ! id) return;
+            const target=document.getElementById('video_'+id);
+            if (! target) return;
+            target.src=null;
+            target.src=url;
+        })
+    }
 })
