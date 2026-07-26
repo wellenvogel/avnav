@@ -30,6 +30,9 @@ body.iconset-legacy .icon-default{
     max-width: 100%;
     height: auto;
 }
+.glightbox img.small{
+    width: 256px;
+}
 
 .videochapter{
     cursor: pointer;
