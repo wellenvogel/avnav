@@ -53,7 +53,7 @@ Source files auf [github](https://github.com/wellenvogel/avnav/tree/master/mobac
 
 Das Ergebnis sieht z.B. so aus (das ist die Einfahrt nach Greifswald):
 
-![](img/MobacExampleBsh.PNG)
+![](../../img/MobacExampleBsh.PNG)
 
 Hier nochmal die Dateien:
 
