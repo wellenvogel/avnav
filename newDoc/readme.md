@@ -70,7 +70,7 @@ The build script is able to create the button usage (-b flag) and run the mkdocs
 Main language is german. Translation using gemini with the script translate/main.py. Needs a gemini token that can be obtained from google for free. Languages are sorted by directory (de/en).
 
 ## Old doc
-As an intermediate work the old documentation was copied and converted to olddocs.
+As an intermediate work the old documentation was copied and converted to converted.
 
 
 ## Screen shots
