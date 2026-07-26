@@ -1,10 +1,81 @@
+# Documentation Tolling
+## Windows
+
+### Symlinks
+Add right to create symlinks:
+* run with admin rights `gpedit.msc`
+* goto Local Computer Policy -> Computer Configuration -> Windows Settings -> Security Settings -> Local Policies -> User Rights Assignment
+  
+  german: Computerkonfiguration -> Windows-Einstellungen -> Sicherheitseinstellungen -> Lokale Richtlinien -> Zuweisen von Benutzerrechten -> Erstellen symbolischer Verknüpfungen
+
+  add your account to the allowed users
+
+* in the cloned AvNav directory:
+  `git config core.symlinks true`
+* __log out and log in again__
+* in the cloned AvNav directory
+  `git checkout -- newDoc\docs\images`
+
+  newDoc\docs\images should now be a symbolic link
+  
+
+### Installation
+
+* Install [Miniconda](https://www.anaconda.com/download)
+* Open Anaconda Prompt
+* Commands: 
+```
+conda create --name avnav-doc python=3.12
+conda activate avnav-doc
+cd <path to avnav repo>\newDoc
+pip install -r docker\requirements.txt
+```
+
+### Usage
+Open AnacondaPrompt
+```
+conda activate avnav-doc
+cd <path to avnav repo>\newDoc
+mkdocs serve
+```
+
+## Linux
+### python venv 
+__python 3.12__
+
+Preparation:
+```
+python3 -m venv ../.venv
+. ../.venv/bin/activate
+pip install -r docker/requirements.txt
+```
+Writing:
+```
+. ../.venv/bin/activate
+./build.sh -b serve
+```
+### docker
+```
+./build.sh -d [-b] serve
+```
+
+### build.sh
+The build script is able to create the button usage (-b flag) and run the mkdocs command - either locally or using a docker container. The current container is available at dockerhub:
+`wellenvogel/avnav-doc-build:m.n`
+
+
 # Hints for writing the documentation
 
 ## Languages
 Main language is german. Translation using gemini with the script translate/main.py. Needs a gemini token that can be obtained from google for free. Languages are sorted by directory (de/en).
 
+## Old doc
+As an intermediate work the old documentation was copied and converted to olddocs.
+
+
 ## Screen shots
 Screenshots should have 800 px width (or slightly more - they are scaled to 800px if there is room).
+All images should go to the img folder.
 
 ## Buttons
 To link to a button use the name from the [buttonlist](docs/buttons/buttons.md) and write a macro in the code:
