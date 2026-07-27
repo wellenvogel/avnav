@@ -48,7 +48,9 @@ Mit diesem Beispiel werden auf allen Seiten dem Button "Mann über Board"
 die Tasten Ctrl-Leer und Ctrl-x zugeordnet.  
 Wenn nur eine Taste zugeordnet werden soll, müssen keine eckigen Klammern
 angegeben werden. Nach dem Speichern der Änderungen muss die AvNav Seite
-neu geladen werden z.B. über {{BT("MainNav")}}->Actions->{{BT("ReloadUI")}}
+neu geladen werden z.B. über 
+
+{{BT("MainNav")}}->Actions->{{BT("ReloadUI",True)}}
 
 Seiten Gruppen und Funktionen
 -----------------------------

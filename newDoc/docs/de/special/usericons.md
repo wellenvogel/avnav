@@ -171,4 +171,6 @@ bearbeitet werden.
 
 ![](../../img/edit-images.png)
 
-Nach der Änderung von images.json muss AvNav neu geladen werden - z:b. über {{BT("MainNav")}}-> Actions ->{{BT("ReloadUI")}}.
+Nach der Änderung von images.json muss AvNav neu geladen werden - z:b. über 
+
+{{BT("MainNav")}}-> Actions -> {{BT("ReloadUI",True)}}.

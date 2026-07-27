@@ -82,7 +82,10 @@ To link to a button use the name from the [buttonlist](docs/buttons/buttons.md) 
 ```
 {{BT("Cancel")}}
 ```
-This will render a small button symbol with the short text and the icon depending on the selected set. For DialogButtons use DB instead of BT.
+This will render a small button symbol with the short text and the icon depending on the selected set. For DialogButtons use DB instead of BT. For buttons of the main menu you can use the long text:
+```
+{{BT("Cancel",True)}}
+```
 
 ## VIDEOS
 To be flexible for the hosting of videos all videos should be configured in [videos.yml](docs/videos.yml).

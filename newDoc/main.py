@@ -30,7 +30,7 @@ def buildButtonCss(buttons,btcss):
                 txt=v.get(kind)
                 if txt is not None:
                     kindClass=f".{kind}" if kind != 'shortText' else ''
-                    str+=f"{kindClass} .avnav-icon.{n}:after"+"{\n"
+                    str+=f"{kindClass}.avnav-icon.{n}:after"+"{\n"
                     str+=f"  content: \"{txt}\";"+"\n}\n"
             oh.write(str)
 def toSeconds(v):
@@ -125,7 +125,7 @@ def define_env(env):
             rt+=f"![{name}]({ileg})"+'{ .icon-legacy } '
         return link+rt
             
-    def button(name,dialog=False):
+    def button(name,dialog=False,longText=False):
         if not name:
             return ''
         button=buttons.get(name)
@@ -136,11 +136,12 @@ def define_env(env):
             return link
         btdoc=btdoc.replace('.md','.html')
         addClass='dialog-button' if dialog else ''
+        addClass+=' longText' if longText else ''
         return f"<span class=\"avnav-icon {addClass} {name}\" data-link=\"{btdoc}\" title=\"{name}\"></span>"
     
     @env.macro
-    def BT(name):
-        return button(name)
+    def BT(name,longText=False):
+        return button(name,longText=longText)
 
     @env.macro
     def DB(name):

@@ -56,6 +56,10 @@ header .md-label{
     position: relative;
     cursor:pointer;
 }
+.avnav-icon.longText {
+    width: 5em;
+    background-size: 1.5em 1.5em;
+}
 .avnav-icon.dialog-button{
     width: 5em;
     background-position-x: left;
