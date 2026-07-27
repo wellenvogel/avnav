@@ -8,6 +8,7 @@ import sys
 import getopt
 #MODEL="gemini-3.5-flash"
 MODEL="gemini-3.1-flash-lite"
+TARGET='en'
 from google import genai
 # Get the directory path of the current file
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -73,9 +74,11 @@ def translate_file(file_path, output_path):
 def err(txt,prefix='ERROR: '):
     print(f"{prefix or ''} {txt}",file=sys.stderr)
     sys.exit(1)
-ARGS='lhm:'
-USAGE=f"Usage: {sys.argv[0]} [-l] [-m model] [-h] <input-file> <output-file>"
+ARGS='lhm:af'
+USAGE=f"Usage: {sys.argv[0]} [-l] [-m model] [-h] [-a] [-f] <input-file> [<output-file>]"
 if __name__ == '__main__':
+    automode=False
+    force=False
     optlist, args = getopt.getopt(sys.argv[1:], ARGS)
     for o, a in optlist:
         if o == '-l':
@@ -86,15 +89,42 @@ if __name__ == '__main__':
             sys.exit(0)
         elif o == '-m':
             MODEL = a
+        elif o == '-a':
+            automode=True
+        elif o == '-f':
+            force=True
         else:
             assert False, "unhandled option"
-    if len(args) < 2:
+    minargs=2 if not automode else 1
+    if len(args) < minargs:
         print(USAGE)
         sys.exit(1)
     infile = args[0]
-    outfile = args[1]
     if not os.path.exists(infile):
         err(f"File not found: {infile}",prefix='')
+    if automode:
+        outfile=None
+        parts=infile.split(os.path.sep)
+        found=False
+        for part in parts:
+            if part == 'de':
+                found=True
+                part=TARGET
+            if outfile:
+                outfile = os.path.join(outfile,part)
+            else:
+                outfile = part
+        if not found:
+            err("no directory 'de' in "+infile)
+        if not force and os.path.exists(outfile):
+            itime=os.stat(infile).st_mtime
+            otime=os.stat(outfile).st_mtime
+            if itime <= otime:
+                print(f"File '{outfile}' is newer than '{infile}', skipping")
+                sys.exit(0)
+        print(f"translating '{infile}' to '{outfile}'")
+    else:
+        outfile = args[1]
     outdir=os.path.dirname(outfile)
     if not os.path.isdir(outdir):
         os.makedirs(outdir)

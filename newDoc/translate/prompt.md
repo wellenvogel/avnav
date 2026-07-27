@@ -6,6 +6,8 @@ Strictly follow these formatting rules:
 2. Do not translate or modify code blocks (```...```) or inline code (`...`).
 3. Keep all URL links, image paths, and formatting tags unchanged.
 4. Maintain the original file structure and frontmatter (if present).
-5. preserver any file header starting with ---
-6. do not change the url of any links even if not found
+5. preserve any file header starting with ---
+6. within a yaml header do translate the array values below the tags element
+7. do not change the url of any links even if not found
+8. preserve any macros between {{ and }}
 
