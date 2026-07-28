@@ -13,6 +13,7 @@ VMODE=M_YT
 cssbuild=False
 pageVariables={}
 PV_OLD="avnav_olddoc"
+PV_OLDBASE="avnav_oldbase"
 PV_LANG="i18nlang"
 PV_BASE="base_url"
 def buildButtonCss(buttons,btcss):
@@ -224,5 +225,10 @@ def on_pre_page_macros(env):
     pageVariables[PV_OLD]=old_doc
     pageVariables[PV_BASE]=base_url
     pageVariables[PV_LANG]=lang
+    pageVariables[PV_OLDBASE]=old_doc+"/"+env.variables.old_doc_start+"?lang="+lang
     for k,v in pageVariables.items():
         env.variables[k]=v
+
+def on_post_page_macros(env):
+    for k,v in pageVariables.items():
+        env.page.meta[k]=v

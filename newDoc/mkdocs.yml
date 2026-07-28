@@ -48,8 +48,9 @@ plugins:
           name: English
           site_name: AvNav Documentation
           nav_translations:
-            Konzept: Concept
+            Einleitung: Introduction
             Basisfunktionen: Base Functions
+            "Alte Doku": Old Docs
   - autorefs
   - search
   - macros
@@ -70,6 +71,7 @@ use_directory_urls: false
 extra:
   old_doc_rel: "../docs"
   old_doc_start: "beschreibung.html"
+  version: !ENV [AVNAV_VERSION,202608xx]
 markdown_extensions:
   - admonition
   - pymdownx.details
