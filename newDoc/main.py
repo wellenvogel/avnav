@@ -11,7 +11,10 @@ M_YT='youtube'
 M_INTERN='intern'
 VMODE=M_YT
 cssbuild=False
-
+pageVariables={}
+PV_OLD="avnav_olddoc"
+PV_LANG="i18nlang"
+PV_BASE="base_url"
 def buildButtonCss(buttons,btcss):
     print("***Building button css***")    
     cssdir=os.path.dirname(btcss)
@@ -99,10 +102,6 @@ def define_env(env):
                             converted.append(cnv)
                 v['converted']=converted
 
-    @env.macro
-    def test(name):
-        rel=os.path.relpath(env.project_dir,os.path.dirname(env.page.file.src_path))
-        return f"![{name}]({rel}/img/{name})"+'{ .icon-default }'
     
     @env.macro
     def BTO(name):
@@ -189,3 +188,41 @@ def define_env(env):
             return '{# chapter '+idx+' not found for '+name+'#}'
         c=chapters[idx]
         return '<a class="videochapter" data-url="'+c.get(VMODE)+'" data-name="'+name+'">'+(text or c.get('title'))+'</a>'
+    
+    def add_lang(url,lang):
+        if not lang:
+            return url
+        return url+"?lang="+lang
+    
+    @env.macro
+    def OLDLINK(sub=None):
+        old_doc=pageVariables.get(PV_OLD)
+        if not old_doc:
+            return ''
+        lang=pageVariables.get(PV_LANG)
+        if not sub:
+            return add_lang(old_doc+"/"+env.variables.old_doc_start,lang)
+        return add_lang(old_doc+"/"+sub,lang)
+    
+def on_pre_page_macros(env):
+    print(f"on_pre_page {env.page.url}")
+    lang=None
+    furi=env.page.file.src_uri
+    alternates=env.page.file.alternates
+    if not furi or not alternates:
+        lang=None
+    else:
+        for k,v in alternates.items():
+            if v.src_uri == furi:
+                lang=k
+                break
+    num=env.page.url.count('/')
+    base_url=''
+    for i in range(0,num):
+        base_url+="../"
+    old_doc=base_url+env.variables.old_doc_rel if base_url else env.variables.old_doc_rel
+    pageVariables[PV_OLD]=old_doc
+    pageVariables[PV_BASE]=base_url
+    pageVariables[PV_LANG]=lang
+    for k,v in pageVariables.items():
+        env.variables[k]=v

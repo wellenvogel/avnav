@@ -67,6 +67,9 @@ extra_css:
 extra_javascript:
   - extra/extra.js
 use_directory_urls: false
+extra:
+  old_doc_rel: "../docs"
+  old_doc_start: "beschreibung.html"
 markdown_extensions:
   - admonition
   - pymdownx.details
