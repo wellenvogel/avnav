@@ -1,7 +1,7 @@
 #! /bin/bash
 IMAGE="wellenvogel/avnav-doc-build:1.5"
 usage(){
-    echo "usage: $0 [-b] [-d] [-h] [-p port] [<command>]"
+    echo "usage: $0 [-b] [-d] [-h] [-n] [-p port] [<command>]"
 }
 useDocker=0
 port=8000
@@ -9,7 +9,8 @@ address="127.0.0.1"
 pdir=`dirname $0`
 pdir=`readlink -f $pdir`
 buttonUsage=0
-while getopts "dhp:a:b" arg; do
+noversion=""
+while getopts "dhp:a:bn" arg; do
   case "$arg" in
     b)
       buttonUsage=1
@@ -26,6 +27,11 @@ while getopts "dhp:a:b" arg; do
     a)
       address=$OPTARG
       ;;
+    n)
+      AVNAV_NOVERSION=true
+      export AVNAV_NOVERSION
+      noversion="-n"
+      ;;
   esac
 done
 shift $((OPTIND-1))
@@ -40,7 +46,7 @@ err(){
     exit 1
 }
 if [ $useDocker = 1 ] ; then
-  docker run -ti --rm -u`id -u` -v "`readlink -f $pdir/..`:/app" -p8000:$port "$IMAGE" /app/newDoc/build.sh -a 0.0.0.0 $command
+  docker run -ti --rm -u`id -u` -v "`readlink -f $pdir/..`:/app" -p8000:$port "$IMAGE" /app/newDoc/build.sh $noversion -a 0.0.0.0 $command
   exit $?
 fi
 

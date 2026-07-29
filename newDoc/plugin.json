@@ -1,0 +1,12 @@
+{
+  "version": "20260729",
+  "description": "AvNav Documentation",
+  "userApps": [
+    {
+      "url": "site/index.html",
+      "shortText": "Doc",
+      "longText": "Documentation",
+      "name": "ui"
+    }
+  ]
+}
