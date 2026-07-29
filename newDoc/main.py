@@ -146,7 +146,27 @@ def define_env(env):
     @env.macro
     def DB(name):
         return button(name,True)
-
+    def chapter_title(chapter):
+        #TODO: language
+        if not chapter:
+            return ''
+        return chapter.get('title')
+    def video_url(video):
+        if not video:
+            return ''
+        rt=video.get(VMODE)
+        if not rt:
+            return ''
+        if VMODE == M_YT:
+            lang=pageVariables.get(PV_LANG)
+            if not lang:
+                return rt
+            chr='&' if rt.find('?') >= 0 else '?'
+            if lang == 'de':
+                rt+=chr+"cc_load_policy=0"
+            else:
+                rt+=chr+"cc_lang_pref="+lang+"&cc_load_policy=1"
+        return rt
     @env.macro
     def VIDEO(name):
         if not name:
@@ -154,7 +174,7 @@ def define_env(env):
         video=videos.get(name)
         if not video:
             return '{# unknown video '+name+'#}'
-        url=video.get(VMODE)
+        url=video_url(video)
         if not url:
             return '{# no url for video '+name+'#}'
         return "![type:video]("+url+"){ #video_"+name+" }"
@@ -171,7 +191,7 @@ def define_env(env):
             return '{# no chapters for video '+name+'#}'
         rt='<ul class="videochapters">'
         for c in chapters:
-            rt+='<li class="videochapter" data-url="'+c.get(VMODE)+'" data-name="'+name+'">'+c.get('title')+'</li>\n'
+            rt+='<li class="videochapter" data-url="'+c.get(VMODE)+'" data-name="'+name+'">'+ chapter_title(c)+'</li>\n'
         rt+='</ul>'
         return rt
     
@@ -188,7 +208,7 @@ def define_env(env):
         if idx < 0 or idx >= len(chapters):
             return '{# chapter '+idx+' not found for '+name+'#}'
         c=chapters[idx]
-        return '<a class="videochapter" data-url="'+c.get(VMODE)+'" data-name="'+name+'">'+(text or c.get('title'))+'</a>'
+        return '<a class="videochapter" data-url="'+c.get(VMODE)+'" data-name="'+name+'">'+(text or chapter_title(c))+'</a>'
     
     def add_lang(url,lang):
         if not lang:
