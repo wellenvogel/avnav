@@ -6,7 +6,9 @@
 
 Um zwischen den Release-Versionen Updates schon für einen breiten Test bereitzustellen, gibt es Beta Versionen. Diese sind ggf. nicht vollständig getestet - man muss also eventuell mit Fehlern rechnen.
 
+{% if not config.extra.no_version %}
 [Hier](../../downloads/daily) geht es zu den Beta Versionen.
+{% endif %}
 
 Wie man diese Beta Versionen installiert, hängt vom System ab.
 

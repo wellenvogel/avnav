@@ -17,4 +17,6 @@ AvNav wird als fertiges Paket, als installierbare Zip Datei oder als eine APK f√
 
  * [Images f√ºr Raspberry Pi](https://github.com/free-x/AvNav-Image)
  * [Releases](release.md)
+ {% if not config.extra.no_version %}
  * [Beta Versionen](../../downloads/daily) 
+ {% endif %}
