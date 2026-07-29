@@ -1,0 +1,102 @@
+site_name: AvNav Dokumentation
+theme: 
+  name: material
+  custom_dir: overrides
+  features:
+    - search.suggest
+    - search.highlight
+nav: 
+  - Einleitung: 
+    - concept/introduction.md
+    - concept/disclaimer.md
+    - concept/scope.md
+    - concept/clientserver.md
+    - concept/operatingsystems.md
+  - Installation:
+    - installation/intro.md
+    - installation/raspberry.md
+    - installation/linux.md
+    - installation/android.md
+    - installation/windows.md
+  - Basisfunktionen:
+    - base/navpage.md
+    - base/routes.md
+    - base/userapps.md
+    - base/settings.md
+    - base/layout.md
+    - base/charts.md
+    - base/ais.md
+  - Details:
+    - special/index.md
+    - special/tags.md
+    - buttons/buttons.md
+  - Alte Doku:
+    - converted/beschreibung.md
+plugins:
+  - i18n:
+      docs_structure: folder
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - build: true
+          default: true
+          locale: de
+          name: Deutsch
+        - build: true
+          locale: en
+          name: English
+          site_name: AvNav Documentation
+          nav_translations:
+            Einleitung: Introduction
+            Basisfunktionen: Base Functions
+            "Alte Doku": Old Docs
+  - autorefs
+  - search
+  - macros
+  - tags
+  - mkdocs-video
+  - glightbox:
+      skip_classes:
+        - inline-image
+        - icon-default
+        - icon-legacy
+        - button-image
+extra_css:
+  - extra/extra.css
+  - generated/buttons.css
+extra_javascript:
+  - extra/extra.js
+use_directory_urls: false
+extra:
+  old_doc_rel: "../docs"
+  old_doc_start: "beschreibung.html"
+  version: !ENV [AVNAV_VERSION,202608xx]
+  no_version: !ENV AVNAV_NOVERSION
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+        anchor_linenums: true
+  #  #  - pymdownx.inlinehilite
+  #  #  - pymdownx.snippets
+  #  - pymdownx.superfences:
+  #      custom_fences:
+  #        - name: mermaid
+  #          class: mermaid
+  #          format: !!python/name:pymdownx.superfences.fence_code_format
+  #  - def_list
+  - attr_list
+  - tables
+  #  - smarty
+  #  - pymdownx.smartsymbols
+  #  - pymdownx.critic
+  #  - pymdownx.caret
+  #  - pymdownx.keys
+  #  - pymdownx.mark
+  #  - pymdownx.tilde
+  #  - pymdownx.magiclink
+  #  - footnotes
+  # - pymdownx.emoji:
+  #    emoji_index: !!python/name:material.extensions.emoji.twemoji
+  #    emoji_generator: !!python/name:material.extensions.emoji.to_svg

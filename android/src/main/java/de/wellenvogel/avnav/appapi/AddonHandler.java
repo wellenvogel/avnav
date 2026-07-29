@@ -93,7 +93,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
             for (String k: STRING_KEYS){
                 rt.stringParameters.put(k,o.optString(k,null));
             }
-            rt.icon=o.getString(ICON);
+            rt.icon=o.optString(ICON,null);
             rt.url=o.getString(URL);
             return rt;
         }

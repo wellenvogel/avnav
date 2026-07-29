@@ -1,0 +1,16 @@
+.icon-legacy{
+    --plugin-doc-icon: url('menu_book.svg')
+}
+.icon-default{
+    --plugin-doc-icon: url('menu_book.svg')
+}
+/*
+set the icon url for the plugin running as user plugin
+and as system plugin
+*/
+.button.user-documentation-ui .icon {
+    background-image: var(--plugin-doc-icon);
+}
+.button.system-documentation-ui .icon {
+    background-image: var(--plugin-doc-icon);
+}

@@ -359,7 +359,7 @@ class ApiImpl(AVNApi):
         if iconFile is not None:
             if os.path.isabs(iconFile):
                 raise Exception("only relative pathes for icon files")
-            iconFilePath = os.path.join(os.path.dirname(self.fileName), iconFile)
+            iconFilePath = os.path.join(self.directory, iconFile)
             if not os.path.exists(iconFilePath):
                 raise Exception("icon file %s not found" % iconFilePath)
         id = "%s%i" % (self.prefix, self.addonIndex)

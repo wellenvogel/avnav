@@ -35,3 +35,8 @@ windows/**/AvChartConvert.v12.suo
 windows/installer/Output
 windows/installer/library
 android/assets/sounds/**
+newDoc/docs/generated
+newDoc/docs/de-test
+newDoc/site
+newDoc/*.zip
+**/.venv

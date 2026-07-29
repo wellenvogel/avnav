@@ -1,0 +1,83 @@
+code{
+    white-space: pre;
+}
+
+.icon-default,.icon-legacy{
+    width: 24px;
+    height: 24px;
+    vertical-align: baseline;
+}
+img.inline-image{
+    height: 24px;
+    width: auto;
+}
+
+body.iconset-default .icon-legacy{
+    display: none;
+}
+body.iconset-legacy .icon-default{
+    display: none;
+}
+
+:root{
+    --md-accent-bg-color: rgb(216, 216, 216);
+}
+.selected{
+    background-color: var(--md-accent-bg-color);
+}
+.glightbox img {
+    width: 800px;
+    max-width: 100%;
+    height: auto;
+}
+.glightbox img.small{
+    width: 256px;
+}
+
+.videochapter{
+    cursor: pointer;
+    color: var(--md-typeset-a-color);
+}
+
+header .md-label{
+    align-self: center ;
+    margin: 0.5em;
+}
+.avnav-icon{
+    height: 2.5em;
+    width: 2.5em;
+    background-repeat: no-repeat;
+    background-size: 60%;
+    background-position-x: center;
+    display: inline-block;
+    vertical-align: middle;
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    position: relative;
+    cursor:pointer;
+}
+.avnav-icon.longText {
+    width: 5em;
+    background-size: 1.5em 1.5em;
+}
+.avnav-icon.dialog-button{
+    width: 5em;
+    background-position-x: left;
+    background-size: 1.2em;
+    background-position-y: center;
+}
+.avnav-icon:after{
+    position: absolute;
+    bottom:0;
+    font-size: 0.6em;
+    left: 0;
+    right: 0;
+    text-align: center;
+}
+.avnav-icon.dialog-button:after{
+    font-size: 0.8em;
+    left: 1.6em;
+    bottom: 0.6em;
+    right: unset;
+    text-align: left;
+}

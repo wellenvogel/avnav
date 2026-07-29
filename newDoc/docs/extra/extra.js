@@ -1,0 +1,51 @@
+
+const iconvariants=['iconset-default','iconset-legacy'];
+const update=(initial)=>{
+    let activeText='unknown';
+    for (const ics of iconvariants){
+        const active=document.body.classList.contains(ics);
+        const action=document.getElementById('select-'+ics);
+        if (action){
+            if (initial){
+                action.addEventListener('click',()=>{
+                    iconvariants.forEach((iv)=>{
+                        if (iv === ics){
+                            document.body.classList.add(iv);
+                        }
+                        else{
+                            document.body.classList.remove(iv);
+                        }
+                        update();
+                    })
+                })
+            }
+            if (active) action.parentElement.classList.add('selected');
+            else action.parentElement.classList.remove('selected');
+            if (active) activeText=ics.replace('iconset-','');
+        }
+    }
+    const display=document.getElementById('iconset-current');
+    if (display) display.textContent=activeText;
+}
+document$.subscribe(()=>{
+    document.body.classList.add('iconset-default');
+    update(true);
+    const links=Array.from(document.querySelectorAll('[data-link]'))
+    for (const link of links){
+        link.addEventListener('click',()=>{
+            window.location.href=link.getAttribute('data-link');
+        })
+    }
+    const videochapters=Array.from(document.querySelectorAll('.videochapter'));
+    for (const vc of videochapters){
+        vc.addEventListener('click',()=>{
+            const url=vc.getAttribute('data-url');
+            const id=vc.getAttribute('data-name');
+            if (!url || ! id) return;
+            const target=document.getElementById('video_'+id);
+            if (! target) return;
+            target.src=null;
+            target.src=url;
+        })
+    }
+})
