@@ -4,8 +4,9 @@
 ---
 Avnav Releases
 ==============
-
+{% if not config.extra.no_version %}
 Das Verzeichnis mit allen Releases findet man [hier](../../downloads/release/).  
+{% endif %}
 
 Hinweise
 --------
@@ -22,7 +23,9 @@ Die Installation hängt vom verwendeten System ab und ist in den Installationsan
 
 !!! Hinweis
     Auf dieser Seite sind nur Releases ab 202608xx aufgeführt.
+    {% if not config.extra.no_version %}
     Ältere Releases findet man [hier]({{OLDLINK('release.html')}})  
+    {% endif %}
 
 Versionen
 ---------
