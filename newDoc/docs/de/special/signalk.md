@@ -1,124 +1,52 @@
 ---
   tags:
-    - Canboat
+    - Nmea2000
     - SignalK
 ---
-Zusammenwirken mit Canboat und SignalK
-======================================
+Zusammenwirken mit SignalK
+==========================
 
-Ab Release 20200204 kann AvNav mit [canboat](#Canboat)
-(NMEA2000) und [SignalK](#SignalK) zusammenarbeiten.
-
-Wichtiger Hinweis: Ab Version 20220421 hat sich das Handling für [SignalK](#SignalK)
-stark verändert.
-
-Canboat (NMEA2000) {: #Canboat}
--------------------------------
-
-Mit [canboat](https://github.com/canboat/canboat) können an
-den Raspberry angeschlossene CAN-Adapter (z.B. mit [MCP2515](https://www.reichelt.de/entwicklerboards-can-modul-mcp2515-mcp2562-debo-can-modul-p239277.md)
-oder ein [Waveshare
-RS485 CAN-HAT](https://www.waveshare.com/wiki/RS485_CAN_HAT) ) oder per USB angeschlossene Adapter (z.B. Actisene
-NGT-1) genutzt werden. Für die einfachen CAN-Adapter muss darauf geachtet
-werden, dass sie 2 Spannungsversorgungen haben (3,3V und 5V) - viele ganz
-einfache haben das nicht!
-
-![Canboat](../../img/Canboat.png)
-
-Im Bild ist das prinzipielle Setup zu sehen, so wie es von den 
-[headless Images](../installation/raspberry.md#images) bereitgestellt wird.
-
-Für einen per [SPI](https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md)
-angeschlossenen [CAN-Adapter](https://www.raspberrypi.org/forums/viewtopic.php?t=141052)
-muss meist noch ein Overlay in /boot/config.txt eingeschaltet werden. Für
-den MCP2515 sind entsprechende Einträge bereits vorbereitet, diese müssen
-auskommentiert werden. Gegebenenfalls müssen die Taktfrequenz und der für den Interrupt
-genutzte GPIO Pin geändert werden.
-
-Dieser CAN-Adapter erscheint dann als Netzwerk-Interface (ggf. muss er
-noch entsprechend konfiguriert werden - in den Images ist das bereits
-vorbereitet).
-
-Das Interface sollte mit
-
-```
-ip link show can0
-```
-
-sichtbar sein.
-
-Für einen per USB angeschlossenen Actisense NGT-1 siehe die [Beschreibung
-bei Canboat](https://github.com/canboat/canboat/wiki/actisense-serial).
-
-AvNav kommuniziert mit dem [n2kd](https://github.com/canboat/canboat/wiki/n2kd).
-Dieser konvertiert empfangene NMEA2000 Daten in NMEA0183 (nicht ganz
-vollständig). Die Konfiguration für n2kd erfolgt über die Datei
-
-```
-/etc/default/n2kd
-```
-
-In den Images ist hier eine Verbindung zu can0 vorbereitet. Für einen per
-USB angeschlossenen Adapter muss diese Datei geändert werden. Falls ein
-solcher USB-Adapter für NMEA2000 angeschlossen wird, sollte er in der Konfiguration für den USBSerialReader auf "ignore" gesetzt werden, damit er dort nicht genutzt wird
-- beim Einstecken die [Connection/Devices Seite](TODO) beobachten und entsprechend konfigurieren.
-
-Wenn alles korrekt konfiguriert ist, sollten auf den Ports 2599 und 2598
-NMEA-Daten bzw. json-Daten zu sehen sein, wenn auf dem Bus NMEA2000-Datenverkehr vorhanden ist. Kontrolle z.B.
-
-```
-nc localhost 2599
-```
-
-Sonst den Zustand von Canboat mit
-
-```
-sudo systemctl status canboat
-```
-
-prüfen.
-
-Für AvNav sollten 2 Verbindungen zum n2kd konfiguriert werden. Über eine
-Verbindung (Port 2599) empfängt der Server die NMEA0183-Daten und über die andere
-Verbindung (Port 2598)  direkt einige JSON-Daten. Das ist notwendig,
-da n2kd keinen NMEA-Datensatz mit Datum ausgibt (z.B. RMC). Um das Datum
-zu erhalten, kann AvNav direkt die pgns 126992,129029 lesen, um intern
-Datum und Zeit zu setzen. AvNav kann daraus auch einen RMC Datensatz
-generieren (wenn über NMEA gültige Positionsdaten empfangen werden).
-
-Die direkte Abfrage der NMEA2000-Daten erfolgt über ein Plugin, daher
-muss unter "Plugins" das Plugin builtin-canboat enabled sein (in den Images vorhanden).
-Für den Empfang von NMEA Daten muss ein AVNSocketReader angelegt werden (unter Connections/Devices) - als host "localhost" und als Port "2599". Es sollte ein Name wie canboatnmea vergeben werden.
-
-In den [Images](../installation/raspberry.md#images) ist das bereits vorkonfiguriert.
-Wenn die NMEA2000 Daten auch direkt zu SignalK geleitet werden, sollte für den SocketWriter auf Port 34568 potentiell eine blacklist mit den Namen vom Socketreader auf Port 2599 und vom builtin-canboat Plugin damit die NMEA2000 Daten nicht auch noch einmal per NMEA0183 zu SignalK gesendet werden. 
-
-Ein Senden von Daten über NMEA2000 ist bisher nicht vorgesehen, das kann
-ggf. über SignalK konfiguriert werden.
-
-SignalK {: #SignalK}
---------------------
-
-Mit der Version 20220421 ist die Integration von AvNav mit  [SignalK](http://signalk.org/)
-stark erweitert worden.
 
 ![SignalK](../../img/SignalK.png)
 
-### Datenfluss {: #dataflow}
-Für die Integration zwischen AvNav und SignalK ist es zunächst wichtig
-zu entscheiden, wie die Daten fließen sollen.  
-Dafür gibt es 2 grundsätzliche Möglichkeiten:
+## SignalK Daten in AvNav
+Die Raspberry-, Linux- und Windows Version von AvNav können auf direktem Weg Daten von [SignalK](https://signalk.org/) empfangen und auch Daten dorthin schicken.
+
+Alle Versionen von AvNav können NMEA0183 Daten von [SignalK](https://signalk.org/) empfangen und dort hin schicken.
+
+Es gibt dabei verschiedene Optionen, wie die Daten von SignalK in AvNav verarbeitet und genutzt werden.
+
+### NMEA0183 Daten
+Diese Daten durchlaufen ganz normal den [Multiplexer](TODO) und [Decoder](TODO) in AvNav und die dekodierten Daten können zur Navigation und Anzeige genutzt werden - genauso, wie alle anderen empfangenen NMEA Daten.
+
+Da AvNav alle NMEA Daten auch an Schnittstellen (TCP, UDP, Seriell,...) bereitstellt, können auf diesem Weg auch Daten zu SignalK gesendet werden.
+
+### Direkte SignalK Daten
+AvNav kann auch (in der Raspberry-, Linux- und Windows-Version) direkt die Schnittstellen des SignalK Servers nutzen und von dort Daten empfangen und senden. In AvNav gibt es dazu einen SignalK Handler (erreichbar über {{BT("MainNav")}} -> Connections/Devices), der [konfiguriert](#configuration) werden kann.
+Die empfangenen Daten können dabei auf verschiedene Weise genutzt werden - je nach der Konfiguration:
+
+1.  "decodeData" ausgeschaltet:
+    Alle SignalK Daten von `vessels.self` (eigenes Schiff) werden in AvNav als __zusätzliche__ Daten unter `nav.gps.signalk...` bereitgestellt und können nur in [Anzeigen](../base/layout.md) genutzt werden. Sie können nicht für die Navigation genutzt werden.Das macht natürlich nur Sinn, wenn die für die Navigation benötigten Daten AvNav auf anderen [Wegen](#dataflow) erreichen.
+    {: #addon}
+
+2. "decodeData" eingeschaltet:
+   Die SignalK Daten werden zusätzlich für die Navigation genutzt und zu den entsprechenden Daten in AvNav [umgewandelt](#mapping). 
+   {: #decode}
+
+Für weitere Details siehe unter [Konfiguration](#configuration).
+
+## Datenfluss {: #dataflow}
+Je nach Nutzer Vorlieben und fertigen Systemkonfigurationen gibt es also mehrere Möglichkeiten, wie Daten zwischen AvNav und SignalK fliessen können. Um Probleme zu vermeiden (insbesondere auch Schleifen bei denen Daten z.B. von SignalK kommen und dann auf anderem Weg wieder dorthin zurück geschickt werden), sollte man sich daher für einen grundsätzlichen Datenfluss entscheiden:
 
 1. NMEA-Daten landen zunächst in AvNav und werden von dort zu SignalK
    weiter geleitet. Dieses Setup wird in den [AvNav Headless Images](../installation/raspberry.md#images) genutzt. 
-   SignalK-Daten, die nocht nicht in AvNav vorhanden sind (z.B. Sensoren) können (per HTTP-Json und websocket) wieder zu AvNav geschickt werden und dann dort auch
-   angezeigt werden.  
+   SignalK-Daten, die noch nicht in AvNav vorhanden sind (z.B. Sensoren) können (über den SignalK handler als [zusätzliche Daten](#addon)) wieder zu AvNav geschickt werden und dann dort auch angezeigt werden.  
    Die Daten, die AvNav zur Navigation nutzt (inklusive der AIS Daten),
    werden hier direkt von AvNav aus den NMEA-Daten dekodiert.  
-   NMEA2000-Daten wird man normalerweise immer auch direkt zu SignalK schicken, damit diese dort direkt dekodiert werden können. AvNav kann diese Daten über [Canboat](#Canboat) empfangen - oder von SignalK erhalten.
+   NMEA2000-Daten wird man normalerweise immer auch direkt zu SignalK schicken, damit diese dort direkt dekodiert werden können. AvNav kann diese Daten über [Canboat](#Canboat) empfangen - oder von SignalK erhalten (dann erzeugt man aber einen gemischten Fluss und muss sicherstellen, das man keine Schleifen erzeugt)
 
 2. NMEA-Daten landen zunächst in SignalK und können von dort per
-   HTTP-Json und websocket zu AvNav weiter geleitet werden.  
+   [Signalk Handler](#decode) zu AvNav weiter geleitet werden.  
    Das ist das Setup, was z.B. in OpenPlotter verwendet wird.
 
 Für beide Varianten kann AvNav auch eigene Daten an SignalK schicken. Im
@@ -128,10 +56,6 @@ RMB/APB NMEA0183-Daten oder als SignalK Update - s.u.).
 Außerdem können Notifications (Alarme) von SignalK gelesen und dorthin
 gesendet werden.
 
-Mit der Version 20220421 wird das Handling nicht mehr durch ein Plugin
-von AvNav erledigt, sondern durch einen eigenen "Handler", den AVNSignalKHandler.
-Die [Konfiguration](#configuration) muss daher dort
-erfolgen.
 
 ### 1. NMEA zu AvNav und von dort zu SignalK {: #flow1}
 
@@ -147,7 +71,7 @@ ausgesendet.
 ```
 
 In SignalK muss dazu eine entsprechende data connection für NMEA0183, TCP
-client angelegt werden (in den images bereits angelegt).
+client zu Port 34568 angelegt werden (in den images bereits angelegt).
 
 Der AVNSignalKHandler ist per default so konfiguriert, dass er SignalK
 über localhost:3000 erreicht und alle Daten von vessels.self liest. Diese
@@ -194,13 +118,6 @@ Außerdem werden Notifications von SignalK empfangen.
 Für das Schreiben von Daten zu SignalK muss ein unter SignalK verfügbarer
 Nutzer mit Schreibrechten konfiguriert werden (siehe [Konfiguration](#configuration)).
 
-Die in früheren Versionen nötigen NMEA-Verbindungen von SignalK (port
-10110) zu AvNav und zurück sind mit dieser Version nicht mehr nötig. Es
-ist auf SignalK-Seite auch kein Plugin zum Erzeugen von NMEA-Daten
-erforderlich.
-
-Wenn man ein Update von einer älteren Version macht, kann man die NMEA-Verbindungen zu SignalK einfach deaktivieren und am AVNSignalKHandler die
-neuen Einstellungen vornehmen.
 
 ### Auswahl des Datenflusses
 
@@ -368,9 +285,6 @@ warn -> alarm
 alarm -> alarm
 
 Im AVNAlarmHandler können auch weitere Alarme [konfiguriert ](configfile.md#AVNAlarmHandler) werden (als Name muss dan sk:name verwendet werden). Diese werden dann entsprechend ihrer konfiguration behandelt.
-
-
-  
 
 ### SignalK - Karten {: #SignalKCharts}
 
