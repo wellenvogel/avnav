@@ -160,7 +160,7 @@ public class PluginManager extends DirectoryRequestHandler {
                                         throw new Exception("file "+f+" not found");
                                     }
                                     if ("iconFile".equals(key)) key="icon";
-                                    addon.put(key,this.pluginUrlBase+"/"+URLEncoder.encode(path,"UTF-8"));
+                                    addon.put(key,this.pluginUrlBase+"/"+path);
                                 }
                             }
                             modified.put(addon);
