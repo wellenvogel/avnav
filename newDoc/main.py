@@ -16,6 +16,65 @@ PV_OLD="avnav_olddoc"
 PV_OLDBASE="avnav_oldbase"
 PV_LANG="i18nlang"
 PV_BASE="base_url"
+
+C_START='start'
+C_TITLE='title'
+def toSeconds(v):
+    if isinstance(v,str):
+        if v.index(":") >= 0:
+            parts=v.split(":")
+            if len(parts) > 2:
+                return int(parts[0])*3600+int(parts[1])*60+int(parts[2])
+            if len(parts) > 1:
+                return int(parts[0])*60+int(parts[1])
+            return int(parts[0])
+        return int(v)
+    return v
+def build_chapters(name,video,chapters):
+    converted=[]
+    for c in chapters:
+        cnv={}
+        if isinstance(c,dict):
+            cnv=c
+            for k in [C_START,C_TITLE]:
+                v=c.get(k)
+                if v is None:
+                    raise Exception(f"invalid video config {name}, missing {k} in chapter dict")
+                if k == C_START:
+                    c[k]=toSeconds(v)
+        else:
+            parts=c.split(" ",1)
+            if len(parts) != 2:
+                print(f"WARNING: invalid chapter {c} for {name}")
+            else:
+                seconds=toSeconds(parts[0])
+                cnv={
+                    C_START: seconds,
+                    C_TITLE:parts[1],
+                }
+        for vm in [M_YT,M_INTERN]:
+            url=video.get(vm)
+            if not url:
+                continue
+            if vm == M_YT:
+                cnv[M_YT]=url+f"?start={seconds}&autoplay=true"
+        converted.append(cnv)
+    return converted
+def load_videos(vf):
+    with open(vf,"r") as vh:
+        videos=yaml.load(vh,Loader=yaml.Loader)
+        for k,v in videos.items():
+            print(f"loading video info for {k}")
+            chapters=v.get('chapters')
+            if chapters:
+                if isinstance(chapters,dict):
+                    #has language codes
+                    for ck,cv in chapters.items():
+                        v[ck]=build_chapters(k,v,cv)
+                else:
+                    v['de']=build_chapters(k,v,chapters)
+    return videos
+
 def buildButtonCss(buttons,btcss):
     print("***Building button css***")    
     cssdir=os.path.dirname(btcss)
@@ -37,17 +96,8 @@ def buildButtonCss(buttons,btcss):
                     str+=f"{kindClass}.avnav-icon.{n}:after"+"{\n"
                     str+=f"  content: \"{txt}\";"+"\n}\n"
             oh.write(str)
-def toSeconds(v):
-    if isinstance(v,str):
-        if v.index(":") >= 0:
-            parts=v.split(":")
-            if len(parts) > 2:
-                return int(parts[0])*3600+int(parts[1])*60+int(parts[2])
-            if len(parts) > 1:
-                return int(parts[0])*60+int(parts[1])
-            return int(parts[0])
-        return int(v)
-    return v
+
+
 def define_env(env):
     global cssbuild
     print("macro script loading...")
@@ -75,33 +125,7 @@ def define_env(env):
     if not os.path.exists(vf):
         print(f"WARNING: video config {vf} not found")
     else:
-        with open(vf,"r") as vh:
-            videos=yaml.load(vh,Loader=yaml.Loader)
-        for k,v in videos.items():
-            chapters=v.get('chapters')
-            if chapters:
-                converted=[]
-                for c in chapters:
-                    if isinstance(c,dict):
-                        converted.append(c)
-                    else:
-                        parts=c.split(" ")
-                        if len(parts) != 2:
-                            print(f"WARNING: invalid chgapter {c} for {k}")
-                        else:
-                            seconds=toSeconds(parts[0])
-                            cnv={
-                                'start': seconds,
-                                'title':parts[1],
-                            }
-                            for vm in [M_YT,M_INTERN]:
-                                url=v.get(vm)
-                                if not url:
-                                    continue
-                                if vm == M_YT:
-                                    cnv[M_YT]=url+f"?start={seconds}&autoplay=true"
-                            converted.append(cnv)
-                v['converted']=converted
+        videos=load_videos(vf)
 
     
     @env.macro
@@ -151,10 +175,10 @@ def define_env(env):
         if not chapter:
             return ''
         return chapter.get('title')
-    def video_url(video):
-        if not video:
+    def video_url(item):
+        if not item:
             return ''
-        rt=video.get(VMODE)
+        rt=item.get(VMODE)
         if not rt:
             return ''
         if VMODE == M_YT:
@@ -186,12 +210,12 @@ def define_env(env):
         video=videos.get(name)
         if not video:
             return '{# unknown video '+name+'#}'
-        chapters=v.get('converted')
+        chapters=video.get(pageVariables.get(PV_LANG)) or video.get('de')
         if not chapters:
             return '{# no chapters for video '+name+'#}'
         rt='<ul class="videochapters">'
         for c in chapters:
-            rt+='<li class="videochapter" data-url="'+c.get(VMODE)+'" data-name="'+name+'">'+ chapter_title(c)+'</li>\n'
+            rt+='<li class="videochapter" data-url="'+ video_url(c)+'" data-name="'+name+'">'+ chapter_title(c)+'</li>\n'
         rt+='</ul>'
         return rt
     
@@ -202,13 +226,13 @@ def define_env(env):
         video=videos.get(name)
         if not video:
             return '{# unknown video '+name+'#}'
-        chapters=v.get('converted')
+        chapters=video.get(pageVariables.get(PV_LANG)) or video.get('de')
         if not chapters:
             return '{# no chapters for video '+name+'#}' 
         if idx < 0 or idx >= len(chapters):
             return '{# chapter '+idx+' not found for '+name+'#}'
         c=chapters[idx]
-        return '<a class="videochapter" data-url="'+c.get(VMODE)+'" data-name="'+name+'">'+(text or chapter_title(c))+'</a>'
+        return '<a class="videochapter" data-url="'+ video_url(c)+'" data-name="'+name+'">'+(text or chapter_title(c))+'</a>'
     
     def add_lang(url,lang):
         if not lang:

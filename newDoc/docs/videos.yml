@@ -1,16 +1,31 @@
 navigation:
   youtube: "https://www.youtube.com/embed/as62-dDtmQ4"
   chapters:
-    - 00:00 Start
-    - 00:12 Navigationsansicht
-    - 00:27 Widgets
-    - 00:48 Buttonleiste
-    - 00:58 Main Menu
-    - 01:55 Actions
-    - 02:20 MOB-Button
-    - 02:55 Charts-Button
-    - 03:44 Follow Button
-    - 04:09 Start-Button
-    - 04:55 Course-Button
-    - 05:16 Route-Button
-    - 05:36 Tools-Button
+    de:
+      - 00:00 Start
+      - 00:12 Navigationsansicht
+      - 00:27 Widgets
+      - 00:48 Buttonleiste
+      - 00:58 Main Menu
+      - 01:55 Actions
+      - 02:20 MOB-Button
+      - 02:55 Charts-Button
+      - 03:44 Follow Button
+      - 04:09 Start-Button
+      - 04:55 Course-Button
+      - 05:16 Route-Button
+      - 05:36 Tools-Button
+    en:
+      - 00:00 Start
+      - 00:12 Navigation view
+      - 00:27 Widgets
+      - 00:48 Button bar
+      - 00:58 Main menu
+      - 01:55 Actions
+      - 02:20 MOB button
+      - 02:55 Charts button
+      - 03:44 Follow button
+      - 04:09 Start button
+      - 04:55 Course button
+      - 05:16 Route button
+      - 05:36 Tools button
