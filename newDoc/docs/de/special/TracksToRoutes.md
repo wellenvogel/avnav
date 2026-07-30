@@ -45,7 +45,7 @@ wieder den Button {{BT("ToRoute")}} nutzen - siehe Bild.
 
 ![](../../img/FeatureInfo-Track.png)
 
-Nach Klick auf den Convert Button erhält man den Konverter-Dialog.
+Nach Klick auf den Convert Button erhält man nach eine Abfrage für den Namen der zu erzeugenden Route den Konverter-Dialog.
 
 ![](../../img/TracksToRoutes1.png)
 
