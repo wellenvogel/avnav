@@ -18,7 +18,8 @@ F_BTEXT="buttontext"
 F_ICONS='icons'
 F_BTOVERVIEW='buttonoverview'
 F_BTJSON='buttonjson'
-
+F_ICONJSON='iconjson'
+ALL_FORMATS=[F_PLAIN,F_TABLE,F_SPARSE,F_PANDOC,F_BT2ICON,F_ICONUSAGE,F_BTEXT,F_ICONS,F_BTOVERVIEW,F_BTJSON,F_ICONJSON]
 logger = logging.getLogger(__name__)
 logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
 
@@ -103,7 +104,7 @@ def readButtons(fname):
     lnr=0
     rec=re.compile(r'//.*')
     re0=re.compile(r'^ *const +ButtonDefinitions *= *{')
-    re1=re.compile(r'^ *(\w+) *: *{')
+    re1=re.compile(r'^ *([":\w]+) *: *{')
     reClose=re.compile(r'} *,*')
     rename=re.compile(r'^ *name *: *btdef\.(\w+)')
     reicon=re.compile(r'^ *iconClass *: *iconClasses\.(\w+)')
@@ -119,7 +120,7 @@ def readButtons(fname):
                 match=re1.match(line)
                 if match is not None and match.group(1) is not None:
                     state=2
-                    name=match.group(1)
+                    name=match.group(1).replace('"','')
                     btline=lnr
             elif state == 2:
                 nmatch=rename.match(line)
@@ -220,16 +221,17 @@ def readTexts(fname):
     lnr=0
     restart1=re.compile(r'^ *.button *{')
     restart2 = re.compile(r'^ *.dialogButton *{')
+    restart3 = re.compile(r'^ *.mmButton *{')
     rename=re.compile(r'^ *&\.(\w+) *{')
-    reshort=re.compile(r'^ *\.btTxt *\( *[\'"]([^\'"]+)')
-    relong = re.compile(r'^ *\.btTxt *\( *[\'"]([^\'"]*)[\'"] *, *[\'"]([^\'"]*)')
+    reshort=re.compile(r'^ *\.(?:btTxt|mmTxt) *\( *[\'"]([^\'"]+)')
+    relong = re.compile(r'^ *\.(?:btTxt|mmTxt) *\( *[\'"]([^\'"]*)[\'"] *, *[\'"]([^\'"]*)')
     reClose = re.compile(r'} *,*')
     with open(fname,'r') as fb:
         for line in fb:
             lnr+=1
             line = line.strip()
             if state == 0:
-                if restart1.match(line) is not None or restart2.match(line) is not None:
+                if restart1.match(line) is not None or restart2.match(line) is not None or restart3.match(line) is not None:
                     state=1
             elif state == 1:
                 if reClose.match(line) is not None:
@@ -339,7 +341,6 @@ def iconUsage(icon:str,buttonDefs,iconGreps):
 if len(sys.argv) < 1:
     usage()
     sys.exit(1)
-ALL_FORMATS=[F_PLAIN,F_TABLE,F_SPARSE,F_PANDOC,F_BT2ICON,F_ICONUSAGE,F_BTEXT,F_ICONS,F_BTOVERVIEW,F_BTJSON]
 #after creating the "pandoc" markdow convert to odt
 #from within the docs dir with
 #pandoc -o buttonUsage.odt --embed-resources=true buttonUsage.md
@@ -480,6 +481,21 @@ elif format == F_BTJSON:
         rt[k]={
             'shortText': textDef.tshort if textDef else '',
             'longText': textDef.tlong if textDef else '',
+            'icon':buttonDef.icon
+        }
+        if iconDef is not None:
+            if iconDef.icon is not None:
+                if len(iconDef.icon)>0:
+                    rt[k]['legacy']=iconPath(iconDef.icon[0])
+                if len(iconDef.icon)>1:
+                    rt[k]['default']=iconPath(iconDef.icon[1])
+    print (json.dumps(rt, indent=4))
+    sys.exit(0)
+elif format == F_ICONJSON:
+    rt={}
+    for k in sorted(iconDefs.keys()):
+        iconDef = iconDefs.get(k)
+        rt[k]={
         }
         if iconDef is not None:
             if iconDef.icon is not None:

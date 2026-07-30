@@ -23,7 +23,10 @@
 // @ts-ignore
 import * as btdef from '../style/button_text.less';
 import {iconClasses} from './Icons';
+import {PAGEIDS} from "../util/pageids";
 
+export const MMPREFIX='MM'; //prefixed to page names
+                            //for button defs
 /**
  * list of all used buttons
  * the key should be similar to the name used in button_text.less
@@ -774,10 +777,110 @@ const ButtonDefinitions= {
     DBColor:{
         iconClass: iconClasses.Color,
         name:btdef.DBColor
+    },
+
+    //MainMenu
+    MMnavpage:{
+        name:btdef.MMnavpage,
+        iconClass:iconClasses.MNCatNav
+    },
+    MMgpspage:{
+        iconClass: iconClasses.MNCatNav,
+        name:btdef.MMgpspage
+    },
+    MMaddonpage:{
+        iconClass: iconClasses.MNCatNav,
+        name:btdef.MMaddonpage,
+    },
+    MMaispage:{
+        iconClass: iconClasses.MNCatSet,
+        name: btdef.MMaispage
+    },
+    MMaddresspage:{
+        iconClass: iconClasses.Empty,
+        name:btdef.MMaddresspage
+    },
+    MMserverpage:{
+        iconClass: iconClasses.MNCatSet,
+        name:btdef.MMServerpage
+    },
+    MMinfopage:{
+        iconClass: iconClasses.Empty,
+        name:btdef.MMinfopage
+    },
+    MMwpapage:{
+        iconClass: iconClasses.Empty,
+        name:btdef.MMwpapage
+    },
+    MMsettingspage:{
+        iconClass: iconClasses.Settings,
+        name:btdef.MMsettingspage,
+    },
+    MMeditroutepage:{
+        iconClass: iconClasses.Empty,
+        name:btdef.MMeditroutepage
+    },
+    MMwarningpage:{
+        iconClass: iconClasses.Empty,
+        name:btdef.MMwarningpage
+    },
+    MMaddonconfigpage:{
+        iconClass: iconClasses.MNCatSet,
+        name:btdef.MMaddonconfigpage
+    },
+    MMchannelspage:{
+        iconClass: iconClasses.MNCatSet,
+        name:btdef.MMchannelspage
+    },
+    MMroutepage:{
+        iconClass: iconClasses.Route,
+        name:btdef.MMroutepage
+    },
+    MMtrackspage:{
+        iconClass: iconClasses.Track,
+        name:btdef.MMtrackspage
+    },
+    MMaiscfgpage:{
+        iconClass: iconClasses.MNCatSet,
+        name: btdef.MMaiscfgpage
+    },
+    MMlayoutspage:{
+        iconClass: iconClasses.Layout,
+        name:btdef.MMlayoutspage
+    },
+    MMchartspage:{
+        iconClass: iconClasses.Charts,
+        name:btdef.MMchartspage
+    },
+    MMpluginspage:{
+        iconClass: iconClasses.Plugins,
+        name:btdef.MMpluginspage
+    },
+    MMremotepage:{
+        iconClass: iconClasses.MNCatSet,
+        name:btdef.MMremotepage
+    },
+    MMloading:{
+        iconClass: iconClasses.Empty,
+        name:btdef.MMloading
+    },
+    "MM:actions":{
+        iconClass: iconClasses.MNCatNav,
+        name:btdef.MMactions,
     }
 
+}
 
-
+//do some checks for button names
+for (const k of Object.keys(PAGEIDS)) {
+    // @ts-ignore
+    const id=PAGEIDS[k];
+    // @ts-ignore
+    if (! ButtonDefinitions[MMPREFIX+id]){
+        const err="missing button def for page "+k+"->"+id;
+        alert(err);
+        throw new Error(err);
+    }
 }
 export default ButtonDefinitions;
 

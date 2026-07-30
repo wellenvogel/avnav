@@ -36,6 +36,10 @@ document$.subscribe(()=>{
             window.location.href=link.getAttribute('data-link');
         })
     }
+    const videoLinks=Array.from(document.querySelectorAll('a.videolink'))
+    for (const a of videoLinks){
+        a.setAttribute("target","_blank");
+    }
     const videochapters=Array.from(document.querySelectorAll('.videochapter'));
     for (const vc of videochapters){
         vc.addEventListener('click',()=>{

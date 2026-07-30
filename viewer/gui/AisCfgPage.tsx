@@ -21,7 +21,7 @@
  #
  */
 import React, {useRef} from "react";
-import {getPageTitle, PAGEIDS} from "../util/pageids";
+import {PAGEIDS} from "../util/pageids";
 import {PageBaseProps, PageFrame, PageLeft} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
@@ -35,6 +35,7 @@ import {EditSettingsCategory} from "../components/Settings";
 import AisCfgPageButtons from "./AisCfgPageButtons";
 import {AisButtonActions, CompleteAisListWithStore} from './AisPage';
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
+import {getPageTitle} from "../components/pagetitles";
 
 const PAGE=PAGEIDS.AISCFG;
 const TITLE=getPageTitle(PAGE);

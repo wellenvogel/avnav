@@ -21,7 +21,7 @@
  #
  */
 import React, {useRef, useState} from "react";
-import {getPageTitle, PAGEIDS} from "../util/pageids";
+import {PAGEIDS} from "../util/pageids";
 import {PageBaseProps, PageFrame, PageLeft} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
@@ -39,6 +39,7 @@ import {UploadHandlerWithActions, useUploadHelper, useUploadHelperHandler} from 
 import {ImporterView} from "../components/ImporterView";
 // @ts-ignore
 import {createItemActions} from '../components/FileDialog';
+import {getPageTitle} from "../components/pagetitles";
 
 const PAGE=PAGEIDS.CHARTS;
 const TITLE=getPageTitle(PAGE);

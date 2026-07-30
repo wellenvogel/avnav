@@ -3,6 +3,14 @@
     content: @small
   }
 }
+.mmTxt(@small){
+  .PageRowFrame .listSlot&:after{
+    content: @small
+  }
+  &.pageTitle:after{
+    content: @small
+  }
+}
 .btTxt(@small,@long){
   .btTxt(@small);
   .longText&:after{
@@ -567,5 +575,75 @@
   }
   &.DBColor{
     .btTxt('Color');
+  }
+}
+//button names here must match the pageids
+//as the values are alos used for page titles
+.mmButton{
+  &.MMnavpage{
+    .mmTxt('Navigation');
+  }
+  &.MMgpspage{
+    .mmTxt('Dashboard');
+  }
+  &.MMaddonpage{
+    .mmTxt("User Apps")
+  }
+  &.MMaispage{
+    .mmTxt('AIS targets')
+  }
+  &.MMaddresspage{
+    .mmTxt('Connect Urls');
+  }
+  &.MMServerpage{
+    .mmTxt('Server');
+  }
+  &.MMinfopage{
+    .mmTxt('Version and License');
+  }
+  &.MMwpapage{
+    .mmTxt('Configure Wifi Clients');
+  }
+  &.MMsettingspage{
+    .mmTxt('Display Settings');
+  }
+  &.MMeditroutepage{
+    .mmTxt('Route Editor');
+  }
+  &.MMwarningpage{
+    .mmTxt('Initial Warning');
+  }
+  &.MMaddonconfigpage{
+    .mmTxt("CSS, JS, User Apps");
+  }
+  &.MMchannelspage{
+    .mmTxt("Connections/Devices");
+  }
+  &.MMroutepage{
+    .mmTxt('Routes');
+  }
+  &.MMtrackspage{
+    .mmTxt("Tracks/NMEALogs");
+  }
+  &.MMaiscfgpage{
+    .mmTxt("AIS");
+  }
+  &.MMlayoutspage{
+    .mmTxt("Layouts")
+  }
+  &.MMchartspage{
+    .mmTxt("Charts/Overlays");
+  }
+  &.MMpluginspage{
+    .mmTxt("Plugins");
+  }
+  &.MMremotepage{
+    .mmTxt("Remote Control");
+  }
+  &.MMloading{
+    .mmTxt('AvNav is loading');
+  }
+  &.MMactions{
+    .mmTxt('Actions');
   }
 }

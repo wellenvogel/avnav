@@ -17,7 +17,7 @@ import {showPromiseDialog} from "../components/OverlayDialog";
 import {avitem} from "../util/helper";
 import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
-import {getPageTitle, PAGEIDS} from "../util/pageids";
+import {PAGEIDS} from "../util/pageids";
 import AddOnConfigPageButtons from "./AddOnConfigPageButtons";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import ButtonList from "../components/ButtonList";
@@ -29,6 +29,7 @@ import {useStoreHelper} from "../util/UiHelper";
 import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import buttonDefs from "../components/ButtonDefs";
 import {useDialogContext} from "../components/DialogContext";
+import {getPageTitle} from "../components/pagetitles";
 
 interface CreateButtonProps extends DynamicButtonProps{
     text?:  string,

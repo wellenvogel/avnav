@@ -287,24 +287,21 @@ const CONVERT_INFO_ROWS=[
 
 const AskEditRoute=(props)=>{
     const history=useHistory();
-    return  <div className="AskEditRouteDialog flexInner">
-        <h3 className="dialogTitle">Route Created</h3>
+    return  <DialogFrame className="AskEditRouteDialog" title={'Route Created'}>
         <div className="dialogRow">
             route &nbsp;<span>{props.route.name}</span>&nbsp; successfully created
         </div>
-        <div className="dialogButtons">
-            <DB name="cancel">
-                Cancel
-            </DB>
-            <DB name="editRoute"
+        <DialogButtons >
+            <DB {...ButtonDefs.Cancel}/>
+            <DB {...ButtonDefs.DBEditRoute}
                 onClick={()=>{
                     let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                     editor.setNewRoute(props.route,0);
                     history.push('editroutepage',{center:true});
                 }}
-            >Edit</DB>
-        </div>
-    </div>
+            ></DB>
+        </DialogButtons>
+    </DialogFrame>
 }
 
 const getRowValue=(data,description)=>{

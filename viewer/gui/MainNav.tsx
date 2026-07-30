@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {RefObject, SyntheticEvent, useEffect, useRef, useState} from "react";
+import React, {ReactNode, RefObject, SyntheticEvent, useEffect, useRef, useState} from "react";
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import Helper, {getav, setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "../components/DialogContext";
@@ -36,7 +36,7 @@ import {
 } from "../components/Button";
 import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
-import {getPageTitle, PAGEIDS, PageType} from "../util/pageids";
+import {PAGEIDS, PageType} from "../util/pageids";
 import {CopyAware} from "../util/CopyAware";
 import {IHistory} from "../util/history";
 import ChannelsPageButtons from "./ChannelsPageButtons";
@@ -63,19 +63,23 @@ import {EditSettingsCategory} from "../components/Settings";
 import {ActionDialog} from "../components/ActionDialog";
 import {actionButtons} from "./MainActionButtons";
 import layouthandler from "../util/layouthandler";
-import ButtonDefs from "../components/ButtonDefs";
+import ButtonDefs, {MMPREFIX} from "../components/ButtonDefs";
 import {useStoreState} from "../hoc/Dynamic";
 import {iconClasses} from '../components/Icons';
+import buttonDefs from "../components/ButtonDefs";
+import {getPageTitle} from "../components/pagetitles";
 
 class Page extends CopyAware{
     name:string;
-    displayName?:string;
+    displayName?:string|ReactNode;
     buttons:ButtonDef[]|(()=>ButtonDef[]);
     iconClass:string;
     all:boolean;
+    buttonName:string
     constructor(name:string,iconClass:string,
                 buttons?:ButtonDef[]|(()=>ButtonDef[]),
-                all:boolean=false
+                all:boolean=false,
+                buttonName?:string
         ){
         super();
         this.name=name;
@@ -83,6 +87,7 @@ class Page extends CopyAware{
         this.buttons=buttons;
         this.iconClass=iconClass;
         this.all=all;
+        this.buttonName=buttonName;
     }
     getDisplay(){
         return this.displayName||this.name;
@@ -96,8 +101,10 @@ class Page extends CopyAware{
 
 class ActionPage extends Page{
     constructor() {
-        super("Actions",iconClasses.MNCatNav);
+        const bdef=buttonDefs["MM:actions"];
+        super("Actions", bdef.iconClass);
         this.displayName="Actions";
+        this.buttonName=bdef.name;
     }
     override getButtons():ButtonDef[]{
         return [];
@@ -107,35 +114,27 @@ class ActionPage extends Page{
 
 const actionPage=new ActionPage();
 
+const toPage=(page:string,buttons?:ButtonDef[]|(()=>ButtonDef[]),
+              all:boolean=false)=>{
+    // @ts-ignore
+    const bt=buttonDefs[MMPREFIX+page];
+    return new Page(page,bt.iconClass,buttons,all,bt.name);
+}
 const mainTree=[
-    new Page(PAGEIDS.NAV,iconClasses.MNCatNav,
-        NavPageButtons),
-    new Page(PAGEIDS.GPS,iconClasses.MNCatNav,
-        GpsPageButtons),
-    new Page(PAGEIDS.ADDON,iconClasses.MNCatNav,
-        AddOnPageButtons),
-    new Page(PAGEIDS.CHARTS,iconClasses.Charts,
-        ChartsPageButtons),
-    new Page(PAGEIDS.NROUTE,iconClasses.Route,
-        RoutesPageButtons),
-    new Page(PAGEIDS.TRACKS,iconClasses.Track,
-        TracksPageButtons),
-    new Page(PAGEIDS.AISCFG,iconClasses.MNCatSet,
-        AisCfgPageButtons),
-    new Page(PAGEIDS.SETTINGS,iconClasses.Settings,
-        SettingsPageButtons,true),
-    new Page(PAGEIDS.LAYOUT,iconClasses.Layout,
-        LayoutsPageButtons,true),
-    new Page(PAGEIDS.PLUGINS,iconClasses.Plugins,
-        PluginsPageButtons,true),
-    new Page(PAGEIDS.ADDCFG,iconClasses.MNCatSet,
-        AddOnConfigPageButtons,true),
-    new Page(PAGEIDS.CHANNELS,iconClasses.MNCatSet,
-        ChannelsPageButtons,true),
-    new Page(PAGEIDS.SERVER,iconClasses.MNCatSet,
-        ServerPageButtons,true),
-    new Page(PAGEIDS.REMOTE,iconClasses.MNCatSet,
-        RemotePageButtons,true)
+    toPage(PAGEIDS.NAV, NavPageButtons),
+    toPage(PAGEIDS.GPS,GpsPageButtons),
+    toPage(PAGEIDS.ADDON, AddOnPageButtons),
+    toPage(PAGEIDS.CHARTS,ChartsPageButtons),
+    toPage(PAGEIDS.NROUTE,RoutesPageButtons),
+    toPage(PAGEIDS.TRACKS,TracksPageButtons),
+    toPage(PAGEIDS.AISCFG,AisCfgPageButtons),
+    toPage(PAGEIDS.SETTINGS,SettingsPageButtons,true),
+    toPage(PAGEIDS.LAYOUT,LayoutsPageButtons,true),
+    toPage(PAGEIDS.PLUGINS, PluginsPageButtons,true),
+    toPage(PAGEIDS.ADDCFG,AddOnConfigPageButtons,true),
+    toPage(PAGEIDS.CHANNELS,ChannelsPageButtons,true),
+    toPage(PAGEIDS.SERVER, ServerPageButtons,true),
+    toPage(PAGEIDS.REMOTE,RemotePageButtons,true)
 ]
 
 
@@ -191,7 +190,7 @@ const PageRow=({
         onClick(ev);
     }}>
         <ListSlot icon={{className:page.iconClass}} />
-        <ListMainSlot primary={page.getDisplay()}>
+        <ListMainSlot primary={page.buttonName?undefined:page.getDisplay()} className={Helper.concatsp(page.buttonName,'mmButton')}>
         </ListMainSlot>
             {!noExpand && hasVisibleButton && <ListSlot
             className={'iconSlot'}

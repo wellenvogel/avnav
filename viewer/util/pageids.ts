@@ -74,33 +74,3 @@ export const PLUGINPAGES:Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'|'WARNING'>=
 }
 export type PluginPageType=valueof<typeof PLUGINPAGES>
 
-const PAGE_TITLES:Record<PageType, string> = {
-    [PAGEIDS.TRACKS]: "Tracks/NMEALogs",
-    [PAGEIDS.ADDCFG]: "CSS, JS, User Apps",
-    [PAGEIDS.ADDON]: "User Apps",
-    [PAGEIDS.ADDR]: "Connect Urls",
-    [PAGEIDS.AIS]: "AIS targets",
-    [PAGEIDS.CHANNELS]: "Connections/Devices",
-    [PAGEIDS.GPS]: "Dashboard",
-    [PAGEIDS.INFO]: "Version and License",
-    [PAGEIDS.NAV]: "Navigation",
-    [PAGEIDS.ROUTE]: "Route Editor",
-    [PAGEIDS.NROUTE]: "Routes",
-    [PAGEIDS.SETTINGS]: "Display Settings",
-    [PAGEIDS.SERVER]: "Server",
-    [PAGEIDS.WARNING]: "Initial Warning",
-    [PAGEIDS.WPA]: "Configure Wifi Clients",
-    [PAGEIDS.AISCFG]: "AIS",
-    [PAGEIDS.LAYOUT]: "Layouts",
-    [PAGEIDS.CHARTS]: "Charts/Overlays",
-    [PAGEIDS.PLUGINS]: "Plugins",
-    [PAGEIDS.REMOTE]: "Remote Control",
-    [PAGEIDS.LOADING]: "AvNav is Loading",
-    [PAGEIDS.ACTIONS]: "Actions",
-}
-export const getPageTitle=(page:PageType)=>{
-    const rt=PAGE_TITLES[page];
-    if (rt !== undefined){ return rt;}
-    return page;
-}
- 

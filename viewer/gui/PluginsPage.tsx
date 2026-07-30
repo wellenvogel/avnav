@@ -26,7 +26,6 @@ import {PageFrame, PageLeft, PageProps} from "../components/Page";
 import {ButtonDef, updateButtons} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import PluginsPageButtons from "./PluginsPageButtons";
-import {getPageTitle} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
 import {DownloadItemList} from "../components/DownloadItemList";
 import {useUploadHelper} from "../components/UploadHandler";
@@ -37,6 +36,7 @@ import Requests from "../util/requests";
 import {shallowEqual} from "shallow-equal";
 import {useHistory} from "../components/HistoryProvider";
 import ButtonDefs from "../components/ButtonDefs";
+import {getPageTitle} from "../components/pagetitles";
 interface InfoCacheEntry{
     status:ChildStatusProps;
     element: ReactElement
