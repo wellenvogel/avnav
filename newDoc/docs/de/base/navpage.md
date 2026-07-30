@@ -1,11 +1,10 @@
 # Navigationsseite
 Die Hauptansicht in AvNav ist die Navigationsseite.
 
-Ein Video erklärt die grundlegenden Funktionen.
-{{VIDEO("navigation")}}
+Ein [Video]({{VURL("navigation")}}){.videolink} erklärt die grundlegenden Funktionen.
 
-## Inhalt
-{{VCALL("navigation")}}
 
-## 2. Kapitel
-{{VCSINGLE("navigation",1,"Hauptansicht")}}
+## Kapitel
+
+* [Start]({{VCURL("navigation",0)}}){.videolink}
+* [Navigationsansicht]({{VCURL("navigation",1)}}){.videolink}

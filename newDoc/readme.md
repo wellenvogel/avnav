@@ -92,7 +92,7 @@ To be flexible for the hosting of videos all videos should be configured in [vid
 Each video will have a name and can have multiple urls and a list of chapters.
 ```
 navigation:
-  youtube: "https://www.youtube.com/embed/as62-dDtmQ4"
+  youtube: "as62-dDtmQ4"
   chapters:
     - 00:00 Start
     - 00:12 Navigationsansicht
@@ -103,7 +103,12 @@ navigation:
     - 02:20 MOB-Button
 ```
 The capter list can easily be created by copying the text from YT. In the future more URLs could be added for local hosting.
-The YT url should be the embed URL.
+
+The YT url should just be the ID. This way we can easily create links to YT or embed links.
+
+Currently YT links will hide subtitles when the current language is german and will enable english subtitles if the current language is english.
+
+### Embedding Videos
 To embed a video on a page use the macro VIDEO
 ```
 {{VIDEO("navigation")}}
@@ -123,4 +128,18 @@ or
 {{VCSINGLE("navigation",1,"chapter 2")}}
 ```
 The chapter index starts at 0. The second form allows to use a different title from the one used in the video.yml file.
+
+### Linking Videos
+To link a video use 
+```
+[Navpage]({{VLINK("navigation")}}){.videolink}
+```
+The added class `videolink` will allow to control if this link should be opened in a new Window (for now: default on).
+
+To link to a video chapter use 
+```
+[Chapter 1]({{VCLINK("navigation",0)}}){.videolink}
+```
+The chapter index starts at 0.
+
 Example: [navpage.md](docs/de/base/navpage.md).

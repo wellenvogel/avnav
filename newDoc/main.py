@@ -16,7 +16,8 @@ PV_OLD="avnav_olddoc"
 PV_OLDBASE="avnav_oldbase"
 PV_LANG="i18nlang"
 PV_BASE="base_url"
-
+VK_LINK='link'
+VK_EMBED='embed'
 C_START='start'
 C_TITLE='title'
 def toSeconds(v):
@@ -53,11 +54,8 @@ def build_chapters(name,video,chapters):
                     C_TITLE:parts[1],
                 }
         for vm in [M_YT,M_INTERN]:
-            url=video.get(vm)
-            if not url:
-                continue
             if vm == M_YT:
-                cnv[M_YT]=url+f"?start={seconds}&autoplay=true"
+                cnv[M_YT]=f"start={seconds}&autoplay=true"
         converted.append(cnv)
     return converted
 def load_videos(vf):
@@ -166,36 +164,48 @@ def define_env(env):
     @env.macro
     def BT(name,longText=False):
         return button(name,longText=longText)
-
     @env.macro
     def DB(name):
         return button(name,True)
+    
+    def get_video(name):
+        if not name:
+            return [None,None]
+        video=videos.get(name)
+        if not video:    
+            return [None,None]
+        chapters=video.get(pageVariables.get(PV_LANG)) or video.get('de')
+        return [video,chapters]
     def chapter_title(chapter):
         #TODO: language
         if not chapter:
             return ''
         return chapter.get('title')
-    def video_url(item):
+    def append_param(url,param):
+        if not url or not param:
+            return url
+        chr='&' if url.find('?') >= 0 else '?'
+        return url+chr+param
+    def video_url(item,kind=VK_EMBED):
         if not item:
             return ''
         rt=item.get(VMODE)
         if not rt:
             return ''
         if VMODE == M_YT:
+            prefix="https://www.youtube.com/embed/" if kind==VK_EMBED else "https://www.youtube.com/watch?v="
+            rt=prefix+rt
             lang=pageVariables.get(PV_LANG)
             if not lang:
                 return rt
-            chr='&' if rt.find('?') >= 0 else '?'
             if lang == 'de':
-                rt+=chr+"cc_load_policy=0"
+                rt=append_param(rt,"cc_load_policy=0")
             else:
-                rt+=chr+"cc_lang_pref="+lang+"&cc_load_policy=1"
+                rt=append_param(rt,"cc_lang_pref="+lang+"&cc_load_policy=1")
         return rt
     @env.macro
     def VIDEO(name):
-        if not name:
-            return ''
-        video=videos.get(name)
+        video,chapters=get_video(name)
         if not video:
             return '{# unknown video '+name+'#}'
         url=video_url(video)
@@ -205,34 +215,50 @@ def define_env(env):
     
     @env.macro
     def VCALL(name):
-        if not name:
-            return ''
-        video=videos.get(name)
+        video,chapters=get_video(name)
         if not video:
-            return '{# unknown video '+name+'#}'
-        chapters=video.get(pageVariables.get(PV_LANG)) or video.get('de')
+            return '{# unknown video '+(name or '??')+'#}'
         if not chapters:
             return '{# no chapters for video '+name+'#}'
         rt='<ul class="videochapters">'
+        vurl=video_url(video)
         for c in chapters:
-            rt+='<li class="videochapter" data-url="'+ video_url(c)+'" data-name="'+name+'">'+ chapter_title(c)+'</li>\n'
+            url=append_param(vurl,c.get(VMODE))
+            rt+='<li class="videochapter" data-url="'+ url+'" data-name="'+name+'">'+ chapter_title(c)+'</li>\n'
         rt+='</ul>'
         return rt
     
     @env.macro
     def VCSINGLE(name,idx,text=None):
-        if not name:
-            return ''
-        video=videos.get(name)
+        video,chapters=get_video(name)
         if not video:
-            return '{# unknown video '+name+'#}'
-        chapters=video.get(pageVariables.get(PV_LANG)) or video.get('de')
+            return '{# unknown video '+(name or '??')+'#}'
         if not chapters:
             return '{# no chapters for video '+name+'#}' 
         if idx < 0 or idx >= len(chapters):
             return '{# chapter '+idx+' not found for '+name+'#}'
+        vurl=video_url(video)
         c=chapters[idx]
-        return '<a class="videochapter" data-url="'+ video_url(c)+'" data-name="'+name+'">'+(text or chapter_title(c))+'</a>'
+        return '<a class="videochapter" data-url="'+ append_param(vurl,c.get(VMODE))+'" data-name="'+name+'">'+(text or chapter_title(c))+'</a>'
+    
+    @env.macro
+    def VURL(name):
+        video,chapters=get_video(name)
+        if not video:
+            return ''
+        return video_url(video,kind=VK_LINK)
+    
+    @env.macro
+    def VCURL(name,idx):
+        video,chapters=get_video(name)
+        if not video or not chapters:
+            return ''
+        if idx is None or idx < 0 or idx >= len(chapters):
+            return ''
+        vurl=video_url(video,kind=VK_LINK)
+        c=chapters[idx]
+        return append_param(vurl,c.get(VMODE))
+        
     
     def add_lang(url,lang):
         if not lang:
