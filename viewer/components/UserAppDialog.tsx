@@ -24,7 +24,7 @@ import {
     EditableStringParameterUI
     // @ts-ignore
 } from "./EditableParameterUI";
-import {getPageTitle, PAGEIDS, PageType, PLUGINPAGES} from "../util/pageids";
+import {PAGEIDS, PageType, PLUGINPAGES} from "../util/pageids";
 import ButtonDefs from "./ButtonDefs";
 import {ParameterDialog, ParameterType} from "./ParameterDialog";
 import {WidgetParameterValue} from "../api/api.interface";
@@ -35,6 +35,7 @@ import Button, {ButtonEventHandler} from "./Button";
 import {iconClasses} from './Icons';
 import ItemList from "./ItemList";
 import {IHistory} from "../util/history";
+import {getPageTitle} from "./pagetitles";
 
 export interface InternalAddonDisplayProps extends InternalAddonProps{
     buttonKey?:string

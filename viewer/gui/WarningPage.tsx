@@ -16,11 +16,12 @@ import base from "../base";
 import {loadSettings, LoadSettingsDialog, SelectLayoutDialog} from "../components/Settings";
 import {useDialogContext} from "../components/exports";
 import {useHistory} from "../components/HistoryProvider";
-import {getPageTitle, PAGEIDS} from "../util/pageids";
+import {PAGEIDS} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
 import ButtonDefs from "../components/ButtonDefs";
 import {IDialogContext} from "../components/DialogContext";
 import {IHistory} from "../util/history";
+import {getPageTitle} from "../components/pagetitles";
 
 const loadSettingsOrLayouts=async (dialogContext:IDialogContext,history:IHistory) => {
     const gotoNav=()=>{

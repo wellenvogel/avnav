@@ -21,7 +21,7 @@
  #
  */
 import React, {useRef, useState} from "react";
-import {getPageTitle, PAGEIDS} from "../util/pageids";
+import {PAGEIDS} from "../util/pageids";
 import {PageBaseProps, PageFrame, PageLeft} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
@@ -45,6 +45,7 @@ import {EditSettingsCategory} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import {useUploadHelper} from "../components/UploadHandler";
 import ButtonDefs from "../components/ButtonDefs";
+import {getPageTitle} from "../components/pagetitles";
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=getPageTitle(PAGE)

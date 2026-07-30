@@ -10,13 +10,14 @@ import React, {useCallback, useEffect, useRef} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import {handleInitialButton, InjectMainMenu} from "./MainNav";
-import {getPageTitle, PAGEIDS} from "../util/pageids";
+import {PAGEIDS} from "../util/pageids";
 import {ButtonAddonType, ButtonDef, ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Button";
 import {useHistory} from "../components/HistoryProvider";
 import AddOnPageButtons from "./AddOnPageButtons";
 import keyhandler from "../util/keyhandler";
 import ButtonList from "../components/ButtonList";
 import {addonViewManager} from "../components/AddonView";
+import {getPageTitle} from "../components/pagetitles";
 
 const PAGE=PAGEIDS.ADDON;
 export interface AddOnPageProps extends Partial<PageProps> {}

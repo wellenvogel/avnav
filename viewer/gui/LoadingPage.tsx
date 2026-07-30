@@ -22,7 +22,8 @@
  */
 import React from 'react'
 import {PageFrame, PageLeft, PageProps} from "../components/Page";
-import {getPageTitle, PAGEIDS} from "../util/pageids";
+import {PAGEIDS} from "../util/pageids";
+import {getPageTitle} from "../components/pagetitles";
 
 const LoadingPage=(_props:PageProps)=>{
     return <PageFrame id={PAGEIDS.LOADING}>
