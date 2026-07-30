@@ -87,6 +87,24 @@ This will render a small button symbol with the short text and the icon dependin
 {{BT("Cancel",True)}}
 ```
 
+## Main Menu Entries
+The buttons in the main menu are named like the pages they open with a prefix "MM".
+For a Main Menu button write:
+```
+{{MB("MMchartspage")}}
+```
+To add the call to the Main Menu there is a shortcut:
+```
+{{MB("MMchartspage")}}
+```
+The name for the actions is `MM:actions`.
+To have the complete chain for open Main Menu, click Actions and an action you can write:
+```
+{{MMA("StatusShutdown")}}
+```
+See the [examples](docs/de/special/index.md).
+
+
 ## Icons
 For standalone icons (without button) you must use the Icon name [see source](https://github.com/wellenvogel/avnav/blob/master/viewer/style/icons.less).
 ```
