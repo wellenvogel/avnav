@@ -4,6 +4,7 @@ import sys
 import json
 import yaml
 BTJSON='docs/buttons/buttons.json' #source path
+ICONJSON='docs/buttons/icons.json'
 BTCSS='docs/generated/buttons.css'
 BTDOC='buttons/buttons.md'
 VIDEOS='docs/videos.yml'
@@ -73,13 +74,13 @@ def load_videos(vf):
                     v['de']=build_chapters(k,v,chapters)
     return videos
 
-def buildButtonCss(buttons,btcss):
+def buildButtonCss(buttons,icons,btcss):
     print("***Building button css***")    
     cssdir=os.path.dirname(btcss)
     if not os.path.isdir(cssdir):
         os.makedirs(cssdir)
     with open(btcss,"w") as oh:
-        for n,v in buttons.items():
+        for n,v in icons.items():
             str=""
             for kind in ['legacy','default']:
                 img=v.get(kind)
@@ -87,11 +88,14 @@ def buildButtonCss(buttons,btcss):
                     str+=f".iconset-{kind} .avnav-icon.{n}"+"{\n"
                     str+=f"  background-image: url('{img}');"
                     str+='\n}\n'
+            oh.write(str)
+        for n,v in buttons.items():
+            str=""
             for kind in ['shortText','longText']:
                 txt=v.get(kind)
                 if txt is not None:
                     kindClass=f".{kind}" if kind != 'shortText' else ''
-                    str+=f"{kindClass}.avnav-icon.{n}:after"+"{\n"
+                    str+=f"{kindClass}.avnav-button.{n}:after"+"{\n"
                     str+=f"  content: \"{txt}\";"+"\n}\n"
             oh.write(str)
 
@@ -100,24 +104,33 @@ def define_env(env):
     global cssbuild
     print("macro script loading...")
     buttons={}
+    icons={}
     videos={}
     btf=os.path.join(env.project_dir,BTJSON)
-    if not os.path.exists(btf):
-        print(f"WARNING: buton defs {btf} not found")
+    iconf=os.path.join(env.project_dir,ICONJSON)
+    if not os.path.exists(btf) or not os.path.exists(iconf):
+        print(f"WARNING: buton defs {btf} / icon defs {iconf} not found")
     else:
         with open(btf,"r") as bh:
             buttons=json.load(bh)
+        with open(iconf,"r") as ih:
+            icons=json.load(ih)
         if not cssbuild:
             btcss=os.path.join(env.project_dir,BTCSS)
             mustBuild=True
             if os.path.exists(btcss):
+                mustBuild=False
                 csstime=os.stat(btcss).st_mtime
-                jsonmtime=os.stat(btf).st_mtime
                 ownmtime=os.stat(__file__).st_mtime
-                if jsonmtime <= csstime and ownmtime <= csstime:
-                    mustBuild=False
+                if ownmtime > csstime:
+                    mustBuild=True
+                else:
+                    for jsonf in [btf,iconf]:
+                        jsonmtime=os.stat(jsonf).st_mtime
+                        if jsonmtime > csstime:
+                            mustBuild=True
             if mustBuild:
-                buildButtonCss(buttons,btcss)        
+                buildButtonCss(buttons,icons,btcss)        
                 cssbuild=True
     vf=os.path.join(env.project_dir,VIDEOS)
     if not os.path.exists(vf):
@@ -126,27 +139,6 @@ def define_env(env):
         videos=load_videos(vf)
 
     
-    @env.macro
-    def BTO(name):
-        if not name:
-            return ''
-        button=buttons.get(name)
-        rel=os.path.relpath(env.project_dir,os.path.dirname(env.page.file.src_path))
-        btdoc=rel+"/"+BTDOC
-        link=f"[{name}]({btdoc}#{name})"
-        if button is None:
-            return link
-        idef=button.get('default')
-        ileg=button.get('legacy')
-        if idef is None and ileg is None:
-            return link
-        rt=''
-        if idef is not None:
-            rt+=f"![{name}]({idef})"+'{ .icon-default } '
-        if ileg is not None:
-            rt+=f"![{name}]({ileg})"+'{ .icon-legacy } '
-        return link+rt
-            
     def button(name,dialog=False,longText=False):
         if not name:
             return ''
@@ -159,7 +151,10 @@ def define_env(env):
         btdoc=btdoc.replace('.md','.html')
         addClass='dialog-button' if dialog else ''
         addClass+=' longText' if longText else ''
-        return f"<span class=\"avnav-icon {addClass} {name}\" data-link=\"{btdoc}\" title=\"{name}\"></span>"
+        icon=button.get('icon')
+        return f"<span class=\"avnav-button {addClass} {name}\" data-link=\"{btdoc}\" title=\"{name}\">"+\
+                f"<span class=\"avnav-icon {icon}\"/>"+\
+                f"</span>"
     
     @env.macro
     def BT(name,longText=False):
@@ -167,7 +162,13 @@ def define_env(env):
     @env.macro
     def DB(name):
         return button(name,True)
-    
+    @env.macro
+    def ICON(name):
+        if not name:
+            return ''
+        return f"<span class=\"avnav-icon {name}\"/>"
+        
+
     def get_video(name):
         if not name:
             return [None,None]

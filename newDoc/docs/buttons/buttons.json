@@ -2,1047 +2,1222 @@
     "ABShowMeasure": {
         "shortText": "Measure",
         "longText": "Show measure buttons",
+        "icon": "Measure",
         "legacy": "../images/icons-new/legacy/straighten.svg",
         "default": "../images/icons-new/default/measure.svg"
     },
     "ABShowWpButtons": {
         "shortText": "Wp",
         "longText": "Show wp buttons",
+        "icon": "Waypoint",
         "legacy": "../images/icons-new/legacy/waypoint.svg",
         "default": "../images/icons-new/default/waypoint.svg"
     },
     "AddonConfigAddOns": {
         "shortText": "Config",
         "longText": "Configure user apps",
+        "icon": "AddOns",
         "legacy": "../images/icons-new/legacy/apps.svg",
         "default": "../images/icons-new/default/addons.svg"
     },
     "AddonConfigImages": {
         "shortText": "Images",
         "longText": "Edit image files",
+        "icon": "Images",
         "legacy": "../images/icons-new/legacy/image-icon.svg",
         "default": "../images/icons-new/default/images.svg"
     },
     "AddonConfigPlus": {
         "shortText": "Add",
         "longText": "Add user app",
+        "icon": "AddonConfigPlus",
         "legacy": "../images/icons-new/legacy/ic_add.svg",
         "default": "../images/icons-new/default/addonconfigplus.svg"
     },
     "AddonConfigUser": {
         "shortText": "User",
         "longText": "Edit user files",
+        "icon": "User",
         "legacy": "../images/icons-new/legacy/folder_shared.svg",
         "default": "../images/icons-new/default/user.svg"
     },
     "AisInfoHide": {
         "shortText": "Hide",
         "longText": "Hide target info",
+        "icon": "AisInfoHide",
         "legacy": "../images/icons-new/legacy/ic_hide.svg",
         "default": "../images/icons-new/default/aisinfohide.svg"
     },
     "AisInfoLocate": {
         "shortText": "Locate",
         "longText": "Center to target",
+        "icon": "Center",
         "legacy": "../images/icons-new/legacy/center.svg",
         "default": "../images/icons-new/default/center.svg"
     },
     "AisItems": {
         "shortText": "Targets",
         "longText": "List AIS targets",
+        "icon": "Items",
         "legacy": "../images/icons-new/legacy/list.svg",
         "default": "../images/icons-new/default/items.svg"
     },
     "AisLock": {
         "shortText": "Pause",
         "longText": "Pause lsiting targets",
+        "icon": "Lock",
         "legacy": "../images/icons-new/legacy/update_disabled.svg",
         "default": "../images/icons-new/default/aislock.svg"
     },
     "AisNearest": {
         "shortText": "Nearest",
         "longText": "Show nearest target",
+        "icon": "AisNearest",
         "legacy": "../images/icons-new/legacy/ais-nearest.svg",
         "default": "../images/icons-new/default/aisnearest.svg"
     },
     "AisSearch": {
         "shortText": "Search",
         "longText": "Search AIS targets",
+        "icon": "Search",
         "legacy": "../images/icons-new/legacy/search.svg",
         "default": "../images/icons-new/default/search.svg"
     },
     "AisSort": {
         "shortText": "Sort",
         "longText": "Sort AIS targets",
+        "icon": "Sort",
         "legacy": "../images/icons-new/legacy/sort.svg",
         "default": "../images/icons-new/default/sort.svg"
     },
     "AnchorWatch": {
         "shortText": "Anchor",
         "longText": "Anchor watch",
+        "icon": "Anchor",
         "legacy": "../images/icons-new/legacy/anchor.svg",
         "default": "../images/icons-new/default/anchor.svg"
     },
     "AndroidBrowser": {
         "shortText": "Browser",
         "longText": "Start external browser",
+        "icon": "Browser",
         "legacy": "../images/icons-new/legacy/internet-web-browser.svg",
         "default": "../images/icons-new/default/browser.svg"
     },
     "Back": {
         "shortText": "Back",
         "longText": "Back",
+        "icon": "Back",
         "legacy": "../images/icons-new/legacy/ic_arrow_back.svg",
         "default": "../images/icons-new/default/back.svg"
     },
     "Cancel": {
         "shortText": "Close",
         "longText": "Close page",
+        "icon": "Cancel",
         "legacy": "../images/icons-new/legacy/ic_clear.svg",
         "default": "../images/icons-new/default/cancel.svg"
     },
     "CenterAction": {
         "shortText": "Info",
         "longText": "Info at Crosshair",
+        "icon": "CenterAction",
         "legacy": "../images/icons-new/legacy/center-action.svg",
         "default": "../images/icons-new/default/centeraction3.svg"
     },
     "ChartsView": {
         "shortText": "Charts",
         "longText": "Select & upload charts",
+        "icon": "Charts",
         "legacy": "../images/icons-new/legacy/map2.svg",
         "default": "../images/icons-new/default/charts.svg"
     },
     "Connected": {
         "shortText": "Connect",
         "longText": "Connect to server",
+        "icon": "Connected",
         "legacy": "../images/icons-new/legacy/plug.svg",
         "default": "../images/icons-new/default/connect.svg"
     },
     "CourseUp": {
         "shortText": "Course",
         "longText": "Course up / north up",
+        "icon": "CourseUp",
         "legacy": "../images/icons-new/legacy/compass.svg",
         "default": "../images/icons-new/default/courseup.svg"
     },
     "CreateFile": {
         "shortText": "New",
         "longText": "Create file",
+        "icon": "Plus",
         "legacy": "../images/icons-new/legacy/ic_add.svg",
         "default": "../images/icons-new/default/plus.svg"
     },
     "DBAccept": {
         "shortText": "Accept",
         "longText": null,
+        "icon": "Ok",
         "legacy": "../images/icons-new/legacy/ic_done.svg",
         "default": "../images/icons-new/default/ok.svg"
     },
     "DBActivate": {
         "shortText": "Activate",
         "longText": null,
+        "icon": "Open",
         "legacy": "../images/icons-new/legacy/ic_open.svg",
         "default": "../images/icons-new/default/open.svg"
     },
     "DBAdd": {
         "shortText": "Add",
         "longText": null,
+        "icon": "Plus",
         "legacy": "../images/icons-new/legacy/ic_add.svg",
         "default": "../images/icons-new/default/plus.svg"
     },
     "DBAddSub": {
         "shortText": "Add sub",
         "longText": null,
+        "icon": "Plus",
         "legacy": "../images/icons-new/legacy/ic_add.svg",
         "default": "../images/icons-new/default/plus.svg"
     },
     "DBAfter": {
         "shortText": "After",
         "longText": null,
+        "icon": "After",
         "legacy": "../images/icons-new/legacy/navigate_next.svg",
         "default": "../images/icons-new/default/after.svg"
     },
     "DBAnchorBoat": {
         "shortText": "Boat",
         "longText": "at boat pos",
+        "icon": "Boat",
         "legacy": "../images/icons-new/legacy/boat.svg",
         "default": "../images/icons-new/default/boat.svg"
     },
     "DBAnchorCenter": {
         "shortText": "Center",
         "longText": "at map center",
+        "icon": "Center",
         "legacy": "../images/icons-new/legacy/center.svg",
         "default": "../images/icons-new/default/center.svg"
     },
     "DBAutoReload": {
         "shortText": "Auto",
         "longText": null,
+        "icon": "Reload",
         "legacy": "../images/icons-new/legacy/ic_refresh.svg",
         "default": "../images/icons-new/default/reload.svg"
     },
     "DBBefore": {
         "shortText": "Before",
         "longText": null,
+        "icon": "Before",
         "legacy": "../images/icons-new/legacy/navigate_before.svg",
         "default": "../images/icons-new/default/before.svg"
     },
     "DBCancel": {
         "shortText": "Cancel",
         "longText": null,
+        "icon": "Cancel",
         "legacy": "../images/icons-new/legacy/ic_clear.svg",
         "default": "../images/icons-new/default/cancel.svg"
     },
     "DBCenter": {
         "shortText": "Center",
         "longText": null,
+        "icon": "Center",
         "legacy": "../images/icons-new/legacy/center.svg",
         "default": "../images/icons-new/default/center.svg"
     },
     "DBCleanTrack": {
         "shortText": "Clean track",
         "longText": null,
+        "icon": "Delete",
         "legacy": "../images/icons-new/legacy/ic_delete.svg",
         "default": "../images/icons-new/default/delete.svg"
     },
     "DBClear": {
         "shortText": "Clear",
         "longText": null,
+        "icon": "Delete",
         "legacy": "../images/icons-new/legacy/ic_delete.svg",
         "default": "../images/icons-new/default/delete.svg"
     },
     "DBColor": {
         "shortText": "Color",
         "longText": null,
+        "icon": "Color",
         "legacy": "../images/icons-new/legacy/palette.svg"
     },
     "DBCompute": {
         "shortText": "Compute",
         "longText": null,
+        "icon": "Start",
         "legacy": "../images/icons-new/legacy/play_arrow.svg",
         "default": "../images/icons-new/default/start.svg"
     },
     "DBConfig": {
         "shortText": "Config",
         "longText": null,
+        "icon": "Edit",
         "legacy": "../images/icons-new/legacy/ic_edit.svg",
         "default": "../images/icons-new/default/edit.svg"
     },
     "DBConnect": {
         "shortText": "Connect",
         "longText": null,
+        "icon": "Connect",
         "legacy": "../images/icons-new/legacy/plug.svg",
         "default": "../images/icons-new/default/connect.svg"
     },
     "DBCopy": {
         "shortText": "Copy",
         "longText": null,
+        "icon": "Copy",
         "legacy": "../images/icons-new/legacy/content_copy.svg",
         "default": "../images/icons-new/default/copy.svg"
     },
     "DBCurrent": {
         "shortText": "Current",
         "longText": null,
+        "icon": "Boat",
         "legacy": "../images/icons-new/legacy/boat.svg",
         "default": "../images/icons-new/default/boat.svg"
     },
     "DBDelete": {
         "shortText": "Delete",
         "longText": null,
+        "icon": "Delete",
         "legacy": "../images/icons-new/legacy/ic_delete.svg",
         "default": "../images/icons-new/default/delete.svg"
     },
     "DBDisable": {
         "shortText": "Disable",
         "longText": null,
+        "icon": "Disable",
         "legacy": "../images/icons-new/legacy/ic_hide.svg",
         "default": "../images/icons-new/default/disable.svg"
     },
     "DBDiscard": {
         "shortText": "Discard changes",
         "longText": null,
+        "icon": "Delete",
         "legacy": "../images/icons-new/legacy/ic_delete.svg",
         "default": "../images/icons-new/default/delete.svg"
     },
     "DBDisconnect": {
         "shortText": "Disconnect",
         "longText": null,
+        "icon": "Disconnect",
         "legacy": "../images/icons-new/legacy/plug-disconnect.svg",
         "default": "../images/icons-new/default/disconnect.svg"
     },
     "DBDownload": {
         "shortText": "Download",
         "longText": null,
+        "icon": "Download",
         "legacy": "../images/icons-new/legacy/ic_file_download.svg",
         "default": "../images/icons-new/default/download.svg"
     },
     "DBEditCss": {
         "shortText": "Edit CSS",
         "longText": null,
+        "icon": "Edit",
         "legacy": "../images/icons-new/legacy/ic_edit.svg",
         "default": "../images/icons-new/default/edit.svg"
     },
     "DBEditLayout": {
         "shortText": "Edit",
         "longText": null,
+        "icon": "Layout",
         "legacy": "../images/icons-new/legacy/ballot.svg",
         "default": "../images/icons-new/default/layout.svg"
     },
     "DBEditRoute": {
         "shortText": "Edit",
         "longText": "Edit item",
+        "icon": "Route",
         "legacy": "../images/icons-new/legacy/route.svg",
         "default": "../images/icons-new/default/route.svg"
     },
     "DBEmptyRoute": {
         "shortText": "Empty",
         "longText": null,
+        "icon": "EmptyRoute",
         "legacy": "../images/icons-new/legacy/delete_sweep.svg",
         "default": "../images/icons-new/default/emptyroute.svg"
     },
     "DBFeatureNewRoute": {
         "shortText": "New route",
         "longText": null,
+        "icon": "Route",
         "legacy": "../images/icons-new/legacy/route.svg",
         "default": "../images/icons-new/default/route.svg"
     },
     "DBHide": {
         "shortText": "Hide",
         "longText": null,
+        "icon": "Hide",
         "legacy": "../images/icons-new/legacy/visibility_off.svg",
         "default": "../images/icons-new/default/hide.svg"
     },
     "DBHideAllOverlays": {
         "shortText": "Hide all",
         "longText": null,
+        "icon": "HideOverlays",
         "legacy": "../images/icons-new/legacy/layers-black-off.svg",
         "default": "../images/icons-new/default/hideoverlays.svg"
     },
     "DBHideOverlays": {
         "shortText": "Hide overlays",
         "longText": null,
+        "icon": "HideOverlays",
         "legacy": "../images/icons-new/legacy/layers-black-off.svg",
         "default": "../images/icons-new/default/hideoverlays.svg"
     },
     "DBIgnore": {
         "shortText": "Ignore",
-        "longText": null
+        "longText": null,
+        "icon": null
     },
     "DBInfo": {
         "shortText": "Info",
         "longText": null,
+        "icon": "Info",
         "legacy": "../images/icons-new/legacy/ic_info.svg",
         "default": "../images/icons-new/default/info.svg"
     },
     "DBInsert": {
         "shortText": "Insert",
         "longText": null,
+        "icon": "After",
         "legacy": "../images/icons-new/legacy/navigate_next.svg",
         "default": "../images/icons-new/default/after.svg"
     },
     "DBInsertAfter": {
         "shortText": "Insert after",
         "longText": null,
+        "icon": "After",
         "legacy": "../images/icons-new/legacy/navigate_next.svg",
         "default": "../images/icons-new/default/after.svg"
     },
     "DBInsertBefore": {
         "shortText": "Insert before",
         "longText": null,
+        "icon": "Before",
         "legacy": "../images/icons-new/legacy/navigate_before.svg",
         "default": "../images/icons-new/default/before.svg"
     },
     "DBInsertRouteAfter": {
         "shortText": "Route after",
         "longText": null,
+        "icon": "NavAddAfter",
         "legacy": "../images/icons-new/legacy/wpplus-after.svg",
         "default": "../images/icons-new/default/navaddafter.svg"
     },
     "DBInsertRouteBefore": {
         "shortText": "Route before",
         "longText": null,
+        "icon": "NavAdd",
         "legacy": "../images/icons-new/legacy/wpplus.svg",
         "default": "../images/icons-new/default/navadd.svg"
     },
     "DBInvertRoute": {
         "shortText": "Invert",
         "longText": null,
+        "icon": "InvertRoute",
         "legacy": "../images/icons-new/legacy/invertroute.svg",
         "default": "../images/icons-new/default/invertroute.svg"
     },
     "DBLoadRoute": {
         "shortText": "Load",
         "longText": null,
+        "icon": "Open",
         "legacy": "../images/icons-new/legacy/ic_open.svg",
         "default": "../images/icons-new/default/open.svg"
     },
     "DBLog": {
         "shortText": "Log",
         "longText": null,
+        "icon": "Log",
         "legacy": "../images/icons-new/legacy/ic_text_snippet.svg",
         "default": "../images/icons-new/default/serverlog.svg"
     },
     "DBNew": {
         "shortText": "New",
         "longText": null,
+        "icon": "Plus",
         "legacy": "../images/icons-new/legacy/ic_add.svg",
         "default": "../images/icons-new/default/plus.svg"
     },
     "DBNewRoute": {
         "shortText": "New",
         "longText": null,
+        "icon": "Plus",
         "legacy": "../images/icons-new/legacy/ic_add.svg",
         "default": "../images/icons-new/default/plus.svg"
     },
     "DBOk": {
         "shortText": "Ok",
         "longText": null,
+        "icon": "Ok",
         "legacy": "../images/icons-new/legacy/ic_done.svg",
         "default": "../images/icons-new/default/ok.svg"
     },
     "DBOpenChart": {
         "shortText": "Open",
         "longText": null,
+        "icon": "Charts",
         "legacy": "../images/icons-new/legacy/map2.svg",
         "default": "../images/icons-new/default/charts.svg"
     },
     "DBOverlays": {
         "shortText": "Overlays",
         "longText": null,
+        "icon": "Overlays",
         "legacy": "../images/icons-new/legacy/layers-black.svg",
         "default": "../images/icons-new/default/overlays.svg"
     },
     "DBPreview": {
         "shortText": "Preview",
         "longText": null,
+        "icon": "View",
         "legacy": "../images/icons-new/legacy/visibility.svg",
         "default": "../images/icons-new/default/view.svg"
     },
     "DBPropose": {
         "shortText": "Propose",
         "longText": "Propose new name",
+        "icon": "Propose",
         "legacy": "../images/icons-new/legacy/prompt_suggestion.svg",
         "default": "../images/icons-new/default/propose.svg"
     },
     "DBReload": {
         "shortText": "Reload",
         "longText": null,
+        "icon": "Reload",
         "legacy": "../images/icons-new/legacy/ic_refresh.svg",
         "default": "../images/icons-new/default/reload.svg"
     },
     "DBRename": {
         "shortText": "Rename",
         "longText": null,
+        "icon": "Edit",
         "legacy": "../images/icons-new/legacy/ic_edit.svg",
         "default": "../images/icons-new/default/edit.svg"
     },
     "DBRenumberRoute": {
         "shortText": "Renumber",
         "longText": null,
+        "icon": "RenumberRoute",
         "legacy": "../images/icons-new/legacy/format_list_numbered.svg",
         "default": "../images/icons-new/default/renumberroute.svg"
     },
     "DBReset": {
         "shortText": "Reset",
         "longText": null,
+        "icon": "Reset",
         "legacy": "../images/icons-new/legacy/ic_delete.svg",
         "default": "../images/icons-new/default/default.svg"
     },
     "DBRestart": {
         "shortText": "Restart",
         "longText": null,
+        "icon": "Reload",
         "legacy": "../images/icons-new/legacy/ic_refresh.svg",
         "default": "../images/icons-new/default/reload.svg"
     },
     "DBRoutePoints": {
         "shortText": "Points",
         "longText": null,
+        "icon": "Route",
         "legacy": "../images/icons-new/legacy/route.svg",
         "default": "../images/icons-new/default/route.svg"
     },
     "DBSave": {
         "shortText": "Save",
         "longText": null,
+        "icon": "Save",
         "legacy": "../images/icons-new/legacy/save.svg",
         "default": "../images/icons-new/default/save.svg"
     },
     "DBSaveAs": {
         "shortText": "Save as",
         "longText": null,
+        "icon": "SaveAs",
         "legacy": "../images/icons-new/legacy/content_copy.svg",
         "default": "../images/icons-new/default/saveas.svg"
     },
     "DBScheme": {
         "shortText": "Scheme",
         "longText": null,
+        "icon": "ChartScheme",
         "legacy": "../images/icons-new/legacy/table_convert.svg",
         "default": "../images/icons-new/default/chartscheme.svg"
     },
     "DBShow": {
         "shortText": "Show",
         "longText": null,
+        "icon": "View",
         "legacy": "../images/icons-new/legacy/visibility.svg",
         "default": "../images/icons-new/default/view.svg"
     },
     "DBShowAllOverlays": {
         "shortText": "Show all",
         "longText": null,
+        "icon": "Overlays",
         "legacy": "../images/icons-new/legacy/layers-black.svg",
         "default": "../images/icons-new/default/overlays.svg"
     },
     "DBShowOverlays": {
         "shortText": "Show overlays",
         "longText": null,
+        "icon": "Overlays",
         "legacy": "../images/icons-new/legacy/layers-black.svg",
         "default": "../images/icons-new/default/overlays.svg"
     },
     "DBStartRoute": {
         "shortText": "Start route",
         "longText": null,
+        "icon": "NavGoto",
         "legacy": "../images/icons-new/legacy/wpgoto.svg",
         "default": "../images/icons-new/default/navgoto.svg"
     },
     "DBStop": {
         "shortText": "Stop",
         "longText": null,
+        "icon": "Stop",
         "legacy": "../images/icons-new/legacy/stop_circle.svg",
         "default": "../images/icons-new/default/stop.svg"
     },
     "DBUpdate": {
         "shortText": "Update",
         "longText": null,
+        "icon": "Ok",
         "legacy": "../images/icons-new/legacy/ic_done.svg",
         "default": "../images/icons-new/default/ok.svg"
     },
     "DBUserApp": {
         "shortText": "User App",
         "longText": null,
+        "icon": "AddOns",
         "legacy": "../images/icons-new/legacy/apps.svg",
         "default": "../images/icons-new/default/addons.svg"
     },
     "DBView": {
         "shortText": "View",
         "longText": null,
+        "icon": "View",
         "legacy": "../images/icons-new/legacy/visibility.svg",
         "default": "../images/icons-new/default/view.svg"
     },
     "DBWpaConnect": {
         "shortText": "Connect",
         "longText": null,
+        "icon": "WpaConnect",
         "legacy": "../images/icons-new/legacy/play_arrow.svg",
         "default": "../images/icons-new/default/wpaconnect.svg"
     },
     "DBWpaDisable": {
         "shortText": "Disable",
         "longText": null,
+        "icon": "WifiOff",
         "legacy": "../images/icons-new/legacy/wifi_off.svg",
         "default": "../images/icons-new/default/wifioff.svg"
     },
     "DBWpaEnable": {
         "shortText": "Enable",
         "longText": null,
+        "icon": "Wifi",
         "legacy": "../images/icons-new/legacy/wifi.svg",
         "default": "../images/icons-new/default/wifi.svg"
     },
     "DBWpaRemove": {
         "shortText": "Remove",
         "longText": null,
+        "icon": "Delete",
         "legacy": "../images/icons-new/legacy/ic_delete.svg",
         "default": "../images/icons-new/default/delete.svg"
     },
     "DefaultValue": {
         "shortText": "Default",
         "longText": "Default value",
+        "icon": "Reset",
         "legacy": "../images/icons-new/legacy/ic_delete.svg",
         "default": "../images/icons-new/default/default.svg"
     },
     "Dim": {
         "shortText": "Dim",
         "longText": "Dim backlight",
+        "icon": "Dim",
         "legacy": "../images/icons-new/legacy/brightness_low.svg",
         "default": "../images/icons-new/default/dim.svg"
     },
     "Edit": {
         "shortText": "Edit",
         "longText": "Edit item",
+        "icon": "Edit",
         "legacy": "../images/icons-new/legacy/ic_edit.svg",
         "default": "../images/icons-new/default/edit.svg"
     },
     "EditLayout": {
         "shortText": "Edit",
         "longText": "Edit layout",
+        "icon": "Layout",
         "legacy": "../images/icons-new/legacy/ballot.svg",
         "default": "../images/icons-new/default/layout.svg"
     },
     "EditPage": {
         "shortText": "Config",
         "longText": "Page layout config",
+        "icon": "EditPage",
         "legacy": "../images/icons-new/legacy/tune.svg",
         "default": "../images/icons-new/default/editpage.svg"
     },
     "FullScreen": {
         "shortText": "Full",
         "longText": "Full screen",
+        "icon": "FullScreen",
         "legacy": "../images/icons-new/legacy/fullscreen.svg",
         "default": "../images/icons-new/default/fullscreen.svg"
     },
     "Gps1": {
         "shortText": "Dash 1",
         "longText": "Dashboard 1",
+        "icon": "Num1",
         "legacy": "../images/icons-new/legacy/num-1.svg",
         "default": "../images/icons-new/default/num1.svg"
     },
     "Gps10": {
         "shortText": "Dash 10",
         "longText": "Dashboard 10",
+        "icon": "Num10",
         "legacy": "../images/icons-new/legacy/num-10.svg",
         "default": "../images/icons-new/default/num10.svg"
     },
     "Gps2": {
         "shortText": "Dash 2",
         "longText": "Dashboard 2",
+        "icon": "Num2",
         "legacy": "../images/icons-new/legacy/num-2.svg",
         "default": "../images/icons-new/default/num2.svg"
     },
     "Gps3": {
         "shortText": "Dash 3",
         "longText": "Dashboard 3",
+        "icon": "Num3",
         "legacy": "../images/icons-new/legacy/num-3.svg",
         "default": "../images/icons-new/default/num3.svg"
     },
     "Gps4": {
         "shortText": "Dash 4",
         "longText": "Dashboard 4",
+        "icon": "Num4",
         "legacy": "../images/icons-new/legacy/num-4.svg",
         "default": "../images/icons-new/default/num4.svg"
     },
     "Gps5": {
         "shortText": "Dash 5",
         "longText": "Dashboard 5",
+        "icon": "Num5",
         "legacy": "../images/icons-new/legacy/num-5.svg",
         "default": "../images/icons-new/default/num5.svg"
     },
     "Gps6": {
         "shortText": "Dash 6",
         "longText": "Dashboard 6",
+        "icon": "Num6",
         "legacy": "../images/icons-new/legacy/num-6.svg",
         "default": "../images/icons-new/default/num6.svg"
     },
     "Gps7": {
         "shortText": "Dash 7",
         "longText": "Dashboard 7",
+        "icon": "Num7",
         "legacy": "../images/icons-new/legacy/num-7.svg",
         "default": "../images/icons-new/default/num7.svg"
     },
     "Gps8": {
         "shortText": "Dash 8",
         "longText": "Dashboard 8",
+        "icon": "Num8",
         "legacy": "../images/icons-new/legacy/num-8.svg",
         "default": "../images/icons-new/default/num8.svg"
     },
     "Gps9": {
         "shortText": "Dash 9",
         "longText": "Dashboard 9",
+        "icon": "Num9",
         "legacy": "../images/icons-new/legacy/num-9.svg",
         "default": "../images/icons-new/default/num9.svg"
     },
     "GpsCenter": {
         "shortText": "GPS",
         "longText": "Center chart to GPS",
+        "icon": "Center",
         "legacy": "../images/icons-new/legacy/center.svg",
         "default": "../images/icons-new/default/center.svg"
     },
     "Help": {
         "shortText": "Help",
         "longText": null,
+        "icon": "Help",
         "legacy": "../images/icons-new/legacy/ic_help_outline.svg",
         "default": "../images/icons-new/default/help.svg"
     },
     "ImportsView": {
         "shortText": "Import",
         "longText": "Import charts & overlays",
+        "icon": "Imports",
         "legacy": "../images/icons-new/legacy/swap_horiz.svg",
         "default": "../images/icons-new/default/imports.svg"
     },
     "Layout": {
         "shortText": "Layout",
         "longText": "Select / edit layout",
+        "icon": "Layout",
         "legacy": "../images/icons-new/legacy/ballot.svg",
         "default": "../images/icons-new/default/layout.svg"
     },
     "LayoutFinished": {
         "shortText": "Finished",
         "longText": "Finish layout",
+        "icon": "Layout",
         "legacy": "../images/icons-new/legacy/ballot.svg",
         "default": "../images/icons-new/default/layout.svg"
     },
     "LockPos": {
         "shortText": "Follow",
         "longText": "Chart follows GPS",
+        "icon": "LockPos",
         "legacy": "../images/icons-new/legacy/boat.svg",
         "default": "../images/icons-new/default/boat.svg"
     },
     "MOB": {
         "shortText": "MOB",
         "longText": "Person over board",
+        "icon": "MOB",
         "legacy": "../images/icons-new/legacy/drowning.svg",
         "default": "../images/icons-new/default/mob.svg"
     },
     "MainExit": {
         "shortText": "Exit",
         "longText": "Exit AvNav",
+        "icon": "Cancel",
         "legacy": "../images/icons-new/legacy/ic_clear.svg",
         "default": "../images/icons-new/default/cancel.svg"
     },
     "MainInfo": {
         "shortText": "Info",
         "longText": "App version & license",
+        "icon": "Info",
         "legacy": "../images/icons-new/legacy/ic_info.svg",
         "default": "../images/icons-new/default/info.svg"
     },
     "MainNav": {
         "shortText": "Menu",
         "longText": "Main menu",
+        "icon": "MainNav",
         "legacy": "../images/icons-new/legacy/menu.svg",
         "default": "../images/icons-new/default/mainnav.svg"
     },
     "Measure": {
         "shortText": "Start",
         "longText": "Start measurement",
+        "icon": "Measure",
         "legacy": "../images/icons-new/legacy/straighten.svg",
         "default": "../images/icons-new/default/measure.svg"
     },
     "MeasureAdd": {
         "shortText": "Add",
         "longText": "Add measurement",
+        "icon": "MeasureAdd",
         "legacy": "../images/icons-new/legacy/straighten-add.svg",
         "default": "../images/icons-new/default/measureadd.svg"
     },
     "MeasureOff": {
         "shortText": "Off",
         "longText": "Measurement off",
+        "icon": "MeasureOff",
         "legacy": "../images/icons-new/legacy/straighten-off.svg",
         "default": "../images/icons-new/default/measureoff.svg"
     },
     "NavActions": {
         "shortText": "Tools",
         "longText": "Show nav tools",
+        "icon": "Navigation",
         "legacy": "../images/icons-new/legacy/navigation.svg",
         "default": "../images/icons-new/default/navactions.svg"
     },
     "NavAdd": {
         "shortText": "Before",
         "longText": "Add wp before selected",
+        "icon": "NavAdd",
         "legacy": "../images/icons-new/legacy/wpplus.svg",
         "default": "../images/icons-new/default/navadd.svg"
     },
     "NavAddAfter": {
         "shortText": "After",
         "longText": "Add wp after selected",
+        "icon": "NavAddAfter",
         "legacy": "../images/icons-new/legacy/wpplus-after.svg",
         "default": "../images/icons-new/default/navaddafter.svg"
     },
     "NavDelete": {
         "shortText": "Delete",
         "longText": "Delete wp",
+        "icon": "NavDelete",
         "legacy": "../images/icons-new/legacy/wpminus.svg",
         "default": "../images/icons-new/default/navdelete.svg"
     },
     "NavGoto": {
         "shortText": "Start",
         "longText": "Start routing",
+        "icon": "NavGoto",
         "legacy": "../images/icons-new/legacy/wpgoto.svg",
         "default": "../images/icons-new/default/navgoto.svg"
     },
     "NavMapWidgets": {
         "shortText": "On Map",
         "longText": "Map widgets",
+        "icon": "NavMapWidgets",
         "legacy": "../images/icons-new/legacy/assistant_nav.svg",
         "default": "../images/icons-new/default/navmapwidgets.svg"
     },
     "NavNext": {
         "shortText": "Skip",
         "longText": "Skip current wp",
+        "icon": "NavNext",
         "legacy": "../images/icons-new/legacy/nextwp.svg",
         "default": "../images/icons-new/default/navnext.svg"
     },
     "NavRestart": {
         "shortText": "Restart",
         "longText": "Restart routing",
+        "icon": "NavGoto",
         "legacy": "../images/icons-new/legacy/wpgoto.svg",
         "default": "../images/icons-new/default/navgoto.svg"
     },
     "NavSelectChart": {
         "shortText": "Charts",
         "longText": "Select charts & overlays",
+        "icon": "SelectChart",
         "legacy": "../images/icons-new/legacy/layers-black.svg",
         "default": "../images/icons-new/default/selectchart.svg"
     },
     "NavToCenter": {
         "shortText": "Shift",
         "longText": "Shift wp to center",
+        "icon": "NavToCenter",
         "legacy": "../images/icons-new/legacy/center.svg",
         "default": "../images/icons-new/default/navtocenter.svg"
     },
     "Night": {
         "shortText": "Night",
         "longText": "Night/Day",
+        "icon": "Night",
         "legacy": "../images/icons-new/legacy/night.svg",
         "default": "../images/icons-new/default/night.svg"
     },
     "Overflow": {
         "shortText": "More",
         "longText": "More buttons",
+        "icon": "Overflow",
         "legacy": "../images/icons-new/legacy/more_left.svg",
         "default": "../images/icons-new/default/overflow.svg"
     },
     "OverlaysView": {
         "shortText": "Overlays",
         "longText": "Edit overlay files",
+        "icon": "Overlays",
         "legacy": "../images/icons-new/legacy/layers-black.svg",
         "default": "../images/icons-new/default/overlays.svg"
     },
     "ReloadUI": {
         "shortText": "Reload",
         "longText": "Reload UI",
+        "icon": "Reload",
         "legacy": "../images/icons-new/legacy/ic_refresh.svg",
         "default": "../images/icons-new/default/reload.svg"
     },
     "RemoteChannel": {
         "shortText": "Remote",
         "longText": "Remote control",
+        "icon": "RemoteChannel",
         "legacy": "../images/icons-new/legacy/settings_remote.svg",
         "default": "../images/icons-new/default/remotechannel.svg"
     },
     "RevertLayout": {
         "shortText": "Undo",
         "longText": "Undo layout change",
+        "icon": "Undo",
         "legacy": "../images/icons-new/legacy/ic_undo.svg",
         "default": "../images/icons-new/default/undo.svg"
     },
     "RouteAdd": {
         "shortText": "Add",
         "longText": "Add route",
+        "icon": "RouteAdd",
         "legacy": "../images/icons-new/legacy/ic_add.svg",
         "default": "../images/icons-new/default/routeadd.svg"
     },
     "RouteMenu": {
         "shortText": "Edit",
         "longText": "Edit route",
+        "icon": "RouteMenu",
         "legacy": "../images/icons-new/legacy/menu_open.svg",
         "default": "../images/icons-new/default/routemenu.svg"
     },
     "SectionView": {
         "shortText": "Groups",
         "longText": "Settings groups",
+        "icon": "Section",
         "legacy": "../images/icons-new/legacy/category.svg",
         "default": "../images/icons-new/default/section.svg"
     },
     "ServerView": {
         "shortText": "Server",
         "longText": "Server settings",
+        "icon": "Server",
         "legacy": "../images/icons-new/legacy/database.svg",
         "default": "../images/icons-new/default/server.svg"
     },
     "SettingsDefaults": {
         "shortText": "Default",
         "longText": "Reset to default values",
+        "icon": "Reset",
         "legacy": "../images/icons-new/legacy/ic_delete.svg",
         "default": "../images/icons-new/default/default.svg"
     },
     "SettingsItems": {
         "shortText": "List",
         "longText": "List settings",
+        "icon": "Items",
         "legacy": "../images/icons-new/legacy/list.svg",
         "default": "../images/icons-new/default/items.svg"
     },
     "SettingsLayoutOff": {
         "shortText": "Remove",
         "longText": "Remove from layout",
+        "icon": "LayoutOff",
         "legacy": "../images/icons-new/legacy/ballot-off.svg",
         "default": "../images/icons-new/default/layoutoff.svg"
     },
     "SettingsLoad": {
         "shortText": "Load",
         "longText": "Load settings",
+        "icon": "Open",
         "legacy": "../images/icons-new/legacy/ic_open.svg",
         "default": "../images/icons-new/default/open.svg"
     },
     "SettingsSave": {
         "shortText": "Save",
         "longText": "Save settings",
+        "icon": "Save",
         "legacy": "../images/icons-new/legacy/save.svg",
         "default": "../images/icons-new/default/save.svg"
     },
     "SettingsSplitReset": {
         "shortText": "Reset",
         "longText": "Reset split settings",
+        "icon": "SplitReset",
         "legacy": "../images/icons-new/legacy/reset_split.svg",
         "default": "../images/icons-new/default/splitreset.svg"
     },
     "ShowRoutePanel": {
         "shortText": "Route",
         "longText": "Open route editor",
+        "icon": "Route",
         "legacy": "../images/icons-new/legacy/route.svg",
         "default": "../images/icons-new/default/route.svg"
     },
     "ShowSettings": {
         "shortText": "Display",
         "longText": "Display settings",
+        "icon": "Settings",
         "legacy": "../images/icons-new/legacy/ic_settings.svg",
         "default": "../images/icons-new/default/settings.svg"
     },
     "Split": {
         "shortText": "Split",
         "longText": "Split screen",
+        "icon": "Split",
         "legacy": "../images/icons-new/legacy/vertical_split.svg",
         "default": "../images/icons-new/default/split.svg"
     },
     "StatusAdd": {
         "shortText": "Add",
         "longText": "Add connection",
+        "icon": "StatusAdd",
         "legacy": "../images/icons-new/legacy/ic_add.svg",
         "default": "../images/icons-new/default/statusadd.svg"
     },
     "StatusAddresses": {
         "shortText": "Net",
         "longText": "Network addresses",
+        "icon": "QRCode",
         "legacy": "../images/icons-new/legacy/qrcode.svg",
         "default": "../images/icons-new/default/qrcode.svg"
     },
     "StatusAll": {
         "shortText": "Expand",
         "longText": "List all handlers",
+        "icon": "Expand",
         "legacy": "../images/icons-new/legacy/expand-all.svg",
         "default": "../images/icons-new/default/expand.svg"
     },
     "StatusAndroid": {
         "shortText": "Android",
         "longText": "Android settings",
+        "icon": "Android",
         "legacy": "../images/icons-new/legacy/ic_android.svg",
         "default": "../images/icons-new/default/android.svg"
     },
     "StatusDebug": {
         "shortText": "Debug",
         "longText": "Enable debugging",
+        "icon": "Debug",
         "legacy": "../images/icons-new/legacy/bug_report.svg",
         "default": "../images/icons-new/default/debug.svg"
     },
     "StatusLog": {
         "shortText": "Log",
         "longText": "AvNav log",
+        "icon": "Log",
         "legacy": "../images/icons-new/legacy/ic_text_snippet.svg",
         "default": "../images/icons-new/default/serverlog.svg"
     },
     "StatusRestart": {
         "shortText": "Restart",
         "longText": "Restart AvNav server",
+        "icon": "StatusRestart",
         "legacy": "../images/icons-new/legacy/ic_refresh.svg",
         "default": "../images/icons-new/default/reboot.svg"
     },
     "StatusShutdown": {
         "shortText": "Halt",
         "longText": "Shutdown server computer",
+        "icon": "Shutdown",
         "legacy": "../images/icons-new/legacy/ic_power.svg",
         "default": "../images/icons-new/default/shutdown.svg"
     },
     "StatusWpa": {
         "shortText": "Wifi",
         "longText": "Configure Wifi",
+        "icon": "Wifi",
         "legacy": "../images/icons-new/legacy/wifi.svg",
         "default": "../images/icons-new/default/wifi.svg"
     },
     "StopAnchorWatch": {
         "shortText": "Stop",
         "longText": "Stop anchor watch",
+        "icon": "AnchorEnd",
         "legacy": "../images/icons-new/legacy/anchor-end.svg",
         "default": "../images/icons-new/default/anchor.svg"
     },
     "StopNav": {
         "shortText": "Stop",
         "longText": "Stop routing",
+        "icon": "NavStop",
         "legacy": "../images/icons-new/legacy/stop-nav.svg",
         "default": "../images/icons-new/default/navstop.svg"
     },
     "StopWp": {
         "shortText": "Stop",
         "longText": "Stop routing",
+        "icon": "WpStop",
         "legacy": "../images/icons-new/legacy/stop-wp.svg",
         "default": "../images/icons-new/default/wpgotostop.svg"
     },
     "StoredRoutes": {
         "shortText": "List",
         "longText": "Edit stored routes",
+        "icon": "Items",
         "legacy": "../images/icons-new/legacy/list.svg",
         "default": "../images/icons-new/default/items.svg"
     },
     "SyncRoutes": {
         "shortText": "Sync",
         "longText": "Sync routes to server",
+        "icon": "Sync",
         "legacy": "../images/icons-new/legacy/sync.svg",
         "default": "../images/icons-new/default/sync.svg"
     },
     "ToRoute": {
         "shortText": "Route",
         "longText": "To route",
+        "icon": "Route",
         "legacy": "../images/icons-new/legacy/route.svg",
         "default": "../images/icons-new/default/route.svg"
     },
     "TrackItems": {
         "shortText": "List",
         "longText": "Edit tracks / logs",
+        "icon": "Items",
         "legacy": "../images/icons-new/legacy/list.svg",
         "default": "../images/icons-new/default/items.svg"
     },
     "Upload": {
         "shortText": "Upload",
         "longText": "Upload file",
+        "icon": "Upload",
         "legacy": "../images/icons-new/legacy/ic_file_upload.svg",
         "default": "../images/icons-new/default/upload.svg"
     },
     "WpEdit": {
         "shortText": "Edit",
         "longText": "Edit wp",
+        "icon": "Edit",
         "legacy": "../images/icons-new/legacy/ic_edit.svg",
         "default": "../images/icons-new/default/edit.svg"
     },
     "WpGoto": {
         "shortText": "Start",
         "longText": "Start to wp",
+        "icon": "WpGoto",
         "legacy": "../images/icons-new/legacy/waypoint.svg",
         "default": "../images/icons-new/default/wpgoto.svg"
     },
     "WpLocate": {
         "shortText": "Locate",
         "longText": "Center to wp",
+        "icon": "WpLocate",
         "legacy": "../images/icons-new/legacy/center.svg",
         "default": "../images/icons-new/default/wplocate.svg"
     },
     "WpNext": {
         "shortText": "Next",
         "longText": "Next wp",
+        "icon": "WpNext",
         "legacy": "../images/icons-new/legacy/ic_arrow_forward.svg",
         "default": "../images/icons-new/default/wpnext.svg"
     },
     "WpPrevious": {
         "shortText": "Previous",
         "longText": "Previous wp",
+        "icon": "WpPrevious",
         "legacy": "../images/icons-new/legacy/ic_arrow_back.svg",
         "default": "../images/icons-new/default/wpprevious.svg"
     },
     "WpRestart": {
         "shortText": "Restart",
         "longText": "Restart wp routing",
+        "icon": "WpRestart",
         "legacy": "../images/icons-new/legacy/wprestart.svg",
         "default": "../images/icons-new/default/wprestart.svg"
     },
     "ZoomIn": {
         "shortText": "Zoom",
         "longText": "Zoom in",
+        "icon": "ZoomIn",
         "legacy": "../images/icons-new/legacy/ic_zoom_in.svg",
         "default": "../images/icons-new/default/zoomin.svg"
     },
     "ZoomOut": {
         "shortText": "Zoom",
         "longText": "Zoom out",
+        "icon": "ZoomOut",
         "legacy": "../images/icons-new/legacy/ic_zoom_out.svg",
         "default": "../images/icons-new/default/zoomout.svg"
     }

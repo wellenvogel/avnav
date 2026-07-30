@@ -87,6 +87,13 @@ This will render a small button symbol with the short text and the icon dependin
 {{BT("Cancel",True)}}
 ```
 
+## Icons
+For standalone icons (without button) you must use the Icon name [see source](https://github.com/wellenvogel/avnav/blob/master/viewer/style/icons.less).
+```
+{{ICON("MNCollapsed")}}
+```
+
+
 ## VIDEOS
 To be flexible for the hosting of videos all videos should be configured in [videos.yml](docs/videos.yml).
 Each video will have a name and can have multiple urls and a list of chapters.

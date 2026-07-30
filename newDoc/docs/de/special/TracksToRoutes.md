@@ -41,7 +41,7 @@ Ablauf
 Man kann den Dialog für die Konvertierung entweder von der [Tracks Seite](TODO)
 Seite nack Klick auf einen Track über {{BT("ToRoute")}}oder aus dem Info Dialog, falls man einen Track als [Overlay](TODO)
 auf der Karte hat, und einen Punkt in diesem anklickt. Im Info Dialog
-wieder den Button {{BT("ToRoute")}} nutzen - siehe Bild.
+wieder den Button {{DB("ToRoute")}} nutzen - siehe Bild.
 
 ![](../../img/FeatureInfo-Track.png)
 

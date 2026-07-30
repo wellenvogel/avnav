@@ -43,30 +43,55 @@ header .md-label{
     align-self: center ;
     margin: 0.5em;
 }
-.avnav-icon{
+.avnav-button{
     height: 2.5em;
     width: 2.5em;
-    background-repeat: no-repeat;
-    background-size: 60%;
-    background-position-x: center;
+    position: relative;
     display: inline-block;
     vertical-align: middle;
     border: 1px solid lightgrey;
     border-radius: 5px;
-    position: relative;
     cursor:pointer;
 }
-.avnav-icon.longText {
+.avnav-icon{
+    width: 2.5em;
+    height: 2.5em;
+    background-repeat: no-repeat;
+    background-size: 60%;
+    background-position-x: center;
+    background-position-y: center;
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    border: 1px solid lightgrey;
+}
+.avnav-button .avnav-icon{
+    width: 100%;
+    height: 100%;
+    background-position-y: unset;
+    border: unset;
+}
+.avnav-button.longText {
     width: 5em;
+}
+.avnav-button.longText .avnav-icon{
     background-size: 1.5em 1.5em;
 }
-.avnav-icon.dialog-button{
+
+.avnav-button.dialog-button{
     width: 5em;
     background-position-x: left;
     background-size: 1.2em;
     background-position-y: center;
+    display: inline-flex;
 }
-.avnav-icon:after{
+.avnav-button.dialog-button .avnav-icon{
+    width: 2.5em;
+    background-size: 50%;
+    background-position-y: center;
+    background-position-x: 0.3em;
+}
+.avnav-button:after{
     position: absolute;
     bottom:0;
     font-size: 0.6em;
@@ -74,10 +99,10 @@ header .md-label{
     right: 0;
     text-align: center;
 }
-.avnav-icon.dialog-button:after{
+.avnav-button.dialog-button:after{
     font-size: 0.8em;
-    left: 1.6em;
     bottom: 0.6em;
-    right: unset;
-    text-align: left;
+    right: 0.3em;
+    text-align: right;
+    vertical-align: middle;
 }

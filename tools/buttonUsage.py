@@ -18,7 +18,8 @@ F_BTEXT="buttontext"
 F_ICONS='icons'
 F_BTOVERVIEW='buttonoverview'
 F_BTJSON='buttonjson'
-
+F_ICONJSON='iconjson'
+ALL_FORMATS=[F_PLAIN,F_TABLE,F_SPARSE,F_PANDOC,F_BT2ICON,F_ICONUSAGE,F_BTEXT,F_ICONS,F_BTOVERVIEW,F_BTJSON,F_ICONJSON]
 logger = logging.getLogger(__name__)
 logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
 
@@ -339,7 +340,6 @@ def iconUsage(icon:str,buttonDefs,iconGreps):
 if len(sys.argv) < 1:
     usage()
     sys.exit(1)
-ALL_FORMATS=[F_PLAIN,F_TABLE,F_SPARSE,F_PANDOC,F_BT2ICON,F_ICONUSAGE,F_BTEXT,F_ICONS,F_BTOVERVIEW,F_BTJSON]
 #after creating the "pandoc" markdow convert to odt
 #from within the docs dir with
 #pandoc -o buttonUsage.odt --embed-resources=true buttonUsage.md
@@ -480,6 +480,21 @@ elif format == F_BTJSON:
         rt[k]={
             'shortText': textDef.tshort if textDef else '',
             'longText': textDef.tlong if textDef else '',
+            'icon':buttonDef.icon
+        }
+        if iconDef is not None:
+            if iconDef.icon is not None:
+                if len(iconDef.icon)>0:
+                    rt[k]['legacy']=iconPath(iconDef.icon[0])
+                if len(iconDef.icon)>1:
+                    rt[k]['default']=iconPath(iconDef.icon[1])
+    print (json.dumps(rt, indent=4))
+    sys.exit(0)
+elif format == F_ICONJSON:
+    rt={}
+    for k in sorted(iconDefs.keys()):
+        iconDef = iconDefs.get(k)
+        rt[k]={
         }
         if iconDef is not None:
             if iconDef.icon is not None:
