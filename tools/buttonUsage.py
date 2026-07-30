@@ -221,16 +221,17 @@ def readTexts(fname):
     lnr=0
     restart1=re.compile(r'^ *.button *{')
     restart2 = re.compile(r'^ *.dialogButton *{')
+    restart3 = re.compile(r'^ *.mmButton *{')
     rename=re.compile(r'^ *&\.(\w+) *{')
-    reshort=re.compile(r'^ *\.btTxt *\( *[\'"]([^\'"]+)')
-    relong = re.compile(r'^ *\.btTxt *\( *[\'"]([^\'"]*)[\'"] *, *[\'"]([^\'"]*)')
+    reshort=re.compile(r'^ *\.(?:btTxt|mmTxt) *\( *[\'"]([^\'"]+)')
+    relong = re.compile(r'^ *\.(?:btTxt|mmTxt) *\( *[\'"]([^\'"]*)[\'"] *, *[\'"]([^\'"]*)')
     reClose = re.compile(r'} *,*')
     with open(fname,'r') as fb:
         for line in fb:
             lnr+=1
             line = line.strip()
             if state == 0:
-                if restart1.match(line) is not None or restart2.match(line) is not None:
+                if restart1.match(line) is not None or restart2.match(line) is not None or restart3.match(line) is not None:
                     state=1
             elif state == 1:
                 if reClose.match(line) is not None:
