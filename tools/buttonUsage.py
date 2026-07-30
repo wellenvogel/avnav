@@ -104,7 +104,7 @@ def readButtons(fname):
     lnr=0
     rec=re.compile(r'//.*')
     re0=re.compile(r'^ *const +ButtonDefinitions *= *{')
-    re1=re.compile(r'^ *(\w+) *: *{')
+    re1=re.compile(r'^ *([":\w]+) *: *{')
     reClose=re.compile(r'} *,*')
     rename=re.compile(r'^ *name *: *btdef\.(\w+)')
     reicon=re.compile(r'^ *iconClass *: *iconClasses\.(\w+)')
@@ -120,7 +120,7 @@ def readButtons(fname):
                 match=re1.match(line)
                 if match is not None and match.group(1) is not None:
                     state=2
-                    name=match.group(1)
+                    name=match.group(1).replace('"','')
                     btline=lnr
             elif state == 2:
                 nmatch=rename.match(line)
