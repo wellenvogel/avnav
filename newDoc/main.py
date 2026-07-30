@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import yaml
+import re
 BTJSON='docs/buttons/buttons.json' #source path
 ICONJSON='docs/buttons/icons.json'
 BTCSS='docs/generated/buttons.css'
@@ -21,6 +22,7 @@ VK_LINK='link'
 VK_EMBED='embed'
 C_START='start'
 C_TITLE='title'
+CLREPL=re.compile("[^a-zA-Z0-9_-]")
 def toSeconds(v):
     if isinstance(v,str):
         if v.index(":") >= 0:
@@ -91,11 +93,12 @@ def buildButtonCss(buttons,icons,btcss):
             oh.write(str)
         for n,v in buttons.items():
             str=""
+            name=CLREPL.sub('_',n)
             for kind in ['shortText','longText']:
                 txt=v.get(kind)
                 if txt is not None:
                     kindClass=f".{kind}" if kind != 'shortText' else ''
-                    str+=f"{kindClass}.avnav-button.{n}:after"+"{\n"
+                    str+=f"{kindClass}.avnav-button.{name}:after"+"{\n"
                     str+=f"  content: \"{txt}\";"+"\n}\n"
             oh.write(str)
 
@@ -139,7 +142,7 @@ def define_env(env):
         videos=load_videos(vf)
 
     
-    def button(name,dialog=False,longText=False):
+    def button(name,dialog=False,longText=False,mainMenu=False):
         if not name:
             return ''
         button=buttons.get(name)
@@ -151,8 +154,10 @@ def define_env(env):
         btdoc=btdoc.replace('.md','.html')
         addClass='dialog-button' if dialog else ''
         addClass+=' longText' if longText else ''
+        addClass+=' mainMenu' if mainMenu else ''
         icon=button.get('icon')
-        return f"<span class=\"avnav-button {addClass} {name}\" data-link=\"{btdoc}\" title=\"{name}\">"+\
+        cl=CLREPL.sub('_',name)
+        return f"<span class=\"avnav-button {addClass} {cl}\" data-link=\"{btdoc}\" title=\"{name}\">"+\
                 f"<span class=\"avnav-icon {icon}\"/>"+\
                 f"</span>"
     
@@ -162,6 +167,22 @@ def define_env(env):
     @env.macro
     def DB(name):
         return button(name,True)
+    @env.macro
+    def MB(name):
+        return button(name,mainMenu=True)
+    
+    BTCONCAT="<span>&nbsp;-&#62;</span>"
+    @env.macro
+    def BC():
+        return BTCONCAT
+    @env.macro
+    def MM(name):
+        return button('MainNav')+BTCONCAT+button(name,mainMenu=True)
+
+    @env.macro
+    def MMA(name):
+        return button('MainNav')+BTCONCAT+button("MM:actions",mainMenu=True)+BTCONCAT+button(name,longText=True)
+
     @env.macro
     def ICON(name):
         if not name:

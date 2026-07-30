@@ -73,6 +73,7 @@ header .md-label{
 }
 .avnav-button.longText {
     width: 5em;
+    height: 3.5em;
 }
 .avnav-button.longText .avnav-icon{
     background-size: 1.5em 1.5em;
@@ -86,6 +87,22 @@ header .md-label{
     display: inline-flex;
 }
 .avnav-button.dialog-button .avnav-icon{
+    width: 2.5em;
+    background-size: 50%;
+    background-position-y: center;
+    background-position-x: 0.3em;
+}
+.avnav-button.mainMenu{
+    width:10em;
+}
+.avnav-button.mainMenu:after{
+    font-size: 0.8em;
+    left: unset;
+    bottom: unset;
+    top: 0.6em;
+    right: 0.5em;
+}
+.avnav-button.mainMenu .avnav-icon{
     width: 2.5em;
     background-size: 50%;
     background-position-y: center;

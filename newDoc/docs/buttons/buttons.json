@@ -794,6 +794,148 @@
         "legacy": "../images/icons-new/legacy/boat.svg",
         "default": "../images/icons-new/default/boat.svg"
     },
+    "MM:actions": {
+        "shortText": "Actions",
+        "longText": null,
+        "icon": "MNCatNav",
+        "legacy": "../images/icons-new/legacy/boat.svg",
+        "default": "../images/icons-new/default/boat.svg"
+    },
+    "MMaddonconfigpage": {
+        "shortText": "CSS, JS, User Apps",
+        "longText": null,
+        "icon": "MNCatSet",
+        "legacy": "../images/icons-new/legacy/build.svg",
+        "default": "../images/icons-new/default/mncatset.svg"
+    },
+    "MMaddonpage": {
+        "shortText": "User Apps",
+        "longText": null,
+        "icon": "MNCatNav",
+        "legacy": "../images/icons-new/legacy/boat.svg",
+        "default": "../images/icons-new/default/boat.svg"
+    },
+    "MMaddresspage": {
+        "shortText": "Connect Urls",
+        "longText": null,
+        "icon": "Empty"
+    },
+    "MMaiscfgpage": {
+        "shortText": "AIS",
+        "longText": null,
+        "icon": "MNCatSet",
+        "legacy": "../images/icons-new/legacy/build.svg",
+        "default": "../images/icons-new/default/mncatset.svg"
+    },
+    "MMaispage": {
+        "shortText": "AIS targets",
+        "longText": null,
+        "icon": "MNCatSet",
+        "legacy": "../images/icons-new/legacy/build.svg",
+        "default": "../images/icons-new/default/mncatset.svg"
+    },
+    "MMchannelspage": {
+        "shortText": "Connections/Devices",
+        "longText": null,
+        "icon": "MNCatSet",
+        "legacy": "../images/icons-new/legacy/build.svg",
+        "default": "../images/icons-new/default/mncatset.svg"
+    },
+    "MMchartspage": {
+        "shortText": "Charts/Overlays",
+        "longText": null,
+        "icon": "Charts",
+        "legacy": "../images/icons-new/legacy/map2.svg",
+        "default": "../images/icons-new/default/charts.svg"
+    },
+    "MMeditroutepage": {
+        "shortText": "Route Editor",
+        "longText": null,
+        "icon": "Empty"
+    },
+    "MMgpspage": {
+        "shortText": "Dashboard",
+        "longText": null,
+        "icon": "MNCatNav",
+        "legacy": "../images/icons-new/legacy/boat.svg",
+        "default": "../images/icons-new/default/boat.svg"
+    },
+    "MMinfopage": {
+        "shortText": "Version and License",
+        "longText": null,
+        "icon": "Empty"
+    },
+    "MMlayoutspage": {
+        "shortText": "Layouts",
+        "longText": null,
+        "icon": "Layout",
+        "legacy": "../images/icons-new/legacy/ballot.svg",
+        "default": "../images/icons-new/default/layout.svg"
+    },
+    "MMloading": {
+        "shortText": "AvNav is loading",
+        "longText": null,
+        "icon": "Empty"
+    },
+    "MMnavpage": {
+        "shortText": "Navigation",
+        "longText": null,
+        "icon": "MNCatNav",
+        "legacy": "../images/icons-new/legacy/boat.svg",
+        "default": "../images/icons-new/default/boat.svg"
+    },
+    "MMpluginspage": {
+        "shortText": "Plugins",
+        "longText": null,
+        "icon": "Plugins",
+        "legacy": "../images/icons-new/legacy/extension.svg",
+        "default": "../images/icons-new/default/plugins.svg"
+    },
+    "MMremotepage": {
+        "shortText": "Remote Control",
+        "longText": null,
+        "icon": "MNCatSet",
+        "legacy": "../images/icons-new/legacy/build.svg",
+        "default": "../images/icons-new/default/mncatset.svg"
+    },
+    "MMroutepage": {
+        "shortText": "Routes",
+        "longText": null,
+        "icon": "Route",
+        "legacy": "../images/icons-new/legacy/route.svg",
+        "default": "../images/icons-new/default/route.svg"
+    },
+    "MMserverpage": {
+        "shortText": "Server",
+        "longText": null,
+        "icon": "MNCatSet",
+        "legacy": "../images/icons-new/legacy/build.svg",
+        "default": "../images/icons-new/default/mncatset.svg"
+    },
+    "MMsettingspage": {
+        "shortText": "Display Settings",
+        "longText": null,
+        "icon": "Settings",
+        "legacy": "../images/icons-new/legacy/ic_settings.svg",
+        "default": "../images/icons-new/default/settings.svg"
+    },
+    "MMtrackspage": {
+        "shortText": "Tracks/NMEALogs",
+        "longText": null,
+        "icon": "Track",
+        "legacy": "../images/icons-new/legacy/track.svg",
+        "default": "../images/icons-new/default/track.svg"
+    },
+    "MMwarningpage": {
+        "shortText": "Initial Warning",
+        "longText": null,
+        "icon": "Empty"
+    },
+    "MMwpapage": {
+        "shortText": "Configure Wifi Clients",
+        "longText": null,
+        "icon": "Empty"
+    },
     "MOB": {
         "shortText": "MOB",
         "longText": "Person over board",
