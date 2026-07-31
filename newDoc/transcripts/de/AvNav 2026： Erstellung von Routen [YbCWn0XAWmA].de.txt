@@ -1,0 +1,79 @@
+﻿00:00:07,040 Beschäftigen wir uns nun mit der Routen-Funktion.  
+00:00:10,560 Das Erstellen einer Route geht am einfachsten direkt aus dem Navigations-Fenster über die 
+00:00:15,600 Schaltfläche für die Route. Wenn man sie anklickt, landet man im Routen 
+00:00:20,780 Editor. Die Kartenansicht bleibt, aber die Buttonleiste rechts hat sich verändert.   
+00:00:26,440 Wie eine Route angelegt wird und wo Wegepunkte einzugeben sind 
+00:00:30,000 und so weiter, wird nun gezeigt. Schritt eins: Man klickt links unten 
+00:00:36,520 in das Routen Widget und legt eine neue Route an, indem man der Route einen neuen Namen mit 
+00:00:42,200 Klick auf New gibt. Wir wählen hier den Namen „Test“ und bestätigen mit okay.  
+00:00:49,080 Nun zeigt der Dialog den neuen Namen. Ein zweiter Klick auf OK führt dazu, dass auch 
+00:00:54,880 im Widget die Route „Test“ existiert, aber es gibt natürlich noch keinerlei Wegepunkte  
+00:01:01,560 Schritt zwei ist das Setzen von Wegepunkten, das erfolgt in AvNav, indem das Fadenkreuz auf den 
+00:01:07,920 Punkt gesetzt wird, wo ein Wegepunkt entstehen soll. Wir wählen hier die Tonne westlich von 
+00:01:14,760 Drejö, besser etwas daneben aus erfindlichen Gründen, und klicken auf den Button „After“.  
+00:01:22,160 Nun soll ein zweiter Wegepunkt angelegt werden. Er soll uns in die Durchfahrt 
+00:01:26,600 zwischen Drejö und Avernakö führen. Dorthin muss also das Fadenkreuz, 
+00:01:31,880 dann drücken wir wieder auf After. Sollten wir jetzt vergessen haben, 
+00:01:36,920 dass wir zwischen Wegepunkt Eins und zwei noch einen dritten Wegepunkt legen wollen, 
+00:01:41,640 kann man nun einen dritten Wegepunkt zwischen die beiden legen, indem man auf Before klickt. 
+00:01:47,400 D.h. jetzt wird Wegepunkt Nummer drei vor den aktuell aktiven Wegepunkt zwei gelegt.  
+00:01:53,840 Das sieht dann so aus. Das hat gut geklappt. Die Arbeit mit dem Fadenkreuz mag im ersten 
+00:02:00,120 Augenblick etwas umständlich wirken im Vergleich zu direkten Klicks auf den 
+00:02:04,240 Touchscreen. In Situationen mit einem sich stark bewegenden Schiff auf einem kleineren 
+00:02:10,240 Bildschirm und klammen Fingern wird man diese Art der Bedienung aber zu schätzen lernen.  
+00:02:17,360 Jetzt geht’s darum, weitere Routing-Funktion kennen zu lernen, zum Beispiel das Verlegen 
+00:02:22,640 eines bestehenden Wegepunktes. Zum Beispiel soll Wegepunkt 1 dann doch auf die Ansteuerung 
+00:02:28,720 von Aeroesköbing gelegt werden. Dazu muss Wegepunkt 1 zunächst markiert 
+00:02:34,360 werden. Das geht so, indem du einfach in der Karte direkt auf den Wegepunkt klickst. 
+00:02:40,760 Wem das zu hakelig oder zu eng ist, kann auch in Widget den Wegepunkt auswählen.  
+00:02:47,520 Wenn Wegepunkt 1 ausgewählt ist, muss das Fadenkreuz auf die neue Koordinate gesetzt werden, 
+00:02:53,720 mit einem Klick auf die Schaltfäche „Shift“ verschiebt sich Wegepunkt 1 nun dorthin.  
+00:03:01,280 Soll ein Wegepunkt aus der Route gelöscht werden, nutzt du dafür die Schaltfläche delete. Natürlich 
+00:03:07,400 musst du vorher den Wegepunkt, den du löschen möchtest, markieren - so wie eben gezeigt.  
+00:03:13,800 Das sind im Prinzip die Dinge, die man braucht, um eine Route aufzubauen.  
+00:03:18,080 Man kann jetzt noch weitere Möglichkeiten nutzen, indem man die Schaltfläche Tools anklickt und hier 
+00:03:24,200 show Wp buttons. Jetzt kann man hier noch mal mit den Schaltflächen Next und Previous von Wegepunkt 
+00:03:31,000 zu Wegepunkt klicken, wenn die Arbeit im Widget oder in der Karte als ungünstiger empfunden wird.  
+00:03:37,840 Über Edit kann jeder einzelne Wegepunkt editiert werden, 
+00:03:41,160 um zum Beispiel einen neuen Namen zu vergeben. Mit Locate kannst du den angewählten Wegepunkt 
+00:03:47,520 schnell wieder ins Kartenfenster holen, wenn die Karte aus irgendwelchen Gründen 
+00:03:51,680 woanders hin verschoben wurde. Das kannst du allerdings auch erreichen, wenn du den Wegepunkt 
+00:03:57,520 im Widget anklickst. Es gibt immer wieder mindestens eine zweite Option, das ist gut so.  
+00:04:05,120 Nun sind alle Eingaben gemacht, es folgt Schritt 3, die Route soll aktiviert werden. 
+00:04:11,160 Das geht über den Klick auf den Start-Button. Bevor das passiert, sollte noch einmal geprüft 
+00:04:17,240 werden, welcher Wegepunkt aktuell aktiv ist, denn dorthin würde die Route starten. Wir legen 
+00:04:25,120 also Wegepunkt 1 als erstes Leg von unserer Position aus fest und klicken auf Start.  
+00:04:32,040 Die Route wird nun aktiv, die Ansicht springt zurück in das normale Navigationsfenster. Aus 
+00:04:38,040 dem Start-Button wird ein Stop-Button. Mit ihm könnte ich die Aktivierung der Route 
+00:04:43,280 wieder zurücknehmen. Dass deine Route nun aktiv ist, siehst du außerdem daran, dass die Widgets 
+00:04:49,680 die routenbezogenen Werte anzeigen, also die Distanz zum nächsten Wegepunkt, den Kurs dorthin, 
+00:04:56,360 im RTE-Widget die Länge der Route und die ETA. Über die Tools können interessante Funktionen 
+00:05:03,840 während des Abfahrens der Route aktiviert werden. Sollte man sich entscheiden, 
+00:05:08,480 einen Wegepunkt auszulassen, ohne die Route gleich in ihrem Ablauf ändern zu wollen, 
+00:05:13,640 ist der Skip-Button die richtige Wahl: Den auszulassenden Wegepunkt auswählen, 
+00:05:20,000 dann auf Skip klicken, schon springt die Route auf den nächsten Wegepunkt. Das kann hilfreich sein, 
+00:05:26,960 wenn man einen Wegepunkt in einer so großen Entfernung passiert hat, dass das Erreichen 
+00:05:31,840 des Wegepunktes nicht quittiert wird. Natürlich kann die Route ,während sie läuft, 
+00:05:37,480 auch verändert werden, indem man wieder in den Routen-Editor wechselt, 
+00:05:42,080 um zum Beispiel einen Wegepunkt doch wieder zu verlegen. Wegepunkt 2 soll beispielsweise 
+00:05:49,480 näher an die Tonne rücken. Das läuft wie bereits erläutert über den Button Shift.  
+00:05:56,440 Die Änderung wird direkt übernommen, während die Route läuft. Das Speichern der Route, 
+00:06:01,360 wenn sie angelegt oder verändert wurde, läuft im Hintergrund automatisch.  
+00:06:07,200 Wenn du nach einer Änderung der Route auch eine XTE-Aktualisierung erreichen 
+00:06:11,400 möchtest, klicke auf Restart. Um einen Überblick zu bekommen, 
+00:06:16,880 wo sich die Dateien zu den Routen befinden, muss man über das Menü zum Bereich Routen wechseln. 
+00:06:24,080 Dort werden alle gespeicherten Routen gelistet, man sieht, dass die Route Test 
+00:06:28,840 vor kurzer Zeit automatisch gespeichert worden ist. Nun kann sie noch kopiert, 
+00:06:34,000 heruntergeladen oder editiert werden und sie kann als Overlay in eine Karte gelegt werden.  
+00:06:40,680 Das sind Dinge, die du in Ruhe für dich ausprobieren kannst. 
+00:06:44,440 Was im Routenbereich noch möglich ist, erklärt sich eigentlich direkt aus den Schaltflächen.  
+00:06:51,760 Zum Ende soll eine Schaltfläche noch einmal herausgehoben werden, nämlich connect.    
+00:06:57,200 Im Normalzustand ist "connect" in der Regel aktiv. Dann werden die Routen-Operationen auf dem Server 
+00:07:03,320 ausgeführt und alle angeschlossenen Displays zeigen die gleichen Werte.  
+00:07:09,280 Wenn “connect” deaktiviert wird, kann man auf einem lokalen Display andere Routen 
+00:07:13,880 ausprobieren und ändern - der Server arbeitet weiter mit der alten Route. Diese Routen werden 
+00:07:20,160 nur auf dem lokalen Display verarbeitet.  Wenn ich mit einem zweiten Display auf einem 
+00:07:23,799 zweiten Gerät arbeite, sollte immer die Schaltfläche connect aktiv sein, 
+00:07:23,874 damit Server und Client, also das zweite Gerät, datentechnisch miteinander verbunden sind. Sonst 
+00:07:23,972 bleibt das Speichern einer Route auf den lokalen Rechner beschränkt. Was das im Einzelnen bedeutet, 
+00:07:24,073 kann man noch einmal in der Doku nachlesen. Das war’s zur Erstellung von Routen. 
