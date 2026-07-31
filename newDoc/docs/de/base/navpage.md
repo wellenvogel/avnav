@@ -1,11 +1,11 @@
 # Navigationsseite 
 
- Ein Teil der Inhalte dieses Abschnittes wird auch im Video [hier](https://www.youtube.com/watch?v=as62-dDtmQ4) vorgestellt
+ Ein Teil der Inhalte dieses Abschnittes wird auch im **[Video hier]({{VURL("navigation")}}){.videolink}** vorgestellt
 
  Beim Start von AvNav landet man sofort in der Navigationsansicht,
  in der die zuletzt benutzte Karte geladen wird. Lässt sich diese nicht feststellen, folgt die Aufforderung zur Auswahl einer Karte.
 
-![Screenshot](../img/navpage.png)
+![Screenshot](../../img/navpage.png)
 
 ## Widgets
  Das Programmfenster ist so gestaltet, dass alle relevanten Daten und Anzeigewerte schnell zugänglich sind. Dafür sorgen die sogenannten "Widgets". Die Widgets können oben und unten und auch links auf der Navigationsseite erscheinen. Um Platz für weitere Anzeigen zu bieten, gibt es darüber hinaus die Dashboardseiten. Alle Widgets lassen sich frei konfigurieren, um die bevorzugten Informationen stets im Blick zu haben. Wie das im Einzelnen geht, und was es mit den Dashboardseiten auf sich hat, thematisiert das Kapitel zum Editieren von [Layouts](layout.md).
@@ -16,7 +16,7 @@ In der rechten Seitenleiste liegt die Buttonleiste, die die wichtigsten Funktio
 
 | Button | Funktion |
 | ------ | -------- |
-| {{BT("MainNav",False)}} | Eine der grundlegendsten Neuerungen 2026 ist das "Main Menu" oben rechts, welches bei Klick eine Übersicht der verfügbaren Funktionsbereiche von AvNav öffnet. Diese lassen sich direkt auswählen oder über {{DB("mncollapsed.svg")}} aufklappen. Durch das Aufklappen eines Funktionsbereichs sieht man die dort relevanten Schaltflächen, hier aber mit längerem und aussagekräftigerem Text. <br><br> Der Funktionsbereich "Actions" öffnet ein Spezialmenü, welches besondere Aktionen auslöst, die übergreifend von sämtlichen Funktionsbereichen erreichbar sein sollen. Mehr dazu [weiter unten](#actions-buttons). <br><br> Über [Settings/Main Menu](settings.md) lässt sich das Menü verkürzen, um es für Navigationsaufgaben unterwegs handlicher zu machen, denn viele Funktionsbereiche werden mit hoher Wahrscheinlichkeit nicht täglich benötigt. |
+| {{BT("MainNav",False)}} | Eine der grundlegendsten Neuerungen 2026 ist das "Main Menu" oben rechts, welches bei Klick eine Übersicht der verfügbaren Funktionsbereiche von AvNav öffnet. Diese lassen sich direkt auswählen oder über {{ICON("MNCollapsed")}} aufklappen. Durch das Aufklappen eines Funktionsbereichs sieht man die dort relevanten Schaltflächen, hier aber mit längerem und aussagekräftigerem Text. <br><br> Der Funktionsbereich "Actions" öffnet ein Spezialmenü, welches besondere Aktionen auslöst, die übergreifend von sämtlichen Funktionsbereichen erreichbar sein sollen. Mehr dazu [weiter unten](#actions-buttons). <br><br> Über [Settings/Main Menu](settings.md) oder direkt im Menü über den Button {{ICON("Settings")}} lässt sich das Menü verkürzen, um es für Navigationsaufgaben unterwegs handlicher zu machen, denn viele Funktionsbereiche werden mit hoher Wahrscheinlichkeit nicht täglich benötigt. |
 | {{BT("MOB",False)}} |Der Mob-Button befindet sich immer an gleicher Stelle auf jeder Seite. Ein Klick auf ihn erzeugt erst einmal einen lauten Alarm, sofern ein lautgebendes Element an das Gerät angeschlossen ist. Es gibt zudem einen visuellen Alarm. Die aktuelle Position wird angesprungen und deutlich markiert. In den zuständigen Widgets werden die Entfernung und der Kurs zum MOB angezeigt. Ein weiterer Klick auf MOB deaktiviert den Mob Alarm wieder.  |
 | {{BT("ChartsView")}} |Durch Klick auf den Charts-Button können zuvor hochgeladene Karten aktiviert werden. Näheres dazu im Abschnitt [Karten und Overlays](charts.md) Neben der Kartenauswahl bietet AvNav die Möglichkeit, unterschiedliche Overlays hinzuzufügen. Mit Overlays können neben der reinen Karte weitere Elemente in die Kartenansicht eingeblendet werden. Das können Satellitenbilder sein, bereits gefahrene Tracks, weitere Karten oder Dateien mit Tonnenpositionen. Das ist besonders hilfreich, wenn man z.B. im Grenzbereich zweier Karten navigieren und die Karten nicht immer wechseln will.|
 | {{BT("ZoomIn")}} {{BT("ZoomOut")}} | Hiermit wird der Kartenausschnitt vergrößert und verkleinert. Dabei bleibt (anders etwa als bei Nutzung des Mausrads) das eigene Boot zentriert.|
@@ -31,34 +31,35 @@ In der rechten Seitenleiste liegt die Buttonleiste, die die wichtigsten Funktio
 
 Über die Buttons des Action Menüs werden spezielle Aktionen auslöst, die übergreifend von sämtlichen Funktionsbereichen erreichbar sein sollen. 
 
-![](../img/actions.png)
+![](../../img/actions.png)
 
 | Button | Funktion |
 | ------ | -------- |
-| {{BT("Night")}} | Es wird ein sehr dunkles Farbschema aktiviert bzw. deaktiviert, welches für Nachtfahrt geeignet ist.  |
-| {{BT("RemoteChannel")}} | Erlaubt den Fernsteuerungskanal und -Modus zu wechseln. Das bietet die Möglichkeit, die Anzeige eines Displays durch ein anderes Gerät oder vom Server aus fernzusteuern. Dieses fortgeschrittene Thema wird [hier](../special/remotecontrol.md) erklärt.|
-| {{BT("FullScreen")}} | Falls vom Browser unterstützt, schaltet dieser Butten den Fullscreen Modus ein oder aus.|
-| {{BT("Split")}} | Hier kann der Split Mode ein- und ausgeschaltet werden. Einfach gesagt laufen in dieser Betriebsart zwei AvNav-Instanzen auf dem Display nebeneinander. Dazu gibt es spezielle Hinweise und Anleitungen [hier](../special/splitmode.md). |
-| {{BT("ReloadUI")}} | Neuerliches Laden Browserfensters mit den Daten vom AvNav Server|
-| {{BT("StatusShutdown", True)}} {{BT("MainExit")}} | Läuft das System auf einem Raspberry Image, startet dieser Button das geordnete Herunterfahren des Systems, andernfalls wird nur der AvNav Server gestoppt |
+| {{BT("Night",True)}} | Es wird ein sehr dunkles Farbschema aktiviert bzw. deaktiviert, welches für Nachtfahrt geeignet ist.  |
+| {{BT("RemoteChannel",True)}} | Erlaubt den Fernsteuerungskanal und -Modus zu wechseln. Das bietet die Möglichkeit, die Anzeige eines Displays durch ein anderes Gerät oder vom Server aus fernzusteuern. Dieses fortgeschrittene Thema wird [hier](../special/remotecontrol.md) erklärt.|
+| {{BT("FullScreen",True)}} | Falls vom Browser unterstützt, schaltet dieser Butten den Fullscreen Modus ein oder aus.|
+| {{BT("Split",True)}} | Hier kann der Split Mode ein- und ausgeschaltet werden. Einfach gesagt laufen in dieser Betriebsart zwei AvNav-Instanzen auf dem Display nebeneinander. Dazu gibt es spezielle Hinweise und Anleitungen [hier](../special/splitmode.md). |
+| {{BT("ReloadUI",True)}} | Neuerliches Laden Browserfensters mit den Daten vom AvNav Server|
+| {{BT("StatusShutdown", True)}} | Läuft das System auf einem Raspberry Image, startet dieser Button das geordnete Herunterfahren des Systems. |
+|  {{BT("MainExit",True)}} | Nur Android: Beendet die [AvNav App](TODO) oder setzt sie in den Hintergrund-Modus. |
 
 ## Navigation Tools Buttons
-![Navigation Tools](../img/navtools.png)
+![Navigation Tools](../../img/navtools.png)
 
 | Button | Funktion |
 | ------ | -------- |
-| {{BT("AnchorWatch")}} | Mit Anchorwatch startet man die AvNav-interne Ankerwache. |
-| {{BT("ABShowWpButtons")}} |Show Waypoint Buttons startet eine kleine zusätzliche Buttonleiste, die direkt rechts unten in die Karteneinsicht eingeblendet wird und bezogen auf aktive Waypoints zusätzliche Tools anbietet.|
+| {{BT("AnchorWatch",True)}} | Mit Anchorwatch startet man die AvNav-interne Ankerwache. |
+| {{BT("ABShowWpButtons",True)}} |Show Waypoint Buttons startet eine kleine zusätzliche Buttonleiste, die direkt rechts unten in die Karteneinsicht eingeblendet wird und bezogen auf aktive Waypoints zusätzliche Tools anbietet.|
 | {{BT("CenterAction", True)}} |Mit Info at Crosshair  lassen sich verschiedene Informationen zur angewählten Kartenposition anzeigen. 
-| {{BT("DBAnchorCenter")}} |Center Chart GPS macht genau das, was es sagt. Ein Klick zentriert die Karte, visualisiert durch das Fadenkreuz, auf die aktuelle GPS Position, wenn sie denn vorhanden ist.|
-| {{BT("ABShowMeasure")}} |Mit Show Measure Buttons kann man sich eine Toolbox mit Instrumenten zum Messen von Entfernungen anzeigen lassen. Dieser Button ist nur aktiv, wenn der Follow-Button (siehe oben) nicht aktiv ist.|
+| {{BT("GpsCenter",True)}} |Center Chart GPS macht genau das, was es sagt. Ein Klick zentriert die Karte, visualisiert durch das Fadenkreuz, auf die aktuelle GPS Position, wenn sie denn vorhanden ist.|
+| {{BT("ABShowMeasure",True)}} |Mit Show Measure Buttons kann man sich eine Toolbox mit Instrumenten zum Messen von Entfernungen anzeigen lassen. Dieser Button ist nur aktiv, wenn der Follow-Button (siehe oben) nicht aktiv ist.|
 
 ## Darstellungen auf der Karte
 
-![](../img/vectors.png)
+![](../../img/vectors.png)
 
 Standardmäßig wird das Boot auf der Karte als ![](../../images/Boat1.svg){ .inline-image }
-angezeigt, sobald ein GPS Signal verfügbar ist. Es kennzeichnet die eigene Position und Bewegungsrichtung. 
+angezeigt, sobald ein GPS Signal verfügbar ist (das Icon kann [angepasst](../special/usericons.md) werden). Es kennzeichnet die eigene Position und Bewegungsrichtung. 
 
 Darüber hinaus gibt es eine Reihe von Linien: sie bezeichnen Abstände, Richtungen und Vektoren. Hier die wichtigsten:
 
@@ -75,6 +76,6 @@ In den [Settings / Navigation](settings.md) können die Parameter dieser Darstel
 
 Mit einem Click oder Touch auf die Karte, können zusätzliche Informationen zu Objekten an dieser Stelle angefordert werden. Wenn raue Bedingungen den exakten Click erschweren, kann man die Karte auch so verschieben, dass der Punkt im Fadenkreuz liegt und dann über den Button {{BT("CenterAction", True)}} aus den Navigation Tools die Abfrage starten.
 
-![](../img/FeatureInfo-Select.png)
+![](../../img/FeatureInfo-Select.png)
 
-Die angezeigte Liste enthält alle Objekte an dieser Stelle, zu denen AvNav nach Selektion (je nach Art) weitere Aktionen oder Informationen anbieten kann. In diesem Beispiel sind das die eigene Position, ein AIS Objekt, der aktuelle Track sowie die Karte selbst. 
+Die angezeigte Liste enthält alle Objekte an dieser Stelle, zu denen AvNav nach Selektion (je nach Art) weitere [Aktionen oder Informationen](TODO: featureInfo) anbieten kann. In diesem Beispiel sind das die eigene Position, ein AIS Objekt, der aktuelle Track sowie die Karte selbst. 
