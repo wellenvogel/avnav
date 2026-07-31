@@ -95,7 +95,7 @@ For a Main Menu button write:
 ```
 To add the call to the Main Menu there is a shortcut:
 ```
-{{MB("MMchartspage")}}
+{{MM("MMchartspage")}}
 ```
 The name for the actions is `MM:actions`.
 To have the complete chain for open Main Menu, click Actions and an action you can write:
