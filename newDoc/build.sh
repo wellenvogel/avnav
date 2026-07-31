@@ -64,6 +64,8 @@ if [ $buttonUsage = 1 ] ; then
     $script -f buttonoverview -i "$icondir" -o "$outfile" || err "unable to create $outfile"
     outfile="$gendir/buttons.json"
     $script -f buttonjson -i "$icondir" -o "$outfile" || err "unable to create $outfile"
+    outfile="$gendir/icons.json"
+    $script -f iconjson -i "$icondir" -o "$outfile" || err "unable to create $outfile"
 fi
 
 if [ "$command" = none ] ; then

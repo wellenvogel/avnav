@@ -8,11 +8,12 @@ import Requests from '../util/requests';
 // @ts-ignore
 import AvNavVersion from '../version.js';
 import {useHistory} from "../components/HistoryProvider";
-import {getPageTitle, PAGEIDS} from "../util/pageids";
+import {PAGEIDS} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
 import {ButtonDef, updateButtons} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import {GeneralWithCancel} from "./GeneralButtons";
+import {getPageTitle} from "../components/pagetitles";
 
 const InfoPage=(props:PageProps)=> {
     const history = useHistory();

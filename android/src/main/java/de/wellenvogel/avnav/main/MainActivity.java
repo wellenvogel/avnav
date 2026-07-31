@@ -661,15 +661,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     return false;
                 }
                 upload=filePathCallback;
-                Intent i = null;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    i=fileChooserParams.createIntent();
-                }
-                else {
-                    i = new Intent(Intent.ACTION_GET_CONTENT);
-                    i.addCategory(Intent.CATEGORY_OPENABLE);
-                    i.setType("*/*");
-                }
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("*/*");
                 MainActivity.this.startActivityForResult(
                         Intent.createChooser(i, getString(R.string.file_upload)),
                         Constants.FILE_OPEN_UPLOAD);

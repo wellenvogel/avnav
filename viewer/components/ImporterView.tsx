@@ -405,11 +405,11 @@ const timer = useTimer((seq) => {
 }, 1000, true);
 
 const isActive=!disabled && !!(mainStatus.main);
-if(!isActive) return <div className="importerInfo">Importer inactive</div>;
 return <div className="importerView">
     <MainStatus
         {...mainStatus}
     />
+    { !isActive?<div className="importerInfo">Importer inactive</div>:
     <ItemList
         scrollable={true}
         itemList={items}
@@ -417,5 +417,6 @@ return <div className="importerView">
         scrollSelected={selectedIdx}
         itemClass={ImporterItem}
     />
+    }
 </div>
 }

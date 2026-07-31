@@ -26,7 +26,6 @@ import {useHistory} from "../components/HistoryProvider";
 import {ButtonDef, updateButtons} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import RemotePageButtons from "./RemotePageButtons";
-import {getPageTitle} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
 import StatusView, {ChannelKinds} from "../components/StatusView";
 import {useStoreState} from "../hoc/Dynamic";
@@ -37,6 +36,7 @@ import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
 // @ts-ignore
 import {showRemoteChannelDialog} from '../components/RemoteChannelDialog';
+import {getPageTitle} from "../components/pagetitles";
 
 const RemoteStatus=()=>{
     const dialogContext = useDialogContext();

@@ -41,11 +41,11 @@ Ablauf
 Man kann den Dialog für die Konvertierung entweder von der [Tracks Seite](TODO)
 Seite nack Klick auf einen Track über {{BT("ToRoute")}}oder aus dem Info Dialog, falls man einen Track als [Overlay](TODO)
 auf der Karte hat, und einen Punkt in diesem anklickt. Im Info Dialog
-wieder den Button {{BT("ToRoute")}} nutzen - siehe Bild.
+wieder den Button {{DB("ToRoute")}} nutzen - siehe Bild.
 
 ![](../../img/FeatureInfo-Track.png)
 
-Nach Klick auf den Convert Button erhält man den Konverter-Dialog.
+Nach Klick auf den Convert Button erhält man nach eine Abfrage für den Namen der zu erzeugenden Route den Konverter-Dialog.
 
 ![](../../img/TracksToRoutes1.png)
 

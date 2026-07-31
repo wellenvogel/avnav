@@ -21,7 +21,7 @@ import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
 import {useHistory} from "../components/HistoryProvider";
-import {getPageTitle, PAGEIDS} from "../util/pageids";
+import {PAGEIDS} from "../util/pageids";
 import {IDialogContext, useDialogContext} from "../components/DialogContext";
 import {scrollInContainer} from "../util/UiHelper";
 // @ts-ignore
@@ -31,6 +31,7 @@ import AisPageButtons from "./AisPageButtons";
 import {ButtonDef, updateButtons} from "../components/Button";
 import { AisProxyItem } from '../nav/aistypes';
 import {StoreKeys} from "../api/api.interface";
+import {getPageTitle} from "../components/pagetitles";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],

@@ -11,12 +11,13 @@ import Requests from '../util/requests';
 import QRCode from 'qrcode.react';
 import {useHistory} from "../components/HistoryProvider";
 import {useTimer} from "../util/UiHelper";
-import {getPageTitle, PAGEIDS} from "../util/pageids";
+import {PAGEIDS} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
 import {InjectMainMenu} from "./MainNav";
 import {propsToDefs, updateButtons} from "../components/Button";
 import {GeneralWithCancel} from "./GeneralButtons";
 import {iconClasses} from '../components/Icons';
+import {getPageTitle} from "../components/pagetitles";
 
 const AddressItem = (props: { value: string }) => {
     const url = "http://" + props.value;

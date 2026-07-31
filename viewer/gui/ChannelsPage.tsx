@@ -21,7 +21,6 @@
  #
  */
 import React, {useRef, useState} from "react";
-import {getPageTitle} from "../util/pageids";
 import {PageFrame, PageLeft, PageProps} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
@@ -32,6 +31,7 @@ import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import ChannelsPageButtons from "./ChannelsPageButtons";
 import {ButtonDef, updateButtons} from "../components/Button";
+import {getPageTitle} from "../components/pagetitles";
 
 const ChannelsPage=(props:PageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);

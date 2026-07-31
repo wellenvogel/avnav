@@ -1,0 +1,557 @@
+{
+    "AddOns": {
+        "legacy": "../images/icons-new/legacy/apps.svg",
+        "default": "../images/icons-new/default/addons.svg"
+    },
+    "AddonConfigPlus": {
+        "legacy": "../images/icons-new/legacy/ic_add.svg",
+        "default": "../images/icons-new/default/addonconfigplus.svg"
+    },
+    "After": {
+        "legacy": "../images/icons-new/legacy/navigate_next.svg",
+        "default": "../images/icons-new/default/after.svg"
+    },
+    "AisInfoHide": {
+        "legacy": "../images/icons-new/legacy/ic_hide.svg",
+        "default": "../images/icons-new/default/aisinfohide.svg"
+    },
+    "AisNearest": {
+        "legacy": "../images/icons-new/legacy/ais-nearest.svg",
+        "default": "../images/icons-new/default/aisnearest.svg"
+    },
+    "Anchor": {
+        "legacy": "../images/icons-new/legacy/anchor.svg",
+        "default": "../images/icons-new/default/anchor.svg"
+    },
+    "AnchorEnd": {
+        "legacy": "../images/icons-new/legacy/anchor-end.svg",
+        "default": "../images/icons-new/default/anchor.svg"
+    },
+    "Android": {
+        "legacy": "../images/icons-new/legacy/ic_android.svg",
+        "default": "../images/icons-new/default/android.svg"
+    },
+    "Back": {
+        "legacy": "../images/icons-new/legacy/ic_arrow_back.svg",
+        "default": "../images/icons-new/default/back.svg"
+    },
+    "Before": {
+        "legacy": "../images/icons-new/legacy/navigate_before.svg",
+        "default": "../images/icons-new/default/before.svg"
+    },
+    "Boat": {
+        "legacy": "../images/icons-new/legacy/boat.svg",
+        "default": "../images/icons-new/default/boat.svg"
+    },
+    "Browser": {
+        "legacy": "../images/icons-new/legacy/internet-web-browser.svg",
+        "default": "../images/icons-new/default/browser.svg"
+    },
+    "Cancel": {
+        "legacy": "../images/icons-new/legacy/ic_clear.svg",
+        "default": "../images/icons-new/default/cancel.svg"
+    },
+    "Center": {
+        "legacy": "../images/icons-new/legacy/center.svg",
+        "default": "../images/icons-new/default/center.svg"
+    },
+    "CenterAction": {
+        "legacy": "../images/icons-new/legacy/center-action.svg",
+        "default": "../images/icons-new/default/centeraction3.svg"
+    },
+    "ChartScheme": {
+        "legacy": "../images/icons-new/legacy/table_convert.svg",
+        "default": "../images/icons-new/default/chartscheme.svg"
+    },
+    "Charts": {
+        "legacy": "../images/icons-new/legacy/map2.svg",
+        "default": "../images/icons-new/default/charts.svg"
+    },
+    "Checked": {
+        "legacy": "../images/icons-new/legacy/checkbox-marked-outline.svg",
+        "default": "../images/icons-new/default/checked.svg"
+    },
+    "Color": {
+        "legacy": "../images/icons-new/legacy/palette.svg"
+    },
+    "Connect": {
+        "legacy": "../images/icons-new/legacy/plug.svg",
+        "default": "../images/icons-new/default/connect.svg"
+    },
+    "Connected": {
+        "legacy": "../images/icons-new/legacy/plug.svg",
+        "default": "../images/icons-new/default/connect.svg"
+    },
+    "Copy": {
+        "legacy": "../images/icons-new/legacy/content_copy.svg",
+        "default": "../images/icons-new/default/copy.svg"
+    },
+    "CourseUp": {
+        "legacy": "../images/icons-new/legacy/compass.svg",
+        "default": "../images/icons-new/default/courseup.svg"
+    },
+    "Debug": {
+        "legacy": "../images/icons-new/legacy/bug_report.svg",
+        "default": "../images/icons-new/default/debug.svg"
+    },
+    "Delete": {
+        "legacy": "../images/icons-new/legacy/ic_delete.svg",
+        "default": "../images/icons-new/default/delete.svg"
+    },
+    "Dim": {
+        "legacy": "../images/icons-new/legacy/brightness_low.svg",
+        "default": "../images/icons-new/default/dim.svg"
+    },
+    "Disable": {
+        "legacy": "../images/icons-new/legacy/ic_hide.svg",
+        "default": "../images/icons-new/default/disable.svg"
+    },
+    "Disconnect": {
+        "legacy": "../images/icons-new/legacy/plug-disconnect.svg",
+        "default": "../images/icons-new/default/disconnect.svg"
+    },
+    "Download": {
+        "legacy": "../images/icons-new/legacy/ic_file_download.svg",
+        "default": "../images/icons-new/default/download.svg"
+    },
+    "Edit": {
+        "legacy": "../images/icons-new/legacy/ic_edit.svg",
+        "default": "../images/icons-new/default/edit.svg"
+    },
+    "EditPage": {
+        "legacy": "../images/icons-new/legacy/tune.svg",
+        "default": "../images/icons-new/default/editpage.svg"
+    },
+    "EmptyRoute": {
+        "legacy": "../images/icons-new/legacy/delete_sweep.svg",
+        "default": "../images/icons-new/default/emptyroute.svg"
+    },
+    "Expand": {
+        "legacy": "../images/icons-new/legacy/expand-all.svg",
+        "default": "../images/icons-new/default/expand.svg"
+    },
+    "FullScreen": {
+        "legacy": "../images/icons-new/legacy/fullscreen.svg",
+        "default": "../images/icons-new/default/fullscreen.svg"
+    },
+    "Help": {
+        "legacy": "../images/icons-new/legacy/ic_help_outline.svg",
+        "default": "../images/icons-new/default/help.svg"
+    },
+    "Hide": {
+        "legacy": "../images/icons-new/legacy/visibility_off.svg",
+        "default": "../images/icons-new/default/hide.svg"
+    },
+    "HideOverlays": {
+        "legacy": "../images/icons-new/legacy/layers-black-off.svg",
+        "default": "../images/icons-new/default/hideoverlays.svg"
+    },
+    "ITDirectory": {
+        "legacy": "../images/icons-new/legacy/folder_shared.svg",
+        "default": "../images/icons-new/default/itdirectory.svg"
+    },
+    "ITHtml": {
+        "legacy": "../images/icons-new/legacy/internet-web-browser.svg",
+        "default": "../images/icons-new/default/ithtml.svg"
+    },
+    "ITOther": {
+        "legacy": "../images/icons-new/legacy/draft.svg",
+        "default": "../images/icons-new/default/itother.svg"
+    },
+    "ITServer": {
+        "legacy": "../images/icons-new/legacy/plug.svg",
+        "default": "../images/icons-new/default/connect.svg"
+    },
+    "ITText": {
+        "legacy": "../images/icons-new/legacy/ic_text_snippet.svg",
+        "default": "../images/icons-new/default/ittext.svg"
+    },
+    "ITUserSpecial": {
+        "legacy": "../images/icons-new/legacy/ic_settings.svg",
+        "default": "../images/icons-new/default/ituserspecial.svg"
+    },
+    "Images": {
+        "legacy": "../images/icons-new/legacy/image-icon.svg",
+        "default": "../images/icons-new/default/images.svg"
+    },
+    "Imports": {
+        "legacy": "../images/icons-new/legacy/swap_horiz.svg",
+        "default": "../images/icons-new/default/imports.svg"
+    },
+    "Info": {
+        "legacy": "../images/icons-new/legacy/ic_info.svg",
+        "default": "../images/icons-new/default/info.svg"
+    },
+    "InvertRoute": {
+        "legacy": "../images/icons-new/legacy/invertroute.svg",
+        "default": "../images/icons-new/default/invertroute.svg"
+    },
+    "Items": {
+        "legacy": "../images/icons-new/legacy/list.svg",
+        "default": "../images/icons-new/default/items.svg"
+    },
+    "JSChanged": {
+        "legacy": "../images/icons-new/legacy/javascript.svg",
+        "default": "../images/icons-new/default/jschanged.svg"
+    },
+    "Layout": {
+        "legacy": "../images/icons-new/legacy/ballot.svg",
+        "default": "../images/icons-new/default/layout.svg"
+    },
+    "LayoutOff": {
+        "legacy": "../images/icons-new/legacy/ballot-off.svg",
+        "default": "../images/icons-new/default/layoutoff.svg"
+    },
+    "Left": {
+        "legacy": "../images/icons-new/legacy/navigate_before.svg",
+        "default": "../images/icons-new/default/left.svg"
+    },
+    "Lock": {
+        "legacy": "../images/icons-new/legacy/update_disabled.svg",
+        "default": "../images/icons-new/default/aislock.svg"
+    },
+    "LockPos": {
+        "legacy": "../images/icons-new/legacy/boat.svg",
+        "default": "../images/icons-new/default/boat.svg"
+    },
+    "Log": {
+        "legacy": "../images/icons-new/legacy/ic_text_snippet.svg",
+        "default": "../images/icons-new/default/serverlog.svg"
+    },
+    "MNCatNav": {
+        "legacy": "../images/icons-new/legacy/boat.svg",
+        "default": "../images/icons-new/default/boat.svg"
+    },
+    "MNCatSet": {
+        "legacy": "../images/icons-new/legacy/build.svg",
+        "default": "../images/icons-new/default/mncatset.svg"
+    },
+    "MNCollapsed": {
+        "legacy": "../images/icons-new/legacy/mncollapsed.svg",
+        "default": "../images/icons-new/default/mncollapsed.svg"
+    },
+    "MNExpanded": {
+        "legacy": "../images/icons-new/legacy/mnexpanded.svg",
+        "default": "../images/icons-new/default/mnexpanded.svg"
+    },
+    "MOB": {
+        "legacy": "../images/icons-new/legacy/drowning.svg",
+        "default": "../images/icons-new/default/mob.svg"
+    },
+    "MainNav": {
+        "legacy": "../images/icons-new/legacy/menu.svg",
+        "default": "../images/icons-new/default/mainnav.svg"
+    },
+    "Measure": {
+        "legacy": "../images/icons-new/legacy/straighten.svg",
+        "default": "../images/icons-new/default/measure.svg"
+    },
+    "MeasureAdd": {
+        "legacy": "../images/icons-new/legacy/straighten-add.svg",
+        "default": "../images/icons-new/default/measureadd.svg"
+    },
+    "MeasureFlag": {
+        "legacy": "../images/icons-new/legacy/outlined_flag.svg",
+        "default": "../images/icons-new/default/measureflag.svg"
+    },
+    "MeasureOff": {
+        "legacy": "../images/icons-new/legacy/straighten-off.svg",
+        "default": "../images/icons-new/default/measureoff.svg"
+    },
+    "More": {
+        "legacy": "../images/icons-new/legacy/ic_chevron_right.svg",
+        "default": "../images/icons-new/default/more.svg"
+    },
+    "NavAdd": {
+        "legacy": "../images/icons-new/legacy/wpplus.svg",
+        "default": "../images/icons-new/default/navadd.svg"
+    },
+    "NavAddAfter": {
+        "legacy": "../images/icons-new/legacy/wpplus-after.svg",
+        "default": "../images/icons-new/default/navaddafter.svg"
+    },
+    "NavDelete": {
+        "legacy": "../images/icons-new/legacy/wpminus.svg",
+        "default": "../images/icons-new/default/navdelete.svg"
+    },
+    "NavGoto": {
+        "legacy": "../images/icons-new/legacy/wpgoto.svg",
+        "default": "../images/icons-new/default/navgoto.svg"
+    },
+    "NavMapWidgets": {
+        "legacy": "../images/icons-new/legacy/assistant_nav.svg",
+        "default": "../images/icons-new/default/navmapwidgets.svg"
+    },
+    "NavNext": {
+        "legacy": "../images/icons-new/legacy/nextwp.svg",
+        "default": "../images/icons-new/default/navnext.svg"
+    },
+    "NavStop": {
+        "legacy": "../images/icons-new/legacy/stop-nav.svg",
+        "default": "../images/icons-new/default/navstop.svg"
+    },
+    "NavToCenter": {
+        "legacy": "../images/icons-new/legacy/center.svg",
+        "default": "../images/icons-new/default/navtocenter.svg"
+    },
+    "Navigation": {
+        "legacy": "../images/icons-new/legacy/navigation.svg",
+        "default": "../images/icons-new/default/navactions.svg"
+    },
+    "Night": {
+        "legacy": "../images/icons-new/legacy/night.svg",
+        "default": "../images/icons-new/default/night.svg"
+    },
+    "Num1": {
+        "legacy": "../images/icons-new/legacy/num-1.svg",
+        "default": "../images/icons-new/default/num1.svg"
+    },
+    "Num10": {
+        "legacy": "../images/icons-new/legacy/num-10.svg",
+        "default": "../images/icons-new/default/num10.svg"
+    },
+    "Num2": {
+        "legacy": "../images/icons-new/legacy/num-2.svg",
+        "default": "../images/icons-new/default/num2.svg"
+    },
+    "Num3": {
+        "legacy": "../images/icons-new/legacy/num-3.svg",
+        "default": "../images/icons-new/default/num3.svg"
+    },
+    "Num4": {
+        "legacy": "../images/icons-new/legacy/num-4.svg",
+        "default": "../images/icons-new/default/num4.svg"
+    },
+    "Num5": {
+        "legacy": "../images/icons-new/legacy/num-5.svg",
+        "default": "../images/icons-new/default/num5.svg"
+    },
+    "Num6": {
+        "legacy": "../images/icons-new/legacy/num-6.svg",
+        "default": "../images/icons-new/default/num6.svg"
+    },
+    "Num7": {
+        "legacy": "../images/icons-new/legacy/num-7.svg",
+        "default": "../images/icons-new/default/num7.svg"
+    },
+    "Num8": {
+        "legacy": "../images/icons-new/legacy/num-8.svg",
+        "default": "../images/icons-new/default/num8.svg"
+    },
+    "Num9": {
+        "legacy": "../images/icons-new/legacy/num-9.svg",
+        "default": "../images/icons-new/default/num9.svg"
+    },
+    "Ok": {
+        "legacy": "../images/icons-new/legacy/ic_done.svg",
+        "default": "../images/icons-new/default/ok.svg"
+    },
+    "Open": {
+        "legacy": "../images/icons-new/legacy/ic_open.svg",
+        "default": "../images/icons-new/default/open.svg"
+    },
+    "Overflow": {
+        "legacy": "../images/icons-new/legacy/more_left.svg",
+        "default": "../images/icons-new/default/overflow.svg"
+    },
+    "Overlays": {
+        "legacy": "../images/icons-new/legacy/layers-black.svg",
+        "default": "../images/icons-new/default/overlays.svg"
+    },
+    "Plugins": {
+        "legacy": "../images/icons-new/legacy/extension.svg",
+        "default": "../images/icons-new/default/plugins.svg"
+    },
+    "Plus": {
+        "legacy": "../images/icons-new/legacy/ic_add.svg",
+        "default": "../images/icons-new/default/plus.svg"
+    },
+    "Propose": {
+        "legacy": "../images/icons-new/legacy/prompt_suggestion.svg",
+        "default": "../images/icons-new/default/propose.svg"
+    },
+    "QRCode": {
+        "legacy": "../images/icons-new/legacy/qrcode.svg",
+        "default": "../images/icons-new/default/qrcode.svg"
+    },
+    "RadioChecked": {
+        "legacy": "../images/icons-new/legacy/radio_button_checked.svg",
+        "default": "../images/icons-new/default/radiochecked.svg"
+    },
+    "RadioUnchecked": {
+        "legacy": "../images/icons-new/legacy/radio_button_unchecked.svg",
+        "default": "../images/icons-new/default/radiounchecked.svg"
+    },
+    "Reload": {
+        "legacy": "../images/icons-new/legacy/ic_refresh.svg",
+        "default": "../images/icons-new/default/reload.svg"
+    },
+    "RemoteChannel": {
+        "legacy": "../images/icons-new/legacy/settings_remote.svg",
+        "default": "../images/icons-new/default/remotechannel.svg"
+    },
+    "RenumberRoute": {
+        "legacy": "../images/icons-new/legacy/format_list_numbered.svg",
+        "default": "../images/icons-new/default/renumberroute.svg"
+    },
+    "Reset": {
+        "legacy": "../images/icons-new/legacy/ic_delete.svg",
+        "default": "../images/icons-new/default/default.svg"
+    },
+    "Right": {
+        "legacy": "../images/icons-new/legacy/navigate_next.svg",
+        "default": "../images/icons-new/default/right.svg"
+    },
+    "Route": {
+        "legacy": "../images/icons-new/legacy/route.svg",
+        "default": "../images/icons-new/default/route.svg"
+    },
+    "RouteAdd": {
+        "legacy": "../images/icons-new/legacy/ic_add.svg",
+        "default": "../images/icons-new/default/routeadd.svg"
+    },
+    "RouteMenu": {
+        "legacy": "../images/icons-new/legacy/menu_open.svg",
+        "default": "../images/icons-new/default/routemenu.svg"
+    },
+    "Satellite": {
+        "legacy": "../images/icons-new/legacy/satellite-alt.svg",
+        "default": "../images/icons-new/default/satellite.svg"
+    },
+    "Save": {
+        "legacy": "../images/icons-new/legacy/save.svg",
+        "default": "../images/icons-new/default/save.svg"
+    },
+    "SaveAs": {
+        "legacy": "../images/icons-new/legacy/content_copy.svg",
+        "default": "../images/icons-new/default/saveas.svg"
+    },
+    "Search": {
+        "legacy": "../images/icons-new/legacy/search.svg",
+        "default": "../images/icons-new/default/search.svg"
+    },
+    "Section": {
+        "legacy": "../images/icons-new/legacy/category.svg",
+        "default": "../images/icons-new/default/section.svg"
+    },
+    "SelectChart": {
+        "legacy": "../images/icons-new/legacy/layers-black.svg",
+        "default": "../images/icons-new/default/selectchart.svg"
+    },
+    "Server": {
+        "legacy": "../images/icons-new/legacy/database.svg",
+        "default": "../images/icons-new/default/server.svg"
+    },
+    "Settings": {
+        "legacy": "../images/icons-new/legacy/ic_settings.svg",
+        "default": "../images/icons-new/default/settings.svg"
+    },
+    "Shutdown": {
+        "legacy": "../images/icons-new/legacy/ic_power.svg",
+        "default": "../images/icons-new/default/shutdown.svg"
+    },
+    "Sort": {
+        "legacy": "../images/icons-new/legacy/sort.svg",
+        "default": "../images/icons-new/default/sort.svg"
+    },
+    "Split": {
+        "legacy": "../images/icons-new/legacy/vertical_split.svg",
+        "default": "../images/icons-new/default/split.svg"
+    },
+    "SplitReset": {
+        "legacy": "../images/icons-new/legacy/reset_split.svg",
+        "default": "../images/icons-new/default/splitreset.svg"
+    },
+    "Start": {
+        "legacy": "../images/icons-new/legacy/play_arrow.svg",
+        "default": "../images/icons-new/default/start.svg"
+    },
+    "StatusAdd": {
+        "legacy": "../images/icons-new/legacy/ic_add.svg",
+        "default": "../images/icons-new/default/statusadd.svg"
+    },
+    "StatusRestart": {
+        "legacy": "../images/icons-new/legacy/ic_refresh.svg",
+        "default": "../images/icons-new/default/reboot.svg"
+    },
+    "Stop": {
+        "legacy": "../images/icons-new/legacy/stop_circle.svg",
+        "default": "../images/icons-new/default/stop.svg"
+    },
+    "Sync": {
+        "legacy": "../images/icons-new/legacy/sync.svg",
+        "default": "../images/icons-new/default/sync.svg"
+    },
+    "Track": {
+        "legacy": "../images/icons-new/legacy/track.svg",
+        "default": "../images/icons-new/default/track.svg"
+    },
+    "UnChecked": {
+        "legacy": "../images/icons-new/legacy/checkbox-blank-outline.svg",
+        "default": "../images/icons-new/default/unchecked.svg"
+    },
+    "Undo": {
+        "legacy": "../images/icons-new/legacy/ic_undo.svg",
+        "default": "../images/icons-new/default/undo.svg"
+    },
+    "Upload": {
+        "legacy": "../images/icons-new/legacy/ic_file_upload.svg",
+        "default": "../images/icons-new/default/upload.svg"
+    },
+    "User": {
+        "legacy": "../images/icons-new/legacy/folder_shared.svg",
+        "default": "../images/icons-new/default/user.svg"
+    },
+    "View": {
+        "legacy": "../images/icons-new/legacy/visibility.svg",
+        "default": "../images/icons-new/default/view.svg"
+    },
+    "Waypoint": {
+        "legacy": "../images/icons-new/legacy/waypoint.svg",
+        "default": "../images/icons-new/default/waypoint.svg"
+    },
+    "Wifi": {
+        "legacy": "../images/icons-new/legacy/wifi.svg",
+        "default": "../images/icons-new/default/wifi.svg"
+    },
+    "WifiOff": {
+        "legacy": "../images/icons-new/legacy/wifi_off.svg",
+        "default": "../images/icons-new/default/wifioff.svg"
+    },
+    "WpGoto": {
+        "legacy": "../images/icons-new/legacy/waypoint.svg",
+        "default": "../images/icons-new/default/wpgoto.svg"
+    },
+    "WpLocate": {
+        "legacy": "../images/icons-new/legacy/center.svg",
+        "default": "../images/icons-new/default/wplocate.svg"
+    },
+    "WpNext": {
+        "legacy": "../images/icons-new/legacy/ic_arrow_forward.svg",
+        "default": "../images/icons-new/default/wpnext.svg"
+    },
+    "WpPrevious": {
+        "legacy": "../images/icons-new/legacy/ic_arrow_back.svg",
+        "default": "../images/icons-new/default/wpprevious.svg"
+    },
+    "WpRestart": {
+        "legacy": "../images/icons-new/legacy/wprestart.svg",
+        "default": "../images/icons-new/default/wprestart.svg"
+    },
+    "WpStop": {
+        "legacy": "../images/icons-new/legacy/stop-wp.svg",
+        "default": "../images/icons-new/default/wpgotostop.svg"
+    },
+    "WpaConnect": {
+        "legacy": "../images/icons-new/legacy/play_arrow.svg",
+        "default": "../images/icons-new/default/wpaconnect.svg"
+    },
+    "ZoomIn": {
+        "legacy": "../images/icons-new/legacy/ic_zoom_in.svg",
+        "default": "../images/icons-new/default/zoomin.svg"
+    },
+    "ZoomOut": {
+        "legacy": "../images/icons-new/legacy/ic_zoom_out.svg",
+        "default": "../images/icons-new/default/zoomout.svg"
+    }
+}
