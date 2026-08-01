@@ -29,3 +29,10 @@ navigation:
       - 04:55 Course button
       - 05:16 Route button
       - 05:36 Tools button
+routes:
+  youtube: "YbCWn0XAWmA"
+  chapters:
+    de:
+      - 00:00 Start
+    en:
+      - 00:00 Start
