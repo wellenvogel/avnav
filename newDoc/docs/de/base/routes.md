@@ -27,7 +27,7 @@ Um einen Wegepunkt zu verschieben, muss er zunächst direkt markiert werden. Das
 
 In der zweiten Spalte sind die gespeicherten Routen gelistet. Sie können dort unter anderem gelöscht, kopiert, heruntergeladen, von gpx Dateien importiert oder editiert werden. Auf schmalen Bildschirmen ist diese zweite Spalte eventuell nicht sichtbar - man erreicht sie dann über Wischen.
 
-## WP Buttons
+## WP Buttons {: #wp-buttons}
 Beim Bearbeiten, aber auch beim Nutzen einer Route bieten sich weitere Möglichkeiten, wenn man die Schaltfläche {{BT("NavActions",False)}} und in "Navigation tools" {{BT("ABShowWpButtons", True)}} anklickt. Die Schaltflächen {{BT("WpNext",False)}} und {{BT("WpPrevious",False)}} bewegen die Markierung von Wegepunkt zu Wegepunkt, wenn die Arbeit im Widget oder in der Karte als ungünstiger empfunden wird. Über {{BT("Edit",False)}} kann jeder einzelne Wegepunkt editiert werden, etwa um einen neuen Namen zu vergeben. Mit {{BT("WpLocate",False)}} kann man den angewählten Wegepunkt schnell wieder ins Kartenfenster holen, wenn die Karte aus irgendwelchen Gründen woanders hin verschoben wurde. Das geht allerdings auch mit Anklicken des Wegepunkts im RTE Widget. 
 
 ## Route aktivieren
@@ -40,8 +40,4 @@ dem {{BT("DBStartRoute",False)}} wird {{BT("StopNav",False)}}. Damit lässt sich
 
 Die [WP Buttons](#wp-buttons) bieten auch während des Abfahrens der Route nützliche Funktionen. Sollte man sich spontan entscheiden, einen Wegepunkt auszulassen, ohne die Route gleich in ihrem Ablauf ändern zu wollen, ist der {{BT("NavNext",False)}} die richtige Wahl: klickt man darauf, springt die Route auf den nächsten Wegepunkt. Das kann hilfreich sein, wenn man einen Wegepunkt in einer so großen Entfernung passiert, dass das Erreichen des Wegepunktes vom System nicht automatisch quittiert wird. <br><br>
 
-Der Kurs zum nächsten Wegepunkt wird automatisch aktualisiert und im Standard als ockerfarbene Linie dargestellt. Der bei der allerersten Berechnung festgelegte Kurs zeigt sich als [gestrichelte schwarze Line](./navpage.md#darstellungen-auf-der-karte). Der Button {{BT("NavRestart",False)}} führt (etwa nach Verschieben des Wegepunkts unterwegs) eine neue Erstberechnung aus - dabei wird XTE zurückgesetzt: gestrichelte und ockerfarbene Linie liegen zusammen.
-
-{# Technisch unklar: 
-Sprung auf textmarken mit echtem Text, der übersetzt werden sollte
-z.B.:./navpage.md#darstellungen-auf-der-karte #}
+Der Kurs zum nächsten Wegepunkt wird automatisch aktualisiert und im Standard als ockerfarbene Linie dargestellt. Der bei der bei Beginn des Legs festgelegte Kurs zeigt sich als [gestrichelte schwarze Line](./navpage.md#vectors). Der Button {{BT("NavRestart",False)}} führt (etwa nach Verschieben des Wegepunkts unterwegs) eine neue Erstberechnung aus - dabei wird XTE zurückgesetzt: die gestrichelte und die ockerfarbene Linie liegen wieder zusammen.
