@@ -71,6 +71,14 @@ header .md-label{
     background-position-y: unset;
     border: unset;
 }
+.small.avnav-button{
+    width: 2em;
+    height: 2em;
+}
+.small.avnav-button .avnav-icon{
+    background-size: 80%;
+    background-position-y: center;
+}
 .avnav-button.longText {
     width: 5em;
     height: 3.5em;
@@ -111,10 +119,13 @@ header .md-label{
 .avnav-button:after{
     position: absolute;
     bottom:0;
-    font-size: 0.6em;
+    font-size: 0.55em;
     left: 0;
     right: 0;
     text-align: center;
+}
+.small.avnav-button:after{
+    display: none;
 }
 .avnav-button.dialog-button:after{
     font-size: 0.8em;
