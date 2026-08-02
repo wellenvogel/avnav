@@ -54,7 +54,7 @@ In der rechten Seitenleiste liegt die Buttonleiste, die die wichtigsten Funktio
 | {{BT("GpsCenter",True)}} |Center Chart GPS macht genau das, was es sagt. Ein Klick zentriert die Karte, visualisiert durch das Fadenkreuz, auf die aktuelle GPS Position, wenn sie denn vorhanden ist.|
 | {{BT("ABShowMeasure",True)}} |Mit Show Measure Buttons kann man sich eine Toolbox mit Instrumenten zum Messen von Entfernungen anzeigen lassen. Dieser Button ist nur aktiv, wenn der Follow-Button (siehe oben) nicht aktiv ist.|
 
-## Darstellungen auf der Karte
+## Darstellungen auf der Karte {: #vectors}
 
 ![](../../img/vectors.png)
 
