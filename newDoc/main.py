@@ -218,6 +218,8 @@ def define_env(env):
             return ''
         if VMODE == M_YT:
             prefix="https://www.youtube.com/embed/" if kind==VK_EMBED else "https://www.youtube.com/watch?v="
+            if item.get('kind') == 'playlist':
+                prefix="https://www.youtube.com/playlist?list="
             rt=prefix+rt
             lang=pageVariables.get(PV_LANG)
             if not lang:
