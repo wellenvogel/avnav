@@ -32,11 +32,16 @@ direction") - sonst nach COG. Der Course Vector eines AIS Zieles wird
 immer nach COG ausgerichtet.  
 Es gibt unterschiedliche Symbole für die AIS Ziele - für Details siehe
 unter "[Nutzerdefinierte Icons](usericons.md)".
+Die AIS Symbole können in ihrer Größe verändert werden (Einstellungen "Icon Scale"), ein Rand kann ebenfalls hinzugefügt werden ("Einstellungen "Border Width"). Falls die Berechnungen
+der AIS Kursvektoren zu aufwändig ist (Browser wird zu langsam), kann
+sie in den Einstellungen abgeschaltet werden (Einstellungen "Use Course
+Vector").
+
 
 Durch Klick auf ein AIS-Ziel (oder auf die Anzeige des nächsten Zieles
 in den Anzeige-Bereichen) erhält man alle [Informationen](#aisinfo)
 zu diesem Ziel und kann zur [Liste aller
-AIS-Ziele](TODO: aispage.md) navigieren.
+AIS-Ziele](#aislist) navigieren.
 
 ## AIS Bewegungsvektoren
 
@@ -87,7 +92,7 @@ Gekrümmte Vektoren
 ------------------
 
 Aktiviert man in den Einstellungen "curved-vectors",
-so wird eine eventuell in den AIS-Daten vorhandene rate-of-turn (ROT)
+so wird eine eventuell in den AIS-DateScreenshot_20260802_120043n vorhandene rate-of-turn (ROT)
 ausgewertet und die Drehung des Targets bei der Darstellung der Vektoren
 berücksichtigt. Die TMVs und RMVs werden dann als gekrümmte Linien
 dargestellt. Die gekrümmten Vektoren zeigen eine potenzielle Kollision
@@ -127,7 +132,7 @@ wenn die Werte unter den konfigurierten Schwellwerten liegen.
 ### Priorität {: #aispriority}
 
 Um zu entscheiden, welches Ziel im AisTargetWidget angezeigt wird und
-für die Sortierung in der [AIS liste](TODO: aispage.md) wird für
+für die Sortierung in der [AIS liste](#aislist) wird für
 jedes Ziel eine Priorität berechnet.  
 Die Priorität von hoch zu niedrig:
 
@@ -208,19 +213,59 @@ Thread (worker) im Browser durchgeführt und werden bei jeder
 Positionsänderung wiederholt. In älteren Versionen wurden die
 Berechnungen nur ausgeführt, wenn neue AIS Daten abgerufen wurden.
 
-Anzeigen (Widgets)
-------------------
+## Anzeigen (Widgets)
 
-Neben der Anzueige auf der Karte gibt es das "AisTargetWidget", das entweder das AIS Ziel mit der höchten Priorität oder ein ausgewähltes Ziel (das im [AIS Dialog](TODO) über {{DB("DBLocate")}} ausgewählt wurde)
+Neben der Anzueige auf der Karte gibt es das "AisTargetWidget", das entweder das AIS Ziel mit der höchten Priorität oder ein ausgewähltes Ziel (das im [AIS Dialog](#aisinfo) über {{DB("AisInfoLocate")}} ausgewählt wurde)
+
+![Navpage](../../img/ais-widget-navpage.png){.small}
+///caption
+Navigationsseite.
+///
+
+![Dashboard](../../img/ais-widget-dashboard.png){.small}
+///caption
+Dashboard.
+///
 
 Die Darstellung des nächsten AIS Zieles (geringste momentane
 Entfernung) färbt sich rot, wenn eine CPA von 500m (einstellbar)
-unterschritten wird. Gelb bedeutet, dass nicht das nächste Ziel, sondern ein separat ausgewähltes Ziel (siehe unten AIS) angezeigt wird. Ein
-Klick auf diese Fläche oder ein AIS Ziel in der Feature Liste (nach
-Klick auf die Karte) [AIS Info](#aisinfo)  .
+unterschritten wird. Gelb bedeutet, dass nicht das nächste Ziel, sondern ein separat ausgewähltes Ziel (siehe unten AIS) angezeigt wird. 
 
-Die AIS Symbole können in ihrer Größe verändert werden (Einstellungen "Icon Scale"), ein Rand kann ebenfalls hinzugefügt werden ("Einstellungen "Border Width"). Falls die Berechnungen
-der AIS Kursvektoren zu aufwändig ist (Browser wird zu langsam), kann
-sie in den Einstellungen abgeschaltet werden (AIS/AIS Use Course
-Vector).
+## AIS Info Dialog { #aisinfo }
+
+Ein Klick auf as AIS Widget oder ein AIS Ziel in der [Feature Liste](featureinfo.md) (nach Klick auf die Karte) zeigt eine detaillierte Information zum AIS Ziel an.
+
+![Ais Info](../../img/ais-info-dialog.png)
+///caption
+AIS Info Dialog
+///
+
+| Button | Funktion |
+| --- | --- |
+| {{DB("AisNearest")}} | Setzt das Widget wieder auf Anzeige des Ziels mit höchster [Priorität](#aispriority) und zentriert die Karte auf dieses Ziel, falls nicht der Modus {{BT("LockPos")}} aktiv ist.|
+| {{DB("AisInfoLocate")}} | Setzt das Widget in den Folgemodus. Damit werden ständig die Werte für dieses Ziel angezeigt und das Ziel auf der Karte wird orange gefärbt (Farbe: Einstellungen "Tracking"). Die Karte wird auf dieses Ziel zentriert.|
+| {{DB("AisInfoHide")}} | Verberge diese AIS Ziel für eine gewisse Zeit (Einstellungen "hide time") |
+| {{DB("AisItems")}} |  Zeige die [Liste](#aislist) aller AIS Ziele |
+
+## Liste der AIS Ziele { #aislist }
+
+Über einen Klick auf {{DB("AisItems")}} im [AIS Info Dialog](#aisinfo) oder auf der AIS-Seite
+
+{{MM("MMaiscfgpage")}}-> {{BT("AisItems")}}
+
+erhält man die Liste der AIS Ziele.
+
+![AIS Liste](../../img/aislist.png)
+///caption
+AIS Ziele
+///
+Durch Klick auf die Zeile "sorted by..." kann man die Sortierreihenfolge verändern. Die Zahl der anzuzeigenden Werte pro Ziel kann unter Einstellungen "reduce details in list" verringert werden.
+Ein Klick auf ein Ziel in der Liste öffnet wieder den [AIS Info Dialog](#aisinfo).
+
+| Button | Funktion |
+| --- | --- |
+| {{BT("AisNearest")}} | Setzt das AIS Widget wieder auf Anzeige des Ziels mit höchster [Priorität](#aispriority) und zentriert die Karte auf dieses Ziel, falls nicht der Modus {{BT("LockPos")}} aktiv ist. |
+| {{BT("AisSort")}} | Ändere die Sortierreihenfole in der Liste |
+| {{BT("AisLock")}} | Pausiere das automatischen Aktualisieren der Liste |
+| {{BT("AisSearch")}} | Suche in den Zielen. Der eingegebene Text wird in MMSI, Name, Callsign und Shipname gesucht. Nur die gefundenen Ziele werden angezeigt. Ein nochmaliger Klick beendet die Filterung.|
 

@@ -78,6 +78,7 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.highlight:
         anchor_linenums: true
+  - pymdownx.blocks.caption
   #  #  - pymdownx.inlinehilite
   #  #  - pymdownx.snippets
   #  - pymdownx.superfences:

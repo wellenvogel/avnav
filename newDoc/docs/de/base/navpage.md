@@ -78,4 +78,4 @@ Mit einem Click oder Touch auf die Karte, können zusätzliche Informationen zu 
 
 ![](../../img/FeatureInfo-Select.png)
 
-Die angezeigte Liste enthält alle Objekte an dieser Stelle, zu denen AvNav nach Selektion (je nach Art) weitere [Aktionen oder Informationen](TODO: featureInfo) anbieten kann. In diesem Beispiel sind das die eigene Position, ein AIS Objekt, der aktuelle Track sowie die Karte selbst. 
+Die angezeigte Liste enthält alle Objekte an dieser Stelle, zu denen AvNav nach Selektion (je nach Art) weitere [Aktionen oder Informationen](../special/featureinfo.md) anbieten kann. In diesem Beispiel sind das die eigene Position, ein AIS Objekt, der aktuelle Track sowie die Karte selbst. 
