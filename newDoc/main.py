@@ -144,7 +144,7 @@ def define_env(env):
         videos=load_videos(vf)
 
     
-    def button(name,dialog=False,longText=False,mainMenu=False):
+    def button(name,dialog=False,longText=False,mainMenu=False,small=False):
         if not name:
             return ''
         button=buttons.get(name)
@@ -157,6 +157,7 @@ def define_env(env):
         addClass='dialog-button' if dialog else ''
         addClass+=' longText' if longText else ''
         addClass+=' mainMenu' if mainMenu else ''
+        addClass+=' small' if small else ''
         icon=button.get('icon')
         cl=CLREPL.sub('_',name)
         return f"<span class=\"avnav-button {addClass} {cl}\" data-link=\"{btdoc}\" title=\"{name}\">"+\
@@ -166,6 +167,10 @@ def define_env(env):
     @env.macro
     def BT(name,longText=False):
         return button(name,longText=longText)
+    @env.macro
+    def SB(name):
+        #small button
+        return button(name,small=True)
     @env.macro
     def DB(name):
         return button(name,True)

@@ -87,6 +87,11 @@ This will render a small button symbol with the short text and the icon dependin
 {{BT("Cancel",True)}}
 ```
 
+Small buttons without text:
+```
+{{SB("Cancel")}}
+```
+
 ## Main Menu Entries
 The buttons in the main menu are named like the pages they open with a prefix "MM".
 For a Main Menu button write:
