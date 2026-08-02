@@ -86,6 +86,8 @@ def buildButtonCss(buttons,icons,btcss):
             str=""
             for kind in ['legacy','default']:
                 img=v.get(kind)
+                if img is None and kind == 'default':
+                    img=v.get('legacy')
                 if img is not None:
                     str+=f".iconset-{kind} .avnav-icon.{n}"+"{\n"
                     str+=f"  background-image: url('{img}');"
