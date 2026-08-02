@@ -1,0 +1,62 @@
+﻿00:00:01,320 
+00:00:03,320 
+00:00:05,320 Welcome to the AvNav video on settings and layouts.  
+00:00:09,840 First, let’s clarify how AvNav distinguishes between these two categories. 
+00:00:16,480 Settings cover all the options that  allow you, as a user, to customise   
+00:00:28,120 the interface or, so to speak, the appearance of  AvNav. This starts with the size of the buttons   
+00:00:30,280 and the font size on buttons or in other parts of  the programme. It continues with the colours of   
+00:00:36,800 routes or tracks, spacing, how far the course  vector extends ahead, and so on and so forth.  
+00:00:42,760 So there is a vast array of customisation options.  Fortunately, the new version of AvNav offers   
+00:00:49,969 some simplifications. But more on that later. But what, then, are layouts? Layouts summarise how   
+00:00:59,440 You can arrange the widgets on the navigation page,  the route page and in the dashboard. Widgets are   
+00:01:06,560 predefined areas that can display a wide variety  of content and data alongside the actual map. You   
+00:01:15,019 may be familiar with widgets from your mobile  phone, for example for displaying weather data.  
+00:01:20,000 In the layout, you can specify which widgets  are displayed where and how they are configured.  
+00:01:27,800 That is the key difference between settings  and layouts. Layouts cover completely   
+00:01:35,000 customisable designs for the visibility of  data in AvNav. Settings control the basic   
+00:01:39,240 interface settings and also include layouts. Let’s now start with the layouts. To do this,   
+00:01:47,900 we’ll switch to the Layout page. As you can see, it’s structured   
+00:01:53,200 quite differently from the Settings page. Only the current layout can be edited at any one   
+00:02:00,400 time. This is clearly displayed in the  first line. At the moment, the layout   
+00:02:05,560 ‘user.test’ is active. The list below  contains all the other saved layouts.  
+00:02:12,040 The prefix ‘user’ makes it clear that this is a  layout created by the user. Layouts prefixed with   
+00:02:19,800 ‘System’ are preset and cannot be edited. You can now start editing the active   
+00:02:40,000 layout using the Edit button. A brief dialogue  box prompts you to enter a new name; otherwise,   
+00:03:08,489 clicking Edit will edit the current layout. The NavPage now appears slightly reduced in   
+00:03:08,648 the button bar on the right has also changed. If you click directly on a widget, you can   
+00:03:09,083 make changes. The most important option  is likely to be the “New Widget” line,   
+00:03:09,720 as this is where you can select an alternative  data display. Clicking on the current name   
+00:03:16,960 opens a drop-down list of all available widgets.  We’ll select COG as an example. If you now click   
+00:03:26,826 directly on “Update”, you’ll change the current  widget you selected earlier. Important: Use the   
+00:03:31,720 Before and After buttons to add a new  COG widget before or after the current   
+00:03:37,800 one. The active one will then remain unchanged. If you want to add a new widget from the start,   
+00:03:45,580 click in the empty area next to the  map and you will be guided through   
+00:03:50,320 the process of setting up a new widget. Further configuration options   
+00:04:07,600 for the edited widget are: Caption, which is the text displayed   
+00:04:28,000 alongside the value shown in the widget. Formatter. This is where the display of   
+00:04:30,317 the value is defined, along with the Unit  field. The format is usually already set.  
+00:04:30,476 Let’s take a closer look at this. We exit the  widget editing dialogue by clicking Cancel   
+00:04:31,360 and then click the Config button. Here you can specify two things: firstly, which   
+00:04:35,080 areas around the map should display  widgets at all, for example at the top   
+00:04:52,480 or bottom right. You can also specify under  which conditions the areas should display   
+00:05:00,800 widgets, e.g. only whilst anchor watchis active.  Please refer to the documentation for further   
+00:05:01,440 details. There are therefore very extensive   
+00:05:03,670 options for customising the layout of the widgets. And widgets aren’t just found on the navigation   
+00:05:18,360 page. It’s no coincidence that the  button bar includes a button for the   
+00:05:28,760 route editor. If you click this button,  you can customise the widgets that are to   
+00:05:31,665 be displayed specifically on the route page. But be careful. Don’t delete the route widget,   
+00:05:31,832 be displayed specifically on the route page. But be careful. Don’t delete the route widget,   
+00:05:42,540 These are also edited via layouts. To do this,  go to the dashboards page via the main menu.  
+00:05:43,316 These are also edited via layouts. To do this,  go to the dashboards page via the main menu.  
+00:05:48,640 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:05:55,840 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:06:00,680 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:06:04,640 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:06:11,880 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:06:18,240 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:06:33,640 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:06:40,800 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:06:43,460 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:06:51,840 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:07:01,280 before on the NavPage, except that here the  display of values is enlarged and arranged   
+00:07:10,560 before on the NavPage, except that here the  display of values is enlarged and arranged   

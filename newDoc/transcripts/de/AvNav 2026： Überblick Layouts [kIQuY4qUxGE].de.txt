@@ -1,0 +1,70 @@
+﻿00:00:05,320 Willkommen zum AvNav-Video zum Thema Settings und Layouts. Zunächst soll die Frage geklärt werden, 
+00:00:11,680 wie AvNav diese beiden Kategorien unterscheidet. Beginnen wir bei den Settings. 
+00:00:17,800 Settings beinhalten alle möglichen Einstellungen, die man als User rund um die Oberfläche oder 
+00:00:23,760 sozusagen das Aussehen von AvNav beeinflussen kann. Da geht es los bei der Größe der Buttons, 
+00:00:30,280 der Schriftgröße auf Buttons oder in anderen Bereichen des Programms. Es geht weiter bei 
+00:00:36,120 Farben von Routen oder Tracks, Abständen, wie weit der Kursvektor nach vorne reicht 
+00:00:41,680 und so weiter und so fort. Es gibt also eine Unmenge 
+00:00:45,840 an Einstellungsmöglichkeiten. Zum Glück bietet die neue Version von AvNav einige 
+00:00:51,360 Erleichterungen. Dazu aber später mehr. Was aber sind dagegen Layouts? Layouts 
+00:00:58,120 fassen zusammen, wie ich die Widgets auf der Navigationspage, der Routenpage und im Dashboard 
+00:01:03,720 beeinflussen kann. Widgets sind fest definierte Bereiche, die verschiedenste Inhalte und Daten 
+00:01:10,360 neben der eigentlichen Karte darstellen können. Vielleicht kennst du Widgets auch von deinem 
+00:01:16,280 Handy, zum Beispiel zur Anzeige von Wetterdaten. Im Layout kannst du zusammenfassen, 
+00:01:22,240 welche Widgets wo zu sehen sind und wie diese dann konfiguriert werden. 
+00:01:27,800 Das ist der wesentliche Unterschied zwischen Settings und Layouts. Layouts 
+00:01:32,280 umfassen ganz individuelle Gestaltungen für die Sichtbarkeit von Daten in AvNav. Settings 
+00:01:38,360 regeln die grundsätzlichen Einstellungen der Oberflächen und beinhalten auch Layouts. 
+00:01:45,160 Beginnen wir nun mit den Layouts. Dazu wechseln wir auf die Layout Page. 
+00:01:50,440 Wie man sieht, ist die ganz anders aufgebaut als die Settingspage. 
+00:01:55,040 Es kann immer nur das aktuelle, das „current“ Layout editiert werden. Das wird prominent in der 
+00:02:01,240 ersten Zeile dargestellt. Im Augenblick ist das Layout user.test aktiviert. In der Liste darunter 
+00:02:08,200 finden sich alle anderen gespeicherten Layouts. Das vorangestellte „user“ macht klar, 
+00:02:14,360 das ist ein vom User erzeugtes Layout. Die Layouts mit vorangestelltem „System“ 
+00:02:20,560 sind voreingestellt und nicht editierbar. Über die Edit-Schaltfläche kann man nun das 
+00:02:26,640 Editieren des aktiven Layouts starten. Ein kurzer Dialog bietet das Eingeben eines neuen Namens an, 
+00:02:34,440 wenn es sich um ein System-Layout handelt. Ansonsten wird nach Klick 
+00:02:38,400 auf Edit das aktuelle Layout editiert. Nun erscheint etwas verkleinert die 
+00:02:44,440 NavPage rot umrahmt, um anzuzeigen, dass etwas besonderes passiert, außerdem hat 
+00:02:49,920 sich die Buttonleiste rechts verändert. Noch einmal zur Erinnerung: Es geht nun nur darum, 
+00:02:56,640 die Widgets rund um die Kartendarstellung auf der Navigationspage anzupassen. 
+00:03:02,120 Wenn du direkt auf ein Widget klickst, kannst du Änderungen vornehmen. Am wichtigsten dürfte die 
+00:03:07,640 Zeile „New Widget sein“, denn hier kannst du eine alternative Datendarstellung auswählen. Ein Klick 
+00:03:15,000 auf den aktuellen Namen öffnet eine Auswahlliste aller verfügbaren Widgets. Wir wählen als Beispiel 
+00:03:21,480 COG aus. Wenn du nun direkt auf „Update“ klickst, änderst du das aktuelle Widget, 
+00:03:27,600 das du zuvor ausgewählt hast. Wichtig: Über die Schaltflächen Before und After 
+00:03:33,400 fügst du ein neues COG-Widget vor oder nach dem aktuellen hinzu. Das aktive bleibt unverändert. 
+00:03:41,960 Wenn du von vornherein ein neues Widget einfügen möchtest, klickst du in den leeren 
+00:03:46,840 Bereich neben der Karte und wirst dann durch die Einrichtung eines neuen Widgets geführt. 
+00:03:57,960 Weitere Einstellmöglichkeiten für das editierte Widgets sind: 
+00:04:02,000 Caption, das ist der Text, der zum dargestellten Wert im Widget zu sehen ist. 
+00:04:07,600 Formatter. Dort wird die Darstellung des Wertes zusammen mit der Zeile Unit festgelegt. Das 
+00:04:14,240 Format ist in der Regel bereits festgelegt. Über die Zeile ganz oben, nämlich Panel, 
+00:04:20,720 wird festgelegt, wo das Widget auf der Seite abgelegt wird. 
+00:04:25,440 Das schauen wir uns genauer an. Wir verlassen den Dialog 
+00:04:28,760 zum Editieren des Widgets mit Cancel und klicken die Schaltfläche Config. 
+00:04:34,560 Hier kann ich genau festlegen, welche Bereiche rund um die Karte überhaupt Widgets aufnehmen 
+00:04:39,800 sollen. Außerdem können verschiedene Konditionen für die Darstellung festgelegt werden, 
+00:04:45,200 abhängig davon, ob zB die Ankerwache läuft. Genaueres lies bitte in der Doku nach. 
+00:04:56,920 Es gibt also sehr umfangreiche Möglichkeiten, das Layout der Widgets zu beeinflussen. 
+00:05:03,720 Und Widgets gibt es nicht nur auf der Navigationspage. Nicht umsonst findet sich 
+00:05:08,960 in der Buttonleiste die Schaltfläche für den Routeneditor. Wenn du diesen Button klickst, 
+00:05:15,080 dann kannst du die Widgets beeinflussen, die speziell auf der Routepage zu sehen sein sollen. 
+00:05:20,640 Aber Vorsicht. Lösche nicht das Widget für Routen, denn sonst kannst du nur noch über den Umweg der 
+00:05:26,720 Toolbox das Erstellen einer Route ermöglichen. Weitere Widgets findest du in AvNAv auf der 
+00:05:33,440 Seite für die Dashboards. Auch diese werden über Layouts editiert. Dazu wechselst du 
+00:05:39,520 über das Main menue auf die Dashboard-Seite. Der rote Rahmen ist nach wie vor sichtbar, 
+00:05:45,440 das heißt, nun kannst du genauso vorgehen wie vorher auf der NavPage, nur dass hier die 
+00:05:51,240 Darstellung von Werten vergrößert ist und anders angeordnet. Aber das Prinzip ist das gleiche wie 
+00:05:57,760 eben bereits erklärt. Das gilt auch für den Config Button. Das Seitenlayout sieht etwas anders aus, 
+00:06:06,280 funktioniert aber auch wie vorher beschrieben: Es gibt eigentlich nur einen Bereich links und 
+00:06:11,400 rechts, in der Mitte können bis zu 3 Spalten für die Aufnahme von Widgets hinzugefügt werden. Dann 
+00:06:17,880 wird es aber sehr voll je nach Bildschirmgröße. Insgesamt können bis zu 10 Dashboardseiten 
+00:06:24,520 individuell gestaltet werden. Das ist eine ganze Menge. Und die Menge der Seiten muss 
+00:06:29,560 in den Settings unter General angepasst werden. Und last but not least wird das Layouten beendet 
+00:06:36,640 mit der Schaltfläche „Finished“, die während des gesamten Layoutens kräftig rot umrandet in der 
+00:06:42,480 Buttonleiste auf ihren Einsatz wartet. Ein letzter Dialog bietet die Möglichkeit, alles wieder zurück 
+00:06:49,653 zu nehmen, wenn du auf Discard changes klickst. Mit OK werden deine Änderungen gespeichert. Wenn 
+00:06:58,040 du ganz tief einsteigen möchtest, kannst du zusätzliche Layout-Feinheiten umsetzen, 
+00:07:03,440 indem du CSS-Code erzeugst. Das ist etwas für eingeweihte Spezialisten. 
+00:07:10,560 Danke fürs Zusehen. Das war's wieder. Nun viel Erfolg beim Einrichten und Layouten. 
