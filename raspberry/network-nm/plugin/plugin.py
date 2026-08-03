@@ -601,7 +601,7 @@ class Plugin(object):
         if zone not in self.ALLOWED_ZONES:
             raise Exception(f"invalid zone: {zone}, not in {' '.join(self.ALLOWED_ZONES)}")
         return zone
-    def addConnection(self,ssid,psk=None,zone=None,autoconnect=None,omitCheck=False):
+    def addConnection(self,ssid,psk=None,zone=None,autoconnect=None,priority=0,omitCheck=False):
         if ssid is None:
             raise Exception("ssid cannot be empty")
         zone=self.check_zone(zone)
@@ -614,6 +614,8 @@ class Plugin(object):
             con['zone'] = zone
         if autoconnect is not None:
             con['autoconnect'] = autoconnect
+        if priority is not None:
+            con['autoconnect-priority'] = int(priority)
         wifi={
             "ssid":dbus.ByteArray(ssid.encode('utf-8')),
             "mode":"infrastructure",
@@ -652,7 +654,7 @@ class Plugin(object):
             raise Exception(f"can only handle 802-11-wireless.infrastructure connections, current is {mode}")
         return cprops
 
-    def updateConnection(self,path,psk=None,zone=None,autoconnect=None):
+    def updateConnection(self,path,psk=None,zone=None,autoconnect=None,priority=0):
         zone=self.check_zone(zone)
         props=self.check_connection(path)
         con=self.nm(path,nm_base + ".Settings.Connection")
@@ -669,6 +671,8 @@ class Plugin(object):
             props['connection'].update({"zone":zone})
         if autoconnect is not None:
             props['connection'].update({"autoconnect":autoconnect})
+        if priority is not None:
+            props['connection'].update({"autoconnect-priority":int(priority)})
         con.Update(props)
 
     def removeConnection(self,path):
@@ -722,6 +726,7 @@ class Plugin(object):
                     data=self.addConnection(ssid,
                                             psk,
                                             zone=self.get_arg(args, 'zone'),
+                                            priority=self.get_arg(args, 'priority'),
                                             autoconnect=self.get_bool_arg(args, 'autoconnect')
                                             )
                     self.api.log(f"added connection {data} for {ssid}")
@@ -731,6 +736,7 @@ class Plugin(object):
                     data=self.updateConnection(path,
                                                psk=self.get_arg(args,'psk'),
                                                zone=self.get_arg(args,'zone'),
+                                               priority=self.get_arg(args, 'priority'),
                                                autoconnect=self.get_bool_arg(args, 'autoconnect', False))
                 elif url == 'getItem':
                     if path is None:
