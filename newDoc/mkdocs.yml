@@ -73,6 +73,7 @@ extra:
   old_doc_start: "beschreibung.html"
   version: !ENV [AVNAV_VERSION,202608xx]
   no_version: !ENV AVNAV_NOVERSION
+  video_mode: !ENV [AVNAV_VIDEOMODE,youtube]
 markdown_extensions:
   - admonition
   - pymdownx.details

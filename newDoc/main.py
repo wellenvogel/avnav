@@ -4,6 +4,7 @@ import sys
 import json
 import yaml
 import re
+import shutil
 BTJSON='docs/buttons/buttons.json' #source path
 ICONJSON='docs/buttons/icons.json'
 BTCSS='docs/generated/buttons.css'
@@ -12,7 +13,6 @@ VIDEOS='docs/videos.yml'
 VERSIONS='versions.txt'
 M_YT='youtube'
 M_INTERN='intern'
-VMODE=M_YT
 cssbuild=False
 pageVariables={}
 docVersions=[]
@@ -62,6 +62,8 @@ def build_chapters(name,video,chapters):
         for vm in [M_YT,M_INTERN]:
             if vm == M_YT:
                 cnv[M_YT]=f"start={seconds}&autoplay=true"
+            if vm == M_INTERN:
+                cnv[vm]=f"start={seconds}"
         converted.append(cnv)
     return converted
 def load_videos(vf):
@@ -121,6 +123,11 @@ def buildButtonCss(buttons,icons,btcss):
                     str+=f"  content: \"{txt}\";"+"\n}\n"
             oh.write(str)
 
+def get_video_mode(env):
+    VMODE=env.conf.extra.get('video_mode')
+    if VMODE not in [M_YT,M_INTERN]:
+        assert False, f"invalid video_mode {VMODE}, expected {M_YT} or {M_INTERN}"
+    return VMODE
 
 def define_env(env):
     global cssbuild
@@ -130,6 +137,7 @@ def define_env(env):
     videos={}
     btf=os.path.join(env.project_dir,BTJSON)
     iconf=os.path.join(env.project_dir,ICONJSON)
+    VMODE=get_video_mode(env)
     if not os.path.exists(btf) or not os.path.exists(iconf):
         print(f"WARNING: buton defs {btf} / icon defs {iconf} not found")
     else:
@@ -238,6 +246,7 @@ def define_env(env):
         if not item:
             return ''
         rt=item.get(VMODE)
+        lang=pageVariables.get(PV_LANG)
         if not rt:
             return ''
         if VMODE == M_YT:
@@ -245,13 +254,17 @@ def define_env(env):
             if item.get('kind') == 'playlist':
                 prefix="https://www.youtube.com/playlist?list="
             rt=prefix+rt
-            lang=pageVariables.get(PV_LANG)
             if not lang:
                 return rt
             if lang == 'de':
                 rt=append_param(rt,"cc_load_policy=0")
             else:
                 rt=append_param(rt,"cc_lang_pref="+lang+"&cc_load_policy=1")
+        if VMODE == M_INTERN:
+            prefix=pageVariables.get(PV_BASE)+"videos/video.html?video="
+            rt=prefix+rt
+            if lang == 'en':
+                rt+="&lang=en"
         return rt
     @env.macro
     def VIDEO(name):
@@ -364,3 +377,29 @@ def on_pre_page_macros(env):
 def on_post_page_macros(env):
     for k,v in pageVariables.items():
         env.page.meta[k]=v
+
+def on_post_build(env):
+    print("on post_build")
+    VMODE=get_video_mode(env)
+    if VMODE == M_INTERN:        
+        src=os.path.join(env.project_dir,'videos')
+        dst=os.path.join(env.conf['site_dir'],'videos')
+        print(f"internal video mode, copying videos from {src} to {dst}")
+        if os.path.isdir(src):
+            if not os.path.isdir(dst):
+                os.makedirs(dst)
+            for f in os.listdir(src):
+                if f == '.' or f == '..':
+                    continue
+                path,ext=os.path.splitext(f)
+                if ext in ['.sh']:
+                    continue
+                sfile=os.path.join(src,f)
+                dfile=os.path.join(dst,f)
+                if os.path.exists(dfile):
+                    stime=os.stat(sfile).st_mtime
+                    dtime=os.stat(dfile).st_mtime
+                    if dtime >= stime:
+                        continue
+                print(f"Copy {sfile} to {dfile}")
+                shutil.copyfile(sfile,dfile)
