@@ -16,6 +16,13 @@
               < 202608xx
             </a>
         </li>
+        {% for vl in page.meta.avnav_versions %}
+        <li class="md-select__item">
+          <a href="{{ vl.url }}"  class="md-select__link">
+              {{ vl.version }}
+            </a>
+        </li>
+        {% endfor %}
       </ul>    
     </div>
     {% endif %}  

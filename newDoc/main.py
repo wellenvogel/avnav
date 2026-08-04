@@ -9,15 +9,18 @@ ICONJSON='docs/buttons/icons.json'
 BTCSS='docs/generated/buttons.css'
 BTDOC='buttons/buttons.md'
 VIDEOS='docs/videos.yml'
+VERSIONS='versions.txt'
 M_YT='youtube'
 M_INTERN='intern'
 VMODE=M_YT
 cssbuild=False
 pageVariables={}
+docVersions=[]
 PV_OLD="avnav_olddoc"
 PV_OLDBASE="avnav_oldbase"
 PV_LANG="i18nlang"
 PV_BASE="base_url"
+PV_VERSIONS="avnav_versions"
 VK_LINK='link'
 VK_EMBED='embed'
 C_START='start'
@@ -75,6 +78,20 @@ def load_videos(vf):
                 else:
                     v['de']=build_chapters(k,v,chapters)
     return videos
+
+def readVersions(versionFile):
+    docVersions.clear()
+    if not os.path.exists(versionFile):
+        return
+    recom=re.compile('#.*')
+    with open(versionFile,"r") as wh:
+        for line in wh:
+            line=line.strip()
+            line=recom.sub('',line)
+            line=line.strip()
+            if not line:
+                continue
+            docVersions.append(line)
 
 def buildButtonCss(buttons,icons,btcss):
     print("***Building button css***")    
@@ -142,6 +159,8 @@ def define_env(env):
         print(f"WARNING: video config {vf} not found")
     else:
         videos=load_videos(vf)
+    versionFile=os.path.join(env.project_dir,VERSIONS)
+    readVersions(versionFile)    
 
     
     def button(name,dialog=False,longText=False,mainMenu=False,small=False):
@@ -327,6 +346,15 @@ def on_pre_page_macros(env):
     pageVariables[PV_BASE]=base_url
     pageVariables[PV_LANG]=lang
     pageVariables[PV_OLDBASE]=old_doc+"/"+env.variables.old_doc_start+"?lang="+lang
+    def versionLink(version):
+        return base_url+'../'+str(version)+'/'+env.page.url
+    versionWithLinks=[]
+    for v in docVersions:
+        versionWithLinks.append({
+            'version':v,
+            'url':versionLink(v)
+        })
+    pageVariables[PV_VERSIONS]=versionWithLinks
     for k,v in pageVariables.items():
         env.variables[k]=v
 
