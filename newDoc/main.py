@@ -349,7 +349,10 @@ def on_pre_page_macros(env):
     def versionLink(version):
         return base_url+'../'+str(version)+'/'+env.page.url
     versionWithLinks=[]
+    current_version=str(env.conf.extra.get('version'))
     for v in docVersions:
+        if v == current_version:
+            continue
         versionWithLinks.append({
             'version':v,
             'url':versionLink(v)
