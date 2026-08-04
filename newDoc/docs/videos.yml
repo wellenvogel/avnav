@@ -35,8 +35,22 @@ navigation:
       - 05:36 Tools button
 routes:
   youtube: "YbCWn0XAWmA"
+  intern: routing.mp4
   chapters:
     de:
       - 00:00 Start
     en:
       - 00:00 Start
+
+settings:
+  youtube: 5otVXjEH0EE
+  intern: settings.mp4
+
+layouts:
+  youtube: kIQuY4qUxGE
+  intern: layouts.mp4
+
+userapps:
+  youtube: "P-i5Eb_7IsQ"
+  intern: userapps.mp4
+  
