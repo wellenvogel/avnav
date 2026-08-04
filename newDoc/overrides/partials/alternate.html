@@ -26,7 +26,7 @@
 <div class="md-header__option">
   <div class="md-select">
     {% set icon = config.theme.icon.alternate or "material/translate" %}
-    <button class="md-header__button md-icon" aria-label="{{ lang.t('select.language') }}">
+    <button class="md-header__button md-icon testIcon" aria-label="{{ lang.t('select.language') }}">
       {% include ".icons/" ~ icon ~ ".svg" %}
     </button>
     <div class="md-select__inner">
@@ -42,6 +42,9 @@
     </div>
   </div>
 </div>
+<div id="linkIcon" class="hidden link-icon">
+      {% include ".icons/octicons/link-external-24.svg" %}
+</div>  
 <div class="md-header__option">
   <div class="md-select">
   {% set icon = config.theme.icon.iconset or "simple/icon" %}
@@ -65,6 +68,6 @@
     </div>
     <div class="md-label" id="iconset-current">
         Test
-    </div>   
+    </div> 
 </div>
 

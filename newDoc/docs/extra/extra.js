@@ -79,4 +79,21 @@ document$.subscribe(()=>{
             target.src=url;
         })
     }
+    const ela=Array.from(document.querySelectorAll('a'));
+    const img=document.getElementById('linkIcon');
+    for (const el of ela){
+        const target=el.getAttribute('href');
+        if (target){
+            const tUrl=new URL(target,window.location.href);
+            if (tUrl.origin != window.location.origin){
+                el.classList.add('external');
+                if (img) {
+                    const limg=img.cloneNode(true);
+                    limg.classList.remove('hidden');
+                    limg.removeAttribute('id');
+                    el.appendChild(limg);
+                }
+            }
+        }
+    }
 })
