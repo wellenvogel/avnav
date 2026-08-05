@@ -16,15 +16,26 @@ Neben den Möglichkeiten zur [Einstellung](../base/settings.md) von Anzeige-Eige
     2. CSS für ein spezielles Layout - direkt im [Layout](TODO layout css)
     3. CSS in [Plugins](TODO: plugins)
 
-2. Erweiterungen der Funktionalität der Anzeige über [JavaScript](https://de.wikipedia.org/wiki/JavaScript) code. Damit kann man z.B. einen neuen Formatierer hinzufügen, um einen Wert zur Anzeige in einem Widget umzuwandeln. Auch eigene Anzeigen und noch viele weitere Dinge kann man damit 
-relativ einfach erstellen. Dieser Code kann auf zwei Arten eingebracht werden:
-    1. eine [user.mjs](TODOuser.mjs) Datei im Nutzerverzeichnis
+2. Erweiterungen der Funktionalität der Anzeige über [JavaScript](https://de.wikipedia.org/wiki/JavaScript) code. Damit kann man z.B. einen neuen Formatierer hinzufügen, um einen Wert zur Anzeige in einem Widget umzuwandeln. 
+Ausserdem kann man in weiteren Bereichen die Funktionalität erweitern (mit unterschiedlichen Schwierigkeitsgraden):
+   * Erstellung eigener Daten-Anzeigen (oder Erweiterung bestehender Anzeigen) für die Navigationsseite und die Dashboards (textbasiert und grafisch)
+   * Erstellung von Anzeigen direkt auf der Karte (Map Widgets)
+   * Einbindung weiterer Kartentypen. Hier können z.B. verschiedene Typen von Vektor-Karten eingebunden werden.
+   * Format-Funktionen für die Anzeige von Karten- oder Overlay-Informationen
+   * Eigene Dialoge
+   * Zugriff auf Online Resourcen
+   * ...
+
+   Dieser Code kann auf zwei Arten eingebracht werden:
+    1. eine [user.mjs](userjs.md) Datei im Nutzerverzeichnis
     2. JavScript code in [Plugins](TODO: plugins)
 
 3. Erweiterungen des Servers in [Python](https://de.wikipedia.org/wiki/Python_(Programmiersprache)).
    Diese Funktion ist nur für die Linux und Windows Version verfügbar. Der Python Code muss Bestandteil eines [Plugins](TODO: plugins) werden.
 
-Alle diese Möglichkeiten erfordern ein gewisses KnowHow oder eine Einarbeitung in die jeweils genutzten Sprachen. Allerdings können einfache Anpassungen oft durch Diskussion in der [Community](TODO: community) oder durch KI Hilfe erreicht werden.
+Alle diese Möglichkeiten erfordern ein gewisses KnowHow oder eine Einarbeitung in die jeweils genutzten Sprachen. Allerdings können einfache Anpassungen oft durch Diskussion in der [Community](TODO: community) oder durch KI Hilfe erreicht werden. Zum Erzeugen oder Bearbeiten der Erweiterungen wird nur ein guter Text-Editor benötigt, spezielle Tools sind nicht notwendig. Für viele Funktionen reicht bereits der in AvNav integrierte Editor aus.
+!!! Hinweis
+    Wenn man Erweiterungen erstellt, wird man meist Text in verschiedenen Dateien erzeugen oder bearbeiten. AvNav hat hierfür keine eingebauten Funktionen, um diese Daten (und auch eine Historie) noch einmal zu sichern. Daher sollten diese Daten (.zB. über die verfügbaren Download-Funktionen) noch einmal an einer anderen Stelle aufbewahrt werden. Das schützt vor Verlust, falls einmal das gesamte AvNav System ausfallen sollte.
 
 ## Dokumentation
 

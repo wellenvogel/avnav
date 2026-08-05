@@ -1,9 +1,9 @@
-user java script
-
-
 
 User Spezifischer Java Script Code
 ==================================
+!!! WICHTIG
+    Diese Beschreibung bezieht sich auf JavaScript Code der in einer legacy user.js oder plugin.js Datei leigt.
+    Die Beschreibung für aktuellen Modul-basierten JavaScript Code findet man [hier](userjs.md).
 
 Um eine einfache Möglichkeit zu bieten, AvNav an seine Bedürfnisse
 anzupassen, kann man mit ein wenig Java Script Code AvNav relativ einfach
