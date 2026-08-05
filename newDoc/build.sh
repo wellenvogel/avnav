@@ -1,7 +1,11 @@
 #! /bin/bash
 IMAGE="wellenvogel/avnav-doc-build:1.5"
+err(){
+  echo "ERROR: $*"
+  exit 1
+}
 usage(){
-    echo "usage: $0 [-b] [-d] [-h] [-n] [-v version] [-c] [-p port] [<command>]"
+    echo "usage: $0 [-b] [-d] [-h] [-n] [-v version] [-s youtube|intern] [-c] [-p port] [<command>]"
 }
 useDocker=0
 port=8000
@@ -12,7 +16,8 @@ buttonUsage=0
 noversion=""
 version=""
 checkVersion=""
-while getopts "dhp:a:bncv:" arg; do
+videomode=""
+while getopts "dhp:a:bncv:s:" arg; do
   case "$arg" in
     b)
       buttonUsage=1
@@ -33,6 +38,12 @@ while getopts "dhp:a:bncv:" arg; do
       AVNAV_NOVERSION=true
       export AVNAV_NOVERSION
       noversion="-n"
+      ;;
+    s)
+      [ "$OPTARG" != intern -a "$OPTARG" != youtube ] && err "-s: invalid mode $OPTARG, allowed: intern|youtube"
+      videomode="-s $OPTARG"
+      AVNAV_VIDEOMODE=$OPTARG
+      export AVNAV_VIDEOMODE
       ;;
     v)
       AVNAV_VERSION=$OPTARG
@@ -57,7 +68,7 @@ err(){
 }
 [ "$checkVersion" != "" -a "$AVNAV_VERSION" = "" ] && err "-c also requires -v"
 if [ $useDocker = 1 ] ; then
-  docker run -ti --rm -u`id -u` -v "`readlink -f $pdir/..`:/app" -p8000:$port "$IMAGE" /app/newDoc/build.sh $noversion $version $checkVersion -a 0.0.0.0 $command
+  docker run -ti --rm -u`id -u` -v "`readlink -f $pdir/..`:/app" -p8000:$port "$IMAGE" /app/newDoc/build.sh $videomode $noversion $version $checkVersion -a 0.0.0.0 $command
   exit $?
 fi
 
@@ -93,7 +104,4 @@ if [ "$command" = "serve" ] ; then
 else
   mkdocs $command
 fi
-
-
-
 
