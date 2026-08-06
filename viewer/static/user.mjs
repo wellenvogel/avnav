@@ -54,9 +54,10 @@ export default async (api)=> {
 
     };
     /*
-     uncomment the next line to register rhe widget
+     uncomment the next line to register the widget
      */
     //api.registerWidget(rpmWidget);
+
 
     /**
      * Example 2:
