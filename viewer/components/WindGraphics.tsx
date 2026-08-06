@@ -10,6 +10,7 @@ import {WidgetFrame} from "./WidgetBase";
 import globalstore from "../util/globalstore";
 import {IWidgetProps} from "../util/types";
 import Helper from "../util/helper";
+import base from "../base";
 
 const EDITABLES={
     scaleStart: {default: 20, type:'NUMBER',displayName:'red/green start',
@@ -364,7 +365,7 @@ const WindGraphics = (props:WindGraphicsProps) => {
         // Rotate
         const [angle,more]=animAngle.current.next();
         if (! isNaN(angle)) {
-            console.log("anim", angle, more);
+            base.log("anim", angle, more);
             ctx.rotate(angle * Math.PI / 180);
             // Write pointer
             ctx.beginPath();
