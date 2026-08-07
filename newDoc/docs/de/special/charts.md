@@ -4,7 +4,7 @@
     - Erweiterungen
 ---
 # Details zum Kartenhandling
-In diesem Dokument werden einige Details beschrieben, die erklären, wie AvNav mit Karten umgeht, welche Kartentypen es gibt, wie man neue Karten anlegen kann und wie man das Karten-Handling erweitern kann.
+In diesem Dokument werden einige Details beschrieben, die erklären, wie AvNav mit Karten umgeht, welche Kartentypen es gibt, wie man neue Karten anlegen kann und wie man das Karten-Handling erweitern kann. Der erste Teil richtet sich an alle Nutzer und beschreibt ein wenig genauer, welche Karten genutzt werden können und wie man sie in AvNav installieren bzw. importieren oder konvertieren kann. Im [zweiten Teil](#definitions) werden die Möglichkeiten beschrieben, wie man eigene Kartenquellen erzeugen kann und wie man das Kartenhandling in AvNav erweitern kann. Dieser Teil richtet sich an fortgeschrittene Nutzer.
 
 ## Grundaufbau
 Die Karten in AvNav sind entweder auf dem AvNav Server gespeichert oder können (je nach Typ) auch während der Nutzung direkt aus dem Internet geladen werden. Mit dem [mapproxy-plugin](TODO: mapproxy) gibt es ein Mischform, die Karten aus dem Internet lädt, anzeigt und gleichzeitig auf dem AvNav Server speichert. Unter Andorid ist der AvNav Server direkt in der App integriert.
@@ -133,7 +133,7 @@ Die Beschreibung einer Kartendefinition ist entweder eine XML Darstellung wie im
 Bei den Parametern ist die Groß-/Kleinschreibung irrelevant.
 
 
-### Layer Typen
+### Layer Typen {: #layertyes }
 
 AvNav hat eine Reihe von eingebauten Karten-Layer Typen. Diese erwarten die Kartendaten jeweils in einem bestimmten Format und laden sie über bestimmte URLs. [Plugins](plugins-extensions.md) oder [Nutzer-JavaScript](userjs.md) können weitere Layer Typen ergänzen.
 Diese Layer erzeugen intern jeweils ein Kartenlayer für [openlayers](http://www.openlayers.org/) oder [MapLibre](https://maplibre.org/).
@@ -266,7 +266,7 @@ Parameter
 
 | Name | Optional | Beschreibung |
 | --- | --- | --- |
-| profile | nein | PMTiles |
+| profile | nein | `PMTiles` |
 | url | siehe oben | Die Basisurl für die Kartendaten|
 | minzoom | ja | |
 | maxzoom | ja | |
@@ -285,8 +285,86 @@ Eine Beispiel für die Nutzung von PM Raster Quellen:
 
 **Layer mapLibreVector**
 
-Dieser Layer kann für Vektorkarten genutzt werden. Diese werden mit [MapLibre](https://maplibre.org/) dargestellt.
+Dieser Layer kann für Vektorkarten genutzt werden. Diese werden mit [MapLibre](https://maplibre.org/) dargestellt. 
 
+Vektorkarten benötigen neben den Kartendaten im Allgemeinen noch mindestens 3 weitere Datentypen:
+
+  * ein "style" Dokument - im Allgemeinen eine .json Datei. Diese beschreibt im Detail, wie die Daten dargestellt werden sollen. Für genauere Informationen siehe die Beschreibung bei [MapLibre](https://maplibre.org/maplibre-style-spec/).
+  * die auf der Karte anzuzeigenden Symbole (sprites). Der Link dazu ist im "style" Dokument enthalten.
+  * die Fonts für die Textdarstellung. Auch dazu sind die Links im "style" Dokument enthalten.
+
+Die darzustellenden Kartendaten (tiles) werden normalerweise durch Links auf ein oder mehrere [TileJSON](https://docs.mapbox.com/help/glossary/tilejson/) APIs beschrieben. Die Kacheln (tiles) selbst werden für Vektorkarten meist im [pbf](https://github.com/mapbox/pbf) Format genutzt. Sie können dabei von einem Server geladen werden oder zu.B. aus einer PMTiles Datei.
+
+Neben diesen Grunddaten kann man für diesen Karten-Layer noch weitere KOnfigurationen angeben, die dann direkt in Paremeter für [MapLibre](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#properties) umgesetzt werden.
+
+
+Parameter
+
+| Name | Optional | Beschreibung |
+| --- | --- | --- |
+| profile | nein | `maplibreVector` oder `maplibre``|
+| style | nein | siehe [unten](#styleparameter) |
+| maplibre | ja | ein Objekt, das direkt als Eigenschaften an die [MapLibre Map](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/) übergeben wird |
+| useProxy | ja | Wenn Vektordaten von einem Server geladen werden erfordert das korrekte [CORS](https://developer.mozilla.org/de/docs/Web/HTTP/Guides/CORS) Einstellungen auf diesem Server. Sonst verweigert der Browser das Laden der Daten. Da man diese Server nicht immer unter Kontrolle hat, gibt es die Möglichkeiten, die Anfragen über den AvNav Server zu leiten. Da die AvNav Webseite ja auch von diesem Server kam, tritt dabei das CORS Problem nicht auf. Das funktioniert natürlich nur, wenn der AvNav Server den Kartenserver auch direkt erreichen kann |
+
+Der **style** Parameter kann auf verschiedene Arten angegeben werden:
+{: #styleparameter }
+
+  * als Parameter `style` oder `url`oder `styleUrl`
+  * als Wert `style` im Parameter `maplibre`
+
+Der Wert des Parameters kann dabei ein String sein - in diesem Fall wird er als eine URL interpretiert und das Style Dokument wird von dieser URL geladen. Alternativ kann der Wert auch ein Objekt sein - in diesem Falle wird der Wert direkt als `style` Parameter an MapLibre übergeben.
+
+Als Erweiterung zu MapLibre kann das Style-Dokument auch ein [yaml Dokument](https://de.wikipedia.org/wiki/YAML) sein. Das kann durch die Nutzung von Ankern und anderen YAML Funktionen die Arbeit beim Schreiben von solchen Dokumenten erleichtern. Nach dem Laden wird das Dokument in JSON umgewandelt und dann an MapLibre übergeben.
+
+## Erweiterungen (eigene Karten-Layer) {: #extensions }
+
+!!! Experten
+    Das Erstellen eigener Kartenlayer erfordert JavaScript Know How und auch eine gewisse Einarbeitung in das Handling der Kartenbibliotheken. Daher wird eine solche Erweiterung meist in [Plugins](plugins-extensions.md) eingebaut.
+
+Eigene Kartenlayer erweitern die vorhandenen Kartenlayer. Damit kann man z.B. vor der Nutzung noch mit dem Kartenserver kommunizieren (z.B. einen [GetCapabilities](https://docs.geoserver.org/main/en/user/services/wms/reference/) Request an einen WMS Server schicken, um die verfügbaren Layer zu ermitteln ), man kann Nutzer-Präferenzen setzen oder z.B. Karteninformationen abrufen und aufbereiten für die [FeatureListe](TODO: featurelist).
+
+### Registrierung {: #registerlayer }
+
+Im JavaScript API von AvNav (das für [Plugins](plugins-extensions.md) und [Nutzer-JavaScript-Code](userjs.md) zur Verfügung steht) gibt es dazu die Funktion [`registerUserMapLayer`](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L684).
+
+Mit dieser Funktion regsitriert man ein neues Profil, das dann in [Kartendefinitionen](#definitions) verwendet werden kann.
+
+Die Funktion hat die folgenden Parameter:
+
+| Name | Typ | Beschreibung |
+| --- | --- | --- |
+| baseName | String | Der Kartenlayer, der erweitert werden soll. Einer der Profilnamen wie unter [Layer Typen](#layertypes) angegeben. |
+| name | String | Der Profilname für den neuen Layer. Wenn die Funktion in [user.mjs](userjs.md) aufgerufen wird, wird intern dem Namen noch `user_` vorangestellt, wenn sie in einem Plugin gerufen wird, wird `plugin_` vorangestellt. In einer Kartendefinition muss man also `"profile":"user-myprofile"` schreiben. |
+| callback | Funktion | Eine Funktion, die aufgerufen wird, sobald ein Kartenlayer mit diesem Profil angelegt werden soll. Für die Beschreibung siehe [unten](#usermaplayercallback) |
+
+### Callback {: #usermaplayercallback }
+
+Im [API](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L467) sieht man die Definition der Callabck Funktion, die beim Erzeugen eines Kartenlayers aufgerufen wird.
+
+Der `context` Parameter erlaubt die Speicherung von Werten, die spezifisch für diesen Aufruf sind. Er wird auch in allen weiteren Callbacks übergeben.
+
+Die Funktion darf async sein oder auch eine Promise zurückgeben.
+
+Der Rückgabewert der Funktion unterscheidet sich, je nachdem ob man einen [Vektorlayer](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L425) oder einen [Rasterlayer](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L397) erweitert.
+
+Das Resultat kann in beiden Fällen modifizierte Parameter (`options`) zurückgeben - diese ersetzen dann die in der Kartenkonfiguration angegebenen.
+Ausserdem können verschiedene Callback-Funktionen angegeben werden.
+
+| Callback | Typ | Beschreibung |
+| --- | --- | --- |
+| finalizeFunction | alle | wird gerufen, bevor die Karte geschlossen wird |
+| sequenceFunction | alle | wird in regelmässigen Abständen gerufen um zu prüfen, ob sich die Karte geändert hat und neu geladen werden muss. Sobald sich der zurückgegebene String verändert, wird die Karte neu geladen |
+| loadCallback | Vektor | wird nach dem Laden der MapLibre Map gerufen und erlaub den direkten Zugriff auf das Map-Objekt |
+| featureListFormatter | Vektor | Wird gerufen, wenn der Nutzer auf die Karte klickt. Als Parameter wird eine Liste der Vektor-Objekte im Klick-Bereich übergeben. Siehe [unten](#featurelistformatter) |
+| createTileUrlFunction | Raster | Die Rasterlayer erzeugen die URL zum Laden einer Kachel mit einer [URLFunction](https://openlayers.org/en/latest/apidoc/module-ol_Tile.html#~UrlFunction). Dieser callback kann genutzt werden, um eine eigene URLFunction zurückzugeben. Damit können z.B. weitere Parameter eingefügt werden, die der Server benötigt |
+| tileLoadFunction | Raster | Diese Funktion ermöglicht es, das Laden der Serverdaten in ein JavaScript Image zu beeinflussen. |
+
+
+Eine besonders interessante Möglichkeit ist die Aufbereitung von Vektor-Kartendaten für den Nutzer mit der `featureListFormatter` Funktion.
+{: #featurelistformatter }
+
+Die übergebene Liste von Objekten .... TODO
 
 
 ## Technischer Hintergrund {: #background }
