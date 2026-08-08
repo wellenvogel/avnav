@@ -98,7 +98,7 @@ class SerialReader(object):
     if enports:
         enports=enports.split(',')
         for enport in enports:
-            rt.append(enport)
+            rt.append(enport.strip())
     if not hasSerial:
       return rt
     ports=serial.tools.list_ports.comports()
