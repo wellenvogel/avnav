@@ -24,7 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
+import os
 import time
 
 from serial.serialutil import SerialBase
@@ -90,13 +90,18 @@ class SerialReader(object):
                cls.P_FILTER
                ]
     return cfg
-
+  ADDPORTS_ENV="AVNAV_ADDSERIAL"
   @classmethod
   def listSerialPorts(cls):
-    if not hasSerial:
-      return []
-    ports=serial.tools.list_ports.comports()
     rt=[]
+    enports=os.environ.get(cls.ADDPORTS_ENV)
+    if enports:
+        enports=enports.split(',')
+        for enport in enports:
+            rt.append(enport)
+    if not hasSerial:
+      return rt
+    ports=serial.tools.list_ports.comports()
     for p in ports:
       rt.append(p.device)
     return rt
