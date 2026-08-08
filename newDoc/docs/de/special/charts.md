@@ -108,6 +108,7 @@ Man kann diese Definition in eine XMLDatei (z.B. `SimpleOSM.xml`) schreiben, sie
 {{MM("MMchartspage")}}->"Charts"->{{SB("Upload")}}
 
 in AvNav hochladen und die OpenStreetMaps Karte steht unter dem Name SimpleOSM.xml zur Anzeige bereit.
+{: #exampledef }
 
 Dieses Beispiel enthält genau einen Kartenlayer, die Kartenkacheln kommen vom Server unter `http://a.tile.openstreetmap.org` - und sie haben die Default-Größe von 256x256 Pixeln. 
 
@@ -131,6 +132,47 @@ Die Beschreibung einer Kartendefinition ist entweder eine XML Darstellung wie im
 ]
 ```
 Bei den Parametern ist die Groß-/Kleinschreibung irrelevant.
+
+### Einbringen von Kartendefinitionen {: #insertingdefs }
+
+Kartendefinitionen können auf verschiedene Art in AvNav eingebracht werden.
+
+**XML Datei**
+{: #xmldef }
+
+Wie im [Beispiel](#exampldef) beschrieben können Kartendefinitionen als XML Datei zu AvNav hochgeladen werden.
+
+**plugin.json**
+{: #pluginjsondef }
+
+[Plugins](plugins-extensions.md) können eine Datei [`plugin.json`](TODO: plugin.json) mitbringen. Diese muss ein Objekt mit verschiedenen Eigenschaften enthalten. Unter dem Namen "charts" kann hier eine Liste von Kartendefinitionen registriert werden. 
+``` json
+{
+  "charts": [
+    {
+      "layers": [
+        {
+          "url": "chart/base.pmtiles",
+          "name": "main",
+          "minzoom": 6,
+          "maxzoom": 18,
+          "profile": "PMTiles"
+        }
+      ],
+      "name": "test-base",
+      "icon": "compass.svg"
+    }
+  ]
+}
+```
+Relative Angaben bei url oder icon beziehen sich auf den Speicherort der plugin.json Datei.
+
+**Plugin Python Code**
+
+_Nur für Windows und Linux/Raspberry_. Im [Plugin Python API](TODO: plugin api) gibt es die Funktion [`registerChartProvider`](https://github.com/wellenvogel/avnav/blob/e297382b2e849db9e1c4f18a0e22915083deb5aa/server/avnav_api.py#L285).
+
+Der dort übergebene Callback wird gerufen, wenn AvNav die Liste seiner Karten ermitteln möchte. Er muss eine Liste von Kartendefinitionen zurückgeben wie unter [plugin.json](#pluginjsondef) beschrieben. Wenn die Kartendefinition noch keine "layers" enthält, versucht AvNav beim Öffnen der Karte die Liste der Layer zu laden. Dazu versucht es eine XML Definition von einem Server zu laden.
+Wenn die Kartendefinition einen Parameter `overviewUrl` enthält wird diese genutzt, sonst wird der Parameter `url` genutzt und `/avnav.xml` angefügt. Der Abruf dieser Url muss eine XML Datei zurückgeben wie unter [XML Datei](#xmldef) beschrieben.
 
 
 ### Layer Typen {: #layertyes }
@@ -293,7 +335,7 @@ Vektorkarten benötigen neben den Kartendaten im Allgemeinen noch mindestens 3 w
   * die auf der Karte anzuzeigenden Symbole (sprites). Der Link dazu ist im "style" Dokument enthalten.
   * die Fonts für die Textdarstellung. Auch dazu sind die Links im "style" Dokument enthalten.
 
-Die darzustellenden Kartendaten (tiles) werden normalerweise durch Links auf ein oder mehrere [TileJSON](https://docs.mapbox.com/help/glossary/tilejson/) APIs beschrieben. Die Kacheln (tiles) selbst werden für Vektorkarten meist im [pbf](https://github.com/mapbox/pbf) Format genutzt. Sie können dabei von einem Server geladen werden oder zu.B. aus einer PMTiles Datei.
+Die darzustellenden Kartendaten (tiles) werden normalerweise durch Links auf ein oder mehrere [TileJSON](https://docs.mapbox.com/help/glossary/tilejson/) APIs beschrieben. Die Kacheln (tiles) selbst werden für Vektorkarten meist im [pbf](https://github.com/mapbox/pbf) Format genutzt. Sie können dabei von einem Server geladen werden oder z.B. aus einer PMTiles Datei.
 
 Neben diesen Grunddaten kann man für diesen Karten-Layer noch weitere KOnfigurationen angeben, die dann direkt in Paremeter für [MapLibre](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#properties) umgesetzt werden.
 
@@ -328,7 +370,7 @@ Eigene Kartenlayer erweitern die vorhandenen Kartenlayer. Damit kann man z.B. vo
 
 Im JavaScript API von AvNav (das für [Plugins](plugins-extensions.md) und [Nutzer-JavaScript-Code](userjs.md) zur Verfügung steht) gibt es dazu die Funktion [`registerUserMapLayer`](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L684).
 
-Mit dieser Funktion regsitriert man ein neues Profil, das dann in [Kartendefinitionen](#definitions) verwendet werden kann.
+Mit dieser Funktion registriert man ein neues Profil, das dann in [Kartendefinitionen](#definitions) verwendet werden kann.
 
 Die Funktion hat die folgenden Parameter:
 
@@ -340,7 +382,7 @@ Die Funktion hat die folgenden Parameter:
 
 ### Callback {: #usermaplayercallback }
 
-Im [API](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L467) sieht man die Definition der Callabck Funktion, die beim Erzeugen eines Kartenlayers aufgerufen wird.
+Im [API](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L467) sieht man die Definition der Callback Funktion, die beim Erzeugen eines Kartenlayers aufgerufen wird.
 
 Der `context` Parameter erlaubt die Speicherung von Werten, die spezifisch für diesen Aufruf sind. Er wird auch in allen weiteren Callbacks übergeben.
 
@@ -356,7 +398,7 @@ Ausserdem können verschiedene Callback-Funktionen angegeben werden.
 | finalizeFunction | alle | wird gerufen, bevor die Karte geschlossen wird |
 | sequenceFunction | alle | wird in regelmässigen Abständen gerufen um zu prüfen, ob sich die Karte geändert hat und neu geladen werden muss. Sobald sich der zurückgegebene String verändert, wird die Karte neu geladen |
 | loadCallback | Vektor | wird nach dem Laden der MapLibre Map gerufen und erlaub den direkten Zugriff auf das Map-Objekt |
-| featureListFormatter | Vektor | Wird gerufen, wenn der Nutzer auf die Karte klickt. Als Parameter wird eine Liste der Vektor-Objekte im Klick-Bereich übergeben. Siehe [unten](#featurelistformatter) |
+| **featureListFormatter** | Vektor | Wird gerufen, wenn der Nutzer auf die Karte klickt. Als Parameter wird eine Liste der Vektor-Objekte im Klick-Bereich übergeben. Siehe [unten](#featurelistformatter) |
 | createTileUrlFunction | Raster | Die Rasterlayer erzeugen die URL zum Laden einer Kachel mit einer [URLFunction](https://openlayers.org/en/latest/apidoc/module-ol_Tile.html#~UrlFunction). Dieser callback kann genutzt werden, um eine eigene URLFunction zurückzugeben. Damit können z.B. weitere Parameter eingefügt werden, die der Server benötigt |
 | tileLoadFunction | Raster | Diese Funktion ermöglicht es, das Laden der Serverdaten in ein JavaScript Image zu beeinflussen. |
 
@@ -364,7 +406,28 @@ Ausserdem können verschiedene Callback-Funktionen angegeben werden.
 Eine besonders interessante Möglichkeit ist die Aufbereitung von Vektor-Kartendaten für den Nutzer mit der `featureListFormatter` Funktion.
 {: #featurelistformatter }
 
-Die übergebene Liste von Objekten .... TODO
+Die übergebene Liste enhält Objekte die alle Properties des jeweiligen [Open Layer Features](https://openlayers.org/en/latest/apidoc/module-ol_Feature-Feature.html)("get" Methode) enthalten.
+Auuserdem sind die folgenden Eigenschaften vorhanden:
+
+| Name | Beschreibung |
+| --- | --- |
+| `_gtype` | Geometrie-Typ (String) |
+| `_lon` | Longitude |
+| `_lat` | Latitude |
+| `vectorTileFeature` |  das originale MapLibre Feature | 
+
+
+Diese Objekte sind durch pas parsen der GeoJSON Darstellung von [MapLibre](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapGeoJSONFeature/) entstanden - und damit ähnlich den Features, die in einem [GeoJSON Overlay](overlays.md) entstehen. 
+
+Die Rückgabe des Formatters muss ein Array mit Objekten vom Typ [FeatureInfoType](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L68) sein.
+
+Die als Resultat zurückgegebenen Objekte werden in einem [Feature List Dialog](TODO: feature list) angezeigt. Für ein gutes Nutzererlebnis sollte die Rückgabe nur ein einziges Objekt enthalten mit einer akkumulierten Darstellung der wichtigsten Features (z.B. Type, TopMark und Licht einer Tonne).
+
+Eine aufbereitete Liste mit den Informationen aller Objekte sollte HTML formatiert im Wert `htmlInfo` des Objektes hinterlegt werden (oder über `link` als URL abrufbar sein).
+
+Siehe auch [FeatureFormatter](userjs.md#featureformatter).
+
+Ein Bespiel findet sich im [Plugin für freenauticalcharts](https://github.com/wellenvogel/avnav-freenauticalcharts/blob/f9859b10d99cc77ec830b39d33b5da04b667e7dd/freenauticalcharts/plugin.mjs#L271).
 
 
 ## Technischer Hintergrund {: #background }
