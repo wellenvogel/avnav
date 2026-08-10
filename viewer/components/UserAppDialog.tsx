@@ -1,4 +1,4 @@
-import React, {SyntheticEvent, useEffect, useState} from 'react';
+import React, { SyntheticEvent, useEffect, useState} from 'react';
 import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, showPromiseDialog} from './OverlayDialog';
 import Toast from './Toast';
 
@@ -304,7 +304,7 @@ export interface UserAppDialogProps{
     resolveFunction?:() => void
 }
 const getPageLabel=(page:PageType)=>{
-    return `${page} [${getPageTitle(page)}]`
+    return <span >{page}&nbsp;[{getPageTitle(page)}]</span>
 }
 
 interface AppDialogValues{
@@ -397,12 +397,11 @@ const buildDialogParameters=(canEdit:boolean)=> {
             displayName:'page',
             readOnly: !canEdit,
             default:PAGEIDS.ADDON,
-            list:Object.values(PLUGINPAGES).map((page)=>{
+            list:Object.values(PLUGINPAGES).filter((pg)=>pg !== PAGEIDS.ACTIONS).map((page)=>{
                     const label=getPageLabel(page);
                     return {label:label,value:page}
-                }).concat({label:'--default--',value:''}),
-            condition:{newWindow:false},
-            description:'The page in AvNav to show this user app'
+            }).concat({label:<span>--default--</span>,value:''}),
+            description:'The page in AvNav to show this user app and the related button.'
         }))
         rt.push(new EditableStringParameterUI({
             name:'shortText',

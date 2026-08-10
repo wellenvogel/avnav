@@ -371,7 +371,9 @@ export class EditableSelectParameterUI extends EditableSelectParameter{
         theList.forEach((item)=>{
             let label=EditableSelectParameter.getLabelFromListEntry(item);
             if (label === undefined) label="";
-            else label=label+"";
+            else if (! React.isValidElement(label)){
+                label=label+"";
+            }
             const value=EditableSelectParameter.getValueFromListEntry(item);
             displayList.push({label:label,value:value,selected:value === current});
         })
