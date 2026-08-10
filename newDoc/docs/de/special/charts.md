@@ -417,11 +417,11 @@ Auuserdem sind die folgenden Eigenschaften vorhanden:
 | `vectorTileFeature` |  das originale MapLibre Feature | 
 
 
-Diese Objekte sind durch pas parsen der GeoJSON Darstellung von [MapLibre](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapGeoJSONFeature/) entstanden - und damit ähnlich den Features, die in einem [GeoJSON Overlay](overlays.md) entstehen. 
+Diese Objekte sind durch parsen der GeoJSON Darstellung von [MapLibre](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapGeoJSONFeature/) entstanden - und damit ähnlich den Features, die in einem [GeoJSON Overlay](overlays.md) entstehen. 
 
 Die Rückgabe des Formatters muss ein Array mit Objekten vom Typ [FeatureInfoType](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L68) sein.
 
-Die als Resultat zurückgegebenen Objekte werden in einem [Feature List Dialog](TODO: feature list) angezeigt. Für ein gutes Nutzererlebnis sollte die Rückgabe nur ein einziges Objekt enthalten mit einer akkumulierten Darstellung der wichtigsten Features (z.B. Type, TopMark und Licht einer Tonne).
+Die als Resultat zurückgegebenen Objekte werden in einem [Feature List Dialog](TODO: feature list) angezeigt. Für ein gutes Nutzererlebnis sollte die Rückgabe nur ein einziges Objekt enthalten mit einer akkumulierten Darstellung der wichtigsten Features (z.B. Typ, Top-Zeichen und Licht einer Tonne).
 
 Eine aufbereitete Liste mit den Informationen aller Objekte sollte HTML formatiert im Wert `htmlInfo` des Objektes hinterlegt werden (oder über `link` als URL abrufbar sein).
 
