@@ -36,7 +36,7 @@ user.css - Editor
 Der Editor beherrscht ein Syntax-Highlighting und kann so helfen eine korrekte CSS Syntax zu erzeugen.
 Sobald man den {{DB("DBSave")}} Button klickt, wird die Datei gespeichert und die Änderungen werden auf allen angeschlossenen Bildschirmen sichtbar. Damit kann man recht einfach mit zwei Browsers-Fenstern oder Tabs arbeiten - in einem Fenster hat man den Editor geöffnet, im anderen Fenster die Ansicht, die man ändern möchte.
 
-## Variablen
+## Variablen {: #variables }
 
 Für eine ganze Reihe von Anzeige-Eigenschaften gibt es in AvNav [benutzerdefinierte Eigenschaften](https://developer.mozilla.org/de/docs/Web/CSS/Guides/Cascading_variables/Using_custom_properties).
 

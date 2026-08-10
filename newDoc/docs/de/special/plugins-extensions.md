@@ -12,7 +12,7 @@ AvNav bietet verschiedene Möglichkeiten die Funktionalität und das Aussehen zu
 Neben den Möglichkeiten zur [Einstellung](../base/settings.md) von Anzeige-Eigenschaften direkt in der Oberfläche, der Anpassung der Anzeigen (Widgets) über [Layouts](../base/layout.md) und der [Verbindungen](TODO: connections) und anderer [Parameter des Servers](TODO: server) gibt es dafür die folgenden Möglichkeiten:
 
 1. Anpassung des Aussehens über [CSS](https://de.wikipedia.org/wiki/Cascading_Style_Sheets). AvNav ist eine Web-Anwendung und nutzt CSS für sein Aussehen. Eingebaut sind verschiedene Möglichkeiten, die dafür genutzten Regeln anzupassen:
-    1. Eigenes CSS für alle Anzeigen in einer [user.css](TODOuser.css) Datei
+    1. Eigenes CSS für alle Anzeigen in einer [user.css](usercss.md) Datei
     2. CSS für ein spezielles Layout - direkt im [Layout](TODO layout css)
     3. CSS in [Plugins](TODO: plugins)
 
@@ -51,8 +51,8 @@ Es gibt die folgenden detaillierten Dokumentationen zum Thema:
 * [JavaScript in Plugins](TODO: plugin-js): JavaScript code in Plugins
 
 ### Plugins
-* [Übersicht](TODO: plugin-intro)
-* [Fertige Plugins](TODO: plugin-list): Liste bereits verfügbarer Plugins
+* [Übersicht](plugins.md#overview)
+* [Fertige Plugins](plugin-list.md): Liste bereits verfügbarer Plugins
 * [CSS](TODO: plugin-css): CSS in plugins
 * [JavaScript](TODO: plugin-js): JavaScript code in Plugins
 * [Server](TODO: plugins-server): Serverfunktionen für Plugins (mit Python)
