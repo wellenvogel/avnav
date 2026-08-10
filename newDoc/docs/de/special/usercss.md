@@ -60,7 +60,7 @@ Entwicklertools
 
 Im Beispiel eingekreist ist der Button für die Ankerwache auf den Dashboard-Seiten. Das in den Entwicklertools angeklickte Element wird meist in der Webseite hervorgehoben.
 
-## Buttons und Icons
+## Buttons und Icons {: #buttons-icons }
 Um Buttons oder Icons anzupassen muss man den Namen des Buttons/ Icons ermitteln.
 Mit der Anzeige im Bild haben wir herausgefunden, das der button den Namen [AnchorWatch](../../buttons/buttons.md#AnchorWatch) hat - wir können noch einmal mit der Buttonliste vergleichen.
 Wenn wir nun das Bild durch ein anderes Bild ersetzen wollen, müssen wir zunächst das Bild als .svg Datei hochladen. Das erfolgt im {{BT("AddonConfigImages")}} Bereich der Seite auf der wir auch die user.css bearbeiten.

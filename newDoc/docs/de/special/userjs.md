@@ -12,12 +12,14 @@ erweitern.
 Die möglichen Erweiterungen werden in den folgenden Kapiteln beschrieben.
 Prinzipiell kann man beliebigen Java Script Code ausführen - muss dabei aber natürlich zusehen, die Funktionen von AvNav nicht zu stören.
 
+Die in diesem Dokument beschriebenen Funktionen stehen sowohl dem Nutzer-JavaScript-Code zur Verfügung als auch dem JavaScript-Code in Plugins.
+
 Der Java Script Code liegt bei den [Nutzerdateien](userfiles.md) in der Datei **user.mjs**. Diese Datei ist ein [JavaScript Modul](https://developer.mozilla.org/de/docs/Web/JavaScript/Guide/Modules) und wird von AvNav am Ende seines Start-Prozesses geladen. 
 Der Hauptinhalt dieser Datei ist eine exportierte Funktion, die von AvNav nach dem Laden aufgerufen wird. Der Parameter "api" ist das [AvNav interface](https://github.com/wellenvogel/avnav/blob/master/viewer/api/api.interface.ts) das durch den Code genutzt werden kann.
 
 Ein minimaler Inhalt der Datei könnte so aussehen:
 
-```
+``` js
 export default (api)=>{
     api.log("Hello world);
 }
@@ -60,7 +62,7 @@ github](https://github.com/wellenvogel/avnav/blob/release-{{config.extra.version
 Ein typischer Anwendungsfall für einen neuen Formatter ist die Anzeige eines bisher nicht bekannten Wertes über das Default Widget (siehe [Layouts](layout.md)).
 Das könnte z.B. ein über einen XDR Datensatz empfangener Lade- oder Entladestrom sein. In den Daten ist der Wert in A, wir möchten den Wert aber gerne in % eines Maximalwertes anzeigen lassen.
 Dazu können wir den folgenden Code nutzen:
-```
+``` js
 const formatAmperePercent=(val)=>{
   const max=50; //fix max
   if (isNaN(val)) return "-----";
@@ -74,7 +76,7 @@ Wenn wir diesen Formatter so in unsere user.mjs geschrieben haben, können wir n
 Natürlich ist das so noch nicht besonders komfortabel - der Maximalwert ist fest kodiert. Wenn wir wollen, das der Maximalwert im Layout Editor auswählbar wird, müssen wir noch Parameter für unseren Formatter festlegen.
 Wir definieren nur einen Parameter "maxCurrent".
 
-```
+``` js
 const formatAmperePercent=(val,max)=>{
   if (isNaN(val)) return "-----";
   if (! max) max=50;
@@ -91,7 +93,7 @@ formatAmperePercent.parameters=[
 ]
 api.registerFormatter("formatAmperePercent",formatAmperePercent);
 ```
-Die Parameter für einen Formnatter werden ähnlich beschrieben, wie [Widget Parameter](#widgetparameters), nur das sie als Array angegeben werden mit einem zusätzlichen Feld "name"
+Die Parameter für einen Formatter werden ähnlich beschrieben, wie [Widget Parameter](#widgetparameters), nur das sie als Array angegeben werden mit einem zusätzlichen Feld "name"
 Wenn wir num im Layout-Editor unseren Formatter nutzen, sieht das Bild so aus:
 
 ![Formatter](../../img/userjs-formatter.png)
@@ -107,7 +109,7 @@ Formatter Resultat
 ///
 Falls wir nun mit der einfachen JavaScript "toFixed" Funktion nicht zufrieden sind, können wir natürlich stattdessen auch einen der bereits [vorhandenen Formatter](layout.md#formatter) verwenden.
 Wir möchten hier 3 Stellen haben und verwenden formatDecimal.
-```
+``` js
 ...
 return api.formatter.formatDecimal(percent,3)+"%";
 ```
@@ -130,8 +132,7 @@ Man kann die folgenden Arten von Anzeigen hinzufügen:
 * Widgets mit eigenem HTML, die mit dem Server Teil eines Plugins
   interagieren ([TestPlugin](https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js):
   testPlugin\_serverWidget)
-* Widgets, die Grafiken auf der Karte darstellen (type: map) - ab
-  20220819 z.B. [SailInstrument](https://github.com/kdschmidt1/Sail_Instrument/blob/e1d87186138e5a3ac894916e9b7e85a3218a4c9a/Sail_Instrument/plugin.js#L223)
+* Widgets, die Grafiken auf der Karte darstellen (type: `map`) z.B. [SailInstrument](https://github.com/kdschmidt1/Sail_Instrument/blob/e1d87186138e5a3ac894916e9b7e85a3218a4c9a/Sail_Instrument/plugin.js#L223)
 
 Das Interface, über das mit AvNav kommuniziert wird, findet sich [auf
 github](https://github.com/wellenvogel/avnav/blob/master/viewer/api/api.interface.ts).
@@ -155,7 +156,7 @@ Parameter](#predefinedparameters) vermeiden möchte, das sie im Layout Editor f�
 sichtbar werden, müssen sie in den editable Parameters mit false angegeben
 werden.
 
-```
+``` js
 var rpmGaugeUserParameter = {
 ...
 formatter: false,
@@ -167,7 +168,7 @@ Für jedes gauge widget muss der Parameter "type" angegeben werden -
 entweder "radialGauge" oder "linearGauge".  
 Ausserdem haben sie den zusätzlichen Parameter
 
-```
+``` js
 drawValue (boolean)
 ```
 
@@ -189,14 +190,13 @@ unveränderlichen Werten) abhängig sein. Andernfalls werden potentiell
 Für ein selbst geschriebenes Widget können die folgenden
 Funktionen/Eigenschaften implementiert werden:
 
-|  |  |  |  |
-| --- | --- | --- | --- |
 | Name | Typ | Nutzbar bei Typ | Beschreibung |
+| --- | --- | --- | --- |
 | name | String | alle | der Name des Widgets |
 | type | String  (optional) | alle | Bestimmt, welches Widget erzeugt werden soll.  Werte: radialGauge, linearGauge, map  Wenn der Typ nicht gesetzt ist, wird entweder das default widget genutzt (keine Funktion renderHtml und keine Funktion renderCanvas angegeben) - oder ein nutzer definiertes Widget (userWidget) |
 | renderHtml { #renderhtml } | Funktion  (optional) | userWidget | Diese Methode muss [HTML](#htmlcode) zurückgeben, das dann in das Widget eingebaut wird.  Das als Parameter an renderHtml übergebene Objekt enthält die unter storeKeys und parameters definierten Werte.  Die Funktion wird jedesmal erneut aufgerufen, wenn sich die Werte geändert haben.     Die "this" variable innerhalb von renderHtml zeigt auf ein Objekt, das spezifisch für das Widget ist ([Kontext](#widgetcontext)). |
 | renderCanvas | Funktion  (optional) | userWidget,  map | Mit dieser Funktion kann in das übergebene Canvas Objekt gezeichnet werden.  Das als zweiter Parameter an renderCanvas übergebene Objekt enthält die unter storeKeys und parameters definierten Werte.  Die Funktion wird jedesmal erneut aufgerufen, wenn sich die Werte geändert haben.  Die "this" variable innerhalb von renderCanvas zeigt auf ein Objekt, das spezifisch für das Widget ist ([Kontext](#widgetcontext)).  Für map widgets ist dieser Canvas ein Overlay, das über die Karte gelegt wird. Am Widget Kontext stehen Funktionen zur Umrechnung von Koordinaten in Canvas Pixel bereit.   Es ist wichtig den Canvas korrekt mit save/restore zu beschreiben, da sich alle map widgets den gleichen Canvas teilen. |
-| storeKeys | Object | alle | Hier müssen die Daten angegeben werden, die aus dem zentralen Speicher gelesen und als Parameter den renderXXX Funktionen mitgegeben werden sollen |
+| storeKeys | Object | alle | Hier müssen die Daten angegeben werden, die aus dem zentralen Speicher gelesen und als Parameter den renderXXX Funktionen mitgegeben werden sollen. Siehe [Store](#store) |
 | caption | String  (optional) | alle | Eine default Beschriftung |
 | unit | String  (optional) | alle | Eine default Einheit |
 | formatter | Funktion  (optional) | defaultWidget,  radialGauge, linearGauge | Ein Formatierer für den Wert. Für das defaultWidget muss diese Funktion angegeben werden. |
@@ -224,7 +224,7 @@ Funktionen "klassisch" mittels function definiert werden und nicht als
 
 Richtig:
 
-```
+``` js
 let userWidget={  
  renderHtml: function(context,props){  
  return "<p>Hello</p>";  
@@ -237,9 +237,8 @@ aufeinanderfolgenden Aufrufen benötigt werden.
 Ausserdem enthält er einige Funktionen, die vom Widget Code aufgerufen
 werden können.
 
-|  |  |  |  |
-| --- | --- | --- | --- |
 | Name | Widget | Parameter | Beschreibung |
+| --- | --- | --- | --- |
 | eventHandler | userWidget | --- | eventHandler ist keine Funktion sondern ein array. Falls im [renderHtml](#htmlastext) event Handler angegeben werden dann muss in der initFunction  eine Funktion mit diesem Namen hier registriert werden. |
 | triggerRedraw | userWidget | --- | Diese Funktion muss gerufen werden, wenn das Widget (z.B. nach einer Kommunikation mit dem Server) möchte, das es neu gezeichnet wird. |
 | lonLatToPixel | map | lon,lat | Konvertiert die Koordinaten in pixel Koordinaten für das Zeichnen in renderCanvas.  Gibt ein array mit x,y Koordinate zurück. |
@@ -265,11 +264,9 @@ der  aus dem Speicher gelesene Wert zur Verfügung gestellt).
 
 Für jeden Parameter kann man die folgenden Werte angeben:
 
-|  |  |  |
-| --- | --- | --- |
 | Name | Type | Beschreibung |
-|  | key | Der Name des Parameters so wie er im Layout Editor angezeigt werden soll, und wie er den renderXXX Funktionen zur Verfügung stehen soll. |
-| type | String | STRING, NUMBER,FLOAT, KEY, SELECT, ARRAY, BOOLEAN, COLOR  Der Typ für den Parameter. Je nach Typ wird er dem Nutzer unterschiedlich angezeigt.  Für COLOR eine Farb-Auswahl, für SELECT eine AuswahlListe und für KEY die Liste der momentan verfügbaren Werte im Store.  Für ein Array kann eine durch Komma getrennte Liste angegeben werden. |
+| --- | --- | --- |
+| type | String | `STRING, NUMBER,FLOAT, KEY, SELECT, ARRAY, BOOLEAN, COLOR`  Der Typ für den Parameter. Je nach Typ wird er dem Nutzer unterschiedlich angezeigt.  Für COLOR eine Farb-Auswahl, für SELECT eine AuswahlListe und für KEY die Liste der momentan verfügbaren Werte im Store.  Für ein Array kann eine durch Komma getrennte Liste angegeben werden. |
 | default | je nach type | Der default Wert.   Für COLOR eine color css Property - also z.B. "rgba(200, 50, 50, .75)" |
 | list | Array  (nur für type SELECT) | Ein Array von Strings oder von Objekten {name:'xxx',value:'yyy'} - diese Werte werden  zur Auswahl angezeigt.  Statt eines Arrays kann auch eine Funktion angegeben werden, die ein Array zurückgibt - oder eine Funktion, die eine Promise zurückgibt, deren resolve Funktion dann das Array liefert. |
 | description | string | Eine Beschreibung des Wertes für den Nutzer |
@@ -292,7 +289,7 @@ Das sind:
 * className (STRING)
 
 Ein Beispiel für eine Definition:
-```
+``` js
 var exampleUserParameters = {
 //formatterParameters is already well known to avnav, so no need for any definition
 //just tell avnav that the user should be able to set this
@@ -313,12 +310,12 @@ soll, können diese in das gleiche Verzeichnis hochgeladen werden - Images
 auch in das Images {{BT("AddonConfigImages")}}Verzeichnis.
 
 Bibliotheken, die sich im Nutzerdaten-Verzeichnis befinden, können einfach mit
-```
+``` js
 import './libtest.js';
 ```
 geladen werden.
 Falls die Bibliotheken ihre Funktionen als Module anbieten, findet man in der Beschreibung, welche imports genutzt werden können.
-```
+``` js
 import test from './libtest.js';
 ```
 Für einen default export.
@@ -343,25 +340,71 @@ werden.
 
 Mit
 
-```
-avnav.api.registerFeatureFormatter('myHtmlInfo',myHtmlInfoFunction);
+``` js
+api.registerFeatureFormatter('myHtmlInfo',myHtmlInfoFunction);
 ```
 
 werden sie registriert.
-**TODO**
-Für Details siehe [Overlays](overlays.md#adaptation).
+Diese Java Script Funktion bekommt als Parameter die in der Overlay Datei
+vorhandenen Eigenschaften des angeklickten Punktes und kann
+veränderte/neue Eigenschaften zurückgeben, die dann vom FeatureInfo Dialog
+angezeigt werden.
 
-## Dialoge und Buttons {: #dialogs }
+Die folgenden Eigenschaften können zurückgegeben werden:
+
+| Name | Bedeutung |
+| --- | --- |
+| sym | die URL für ein anzuzeigendes Icon. Das kann eine relative URL sein, diese ist dann eine Icon Datei innerhalb der [konfigurierten](TODO: overlay config) userIcons Datei, ein absoluter Pfad wie z.B. /user/images/myImage.png oder eine mit http: beginnende externe URL (natürlich dann nur mit Internet Verbindung nutzbar). |
+| name | der anzuzeigende Name |
+| desc | der unter "description" anzuzeigende Text |
+| htmlInfo | ein html String, der dann bei Klick auf den {{DB("DBInfo")}} Button angezeigt wird. |
+| time | eine Zeitangabe (String oder java script Date) |
+| link | eine URL, die bei Klick auf den {{DB("DBInfo")}} Button angezeigt werden soll (alternativ zu htmlInfo). Es gelten die gleichen Regeln wie für "sym". |
+
+Die übergebenen Parameter hängen von der Overlay Datei ab. Zusätzlich
+sind in jedem Falle die Werte "lat" und "lon" vorhanden.
+
+Ein Beispiel für die [eingebaute
+genericHtmlInfo](https://github.com/wellenvogel/avnav/blob/master/viewer/util/featureFormatter.js) Funktion, die alle vorhandenen Werte als HTML in den
+Wert htmlInfo schreibt.
+
+``` js
+let genericHtmlInfo=function(properties,extended){
+if (! extended) return {};
+let htmlInfo='<div class="featureInfoHtml">';
+for (let k in properties){
+if (!properties[k]) continue;
+if (htmlInfo !== "") htmlInfo+="<br/>";
+htmlInfo+=avnav.api.escapeHtml(k)+"="+avnav.api.escapeHtml(properties[k]);
+}
+htmlInfo+='</div>';
+return {htmlInfo:htmlInfo};
+}
+```
+
+Der zweite Parameter, der an die Funktion übergeben wird, gibt einen
+Hinweis, ob alle Parameter erzeugt werden sollen oder nur der "sym"
+Parameter. Falls extended auf "false" gesetzt ist, sollte die Funktion
+keine zeitraubenden Operationen ausführen, da sie potentiell für jedes
+Element aus dem Overlay aufgerufen wird.
+
+Nachdem eine solche Funktion registriert wurde, kann sie für ein Overlay in der [Konfiguration](TODO: overlay config) ausgewählt werden.
+
 
 ## Kartenlayer (User Map Layer) {: #usermaplayer }
 
+Über die Funktion
+``` js
+api.registerUserMapLayer(baseName,name,callback)
+```
+können eigene Karten-Layer-Typen registriert werden. Eine Beschreibung findet man unter [Kartendetails](charts.md#extensions).
 
 ## HTML Code { #htmlcode }
 
 An verschiedenen Stellen (bei [Widgets](#widgets), [Dialogen](#dialogs)) kann HTML code an das API übergeben werden. Dafür gibt es die folgenden Möglichkeiten:
 
 ### Text { #htmlastext }
-Das ist die auch bereits in allen AvNav Versionen verfügbare Variante. Hier wird einfach der HTML code als Text übergeben.
+Das ist die auch bereits in allen älteren AvNav Versionen verfügbare Variante. Hier wird einfach der HTML code als Text übergeben.
 ` <div class="test">Test</div>`.
 In JavaScript kann man dazu recht gut [Template Strings](https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Template_literals) verwenden.
 
@@ -376,11 +419,11 @@ EventHandler für Elemente müssen vorher registriert werden (siehe [initFunctio
 AvNav selbst ist unter Nutzung von [ReactJS](https://react.dev/) geschrieben. Um dem Nutzer erweiterte Möglichkeiten beim Einbringen von eigenem Code zu bieten, kann HTML auch als [ReactNode](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/9a3935d14fd94421a5c599b968365543c4f1fb2f/types/react/v18/index.d.ts#L486) zurückgegeben werden.
 Da für den Nutzer-JavaScript Code kein JSX Parser bereitsteht, und das Erzeugen der React-Objekte in purem JavaScript Code mühsam ist, bietet AvNav hier Support für [HTM](https://github.com/developit/htm).
 Um das zu nutzen muss man die entsprechenden Module am Anfang der user.mjs Datei importieren.
-```
+``` js
 import html from '/modules/htm.js';
 ```
 Ein simples Widget, das eine wiederverwendbare Componente Value zur Anzeige nutzt, kann dann so aussehen:
-```
+``` js
 //a simple React component that will render a div with the class "value"
 //and display the parameter "v" inside
 const Value=({v})=>html`<div class="value">${v}<//>`
@@ -402,7 +445,7 @@ api.registerWidget(HTMWidget,HTMParameters);
 ```
 Unter Nutzung von React Funktionen ist es auch sehr viel einfacher z.B. einen Klick-Handler einzubauen.
 
-```
+``` js
 const Value=({v})=>{
    const clickHandler=(ev)=>alert("Value:"+v);
    return html`<div class="value" onClick=${clickHandler}>${v}<//>`
@@ -411,13 +454,187 @@ const Value=({v})=>{
 Es stehen alle ReactJS Funktionen zur Verfügung. Die nötigen Module lassen sich über entsprechende Imports hinzufügen. Ausserdem stehen auch einige AvNav GUI Elemente über Imports zur Verfügung. 
 Die bereitgestellten Module finden sich im [Code](https://github.com/wellenvogel/avnav/tree/master/viewer/exportmodules).
 Wenn man z.B. [ListItem](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/exportmodules/avnavui.js#L36) von den AvNav Modulen importieren möchte, schreibt man im code
-```
+``` js
 import {ListItem} from '/modules/avnavui.js`;
 ```
 
 Einige Beispiele zur Nutzung kann man in einem [AvNav eigenen Plugin](https://github.com/wellenvogel/avnav/blob/master/raspberry/network-nm/plugin/plugin.mjs) zur Netzwerk-Verwaltung sehen. 
 
 ## AvNav Navigationsdaten (Store) {: #store }
+
+Um Anzeigen dynamisch an geänderte Werte anzupassen, verfolgt AvNav ein "Store" Konzept. In diesem Store werden Daten mit einem strukturierten Key und ihrem Wert gespeichert. Ein solcher Key ist z.B. `nav.gps.lat` für die aktuelle Länge der GPS Position. Die innerhalb von AvNav verwendeten Keys finden sich in [keys.ts](https://github.com/wellenvogel/avnav/blob/4ba19d53196a35ac46c0c38daebd1f59112981a9/viewer/util/keys.ts#L161).
+
+Der AvNav store kann auf verschiedene Arten genutzt werden:
+  
+  1. Für dynamische Anzeigen
+
+     An einigen Stellen (z.B. bei Widgets oder Buttons) kann man einen Paremeter `storeKeys` angeben. Dieser wählt einige der Werte im Store aus, die auf Änderungen überwacht werden sollen. Immer wenn sich diese ändern wird das entsprechende Element (also z.B. das Widget neu gezeichnet). Gleichzetig übersetzen die Einträge die strukturierten Keys in einfache.
+     ``` js
+     const storeKeys={
+        lat:'nav.gps.lat',
+        lon: 'nav.gps.lon'
+     }
+
+     const testWidget={
+        name: 'testWidget',
+        renderHtml: (props)=>return `<span>lat=${props.lat}, lon=${props.lon}</span>`,
+        storeKeys: storeKeys
+     }
+     ```
+
+     Die Werte `nav.gps.lat` und `nav.gps.lon` werden überwacht und an das Widget werden die Properties `lat` und `lon` übergeben.
+     Die Elemente, die storeKeys akzeptieren, haben ausserdem einen Parameter `updateFunction`. Dieser erhält als Parameter die aktuell gelesenen Werte und kann veränderte Werte zurückgeben.
+     
+     ``` js
+     const testWidget={
+        ...
+        updateFunction=(current)=> return {...current, valid: curren.lat != null && current.lon != null}
+     }
+     ```
+
+     Dieses Beispiel gibt noch einen zusätzlichen Wert `valid` zurück, wenn `lat` und `lon` gültige Werte haben.
+     Mit diesem Konzept lassen sich relativ flexibel die vorhandenen Elemente dynamisch nutzen.
+
+  2. Direkter Zugriff
+     
+     Die [API-Funktionen](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L702)
+
+     ``` ts
+     getStoreBaseKey():string;
+     getStoreData(key:string,defaultv?:StoreData):StoreData;
+     setStoreData(key:string,data:StoreData):void;
+     ```
+     ermöglichen den zugriff auf den Store. Der lesende Zugriff auf die Store-Daten ist dabei für beliebige Keys möglich, der schreibende zugriff nur für Keys die mit dem Prefix beginnen, der von `getStoreBaseKey()`zurückgegeben wird. Damit wird sichergestellt das Plugins und Nutzer-Code nur ihre eigenen Daten in den Store schreiben können und nicht die Grundfunktionen von AvNav stören.
+
+     Prinzipiell können beliebige Daten in den Store geschrieben werden, man muss jedoch aufpassen, wenn man z.B. Objekte in den Store schreibt und diese ändern möchte. Bei Änderungen muss man ein solches Objekt vorher kopieren und dann die Kopie in den Store schreiben, da AvNav sonst nicht erkennen kann, das sich der Wert geändert hat.
+
+     Ein Anwendungsfall für einen eigenen Wert im Store kann beispielsweise die Steuerung der Sichtbarkeit oder des "disabled" Zustandes eines [User-Buttons](#dialogs) sein.
+
+     Natürlich kann es auch für Anzeigen in einem [Widget](#widgets) genutzt werden - beispielsweise für Werte, die per fetch von einem Server geladen werden.
+
+     ``` js
+     const SKEY=api.getStoreBaseKey()+".TestButton";
+     //initially disable the button
+     api.setStoreData(SKEY,true);
+     api.registerUserButton({
+        name: 'test',
+        shortText: 'Test',
+        storeKeys: {
+            disabled: SKEY
+        }
+        ...
+     });
+     //call this to enable the button
+     const enableButton=()=>{
+        api.setStoreData(SKEY,false)
+     }
+     ```
+  3. In [React HTML-Code](#htmlreact)
+
+     Hier steht eine Helper-Funktion bereit, die die AvNav Store Werte mit dem React State verknüpft, so das bei Änderungen auch die Komponente neu gezeichnet wird.
+
+     ``` js
+     import {useStoreState} from '/imports/avnavui.js';
+     ....
+     const StoreValue=({vkey})=>{
+        const [current]=useStoreState(vkey,'not set');
+        return html`<div className="value">${current}</div>`
+     }
+
+     ....
+     const SKEY=api.getStoreBaseKey()+".TestValue";
+     api.setStoreData(SKEY,1)
+     const TestComp=()=>{
+        return html`${StoreValue} vkey=${SKEY} <//>`
+     }
+
+     window.setInterval(()=>{
+        api.setStoreData(SKEY,api.getStoreData(SKEY)+1);
+     },1000)
+     ```
+     Dieses Beispiel zeigt den Wert aus dem Store mit der Komponente StoreValue bei jeder Änderung an.
+
+## Dialoge und Buttons {: #dialogs }
+
+AvNav bietet die Möglichkeit HTML Seiten oder externe Webseiten als [User Apps](../base/userapps.md) einzubinden. Daneben gibt es auch noch die Option Buttons auf bestimmte Seiten zu plazieren und mit diesen Buttons Aktionen auszulösen - z.B. Dialoge oder auch Aktionen in einem Plugin.
+
+Das [API](https://github.com/wellenvogel/avnav/blob/master/viewer/api/api.interface.ts) bietet dazu einige Funktionen.
+
+| Funktion | Beschreibung |
+| --- | --- |
+| [registerUserButton](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L669) | Registriere ein Button mit einer Callback-Funktion, die bei Click aufgerufen wird. |
+| [showDialog](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L721) | Zeige einen Dialog an. |
+
+### Buttons {: #userbutton }
+
+Ein Button, der mit registerUserButton bekannt gemacht wird, hat die folgenden Eigenschaften (Details findet man im [API](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L525)): 
+
+| Name | Typ | Beschreibung |
+| --- | --- | --- |
+| name | String | Name des Buttons. Der Name wird auch als CSS Klasse am Button gesetzt und kann dazu genutzt werden, im [CSS](usercss.md#buttons-icons) das Icon oder die Texte anzupassen |
+| iconClass | String | Optional. Siehe API |
+| shortText | String | Optional. Wenn nicht gesetzt sollte der Text per CSS gesetzt werden. |
+| longText | String | Optional. Text für den Tool-Tip oder für den Button wenn er im Hauptmenü sichtbar ist. Alternativ per CSS. |
+| icon | URL | Optional. Relative Icon-URL. Alternativ per CSS. |
+| storeKeys | Objekt | Optional. Siehe [Store](#store). | 
+| updateFunction | Funktion | Optional. Siehe [Store](#store). | 
+| visible | Boolean | Optional. Wenn false wird der Button nicht angezeigt.|
+| disabled | Boolean | Optional. Wenn true wird der Button disabled gesetzt. |
+| toggle | Boolean | Optional. Wenn true wird der Button auf aktiv gesetzt. (Gründer Rand) |
+| onClick | Funktion | Die Funktion, die bei Klick aufgerufen wird. |
+
+Der `page` Parameter in `registerUserButton` ist die Seite, auf der der Button angezeigt werden soll. Die Liste der Seitennamen findet man im [Code](https://github.com/wellenvogel/avnav/blob/master/viewer/util/pageids.ts) - oder wenn man im Dialog für das Anlegen einer [User App](../base/userapps.md) die "page" auswählt.
+
+Die `onClick` Funktion erhält als Parameter den ReactJS Klick-Event.
+
+### Dialoge {: #dialogs }
+
+Eine der Funktionen, die man durch einen Button auslösen kann, ist die Anzeige eines Dialogs.
+
+AvNav bietet dazu die API Funktion [showDialog](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L721). Der übergebene Parameter vom Typ `DialogConfig` beschreibt den Dialog, der angezeigt werden soll. Die Funktion arbeitet asynchron (d.h. gibt eine Promise zurück). Der Resolve Wert  (bzw. der async Returnwert) ist eine Funktion, mit der man den Dialog wieder schliessen kann. Für viele Szenarien wird man das nicht benötigen. Der Dialog wird in jedem Fall geschlossen, wenn die Seite in AvNav verlassen wird.
+
+Die Parameter des [DialogConfig](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L490) Objektes sind im API Code beschrieben.
+
+Parameter die als Typ `string|React.ReactNode` haben, können wie unter [ReactJS](#htmlreact) beschrieben gefüllt werden. Falls der Dialog vor allem dazu dienen soll ein Formular mit Werte-Eingaben anzuzeigen, kann im Feld `parameters` ein Array von Parameter-Definitionen übergeben werden. Die Syntax entspricht den [Widget Parametern](#widgetparameter). Initiale Werte werden in `values` gesetzt (ein Objekt dessen Keys die Parameter-Namen sind). Falls der Nutzer einen Wert ändert, wird der `onChange` Callback gerufen.
+
+Über den `buttons` Parameter wird eine Liste von anzuzeigenden Buttons angegeben. Die Elemente entsprechen weitgehend der Beschreibung unter [Buttons](#userbutton). Die `onClick` Funktion bekommt als zusätzliche Parameter die aktuellen Werte und eine Funktion zum Schliessen des Dialogs übergeben. Wenn sie (optional async - d.h. als Promise) ein Objekt zurückgibt, wird dieses als neue Parameterwerte interpretiert. 
+Falls der Parameter `close` an einem Button nicht gesetzt (oder true) ist, wird der Dialog geschlossen.
+
+``` js
+const INITIALVALUES={
+    testvalue:'to be changed'
+}
+let ivalues={...INITALVALUES}
+api.showDialog({
+    title: 'Test',
+    parameters:[
+        name: 'testvalue',
+        type: 'STRING'
+    ],
+    buttons: [
+        {
+            name: 'reset',
+            shortText: 'Reset',
+            close: false,
+            onClick:(ev,values)=> return INITIALVALUES
+        },
+        {
+            name:'cancel',
+            shortText:'Cancel',
+        }
+        {
+            name:'ok'
+            shortText:'Ok',
+            onClick:(ev,values)=>{
+                alert("testvalue="+values.testvalue);
+            }
+        },
+    ]
+})
+```
+
+
+           
 
 
 
