@@ -85,7 +85,6 @@ export const PluginsPage = (props:PageProps) => {
         }
         return null;
     },[]);
-    console.log(ItemStatus);
     currentButtons.current=InjectMainMenu(props.id,updateButtons(PluginsPageButtons,buttonActions));
     useInitialButton(currentButtons);
     return <PageFrame id={props.id}>
