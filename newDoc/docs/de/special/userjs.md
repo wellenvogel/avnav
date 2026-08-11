@@ -24,6 +24,29 @@ export default (api)=>{
     api.log("Hello world);
 }
 ```
+## Aufräumen {: #cleanup }
+Damit ein Neu-Laden des JavaScript Codes funktioniert (besonders wichtig auch für Plugins) muss darauf geachtet werden, das alle globalen Resourcen wieder freigegeben werden, wenn das Modul nicht mehr benötigt wird. Was bedeutet das?
+Globale Resourcen sind z.B. timer die direkt am Windows-Objekt gestartet worden sind. Falls diese nicht anders bereits wieder gestoppt werden, sollte eine "Aufräum-Funktion" geschrieben werden, die sie stoppt.
+
+Eine solche Aufräum-Funktion kann als Resultat der Default-Export-Funktion zurückgegeben werden.
+
+Beispiel:
+
+``` js
+export default (api)=>{
+    //start a timer (global resource)
+    const timer=window.setInterval(()=>console.log("timer"),1000);
+    //a cleanup function to stop the timer
+    //or free other global resources
+    const cleanup=()=>{
+        if (timer) window.clearInterval(timer);
+    }
+    //return the cleanup function
+    return cleanup;
+}
+```
+Wenn der Code keine solchen globalen Resourcen nutzt, muss auch keine Cleanup-Funktion zurückgegeben werden. Die Aufrufe am AvNav-Api sind keine globalen Resourcen - dort erfolgt das Aufräumen intern in AvNav.
+
 
 ??? "Kompatibilität zu früheren Versionen - user.js"
     In früheren Versionen befand sich der JavaScript code in einer Datei user**.js**. Das war eine einfache JavaScript Datei (kein Modul). 
@@ -41,10 +64,10 @@ export default (api)=>{
 ## Bearbeiten der Datei user.mjs
 Über 
 
-{{MM("addonconfigpage")}}->{{BT("AddonConfigUser")}}
+{{MM("MMaddonconfigpage")}}->{{BT("AddonConfigUser")}}
 
 erreicht man die Liste der Dateien im Nutzerverzeichnis. Nach Klick auf die Datei "user.mjs" und {{DB("Edit")}} wird ein Editorfenster geöffnet, in dem man den Code bearbeiten kann.
-Um effektiv arbeiten zu können, empfiehlt es sich, mit zwei Browser-Fenstern oder Tabs zu arbeiten - in einem Fenster hat man den Editor geöffnet, im anderen Fenster AvNav noch einmal in dem Bereich, den man testen möchte. Beim Specihern der Datei im Editor-Fenster wird diese im Hintergrund sofort in allen offenen AvNav Fenstern neu geladen und wird direkt wirksam.
+Um effektiv arbeiten zu können, empfiehlt es sich, mit zwei Browser-Fenstern oder Tabs zu arbeiten - in einem Fenster hat man den Editor geöffnet, im anderen Fenster AvNav noch einmal in dem Bereich, den man testen möchte. Beim Speichern der Datei im Editor-Fenster wird diese im Hintergrund sofort in allen offenen AvNav Fenstern neu geladen und wird direkt wirksam.
 
 Der Editor hat eine Syntax-Anzeige für JavaScript, so das man bereits bis zu einem gewissen Grad die Korrektheit des Codes sehen kann.
 
@@ -61,7 +84,7 @@ github](https://github.com/wellenvogel/avnav/blob/release-{{config.extra.version
 
 Ein typischer Anwendungsfall für einen neuen Formatter ist die Anzeige eines bisher nicht bekannten Wertes über das Default Widget (siehe [Layouts](layout.md)).
 Das könnte z.B. ein über einen XDR Datensatz empfangener Lade- oder Entladestrom sein. In den Daten ist der Wert in A, wir möchten den Wert aber gerne in % eines Maximalwertes anzeigen lassen.
-Dazu können wir den folgenden Code nutzen:
+Dazu kannb man den folgenden Code nutzen:
 ``` js
 const formatAmperePercent=(val)=>{
   const max=50; //fix max
@@ -71,10 +94,10 @@ const formatAmperePercent=(val)=>{
 }
 api.registerFormatter("formatAmperePercent",formatAmperePercent);
 ```
-Wenn wir diesen Formatter so in unsere user.mjs geschrieben haben, können wir nun sofort im Layout Editor den Formatter nutzen indem wir das Default Widget auswählen, unter "value" den anzuzeigenden Wert selektieren und unter "formatter" unseren formatAmperePercent auswählen.
+Wenn man diesen Formatter so in die user.mjs geschrieben hat, kann man nun sofort im Layout Editor den Formatter nutzen indem man das Default Widget auswählt, unter "value" den anzuzeigenden Wert selektiert und unter "formatter" den eingefügten "formatAmperePercent" auswählt.
 
-Natürlich ist das so noch nicht besonders komfortabel - der Maximalwert ist fest kodiert. Wenn wir wollen, das der Maximalwert im Layout Editor auswählbar wird, müssen wir noch Parameter für unseren Formatter festlegen.
-Wir definieren nur einen Parameter "maxCurrent".
+Natürlich ist das so noch nicht besonders komfortabel - der Maximalwert ist fest kodiert. Wenn man möchte, das der Maximalwert im Layout Editor auswählbar wird, muss man noch Parameter für den Formatter festlegen.
+Man definiert nur einen Parameter "maxCurrent".
 
 ``` js
 const formatAmperePercent=(val,max)=>{
@@ -94,7 +117,7 @@ formatAmperePercent.parameters=[
 api.registerFormatter("formatAmperePercent",formatAmperePercent);
 ```
 Die Parameter für einen Formatter werden ähnlich beschrieben, wie [Widget Parameter](#widgetparameters), nur das sie als Array angegeben werden mit einem zusätzlichen Feld "name"
-Wenn wir num im Layout-Editor unseren Formatter nutzen, sieht das Bild so aus:
+Wenn man num im Layout-Editor den neuen Formatter nutzt, sieht das Bild so aus:
 
 ![Formatter](../../img/userjs-formatter.png)
 ///caption
@@ -107,8 +130,8 @@ Und das Resultat dann (unteres Widget):
 ///caption
 Formatter Resultat
 ///
-Falls wir nun mit der einfachen JavaScript "toFixed" Funktion nicht zufrieden sind, können wir natürlich stattdessen auch einen der bereits [vorhandenen Formatter](layout.md#formatter) verwenden.
-Wir möchten hier 3 Stellen haben und verwenden formatDecimal.
+Falls man mit der einfachen JavaScript "toFixed" Funktion nicht zufrieden ist, kann man natürlich stattdessen auch einen der bereits [vorhandenen Formatter](layout.md#formatter) verwenden.
+Wenn man z.B. 3 Stellen haben möchte, kann man "formatDecimal" verwenden.
 ``` js
 ...
 return api.formatter.formatDecimal(percent,3)+"%";
@@ -468,7 +491,7 @@ Der AvNav store kann auf verschiedene Arten genutzt werden:
   
   1. Für dynamische Anzeigen
 
-     An einigen Stellen (z.B. bei Widgets oder Buttons) kann man einen Paremeter `storeKeys` angeben. Dieser wählt einige der Werte im Store aus, die auf Änderungen überwacht werden sollen. Immer wenn sich diese ändern wird das entsprechende Element (also z.B. das Widget neu gezeichnet). Gleichzetig übersetzen die Einträge die strukturierten Keys in einfache.
+     An einigen Stellen (z.B. bei Widgets oder Buttons) kann man einen Paremeter `storeKeys` angeben. Dieser wählt einige der Werte im Store aus, die auf Änderungen überwacht werden sollen. Immer wenn sich diese ändern wird das entsprechende Element (also z.B. das Widget neu gezeichnet). Gleichzeitig übersetzen die Einträge die strukturierten Keys in einfache.
      ``` js
      const storeKeys={
         lat:'nav.gps.lat',
@@ -488,7 +511,7 @@ Der AvNav store kann auf verschiedene Arten genutzt werden:
      ``` js
      const testWidget={
         ...
-        updateFunction=(current)=> return {...current, valid: curren.lat != null && current.lon != null}
+        updateFunction=(current)=> return {...current, valid: current.lat != null && current.lon != null}
      }
      ```
 
@@ -504,7 +527,7 @@ Der AvNav store kann auf verschiedene Arten genutzt werden:
      getStoreData(key:string,defaultv?:StoreData):StoreData;
      setStoreData(key:string,data:StoreData):void;
      ```
-     ermöglichen den zugriff auf den Store. Der lesende Zugriff auf die Store-Daten ist dabei für beliebige Keys möglich, der schreibende zugriff nur für Keys die mit dem Prefix beginnen, der von `getStoreBaseKey()`zurückgegeben wird. Damit wird sichergestellt das Plugins und Nutzer-Code nur ihre eigenen Daten in den Store schreiben können und nicht die Grundfunktionen von AvNav stören.
+     ermöglichen den Zugriff auf den Store. Der lesende Zugriff auf die Store-Daten ist dabei für beliebige Keys möglich, der schreibende Zugriff nur für Keys die mit dem Prefix beginnen, der von `getStoreBaseKey()` zurückgegeben wird. Damit wird sichergestellt das Plugins und Nutzer-Code nur ihre eigenen Daten in den Store schreiben können und nicht die Grundfunktionen von AvNav stören.
 
      Prinzipiell können beliebige Daten in den Store geschrieben werden, man muss jedoch aufpassen, wenn man z.B. Objekte in den Store schreibt und diese ändern möchte. Bei Änderungen muss man ein solches Objekt vorher kopieren und dann die Kopie in den Store schreiben, da AvNav sonst nicht erkennen kann, das sich der Wert geändert hat.
 
@@ -514,19 +537,19 @@ Der AvNav store kann auf verschiedene Arten genutzt werden:
 
      ``` js
      const SKEY=api.getStoreBaseKey()+".TestButton";
-     //initially disable the button
-     api.setStoreData(SKEY,true);
+     //initially hide the button
+     api.setStoreData(SKEY,false);
      api.registerUserButton({
         name: 'test',
         shortText: 'Test',
         storeKeys: {
-            disabled: SKEY
+            visible: SKEY
         }
         ...
      });
-     //call this to enable the button
-     const enableButton=()=>{
-        api.setStoreData(SKEY,false)
+     //call this to show/hide the button
+     const showOrHideButton=(show)=>{
+        api.setStoreData(SKEY,show)
      }
      ```
   3. In [React HTML-Code](#htmlreact)
@@ -556,7 +579,7 @@ Der AvNav store kann auf verschiedene Arten genutzt werden:
 
 ## Dialoge und Buttons {: #dialogs }
 
-AvNav bietet die Möglichkeit HTML Seiten oder externe Webseiten als [User Apps](../base/userapps.md) einzubinden. Daneben gibt es auch noch die Option Buttons auf bestimmte Seiten zu plazieren und mit diesen Buttons Aktionen auszulösen - z.B. Dialoge oder auch Aktionen in einem Plugin.
+AvNav bietet die Möglichkeit HTML Seiten oder externe Webseiten als [User Apps](../base/userapps.md) einzubinden. Daneben gibt es auch noch die Option Buttons auf bestimmte Seiten zu plazieren und mit diesen Buttons Aktionen auszulösen - z.B. Dialoge zu starten oder auch Aktionen in einem Plugin.
 
 Das [API](https://github.com/wellenvogel/avnav/blob/master/viewer/api/api.interface.ts) bietet dazu einige Funktionen.
 
@@ -567,7 +590,7 @@ Das [API](https://github.com/wellenvogel/avnav/blob/master/viewer/api/api.interf
 
 ### Buttons {: #userbutton }
 
-Ein Button, der mit registerUserButton bekannt gemacht wird, hat die folgenden Eigenschaften (Details findet man im [API](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L525)): 
+Ein Button, der mit `registerUserButton` bekannt gemacht wird, hat die folgenden Eigenschaften (Details findet man im [API](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L525)): 
 
 | Name | Typ | Beschreibung |
 | --- | --- | --- |
@@ -580,7 +603,7 @@ Ein Button, der mit registerUserButton bekannt gemacht wird, hat die folgenden E
 | updateFunction | Funktion | Optional. Siehe [Store](#store). | 
 | visible | Boolean | Optional. Wenn false wird der Button nicht angezeigt.|
 | disabled | Boolean | Optional. Wenn true wird der Button disabled gesetzt. |
-| toggle | Boolean | Optional. Wenn true wird der Button auf aktiv gesetzt. (Gründer Rand) |
+| toggle | Boolean | Optional. Wenn true wird der Button auf aktiv gesetzt. (Grüner Rand) |
 | onClick | Funktion | Die Funktion, die bei Klick aufgerufen wird. |
 
 Der `page` Parameter in `registerUserButton` ist die Seite, auf der der Button angezeigt werden soll. Die Liste der Seitennamen findet man im [Code](https://github.com/wellenvogel/avnav/blob/master/viewer/util/pageids.ts) - oder wenn man im Dialog für das Anlegen einer [User App](../base/userapps.md) die "page" auswählt.
@@ -595,7 +618,7 @@ AvNav bietet dazu die API Funktion [showDialog](https://github.com/wellenvogel/a
 
 Die Parameter des [DialogConfig](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L490) Objektes sind im API Code beschrieben.
 
-Parameter die als Typ `string|React.ReactNode` haben, können wie unter [ReactJS](#htmlreact) beschrieben gefüllt werden. Falls der Dialog vor allem dazu dienen soll ein Formular mit Werte-Eingaben anzuzeigen, kann im Feld `parameters` ein Array von Parameter-Definitionen übergeben werden. Die Syntax entspricht den [Widget Parametern](#widgetparameter). Initiale Werte werden in `values` gesetzt (ein Objekt dessen Keys die Parameter-Namen sind). Falls der Nutzer einen Wert ändert, wird der `onChange` Callback gerufen.
+Parameter die als Typ `string|React.ReactNode` haben, können mit einem String oder wie unter [ReactJS](#htmlreact) beschrieben gefüllt werden. Falls der Dialog vor allem dazu dienen soll ein Formular mit Werte-Eingaben anzuzeigen, kann im Feld `parameters` ein Array von Parameter-Definitionen übergeben werden. Die Syntax entspricht den [Widget Parametern](#widgetparameter). Initiale Werte werden in `values` gesetzt (ein Objekt dessen Keys die Parameter-Namen sind). Falls der Nutzer einen Wert ändert, wird der `onChange` Callback gerufen.
 
 Über den `buttons` Parameter wird eine Liste von anzuzeigenden Buttons angegeben. Die Elemente entsprechen weitgehend der Beschreibung unter [Buttons](#userbutton). Die `onClick` Funktion bekommt als zusätzliche Parameter die aktuellen Werte und eine Funktion zum Schliessen des Dialogs übergeben. Wenn sie (optional async - d.h. als Promise) ein Objekt zurückgibt, wird dieses als neue Parameterwerte interpretiert. 
 Falls der Parameter `close` an einem Button nicht gesetzt (oder true) ist, wird der Dialog geschlossen.
@@ -615,7 +638,9 @@ api.showDialog({
         {
             name: 'reset',
             shortText: 'Reset',
+            //do not close the dialog when clicked
             close: false,
+            //return an object with the new values to be set
             onClick:(ev,values)=> return INITIALVALUES
         },
         {

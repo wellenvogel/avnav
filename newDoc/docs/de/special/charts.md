@@ -179,6 +179,7 @@ Wie im [Beispiel](#exampldef) beschrieben können Kartendefinitionen als XML Dat
 Relative Angaben bei url oder icon beziehen sich auf den Speicherort der plugin.json Datei.
 
 **Plugin Python Code**
+{: #insertingpython }
 
 _Nur für Windows und Linux/Raspberry_. Im [Plugin Python API](TODO: plugin api) gibt es die Funktion [`registerChartProvider`](https://github.com/wellenvogel/avnav/blob/e297382b2e849db9e1c4f18a0e22915083deb5aa/server/avnav_api.py#L285).
 
@@ -190,7 +191,7 @@ Der dort übergebene Callback wird gerufen, wenn AvNav die Liste seiner Karten e
     Für die Definitionen per _plugin.json_ oder _python_ kann die Kartendefinition auch in zwei Schritten erzeugt werden.
 
     Das kann insbesondere Sinn machen, wenn die Karten durch einen separaten Server ausserhalb von AvNav bereitgestellt werden.
-     
+
     Wenn die Kartendefinition noch keine "layers" enthält, versucht AvNav beim Öffnen der Karte die finale Kartendefinition zu laden. Diese Definition muss wieder eine Kartendefinition im [XML Format](#xmldef) sein. AvNav erwartet in der Definition eine URL, von der dieses XML Dokument geladen werden kann.
     
     Wenn die Kartendefinition einen Parameter `overviewUrl` enthält wird diese genutzt, sonst wird der Parameter `url` genutzt und `/avnav.xml` angefügt.

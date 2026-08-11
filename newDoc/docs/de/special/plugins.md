@@ -31,7 +31,7 @@ Es gibt zwei Wege für die Installation von Plugins:
 
   1. Als Debian Pakete
 
-     Unter Linux (auch Raspberry) können Plugins als debian Pakete ausgeliefert werden und müssen ihren Inhalt nach /usr/lib/avnav/plugins/name-des-plugins  installieren.
+     Unter Linux (auch Raspberry) können Plugins als debian Pakete ausgeliefert werden.Diese installieren ihren Inhalt nach /usr/lib/avnav/plugins/*name-des-plugins*.
 
      In AvNav sind diese Plugins mit dem Prefix `system-` sichtbar.
 
@@ -76,7 +76,11 @@ Plugin Config
 
 Eine Liste von Plugins findet sich [hier](plugin-list.md).
 
-## Inhalt von Plugins {: #content }
+## Erstellen von Plugins
+
+Plugins sind Zip Dateien oder Debian Pakete, die verschiedene Bestandteile enthalten. Jedes Plugin wird in ein Verzeichnis auf dem AvNav Server installiert. Die genaue Struktur der Zip Datei oder des Debian Paketes ist unter [Bauen](#build) beschrieben.
+
+Die hier beschriebenen Bestandteil müssen sich im Basisverzeichnis des Plugins befinden.
 
 ### JavaScript Code {: #jscode }
 
@@ -108,6 +112,8 @@ Als Plugin-Entwickler sollte man bedenken, das der CSS code sofort wirksam wird,
 
 ### plugin.json {: #pluginjson }
 
+_Alle Plattformen_
+
 Ein Plugin kann eine Datei `plugin.json` mitbringen. Diese Muss ein JSON Objekt mit verschiedenen Keys enthalten.
 ``` json
 {
@@ -127,6 +133,7 @@ Die Keys und ihre Bedeutung (alle sind optional).
 
 
 #### UserApps {: #pluginuserapps }
+
 Die Einträge für den Parameter userApps müssen folgende Werte enthalten:
 
 | Name | Typ | Beschreibung |
@@ -205,18 +212,18 @@ stehen die folgenden Funktionen zur Verfügung
 | Funktion | Beschreibung |
 | --- | --- |
 | log,debug,error | Logging Funktionen. Es werden Zeilen in die AvNav log Datei geschrieben. Man sollte für log und error vermeiden, solche Einträge in grosser Zahl zu schreiben, da sonst im Log potentiell wichtige Informationen verloren gehen (also z.B. nicht jede Sekunde ein Fehlereintrag...) |
-| getConfigValue | lies einen config Wert aus der [avnav\_server.xml](configfile.md#plugins). |
-| fetchFromQueue | Interface B: lies Daten aus der internen NMEA Liste. Ein Beispiel ist im API code vorhanden. Der filter Parameter funktioniert wie in der [avnav\_server.xml](configfile.md#filter). |
+| getConfigValue | lies einen config Wert aus der [avnav_server.xml](configfile.md#plugins). |
+| fetchFromQueue | Interface B: lies Daten aus der internen NMEA Liste. Ein Beispiel ist im API code vorhanden. Der filter Parameter funktioniert wie in der [avnav_server.xml](configfile.md#filter). |
 | addNMEA | Interface A: schreibe einen NMEA Datensatz in die interne Liste. Man kann AvNav die Prüfsummenberechnung überlassen und man kann auch eine Dekodierung in AvNav verhindern. Der Parameter source ist ein Wert, der in [blackList parametern](configfile.md#blackList) genutzt werden kann. |
 | addData | Interface C: schreibe einen Wert in den internen Speicher. Es können nur Werte geschrieben werden, deren Schlüssel in der Rückgabe der pluginInfo Methode vorhanden waren. |
 | getSingleValue | Interface D: lies einen Datenwert aus dem internen Speicher. Zur Zusammenfassung mehrerer solcher Lesevorgänge existiert die Funktion getDataByPrefix |
-| setStatus | Hier sollte der aktuelle Zustand des Plugins gesetzt werden. Das ist der Wert, der auf der [Statusseite](../userdoc/statuspage.md) angezeigt wird. |
-| registerUserApp | Ein Plugin kann eine [User App](../userdoc/addonconfigpage.md) registrieren. Dafür nötig ist eine URL und eine Icon Datei. Die Icon Datei sollte mit im Plugin Verzeichnis liegen. In der URL kann $HOST verwendet werden, das wird dann durch die korrekte IP Adresse des AvNav Servers ersetzt. |
-| registerLayout | Falls das Plugin z.B. eigene Widgets mitbringt, ist es u.U. hilfreich ein vorbereitetes Layout mitzuliefern, das der Nutzer dann auswählen kann. Das Layout dazu nach der Erstellung mit dem [Layout Editor](layouts.md) herunterladen und im Plugin Verzeichnis speichern. |
-| registerSettingsFile  (since 20220225) | Registrierung einer eigenen Einstellungsdatei (die vorher von der Settingsseite aus exportiert werden kann).  Der Dateiname (zweiter Parameter) ist relativ zum Plugin-Verzeichnis. Der Name (erster Parameter) wird dem Nutzer angezeigt.  Within this file you can use $prefix$ in the layout name if you want to refer to a layout that you register from the same plugin.  ``` ... "layoutName": "$prefix$.main" .... ``` This will refer to a layout that you registered with the name "main". |
+| setStatus | Hier sollte der aktuelle Zustand des Plugins gesetzt werden. Das ist der Wert, der auf der Plugin-Seite {{MM("MMpluginspage")}} angezeigt wird. |
+| registerUserApp | Ein Plugin kann eine [User App](../base/userapps.md) registrieren. Dafür nötig ist eine URL und eine Icon Datei. Die Icon Datei sollte mit im Plugin Verzeichnis liegen. In der URL kann $HOST verwendet werden, das wird dann durch die korrekte IP Adresse des AvNav Servers ersetzt. |
+| registerLayout | Falls das Plugin z.B. eigene Widgets mitbringt, ist es u.U. hilfreich ein vorbereitetes Layout mitzuliefern, das der Nutzer dann auswählen kann. Das Layout dazu nach der Erstellung mit dem [Layout Editor](../base/layout.md) herunterladen und im Plugin Verzeichnis speichern. |
+| registerSettingsFile  (since 20220225) | Registrierung einer eigenen Einstellungsdatei (die vorher von der Settingsseite aus exportiert werden kann).  Der Dateiname (zweiter Parameter) ist relativ zum Plugin-Verzeichnis. Der Name (erster Parameter) wird dem Nutzer angezeigt.  IN dieser Datei kamm man  $prefix$ im Layout-Namen nutzen, wenn das Layout im gleichen Plugin regsitriert wird.` "layoutName": "$prefix$.main" ` |
 | getDataDir | Das Verzeichnis, in dem AvNav Daten ablegt |
-| registerChartProvider | Falls das Plugin Karten bereitstellt, wird hier ein callback registriert, der eine Liste der Karten zurückgibt. |
-| registerRequestHandler | Falls das Plugin HTTP requests bearbeiten soll (Interface E) muss hier ein callback registriert werden, der den Request behandelt. Die url für den Aufruf ist:  <pluginBase>/api  Dabei ist pluginBase der unter getBaseUrl zurückgegebene Wert.  Die [java script Anteile](userjs.md) können die API url mit der Funktion `api.getBaseUrl()+"/api"` bilden. Im einfachsten Fall kann die aufgerufene callback-Funktion ein dictionary zurückgeben, dieses wird als Json zurück gesendet. |
+| registerChartProvider | Falls das Plugin [Karten](charts.md#insertingpython) bereitstellt, wird hier ein callback registriert, der eine Liste der Karten zurückgibt. |
+| registerRequestHandler | Falls das Plugin HTTP requests bearbeiten soll (Interface E) muss hier ein callback registriert werden, der den Request behandelt. Die url für den Aufruf ist:  <pluginBase>/api  Dabei ist pluginBase der unter getBaseUrl zurückgegebene Wert.  Die [java script Anteile](#jscode) können die API url mit der Funktion `api.getBaseUrl()+"/api"` bilden. Im einfachsten Fall kann die aufgerufene callback-Funktion ein dictionary zurückgeben, dieses wird als Json zurück gesendet. |
 | getBaseUrl | gib die Basis URL für das Plugin zurück |
 | registerUsbHandler  (ab 20201227) | registriert einen Callback für ein USB Gerät. Mit dieser Registrierung wird AvNav mitgeteilt, dass es das USB Gerät nicht beachten soll. Der Callback wird mit dem Device-Pfad für das Gerät aufgerufen, wenn das Gerät erkannt wurde.  Die USB-Id kann am einfachsten durch Beobachten der Status-Seite beim Einstecken des Gerätes ermittelt werden. Siehe auch [AVNUsbSerialReader](configfile.md#AVNUsbSerialReader). Damit kann ein Plugin selbst einfach das Handling für ein spezielles Gerät übernehmen, Ein Beispiel findet sich auf [GitHub](https://github.com/wellenvogel/avnav-seatalk-remote-plugin/blob/master/plugin.py). |
 | getAvNavVersion  (ab 20210115) | Aktuelle AvNav Version (int) |
@@ -231,6 +238,39 @@ stehen die folgenden Funktionen zur Verfügung
 | registerCommand  (ab 20230426) | Registriere ein Kommando, das von AvNav ausgeführt werden kann. Dieses kann z.B. dafür genutzt werden ein bereits vorhandenes Kommando zu ersetzen. Auch neue Kommandos sind möglich. Siehe den [Source Code](https://github.com/wellenvogel/avnav/blob/3a291c2e08bfaa13b12246f9a456a4a896533d52/server/avnav_api.py#L364) oder die [AVNCommandHandler Konfiguration](configfile.md#AVNCommandHandler) für Details. |
 | registerConverter  (since 20240520) | Registriere einen Karten-Konverter  Für ein Beispiel siehe das [ochartsng plugin](https://github.com/wellenvogel/ochartsng/blob/f10d8aa8b10ce89320b939a91e14ceaa822054a0/avnav-plugin/plugin.py#L407) |
 | deregisterConverter  (since 20240520) | Deregistriere einen Karten-Konverter |
+| clearAlarms (20250723) | Lösche alle Alarme |
+| startAlarm (202607xx) | Erzeuge einen Alarm |
+| clearAlarm (202607xx) | Lösche einen Alarm |
+| getRunningAlarms (202607xx) | Liste aller aktiven Alarme |
+
+## Bauen {: #build }
+
+### Zip Datei
+Um ein Plugin für die Nutzung durch Andere bereitzustellen, kann man es vorzugsweise als Zip-Datei bereitstellen. Plugins als Zip-Datei können auf allen von AvNav unterstützten Plattformen verwendet werden. Falls sie auch für Android vorgesehen sind, sollten sie keinen Python Code enthalten, da dieser dort nicht verwendet wird.
+Eine solche Zip-Datei für ein Beispiel-Plugin mit dem Namen `doctest` hat z.B. den folgenden Inhalt
+```
+d doctest
+f doctest/plugin.json
+f doctest/plugin.mjs
+f doctest/plugin.css
+d doctest/images
+f doctest/images/icon.svg
+```
+Nach der [Installation](#installation) wird das Plugin als `user-doctest`in AvNav sichtbar.
+
+Diese Zip Datei kann mit einem beliebigen Zip-Tool erzeugt werden. Wichtig ist, das bei neuen Versionen der Name des Verzeichnisses in der Zip-Datei immer gleich bleibt. Der Name der Zip-Datei spielt für AvNav keine Rolle - er sollte jedoch das Plugin und eine Version enthalten, um die Verwendung durch den Nutzer zu vereinfachen.
+
+Vorzugsweise sollte man das Plugin auf einer Git-Plattform (z.B. [GitHub](https://github.com/) ) pflegen und die Zip-Datei in jeder Release bereitstellen. Man sollte dabei in der [plugin.json](#pluginjson) den Wert für `version` jeweils setzen.
+
+Falls man unter Linux das Plugin bauen möchte, gibt es [hier](https://github.com/wellenvogel/avnav-font-noto/blob/master/build.sh) ein Beispiel für ein einfaches Build-Script zum Erzeugen der Zip-Datei.
+
+### Debian Pakete
+
+Falls ein Plugin nur unter Linux/Raspberry laufen soll, kann man es auch als Debian Paket ausliefern. Man kann dazu direkt die [Debian Package Tools](https://www.debian.org/doc/manuals/maint-guide/build.en.html) nutzen. Falls das zu kompliziert ist, kann man [NFPM](https://nfpm.goreleaser.com/docs/) oder das [Gradle OsPackage Plugin](https://github.com/nebula-plugins/gradle-ospackage-plugin) nutzen. Für NFPM gibt es einen Docker-Container, so das das Erstellen des Build sehr einfach ist. Ein Beispiel findet man im [avnav-update-plugin](https://github.com/wellenvogel/avnav-update-plugin/blob/master/buildPkg.sh).
+
+Das Paket muss so gebaut werden, das alle zum Plugin gehörenden Daten unter `/usr/lib/avnav/plugins/plugin-name` entpackt werden.
+
+Plugins, die als Debian-Pakete ausgeliefert werden, erfordern nach der Installation einen Neustart von AvNav.
 
 
 ## Aktivieren und Verbergen von System Plugins
