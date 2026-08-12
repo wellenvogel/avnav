@@ -186,14 +186,14 @@ eingehalten werden:
    @classmethod
    def pluginInfo(cls):  
     return {
-   'description': 'a test plugins',
-   'data': [
-   {
-   'path': 'gps.test',
-   'description': 'output of testdecoder',
-   }
-   ]
-   }
+        'description': 'a test plugins',
+        'data': [
+            {
+                'path': 'gps.test',
+                'description': 'output of testdecoder',
+            }
+            ]   
+    }
    ```
 3. Der Konstruktor der plugin Klasse muss einen Parameter erwarten.  
    Beim Aufruf wird hier eine Instanz des [API](https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py)
