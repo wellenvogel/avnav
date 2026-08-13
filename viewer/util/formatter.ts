@@ -140,11 +140,11 @@ export type TFormatDecimal=FormatterBase & {
     (number:number|string,fix?:number,fract?:number,addSpace?:boolean,prefixZero?:boolean):string
 }
 const formatDecimal:TFormatDecimal=function(number:number|string,fix?:number,fract?:number,addSpace?:boolean,prefixZero?:boolean){
-    number=Number(number);
-    if (!isFinite(number)) return padDef(fix)+(fract?'.'+padDef(fract):'');
+    let inumber=Number(number);
+    if (number == null || !isFinite(inumber)) return padDef(fix)+(fract?'.'+padDef(fract):'');
     let sign = addSpace ? ' ' : '';
-    if (number < 0) { number=-number; sign='-'; }
-    const str = number.toFixed(fract); // formatted number w/o sign
+    if (inumber < 0) { inumber=-inumber; sign='-'; }
+    const str = inumber.toFixed(fract); // formatted number w/o sign
     const n = fix+fract+(fract?1:0); // expected length of string w/o sign
     if(prefixZero || fix<0) {
         return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // add sign and padding zeroes
@@ -200,15 +200,15 @@ const formatFloat:TFormatFloat=function(number, digits, maxFrac, leadingZeroes=f
     digits = Math.abs(digits);
     if(maxFrac==null) maxFrac=digits-1;
     maxFrac=clamp(0,maxFrac,digits-1);
-    number=Number(number); // null-->NaN
-    if(!isFinite(number)) return padDef(digits+(signed?1:0)-maxFrac)+(maxFrac?'.'+padDef(maxFrac):'');
-    if(digits==0) return number.toFixed(0);
-    if(number<0 && !signed) digits-=1; // make room for unexpected sign
-    const sign = number<0 ? '-' : signed ? ' ' : '';
-    number = Math.abs(number);
-    let decPlaces = digits-1-Math.floor(Math.log10(number));
+    let inumber=Number(number); // null-->NaN
+    if(number == null || !isFinite(inumber)) return padDef(digits+(signed?1:0)-maxFrac)+(maxFrac?'.'+padDef(maxFrac):'');
+    if(digits==0) return inumber.toFixed(0);
+    if(inumber<0 && !signed) digits-=1; // make room for unexpected sign
+    const sign = inumber<0 ? '-' : signed ? ' ' : '';
+    inumber = Math.abs(inumber);
+    let decPlaces = digits-1-Math.floor(Math.log10(inumber));
     decPlaces = clamp(0,decPlaces,maxFrac);
-    const str = number.toFixed(decPlaces);
+    const str = inumber.toFixed(decPlaces);
     const n = digits+(str.includes('.')?1:0); // expected length of string w/o sign
     if(leadingZeroes) {
         return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // -001.23
@@ -241,7 +241,7 @@ type TFormatDistance=FormatterBase &{
 }
 const formatDistance:TFormatDistance=function(distance,opt_unit,opt_fixed,opt_fillRight,opt_prefixZero){
     let number=Number(distance);
-    if (isNaN(number)) return padDef(3); //4 spaces
+    if (distance == null || isNaN(number)) return padDef(3); //4 spaces
     const factor=unitToFactor(opt_unit||TDEPTH_UNITS.NM);
     number=number/factor;
     let fract=0;
@@ -298,7 +298,7 @@ export type TFormatSpeed=FormatterBase &{
 }
 const formatSpeed:TFormatSpeed=function(speed,opt_unit,opt_numdigits,opt_zeros){
     let number=Number(speed);
-    if (isNaN(number)) return padDef(3); //2 spaces
+    if (speed == null || isNaN(number)) return padDef(3); //2 spaces
     if (opt_unit == 'bft') {
         const v=number*3600/navcompute.NM;
         if(v<=1)  return ' 0';
@@ -344,7 +344,7 @@ export type TFormatDirection=FormatterBase &{
     (dir:number,opt_rad?:boolean,opt_180?:boolean,opt_lz?:boolean):string
 }
 const formatDirection:TFormatDirection=function(dir,opt_rad,opt_180,opt_lz){
-    if (isNaN(Number(dir))) return padDef(3);
+    if (dir == null || isNaN(Number(dir))) return padDef(3);
     dir=opt_rad ? Helper.degrees(dir) : dir;
     dir=opt_180 ? Helper.to180(dir) : Helper.to360(dir);
     return formatDecimal(dir,3,0,(!!opt_lz && !!opt_180),!!opt_lz);
@@ -476,7 +476,7 @@ const KELVIN=273.15;
 const formatTemperature:TFormatTemperature=function(data,opt_unit?,fract=1){
     const value=Number(data);
     const defv=padDef(4+(Number(fract||0)));
-    if (isNaN(value)) return defv;
+    if (data == null || isNaN(value)) return defv;
     try{
         if (! opt_unit || opt_unit.toLowerCase().match(/^k/)){
             return formatDecimal(value,3,fract);
