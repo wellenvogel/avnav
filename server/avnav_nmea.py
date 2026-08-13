@@ -876,7 +876,10 @@ class NMEAParser(object):
         tname=self.aisFieldTranslations.get(name)
         if tname is not None:
           name=tname
-        val=str(bfe[1])
+        if bfe[0].oob is not None and bfe[0].oob == bfe[1]:
+            val=None
+        else:
+            val=str(bfe[1])
         rt[name]=val
       except:
         AVNLog.debug("exception in getting AIS message: %s",traceback.format_exc())
