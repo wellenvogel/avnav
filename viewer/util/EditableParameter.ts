@@ -427,6 +427,7 @@ export class EditableFloatParameter extends EditableParameter{
     }
 }
 
+
 export class EditableSelectParameter extends EditableParameter{
     static TYPE=EditableParameterTypes.SELECT;
     static getValueFromListEntry(listEntry:ListEntry){
@@ -437,10 +438,10 @@ export class EditableSelectParameter extends EditableParameter{
     static getLabelFromListEntry(listEntry:ListEntry){
         if (typeof listEntry === 'string') return listEntry;
         if (! (listEntry instanceof Object)) return listEntry;
-        if ('label' in listEntry) return listEntry.label+'';
-        if ('l' in listEntry) return listEntry.l+'';
-        if ('displayName' in listEntry) return listEntry.displayName+'';
-        return listEntry.value+'';
+        if ('label' in listEntry) return listEntry.label;
+        if ('l' in listEntry) return listEntry.l;
+        if ('displayName' in listEntry) return listEntry.displayName;
+        return listEntry.value;
     }
     static sort(a:Partial<SelectListEntry>,b:Partial<SelectListEntry>){
         const na=(typeof a.label === 'string')?a.label.toLowerCase():a.label;

@@ -4,6 +4,7 @@ import android.location.Location;
 import android.os.SystemClock;
 import android.util.Log;
 import de.wellenvogel.avnav.aislib.messages.message.*;
+import de.wellenvogel.avnav.aislib.model.Position;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
@@ -122,7 +123,17 @@ public class AisStore {
         }
         return true;
     }
-
+    private static void addPositionFields(JSONObject rt,IVesselPositionMessage m) throws JSONException {
+        if (m.isSogValid()) rt.put("speed",m.getSog());
+        if (m.isCogValid()) rt.put("course", m.getCog());
+        if (m.isPositionValid()){
+            rt.put("lon", m.getPos().getLongitudeDouble());
+            rt.put("lat", m.getPos().getLatitudeDouble());
+        }
+        if (m.isHeadingValid()){
+            rt.put("heading",m.getTrueHeading());
+        }
+    }
     public static JSONObject objectFromMessage(AisMessage msg){
         JSONObject rt=null;
         int msgId=msg.getMsgId();
@@ -134,12 +145,8 @@ public class AisStore {
                     AisPositionMessage m = (AisPositionMessage) msg;
                     rt = new JSONObject();
                     rt.put("mmsi", m.getUserId());
-                    rt.put("lon", m.getPos().getLongitudeDouble());
-                    rt.put("lat", m.getPos().getLatitudeDouble());
+                    addPositionFields(rt,m);
                     rt.put("status", m.getNavStatus());
-                    rt.put("speed", m.getSog());
-                    rt.put("course", m.getCog());
-                    rt.put("heading",m.getTrueHeading());
                     Float rot=m.getSensorRot();
                     if (rot != null){
                         rt.put("turn",rot);
@@ -188,11 +195,7 @@ public class AisStore {
                     IVesselPositionMessage m = (IVesselPositionMessage) msg;
                     rt = new JSONObject();
                     rt.put("mmsi", msg.getUserId());
-                    rt.put("lon", m.getPos().getLongitudeDouble());
-                    rt.put("lat", m.getPos().getLatitudeDouble());
-                    rt.put("speed", m.getSog());
-                    rt.put("course", m.getCog());
-                    rt.put("heading",m.getTrueHeading());
+                    addPositionFields(rt,m);
                     break;
                 }
                 case 21:
@@ -200,8 +203,10 @@ public class AisStore {
                     AisMessage21 m=(AisMessage21) msg;
                     rt = new JSONObject();
                     rt.put("mmsi", msg.getUserId());
-                    rt.put("lon", m.getPos().getLongitudeDouble());
-                    rt.put("lat", m.getPos().getLatitudeDouble());
+                    if (m.getValidPosition() != null) {
+                        rt.put("lon", m.getPos().getLongitudeDouble());
+                        rt.put("lat", m.getPos().getLatitudeDouble());
+                    }
                     rt.put("name",m.getName().replaceAll("@*$",""));
                     rt.put("aid_type",m.getAtonType());
                     rt.put("length",m.getDimBow()+m.getDimStern());

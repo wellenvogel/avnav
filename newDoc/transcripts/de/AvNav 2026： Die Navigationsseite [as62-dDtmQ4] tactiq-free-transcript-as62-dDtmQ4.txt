@@ -1,0 +1,69 @@
+# tactiq.io free youtube transcript
+# AvNav 2026: Die Navigationsseite
+# https://www.youtube.com/watch/as62-dDtmQ4
+
+00:00:09.315 [musik]
+00:00:09.800 Beim Start von AvNav landest du sofort in der Navigationsansicht,
+00:00:14.520 in die zuletzt benutzte Karte geladen wird. Das Programmfenster ist so gestaltet,
+00:00:20.520 dass alle relevanten Daten schnell zugänglich sind. Dafür sorgen die sogenannten Widgets. Die
+00:00:27.200 Widgets können oben und unten und auch links im Programmfenster erscheinen. Du kannst sie
+00:00:32.680 frei konfigurieren, um ihre bevorzugten Informationen stets im Blick zu haben.
+00:00:38.520 Wie das im einzelnen geht, thematisiert das Video zum Editieren von Layouts.
+00:00:46.680 In der rechten Seitenleiste findest du die Buttonleiste, die die wichtigsten Funktionen
+00:00:51.560 der jeweiligen AvNav-Seite zur Verfügung stellt. Eine der spannendsten Neuerungen
+00:00:57.480 ist das Main Menu oben rechts, welches bei Klick eine Übersicht aller verfügbaren Funktionsbereiche
+00:01:04.519 von AvNav öffnet. Das ist besonders hilfreich, um schnell zwischen verschiedenen Einstellungen
+00:01:10.840 und Werkzeugen zu wechseln, egal ob auf einem Touchscreen oder mit der Maus.
+00:01:18.320 Durch das Aufklappen eines Funktionsbereichs erreicht man noch einmal alle dort relevanten
+00:01:23.600 Schaltflächen, hier aber mit längerem und aussagekräftigerem Text. Man kann sich also,
+00:01:30.240 ohne die jeweilige Seite wechseln zu müssen, auch kurz informieren,
+00:01:34.440 was in den einzelnen Bereichen an Funktionen zur Verfügung steht.
+00:01:41.360 Außerdem lässt sich das Menü verkürzen, um es für Navigationsaufgaben unterwegs handlicher zu
+00:01:47.240 machen, denn viele Funktionsbereiche werden mit hoher Wahrscheinlichkeit nicht täglich
+00:01:52.000 benötigt. Neu ist auch der Bereich Actions. Dort findest du Funktionen, die du unter
+00:01:58.600 Umständen schnell brauchst. beispielsweise das Umschalten des Tag in den Nachtmodus,
+00:02:04.720 die Steuerung der Fernbedienung, den Wechsel in den Vollbildmodus, das Teilen des Displays
+00:02:12.520 und auch das herunterfahren der Software. Gehen wir nun die Schaltflächen der Reihe nach durch.
+00:02:19.680 Der Mob-Button befindet sich immer an gleicher Stelle auf jeder Seite. Ein Klick auf ihn erzeugt
+00:02:25.480 erst einmal einen lauten Alarm, sofern eben ein lautgebendes Element an dein Gerät angeschlossen
+00:02:31.680 ist. Es gibt zudem einen visuellen Alarm. Die aktuelle Position wird angesprungen und deutlich
+00:02:38.480 markiert. In den zuständigen Widgets werden die Entfernung und der Kurs zum MOB angezeigt.
+00:02:45.800 Ein weiterer Klick auf MOB deaktiviert den Mob Alarm wieder.
+00:02:53.440 Durch Klick auf den Charts-Button können zuvor hochgeladene Karten aktiviert werden. Welche
+00:02:59.520 Kartentypen in AvNav genutzt werden können, findest du genauer in der Doku. Neben der
+00:03:05.800 Kartenauswahl bietet AvNav die Möglichkeit, unterschiedliche Overlays hinzuzufügen. Mit
+00:03:12.160 Overlays können neben der reinen Karte weitere Elemente in die Kartenansicht eingeblendet
+00:03:17.400 werden. Es können Satellitenbilder sein, bereits gefahrene Tracks oder auch weitere Karten oder,
+00:03:24.240 wie hier zu sehen, die Position dänische Ankertonnen. Das ist besonders hilfreich, wenn
+00:03:30.160 du z.B. im Grenzbereich zweier Karten navigieren und die Karten nicht immer wechseln willst.
+00:03:40.240 Die Zoom-Buttons erklären sich selbst.
+00:03:43.760 Mit dem Follow-Button erreicht man, dass die Karte immer auf die Bootsposition zentriert
+00:03:48.880 bleibt und ihr folgt. Die Zentrierung wird durch ein bei AvNav wichtiges Element visualisiert,
+00:03:55.280 das Fadenkreuz. Dieses Fadenkreuz wird bei allen möglichen Funktionen benutzt, so auch bei der
+00:04:01.720 nächsten, nämlich dem Setzen eines einzelnen Wegepunkts. Das steckt hinter dem Button Start.
+00:04:09.280 Klickt man auf Start, wird ein Wegepunkt auf die Position des Fadenkreuzes gesetzt und im
+00:04:14.680 Widget tauchen sofort Informationen auf, wie weit es zu diesem Punkt ist,
+00:04:19.680 mit welchem Kurs er erreichbar ist und wie lange das in etwa dauern wird. Diese Funktion
+00:04:25.560 lässt sich also nutzen, um schnell und effektiv zu einem bestimmten Punkt, eine Ansteuerung,
+00:04:31.360 einer bestimmten Tonne zu navigieren oder sich einfach über den Weg dorthin zu informieren.
+00:04:37.400 Das ersetzt aber nicht die Routenfunktion. Das bedeutet, es gibt zwar einen Annäherungsalarm,
+00:04:43.960 aber kein automatisches Deaktivieren des Punktes, wenn er erreicht ist. Das geht nur
+00:04:49.800 über die Routenfunktion, dazu gleich mehr. Der nächste Button mit dem Namen Course dient dazu,
+00:04:57.400 die Ausrichtung der Karte entweder auf den aktuellen Kurs des eigenen Bootes oder nach
+00:05:02.720 Nord auszurichten. Dabei führt das Klicken zur kursbezogenen Ausrichtung. Standardeinstellung ist
+00:05:09.200 die Ausrichtung nach Nord. Eines der wichtigsten Tools in AvNav ist die Routenfunktion, die man
+00:05:16.880 mit dem nächsten Button mit Namen Route erreichen kann. Mit ihr kannst du komplexe Routen planen,
+00:05:23.600 Wegepunkte setzen und verändern, Routen speichern und starten. Zu diesem Themenbereich gibt es ein
+00:05:29.920 eigenes kurzes Einführungsvideo. Eine weitere Neuerung in AvNav ist der Tools-Button. Er blendet
+00:05:37.760 über einen Dialog zusätzliche Werkzeuge ein, die nicht ständig gebraucht werden. Mit Anchorwatch
+00:05:45.360 kannst du eine AvNav-interne Ankerwache auslösen. Hinter Show Waypoint Buttons verbirgt sich eine
+00:05:53.160 kleine zusätzliche Buttonleiste, die direkt rechts unten in die Karteneinsicht eingeblendet wird
+00:05:59.040 und themenbezogen zusätzliche Tools anbietet. Probiere das einfach aus. Das meiste erschließt
+00:06:06.200 sich selbst. Mit Info at Crosshair wird das Fadenkreuz ein weiteres Mal relevant. Mit dieser
+00:06:13.240 Funktion lassen sich verschiedene Informationen zur angewählten Kartenposition anzeigen. Center
+00:06:20.400 Chart GPS macht genau das, was es bedeutet. Ein Klick zentriert die Karte, visualisiert durch
+00:06:26.360 das Fadenkreuz, auf die aktuelle GPS Position, wenn sie denn vorhanden ist. Mit Show Measure
+00:06:34.240 Buttons kann man sich die zusätzliche Toolbox mit Instrumenten zum Messen von Entfernungen füllen.
+00:06:41.960 In diesem Beitrag hast du kennengelernt, wie du das Navigationsfenster von AvNav nutzen kannst,
+00:06:48.200 einzelne Wegepunkte effizient setzt und das neue Main Menu für häufige Funktionen nutzt.
+00:06:55.080 In weiteren Videoeinführungen kannst du weitere wichtige Funktionsbereiche von AvNav kennenlernen.

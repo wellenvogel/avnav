@@ -51,7 +51,7 @@ export type PageType=valueof<typeof PAGEIDS>;
 /**
  * pages that allow userapps/plugins
  */
-export const PLUGINPAGES:Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'|'WARNING'>={
+export const PLUGINPAGES:Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'|'WARNING'|'LOADING'>={
     ADDCFG: PAGEIDS.ADDCFG,
     ADDON: PAGEIDS.ADDON,
     ADDR: PAGEIDS.ADDR,
@@ -69,7 +69,6 @@ export const PLUGINPAGES:Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'|'WARNING'>=
     TRACKS: PAGEIDS.TRACKS,
     PLUGINS: PAGEIDS.PLUGINS,
     REMOTE: PAGEIDS.REMOTE,
-    LOADING: PAGEIDS.LOADING,
     ACTIONS: PAGEIDS.ACTIONS,
 }
 export type PluginPageType=valueof<typeof PLUGINPAGES>

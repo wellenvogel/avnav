@@ -1,7 +1,11 @@
 #! /bin/bash
 IMAGE="wellenvogel/avnav-doc-build:1.5"
+err(){
+  echo "ERROR: $*"
+  exit 1
+}
 usage(){
-    echo "usage: $0 [-b] [-d] [-h] [-n] [-p port] [<command>]"
+    echo "usage: $0 [-b] [-d] [-h] [-n] [-v version] [-s youtube|intern] [-c] [-p port] [<command>]"
 }
 useDocker=0
 port=8000
@@ -10,7 +14,10 @@ pdir=`dirname $0`
 pdir=`readlink -f $pdir`
 buttonUsage=0
 noversion=""
-while getopts "dhp:a:bn" arg; do
+version=""
+checkVersion=""
+videomode=""
+while getopts "dhp:a:bncv:s:" arg; do
   case "$arg" in
     b)
       buttonUsage=1
@@ -32,6 +39,20 @@ while getopts "dhp:a:bn" arg; do
       export AVNAV_NOVERSION
       noversion="-n"
       ;;
+    s)
+      [ "$OPTARG" != intern -a "$OPTARG" != youtube ] && err "-s: invalid mode $OPTARG, allowed: intern|youtube"
+      videomode="-s $OPTARG"
+      AVNAV_VIDEOMODE=$OPTARG
+      export AVNAV_VIDEOMODE
+      ;;
+    v)
+      AVNAV_VERSION=$OPTARG
+      export AVNAV_VERSION
+      version="-v $AVNAV_VERSION"
+      ;;
+    c)
+      checkVersion="-c"
+      ;;
   esac
 done
 shift $((OPTIND-1))
@@ -45,8 +66,9 @@ err(){
     echo "ERROR: $*"
     exit 1
 }
+[ "$checkVersion" != "" -a "$AVNAV_VERSION" = "" ] && err "-c also requires -v"
 if [ $useDocker = 1 ] ; then
-  docker run -ti --rm -u`id -u` -v "`readlink -f $pdir/..`:/app" -p8000:$port "$IMAGE" /app/newDoc/build.sh $noversion -a 0.0.0.0 $command
+  docker run -ti --rm -u`id -u` -v "`readlink -f $pdir/..`:/app" -p8000:$port "$IMAGE" /app/newDoc/build.sh $videomode $noversion $version $checkVersion -a 0.0.0.0 $command
   exit $?
 fi
 
@@ -72,12 +94,14 @@ if [ "$command" = none ] ; then
   exit 0
 fi
 cd $pdir || err ""
+VFILE=versions.txt
+if [ "$checkVersion" != "" ] ; then
+  grep $AVNAV_VERSION $VFILE > /dev/null 2>&1
+  [ $? != 0 ] && err "version $AVNAV_VERSION not in $VFILE"
+fi
 if [ "$command" = "serve" ] ; then
   mkdocs $command --dev-addr $address:$port
 else
   mkdocs $command
 fi
-
-
-
 

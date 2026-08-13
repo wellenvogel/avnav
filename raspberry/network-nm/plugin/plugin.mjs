@@ -178,9 +178,11 @@
     const hasPw=connection && connection.haspsk;
     const hasExternalAccess=connection && (nested(connection,'connection.zone') == ZONE_T);
     const hasAutoconnect=! connection || undefOrTrue(nested(connection,'connection.autoconnect'))
+    const priority=connection?nested(connection,'connection.autoconnect-priority'):0;
     const initialValues={
             ext: hasExternalAccess,
-            autoconnect: hasAutoconnect
+            autoconnect: hasAutoconnect,
+            priority: priority || 0
         };
     const parameters=[
         {name:'ext',
@@ -195,6 +197,12 @@
             type:'BOOLEAN',
             default: true,
             description:'Automatically connect to the network when it is available.'
+        },
+        {
+            name:'priority',
+            type:'NUMBER',
+            default: 0,
+            description:'When autoconnect is enabled use this priority. Higher numbers are higher priority.'
         }
     ]
     if (needsPw){
@@ -264,6 +272,7 @@
                             let url=api.getBaseUrl()+'api/addConnection?ssid='+
                                 encodeURIComponent(ssid)+
                                 "&zone="+encodeURIComponent(zone)+
+                                "&priority="+encodeURIComponent(values.priority)+
                                 "&autoconnect="+encodeURIComponent(values.autoconnect);
                             if (needsPw && !! values.psk) url+="&psk="+encodeURIComponent(values.psk);
                             const d1= await api.showDialog({
@@ -284,6 +293,9 @@
                             if (nested(connection,'connection.zone') !== zone){
                                 mustUpdate=true;
                             }
+                            if (nested(connection,'connection.autoconnect-priority') !== priority){
+                                mustUpdate=true;
+                            }
                             if (nested(connection,'connection.autoconnect') !== values.autoconnect){
                                 mustUpdate=true;
                             }
@@ -292,6 +304,7 @@
                                 let url=api.getBaseUrl()+"api/updateConnection?path="+
                                     encodeURIComponent(conPath)+
                                     "&zone="+encodeURIComponent(zone)+
+                                    "&priority="+encodeURIComponent(values.priority)+
                                     "&autoconnect="+encodeURIComponent(values.autoconnect);
                                 if (values.psk){
                                     url+="&psk="+encodeURIComponent(values.psk);

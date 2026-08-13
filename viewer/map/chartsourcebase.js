@@ -446,11 +446,13 @@ class ChartSourceBase {
  * as this could easily create circular dependencies
  * @type {*[]}
  */
+const MZ=32; //max zoom for parameters
+const ZMM=[0,MZ];
 export const editableOverlayParameters={
-    minZoom:new EditableNumberParameter({name:'minZoom',displayName:'min zoom',default:0,description:'minimal zoom level to display this overlay'}),
-    maxZoom:new EditableNumberParameter({name:'maxZoom',displayName:'max zoom',default: 0,description:'maximal zoom level to display this overlay'}),
-    minScale:new EditableNumberParameter({name:'minScale',displayName:'min scale', default: 0,description:'shrink symbols below this zoom, 0 to unset'}),
-    maxScale:new EditableNumberParameter({name:'maxScale',displayName:'max scale', default: 0,description:'enlarge symbols above this zoom, 0 to unset'}),
+    minZoom:new EditableNumberParameter({name:'minZoom',list:ZMM,displayName:'min zoom',default:0,description:'minimal zoom level to display this overlay'}),
+    maxZoom:new EditableNumberParameter({name:'maxZoom',list:ZMM,displayName:'max zoom',default: 0,description:'maximal zoom level to display this overlay'}),
+    minScale:new EditableNumberParameter({name:'minScale',list:ZMM,displayName:'min scale', default: 0,description:'shrink symbols below this zoom, 0 to unset'}),
+    maxScale:new EditableNumberParameter({name:'maxScale',list:ZMM,displayName:'max scale', default: 0,description:'enlarge symbols above this zoom, 0 to unset'}),
     allowOnline:new EditableBooleanParameter({name: 'allowOnline',displayName: 'allow online',default:false,description:'allow access to online http/https resources'}),
     showText:new EditableBooleanParameter({name:'showText',displayName: 'show text',default:false,description:'show text beside symbols if available'}),
     allowHtml:new EditableBooleanParameter({name:'allowHtml',displayName: 'allow html',default: true,description:'allow to show html content'}),

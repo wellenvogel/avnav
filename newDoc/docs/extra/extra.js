@@ -1,5 +1,6 @@
 
 const iconvariants=['iconset-default','iconset-legacy'];
+const LSNAME='iconset';
 const update=(initial)=>{
     let activeText='unknown';
     for (const ics of iconvariants){
@@ -11,6 +12,9 @@ const update=(initial)=>{
                     iconvariants.forEach((iv)=>{
                         if (iv === ics){
                             document.body.classList.add(iv);
+                            try{
+                            localStorage.setItem(LSNAME,iv);
+                            }catch (e){}
                         }
                         else{
                             document.body.classList.remove(iv);
@@ -28,7 +32,30 @@ const update=(initial)=>{
     if (display) display.textContent=activeText;
 }
 document$.subscribe(()=>{
-    document.body.classList.add('iconset-default');
+    let iconSet;
+    try{
+        iconset=localStorage.getItem(LSNAME)
+        if (! iconset) iconset='iconset-default';
+    }catch (e){};
+    if (window.location.search){
+        const param=window.location.search.split('&');
+        param.forEach((p)=>{
+            let [n,v]=p.split("=");
+            n=n.replace(/^\?/,'');
+            v=decodeURIComponent(v);
+            n=decodeURIComponent(n);
+            if (n == 'iconset'){
+                if (v == 'legacy' || v == 'default'){
+                    iconset='iconset-'+v;
+                    try{
+                        localStorage.setItem(LSNAME,iconset);
+                    }catch (e){}
+                }
+            }
+
+        })
+    }
+    document.body.classList.add(iconset);
     update(true);
     const links=Array.from(document.querySelectorAll('[data-link]'))
     for (const link of links){
@@ -51,5 +78,22 @@ document$.subscribe(()=>{
             target.src=null;
             target.src=url;
         })
+    }
+    const ela=Array.from(document.querySelectorAll('a'));
+    const img=document.getElementById('linkIcon');
+    for (const el of ela){
+        const target=el.getAttribute('href');
+        if (target){
+            const tUrl=new URL(target,window.location.href);
+            if (tUrl.origin != window.location.origin){
+                el.classList.add('external');
+                if (img) {
+                    const limg=img.cloneNode(true);
+                    limg.classList.remove('hidden');
+                    limg.removeAttribute('id');
+                    el.appendChild(limg);
+                }
+            }
+        }
     }
 })

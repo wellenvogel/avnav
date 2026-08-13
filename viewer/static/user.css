@@ -4,11 +4,11 @@
 */
 /*
 Assuming you would like to have a different symbol on the cancel button on every page:
-1. upload the image you want toe the "images" tab (Download page), in this case the name is alternateCancel.svg
-2. uncomment the entry below and reload avnav
+1. upload the image you want to the "images" tab (USerApps/CSS/JS), in this case the name is alternateCancel.svg
+2. uncomment the entry below and save
 */
 /*
-button.Cancel span {
+button.Cancel .icon {
     background-image: url(/user/images/alternateCancel.svg);
 }
 */

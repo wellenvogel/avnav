@@ -1,0 +1,89 @@
+WEBVTT
+Kind: captions
+Language: en
+
+00:00:04.785 --> 00:00:08.858
+AvNav 2026: Navigation page
+
+00:00:09.503 --> 00:00:26.682
+When you launch AVNav, you are taken straight to the navigation view, where the most recently used map is loaded. The programme window is designed so that all relevant data arequickly accessible – this is made possible by the widgets. 
+
+00:00:26.682 --> 00:00:46.228
+ The widgets can appear at the top, bottom or left of the programme window. You can configure them as you wish to ensure your preferred information is always in view. The video on editing layouts explains exactly how to do this.
+
+00:00:46.228 --> 00:00:54.775
+In the right-hand sidebar, you’ll find the button bar, which provides access to the key functions of the relevant AvNav page.
+
+00:00:54.775 --> 00:01:16.645
+One of the most exciting new features is the ‘Main Menu’ in the top-right corner, which, when clicked, opens an overview of all the available AvNav functional areas. This is particularly useful for switching quickly between different settings and tools – whether on a touchscreen or using a mouse.
+
+00:01:17.496 --> 00:01:39.553
+By expanding a function area, you can access all the relevant buttons there once again, but this time with longer and more descriptive text. This means you can quickly see what functions are available in each area without having to switch to the respective page.
+
+00:01:41.145 --> 00:01:53.122
+You can also shorten the menu to make it easier to use when navigating at the sea. After all, there are many features that you’re unlikely to need on a daily basis.
+
+00:01:53.122 --> 00:02:14.910
+Another new feature is the ‘Actions’ section. Here you’ll find functions you might need quickly – for example, switching from day to night mode, controlling the remote, switching to full-screen mode, splitting the display, and shutting down the software.
+
+00:02:14.910 --> 00:02:32.456
+Let’s now go through the buttons one by one. The MOB button is always in the same place on every page. Clicking it first triggers a loud alarm, provided that any sound-emitting device is connected to your device. 
+
+00:02:32.456 --> 00:02:50.535
+There is also a visual alarm; the current position is highlighted and clearly marked. The relevant widgets display the distance and bearing to the MOB position. Clicking MOB again deactivates the MOB alarm.
+
+00:02:53.060 --> 00:03:04.189
+You can activate previously uploaded maps by clicking the Charts button. You can find more details on the types of maps that can be used in AvNav in the documentation.
+
+00:03:04.189 --> 00:03:18.000
+In addition to map selection, AvNav offers the option to add various overlays – these allow you to display additional elements alongside the map itself. 
+
+00:03:18.000 --> 00:03:37.208
+ These can be satellite images, previously sailed tracks, additional maps or, as shown here, the positions of Danish mooring buoys. This is particularly helpful if, for example, you are navigating at the boundary between two maps and do not want to keep switching between them.
+
+00:03:39.884 --> 00:03:50.507
+The zoom buttons are self-explanatory.
+The Follow button ensures that the map always remains centred on the boat’s position and follows it.
+
+00:03:50.507 --> 00:04:05.552
+The centring is visualised by an element that is important in AvNav: the crosshair. The crosshair is used in all sorts of functions, including the next one, namely setting a single waypoint.
+
+00:04:05.552 --> 00:04:08.774
+ This is what lies behind the ‘Start’ button.
+
+00:04:09.000 --> 00:04:24.516
+If you click on Start, a waypoint is set at the position of the crosshairs and information immediately appears in the widget showing thje distance to this point, the course required to reach it and approximately how long it will take.
+
+00:04:24.516 --> 00:04:48.729
+This feature can therefore be used to navigate quickly and effectively to a specific point, a waypoint or a particular buoy, or simply to find out the route there. However, it does not replace the route function. This means that whilst there is an approach alarm, the point is not automatically deactivated once it has been reached.
+
+00:04:48.729 --> 00:04:53.333
+This is only possible using the route function; more on that shortly.
+
+00:04:53.333 --> 00:05:11.686
+The next button, labelled ‘Course’, is used to orient the map either towards your boat’s current course or towards north. Clicking it sets the course-based orientation. The default setting is north-facing.
+
+00:05:11.686 --> 00:05:32.799
+One of the most important tools in AVNav is the route function, which can be accessed via the next button labelled ‘Route’. With this, you can plan complex routes, set and modify waypoints, save routes and start them. There is a separate short introductory video on this topic.
+
+00:05:33.115 --> 00:05:43.134
+Another new feature in AvNav is the ‘Tools’ button. It displays additional tools via a dialogue box that are not needed all the time.
+
+00:05:43.299 --> 00:05:48.913
+With Anchor Watch, you can trigger an AvNav-internal anchor watch.
+
+00:05:49.421 --> 00:06:07.376
+‘Show Wp buttons’ evokes a small additional button bar that appears directly at the bottom right of the map view and offers additional topic-specific tools. Just give it a go; most of it is self-explanatory.
+
+00:06:07.376 --> 00:06:19.075
+With ‘Info at Crosshair’, the crosshairs come into play once again. This function allows you to display various details about the selected map location.
+
+00:06:19.821 --> 00:06:32.445
+‘Centre chart to GPS’ does exactly what it says: a single click centres the map – as indicated by the crosshairs – on your current GPS position, provided one is available.
+
+00:06:32.445 --> 00:06:41.401
+With Show measure buttons, you can fill the additional toolbox with instruments for measuring distances.
+
+00:06:41.401 --> 00:07:01.078
+In this episode, you have learnt how to use the AVNav navigation window, set individual waypoints efficiently and use the new Main Menu for frequently used functions – in further video introductions, you can learn about other important functional areas of AvNav.
+

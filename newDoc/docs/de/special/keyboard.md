@@ -66,8 +66,7 @@ Die Namen der Funktion in der Gruppe "button" sind jeweils die Namen der
 Buttons, so wie sie in der [Buttonliste](../../buttons/buttons.md)
 dokumentiert sind.  
 Ein Klick auf ein Widget kann über die Gruppe "widgets" und den Namen des
-Widgets erreicht werden (die Namen sieht man im [Layout
-editor](layouts.md)). Ein SOG widget wäre z.B. mit
+Widgets erreicht werden (die Namen sieht man im [Layouteditor](layout.md)). Ein SOG widget wäre z.B. mit
 
 ```
 "all":{  
@@ -116,7 +115,7 @@ Zuweisungen
 |  |  | gpspage | "d" | geht zur dashboard Seite |
 |  |  | navpage | "n" | geht zur Kartenansicht |
 |  |  | ... | ... | weitere Seiten können hier auch direkt erreicht werden, wenn Tasten dafür konfiguriert werden |
-|  | addon | signalk | "Control-0" | als Gruppe muss hier der Name des addons angezeigt werden, so wie man ihn auf der [UserApp Konfigurationsseite](TODO) sehen kann|
+|  | addon | signalk | "Control-0" | als Gruppe muss hier der Name des addons angezeigt werden, so wie man ihn auf der [UserApp Konfigurationsseite](../base/userapps.md) sehen kann|
 |  |  | system-ochartsng-ui | "Control-1" |
 |  |  | system-history-ui | "Control-2" |
 |  |  | system-mapproxy-ui | "Control-3" |
@@ -144,11 +143,11 @@ Zuweisungen
 |  |  |  Gps8 | "8" | Dashboard #8 |
 |  |  |  Gps9 | "9" | Dashboard #9 |
 |  |  |  Gps10 | "0" | Dashboard #10 |
-| navpage (Navigationsseite) | widget | AisTarget | "a" | geht zur [Ais Info](../userdoc/navpage.md#aisinfo)) |
-|  |  | COG | "d" |geht zum [Dashboard](../userdoc/dashboardpage.md), mit d kann man so zwischen Navigationsseite und Dashboard hin- und herschalten |
+| navpage (Navigationsseite) | widget | AisTarget | "a" | geht zur [Ais Info](ais.md#aisinfo)) |
+|  |  | COG | "d" |geht zum [Dashboard](TODO dashboardpage.md), mit d kann man so zwischen Navigationsseite und Dashboard hin- und herschalten |
 |  | button | LockMarker  | "g" | starte Navigation zur Kartenmitte|
 |  |  | StopNav | "s" |
-|  |  | ShowRoutePanel  | ["Control-r","r"] | (gehe zum [Routen-Editor](../userdoc/editroutepage.md)) |
+|  |  | ShowRoutePanel  | ["Control-r","r"] | (gehe zum [Routen-Editor](../base/routes.md)) |
 |  | map | centerToGps  | "c" | einmalig Boot in Kartenmitte |
 |  | page | centerToTarget  | "w" | aktuellen Wegpunkt in Kartenmitte |
 |  |  | navNext  | ["n","Control-n"] | Navigation zum nächsten Punkt in der Route |

@@ -1,0 +1,77 @@
+﻿00:00:07,040 Let's now look at the route function. 
+00:00:10,560 The easiest way to create a route is directly from the navigation window using the 
+00:00:15,600 route button. Clicking it takes you to the route 
+00:00:20,780 editor. The map view remains the same, but the button bar on the right has changed. 
+00:00:26,440 We'll now show you how to create a route, where to enter waypoints, 
+00:00:30,000 and so on. Step one: Click 
+00:00:36,520 in the route widget in the lower left corner and create a new route by 
+00:00:42,200 giving it a new name by clicking "New". We'll choose the name "Test" and confirm with "OK". 
+00:00:49,080 The dialog box will now display the new name. A second click on "OK" will add 
+00:00:54,880 the route "Test" to the widget, but of course, there are no waypoints yet. 
+00:01:01,560 Step two is setting waypoints. In AvNav, this is done by 
+00:01:07,920 placing the crosshairs on the point where you want to create a waypoint. Here, we'll choose the buoy west of 
+00:01:14,760 Drejö, or better yet, slightly to the side, for obvious reasons, and click the "After" button. 
+00:01:22,160 Now we'll create a second waypoint. It should guide us into the passage 
+00:01:26,600 between Drejö and Avernakö. So, the crosshair needs to go there, 
+00:01:31,880 then we press "After" again. If we forgot 
+00:01:36,920 that we want to place a third waypoint between waypoints one and two, 
+00:01:41,640 we can now place a third waypoint between the two by clicking "Before. 
+00:01:47,400 " This means waypoint number three will now be placed before the currently active waypoint two. 
+00:01:53,840 It will look like this. That worked well. Working with the crosshair might 
+00:02:00,120 seem a bit cumbersome at first compared to direct taps on the 
+00:02:04,240 touchscreen. However, in situations with a rapidly moving ship on a smaller 
+00:02:10,240 screen and cold fingers, you'll come to appreciate this method of operation. 
+00:02:17,360 Now it's time to learn about other routing functions, such as moving 
+00:02:22,640 an existing waypoint. For example, waypoint 1 should now 
+00:02:28,720 be moved to the approach to Aeroeskøbing. To do this, waypoint 1 must first 
+00:02:34,360 be selected. This is done by simply clicking directly on the waypoint in the map. 
+00:02:40,760 If that's too cumbersome or too cramped, you can also select the waypoint in the widget. 
+00:02:47,520 With waypoint 1 selected, the crosshair must be set to the new coordinates. 
+00:02:53,720 Clicking the "Shift" button will then move waypoint 1 there. 
+00:03:01,280 To delete a waypoint from the route, use the delete button. Of course, 
+00:03:07,400 you must first select the waypoint you want to delete – as shown above. 
+00:03:13,800 These are essentially the steps required to create a route. 
+00:03:18,080 You can now access further options by clicking the Tools button and then 
+00:03:24,200 "show waypoint buttons." Here, you can use the Next and Previous buttons 
+00:03:31,000 to navigate between waypoints if working in the widget or on the map is less convenient. 
+00:03:37,840 The Edit button allows you to edit each individual waypoint, 
+00:03:41,160 for example, to assign a new name. The Locate button lets you 
+00:03:47,520 quickly retrieve the selected waypoint and return it to the map window if the map 
+00:03:51,680 has been moved for any reason. You can also achieve this by 
+00:03:57,520 clicking the waypoint in the widget. There's always at least one other option, which is a good thing. 
+00:04:05,120 Now that all the entries are complete, we move on to step 3: activating the route. 
+00:04:11,160 This is done by clicking the Start button. Before doing so, you should double-check 
+00:04:17,240 which waypoint is currently active, as that's where the route will start. So, we'll set 
+00:04:25,120 waypoint 1 as the first starting point from our current position and click Start. 
+00:04:32,040 The route is now active, and the view returns to the normal navigation window. 
+00:04:38,040 The Start button changes to a Stop button. With this, you could deactivate the route 
+00:04:43,280 . You can also see that your route is now active because the widgets 
+00:04:49,680 display the route-related values: the distance to the next waypoint, the course to it, and, 
+00:04:56,360 in the RTE widget, the route length and ETA. Interesting functions can be accessed via the tools. 
+00:05:03,840 The route can be activated while the route is running. If you decide 
+00:05:08,480 to skip a waypoint without changing the route's direction, 
+00:05:13,640 the Skip button is the right choice: Select the waypoint to be skipped, 
+00:05:20,000 then click Skip, and the route will jump to the next waypoint. This can be helpful 
+00:05:26,960 if you've passed a waypoint so far away that reaching it 
+00:05:31,840 isn't acknowledged. Of course, the route can also be modified while running 
+00:05:37,480 by switching back to the route editor, 
+00:05:42,080 for example, to move a waypoint. Waypoint 2, for instance, should 
+00:05:49,480 be moved closer to the buoy. This is done, as explained previously, using the Shift key. 
+00:05:56,440 The change is applied immediately while the route is running. Saving the route 
+00:06:01,360 after it has been created or modified happens automatically in the background. 
+00:06:07,200 If you want to perform an XTE update after modifying the route 
+00:06:11,400 , click Restart. To see 
+00:06:16,880 where the route files are located, navigate to the Routes section in the menu. 
+00:06:24,080 All saved routes are listed there, and you can see that the "Test" route 
+00:06:28,840 was recently saved automatically. It can now be copied, 
+00:06:34,000 downloaded, or edited, and it can be placed as an overlay on a map. 
+00:06:40,680 These are things you can try out at your leisure. 
+00:06:44,440 What else is possible in the route section is pretty self-explanatory from the buttons. 
+00:06:51,760 One button deserves special mention: "connect. 
+00:06:57,200 " Normally, "connect" is active. This means that route operations are 
+00:07:03,320 executed on the server, and all connected displays show the same values. 
+00:07:09,280 If "connect" is deactivated, you can 
+00:07:13,880 try out and change different routes on a local display—the server continues to work with the original route. These routes are 
+00:07:20,160 only processed on the local display. When 
+00:07:23,799 working with a second display on a second device, the "connect" button should always be active to ensure that the server and client (the second device) are connected. Otherwise, 
+00:07:23,972 saving a route remains limited to the local machine. You can find more detailed information in the documentation. That concludes our guide to creating routes. 

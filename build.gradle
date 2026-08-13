@@ -698,16 +698,28 @@ def checkOnlineLink(url){
     }
     return false
 }
-def ONLINEBASE="https://www.wellenvogel.de/software/avnav"
-def ONLINEPATTERN=['downloads','configGen','viewern']
-task findBrokenLinks(type: DefaultTask){
-    def baseDir="docs"
-    def list=fileTree(baseDir,{
-                    include "**/*html"
-            })
-    inputs.files list 
-    doLast(){
-        def anchorMap=[:]
+
+def addChildren(nodes,node,ignoreClasses){
+    if (node.@class != null && ignoreClasses != null){
+        def cl="${node.@class}"
+        for (def ic : ignoreClasses){
+            if (cl.indexOf(ic)>=0){
+                //println("${node.name()} ${node.@class}")
+                return false;
+            }
+        }
+    }
+    nodes.add(node);
+    node.children().each{ child->
+        addChildren(nodes,child,ignoreClasses)
+    }
+}
+
+def brokenLinks(baseDir,list,ignoreClasses=null){
+    def ONLINEBASE="https://www.wellenvogel.de/software/avnav"
+    def ONLINEPATTERN=['downloads','configGen','viewern']
+
+    def anchorMap=[:]
         def requestedAnchors=[]
         list.visit{ FileVisitDetails element ->
           if (! element.getFile().isFile()) return;
@@ -719,7 +731,11 @@ task findBrokenLinks(type: DefaultTask){
           def page = new MySlurper(tagsoupParser).parse(element.getFile())
           def relPath=element.getRelativePath().getParent().getPathString()
           if (! relPath.isEmpty()) relPath+="/"
-          page.'**'.findAll().each{ node->
+          def nodes=[]
+          page.children().each{ node->
+            addChildren(nodes,node,ignoreClasses)
+          }
+          nodes.each{ node->
             def line=node["@"+MySlurper.LINE_NUM_ATTR]
             if (node.name() == 'a'){
                 def anchorName=node.@name
@@ -781,8 +797,29 @@ task findBrokenLinks(type: DefaultTask){
             }
         }
     }
+
+task findBrokenLinks(type: DefaultTask){
+    def baseDir="docs"
+    def list=fileTree(baseDir,{
+                    include "**/*html"
+            })
+    inputs.files list 
+    doLast(){
+        brokenLinks(baseDir,list)
+    }
 }
 
+task newDocBrokenLinks(type: DefaultTask){
+    group "documentation"
+    def baseDir="newDoc/site"
+    def list=fileTree(baseDir,{
+                    include "**/*html"
+            })
+    inputs.files list 
+    doLast(){
+        brokenLinks(baseDir,list,["md-sidebar","md-header"])
+    }
+}
 
 task findImages(type: DefaultTask){
     doFirst(){

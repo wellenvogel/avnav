@@ -73,14 +73,17 @@ extra:
   old_doc_start: "beschreibung.html"
   version: !ENV [AVNAV_VERSION,202608xx]
   no_version: !ENV AVNAV_NOVERSION
+  video_mode: !ENV [AVNAV_VIDEOMODE,youtube]
 markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.highlight:
         anchor_linenums: true
+        pygments_lang_class: true
+  - pymdownx.blocks.caption
   #  #  - pymdownx.inlinehilite
   #  #  - pymdownx.snippets
-  #  - pymdownx.superfences:
+  - pymdownx.superfences:
   #      custom_fences:
   #        - name: mermaid
   #          class: mermaid
@@ -97,6 +100,9 @@ markdown_extensions:
   #  - pymdownx.tilde
   #  - pymdownx.magiclink
   #  - footnotes
-  # - pymdownx.emoji:
-  #    emoji_index: !!python/name:material.extensions.emoji.twemoji
-  #    emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      options:
+        custom_icons:
+          - overrides/icons

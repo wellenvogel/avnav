@@ -87,6 +87,11 @@ This will render a small button symbol with the short text and the icon dependin
 {{BT("Cancel",True)}}
 ```
 
+Small buttons without text:
+```
+{{SB("Cancel")}}
+```
+
 ## Main Menu Entries
 The buttons in the main menu are named like the pages they open with a prefix "MM".
 For a Main Menu button write:
@@ -95,7 +100,7 @@ For a Main Menu button write:
 ```
 To add the call to the Main Menu there is a shortcut:
 ```
-{{MB("MMchartspage")}}
+{{MM("MMchartspage")}}
 ```
 The name for the actions is `MM:actions`.
 To have the complete chain for open Main Menu, click Actions and an action you can write:

@@ -98,7 +98,7 @@ const DownloadItem = (props:DownloadItemProps) => {
                 {(infoMode === DownloadItemInfoMode.ALL ||
                         infoMode === DownloadItemInfoMode.ICONS) &&
                     <div className="infoImages">
-                        <Icon className={actions.showIsServer(props)?iconClasses.ITServer:iconClasses.Empty}/>
+                        <Icon className={actions.firstIcon(props)}/>
                         <Icon className={actions.canModify(props)?iconClasses.Edit:iconClasses.Empty}/>
                         <Icon className={actions.canView(props)?iconClasses.View:iconClasses.Empty}/>
                     </div>

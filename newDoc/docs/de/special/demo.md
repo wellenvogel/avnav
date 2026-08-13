@@ -6,7 +6,7 @@
 Demo
 ====
 
-Die Demo gibt einen kleinen Einblick in die Programm-Funktionen.  
+Die [Demo]((../../../viewern/avnav_viewer.html?navurl=../viewer/avnav_navi.php&readOnlyServer=true)) gibt einen kleinen Einblick in die Programm-Funktionen.  
 Der "connected" mode - also die Übertragung des Routing-Ziels von einem
 Browser zum anderen - funktioniert hier nicht.
 

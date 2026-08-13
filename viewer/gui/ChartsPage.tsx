@@ -160,7 +160,7 @@ const ChartsPage=(props:ChartsPageProps)=>{
                     />
                 </React.Fragment>:null,
                 <React.Fragment key={3}>
-                    <MvHeadline title={"Overlays"}
+                    <MvHeadline title={"Overlay Files"}
                                 />
                     <UploadAction
                         className={'topRow'}
