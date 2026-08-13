@@ -24,7 +24,7 @@ import OverlayConfig, {
     overlayExpandsValue
 } from '../map/overlayconfig';
 import chartImage from '../images/Chart60.png';
-import editableParameterUI, {EditableParameterListUI} from "./EditableParameterUI";
+import editableParameterUI, {EditableFloatParameterUI, EditableParameterListUI} from "./EditableParameterUI";
 import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
 import Mapholder from "../map/mapholder";
@@ -97,7 +97,14 @@ const OverlayItemDialog = (props) => {
 
         };
     const parameters=useMemo(()=>{
-        const rt=[];
+        const rt=[
+            new EditableFloatParameterUI({
+                name:'opacity',
+                default: 1,
+                list:[0,1,0.1],
+                description:'Set the opacity for the overlay.'
+            })
+        ];
         if (itemInfo.settings){
             itemInfo.settings.forEach((setting)=>{
                 let addOn=undefined;
@@ -223,14 +230,6 @@ const OverlayItemDialog = (props) => {
                         value={currentType}
                         itemList={TYPE_LIST}
                         onChange={(nv) => changeType(nv)}
-                    />
-                    <Input
-                        className="opacity"
-                        dialogRow={true}
-                        label="opacity"
-                        value={current.opacity}
-                        onChange={(nv) => updateCurrent({opacity: parseFloat(nv)})}
-                        type="number"
                     />
                     <React.Fragment>
                         <InputReadOnly

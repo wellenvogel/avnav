@@ -284,12 +284,23 @@ export class EditableNumberParameterUI extends EditableNumberParameter{
                 {...common}
             />
         }
-
+        let step="1";
+        const list = this.getList();
+        if (list && (list instanceof Array)) {
+            if (list.length >= 3) {
+                if (typeof list[2] !== 'object') {
+                    step = parseFloat(list[2]);
+                }
+            }
+        }
+        const range=this.getRange();
         return <Input
             {...getMinMax(this)}
             {...common}
             type={'number'}
-            step={1}
+            step={step}
+            min={range.min}
+            max={range.max}
             onChange={(nv)=>{
                 onChange(this.setValue(undefined,nv))
             }}
@@ -331,10 +342,22 @@ export class EditableFloatParameterUI extends EditableFloatParameter{
                 {...cp}
             />
         }
+        let step="any";
+        const list = this.getList();
+        if (list && (list instanceof Array)) {
+            if (list.length >= 3) {
+                if (typeof list[2] !== 'object') {
+                    step = parseFloat(list[2]);
+                }
+            }
+        }
+        const range=this.getRange();
         return <Input
             {...this.convertToDisplay(getCommonParam({ep:this,currentValues,initialValues,className,onChange,children}),currentValues)}
             type={'number'}
-            step={"any"}
+            step={step}
+            min={range.min}
+            max={range.max}
             onChange={(nv)=>{
                 if (this.converter && this.converter.fromDisplay){
                     nv=this.converter.fromDisplay(currentValues,nv);
