@@ -77,7 +77,7 @@ import {CopyAware} from "../util/CopyAware";
 import {LoadSettingsDialog} from "./Settings";
 import {ViewDialog} from "./ViewDialog";
 import ButtonDefs from "./ButtonDefs";
-import {StatusIcon} from "./Icons";
+import {StatusIcon,iconClasses} from "./Icons";
 
 
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -820,8 +820,8 @@ export class ItemActions extends CopyAware {
     canView(item) {
         return false;
     }
-    showIsServer(item) {
-        return false;
+    firstIcon(item) {
+        return iconClasses.Empty;
     }
     showUpload() {
         return this.isConnected();
@@ -980,6 +980,11 @@ class ChartItemActions extends ItemActions{
     showUpload() {
         return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadCharts,false);
     }
+
+    firstIcon(item) {
+        return Helper.concatsp(iconClasses.Overlays,item.hasOverlay?"withOverlays":"noOverlays")
+    }
+
     fillActions(item,actions) {
         actions.push(new Action({
             ...ButtonDefs.DBOpenChart,
@@ -1179,8 +1184,8 @@ class RouteItemActions extends ItemActions{
         return true;
     }
 
-    showIsServer(item) {
-        return item.server;
+    firstIcon(item) {
+        return item.server ? iconClasses.Server : iconClasses.Empty;
     }
     namePreCheck(name){
         if (! name) {

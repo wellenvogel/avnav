@@ -1499,9 +1499,6 @@ span.valuePrefix{
   }
 
   .ChartSelectDialog{
-    .noOverlays .icon.Overlays {
-      opacity: 0.4;
-    }
     .loading{
       display: flex;
       flex-direction: column;
@@ -1825,3 +1822,11 @@ span.valuePrefix{
       z-index: 2;
     }
   }
+.noOverlays{
+  .icon.Overlays {
+    opacity: 0.4;
+  }
+  &.icon.Overlays{
+    opacity: 0.4;
+  }
+}
