@@ -12,7 +12,7 @@ Die Karten in AvNav sind entweder auf dem AvNav Server gespeichert oder können 
 Die Anzeige der Karten erfolgt immer in einem Browser - so wie die gesamte Bedienoberfläche von AvNav. Wie im [Technischen Hintergrund](#background) beschrieben, werden dazu entsprechende JavaScript Bibliotheken genutzt.
 
 ## Karten und Overlays {: #overlays }
-Typischerweise benötigt man für die Navigation nicht nur eine Karte sonder auf dieser Karte auch noch verschiedene Zusatz-Informationen. Neben den Informationen, die AvNav selbst bereitstellt - wie die Bootsposition, Kurslinien, die aktuelle Route oder AIS Ziele (siehe [Navigationsseite](../base/navpage.md)) kann man auch sogenannte "Overlays" über die Karte legen.
+Typischerweise benötigt man für die Navigation nicht nur eine Karte sondern auf dieser Karte auch noch verschiedene Zusatz-Informationen. Neben den Informationen, die AvNav selbst bereitstellt - wie die Bootsposition, Kurslinien, die aktuelle Route oder AIS Ziele (siehe [Navigationsseite](../base/navpage.md)) kann man auch sogenannte "Overlays" über die Karte legen.
 Diese Overlays sind im Normalfall Dateien die geografische Informationen sowie Informationen zur Darstellung enthalten. AvNav kann Daten im [GPX Format](https://de.wikipedia.org/wiki/GPS_Exchange_Format), im [GEOJSON Format](https://geojson.org/) oder im [KML/KMZ Format](https://de.wikipedia.org/wiki/Keyhole_Markup_Language) verarbeiten. Daneben können auch in AvNav bereits vorhandene Daten wie Tracks und Routen als Overlays genutzt werden.
 Um komplett flexibel zu sein, kann man auch andere Karten als Overlay zu einer bestimmten Karte hinzufügen. Das kann sehr hilfreich sein, wenn die Karten getrennte Bereiche abdecken - so bekommt man eine übergangsfreie Darstellung.
 Eine Zuordnung, welche vorhandenen Overlays auf einer Karte angezeigt werden sollen, kann im [Overlay Editor](overlays.md) erfolgen.
@@ -45,6 +45,40 @@ Plugins können im Prinzip beliebige weitere Kartentypen zu AvNav hinzufügen. D
 | [mapproxy](https://github.com/wellenvogel/avnav-mapproxy-plugin) | Online Karten | Das mapproxy Plugin erlaubt über eigene Definitionen den Zugriff auf online Kartendienste. Die Karten werden im AvNav Server zwischengespeichert und stehen damit auch ohne Internet zur Verfügung. _Nur für Linux_ |
 
 Daneben gibt es u.U. noch weitere Plugins für andere Kartentypen. Siehe dazu auch die [Liste der Plugins](TODO: pluginlist).
+
+## Verwalten von Karten
+
+Die Verwaltung von Karten ist in der [Einführung](../base/charts.md) bereits beschrieben. Sie erfolgt über 
+
+{MM("MMchartspage")}
+
+![Charts Left](../../img/charts-left.png)
+///caption
+Karten Verwaltung 
+///
+
+Im "Charts" Tab sind alle vorhandenen Karten aufgelistet und es können neue Karten hochgeladen werden (in den Formaten, die AvNav [direkt versteht](#owntypes)). Bei Klick auf eine Karte erhält man einen Dialog, mit dem man die [Overlays](overlays.md) bearbeiten kann, Karten ggf. herunterladen, Löschen oder direkt öffnen Kann. Plugin-Karten werden hier angezeigt, diese können hier jedoch normalerweise nicht gelöscht oder heruntergeladen werden.
+
+Für MBTiles karten kann man hier das Schema der Karte umstellen. Dieses beschreibt, wie die y-Koordinate zählt. 
+{: #scheme }
+
+Es gibt zwei Optionen
+
+| Name | Beschreibung |
+| --- | --- |
+| tms | y-Koordinate 0 ist Süden |
+| zxy | y-Koordinate 0 ist Norden |
+
+Der Default ist `tms`. Leider gibt es oft MBTiles Dateien, die `zxy` nutzen aber das nicht in der Datei vermerken. Im Zweifel muss man daher probieren und das Schema ggf. umstellen, wenn die Karte falsch dargestellt wird. AvNav schgreibt eine eigene Information in die MBTiles Datei, wenn man es im Dialog umstellt. Damit kann diese Datei dann auch auf anderen AvNav Systemen sofort korrekt genutzt werden.
+
+Der mittlere Tab "Imports" zeigt Informationen über Karten, die in den [Konverter](#converter) von AvNav geladen wurden. Auf Android ist der Konverter nicht vorhanden.
+
+Im Tab "Overlay Files" werden die Dateien aufgelistet, die man als [Overlays](overlays.md) zu Karten hinzufügen kann.
+
+Es gibt ganz links noch einen Tab "Server" - der zeigt den Zustand der Server-Funktionen für das Kartenhandling.
+
+
+
 
 
 ## Karten Konvertierung {: #converter }
@@ -156,7 +190,7 @@ Wie im [Beispiel](#exampldef) beschrieben können Kartendefinitionen als XML Dat
 **plugin.json**
 {: #pluginjsondef }
 
-[Plugins](plugins-extensions.md) können eine Datei [`plugin.json`](TODO: plugin.json) mitbringen. Diese muss ein Objekt mit verschiedenen Eigenschaften enthalten. Unter dem Namen "charts" kann hier eine Liste von Kartendefinitionen registriert werden. 
+[Plugins](plugins-extensions.md) können eine Datei [`plugin.json`](plugins.md#pluginjson) mitbringen. Diese muss ein Objekt mit verschiedenen Eigenschaften enthalten. Unter dem Namen "charts" kann hier eine Liste von Kartendefinitionen registriert werden. 
 ``` json
 {
   "charts": [
@@ -181,7 +215,7 @@ Relative Angaben bei url oder icon beziehen sich auf den Speicherort der plugin.
 **Plugin Python Code**
 {: #insertingpython }
 
-_Nur für Windows und Linux/Raspberry_. Im [Plugin Python API](TODO: plugin api) gibt es die Funktion [`registerChartProvider`](https://github.com/wellenvogel/avnav/blob/e297382b2e849db9e1c4f18a0e22915083deb5aa/server/avnav_api.py#L285).
+_Nur für Windows und Linux/Raspberry_. Im [Plugin Python API](plugins.md#pluginpython) gibt es die Funktion [`registerChartProvider`](https://github.com/wellenvogel/avnav/blob/e297382b2e849db9e1c4f18a0e22915083deb5aa/server/avnav_api.py#L285).
 
 Der dort übergebene Callback wird gerufen, wenn AvNav die Liste seiner Karten ermitteln möchte. Er muss eine Liste von Kartendefinitionen zurückgeben wie unter [plugin.json](#pluginjsondef) beschrieben. 
 
@@ -500,7 +534,7 @@ verwendet. Diese lädt die entsprechenden Kartenkacheln je nach Zoom Level
 vom Server und zeigt sie an. OpenStreetMaps verwendet typischerweise
 diese Library.
 Es ist dabei möglich innerhalb einer Karte mehrere sogenannte Layer (Schichten) übereinander zu legen - auf diesem können z.B. unterschiedliche Auflösungen verwendet werden - oder auch in einem Layer die Basis-Karten und in einem anderen Layer die Seezeichen.
-Zusätzlich können auch Kartenlayer mit [MapLibre](https://maplibre.org/) genutzt werden. Damit lassen sich z.B. Verktorkarten darstellen. Das erfordert jedoch typischerweise zusätzliche Daten und erfordert damit spezielle [Kartendefinitionen](TODO: #chartdefinitions) oder [Plugins](plugins-extensions.md).
+Zusätzlich können auch Kartenlayer mit [MapLibre](https://maplibre.org/) genutzt werden. Damit lassen sich z.B. Verktorkarten darstellen. Das erfordert jedoch typischerweise zusätzliche Daten und erfordert damit spezielle [Kartendefinitionen](#definitions) oder [Plugins](plugins.md).
 
 Man kann sich leicht vorstellen, dass bei hohen Zoom Levels schnell große
 Datenmengen zusammenkommen. Daher müssen wir für unsere Kartenkacheln

@@ -2,7 +2,7 @@
 User Spezifischer Java Script Code
 ==================================
 !!! WICHTIG
-    Diese Beschreibung bezieht sich auf JavaScript Code der in einer legacy user.js oder plugin.js Datei leigt.
+    Diese Beschreibung bezieht sich auf JavaScript Code der in einer legacy user.js oder plugin.js Datei liegt.
     Die Beschreibung für aktuellen Modul-basierten JavaScript Code findet man [hier](userjs.md).
 
 Um eine einfache Möglichkeit zu bieten, AvNav an seine Bedürfnisse
@@ -18,43 +18,6 @@ Der Java Script Code liegt in der Datei user.js im Verzeichnis
 BASEDIR/user/viewer.  
 BASEDIR ist z.B. auf dem pi /home/pi/avnav/data.
 
-Bearbeitung
------------
-
-Um die Bearbeitung zu erleichtern, kann man über die Files/Download Seite
-{{BT("DBDownload")}}und
-die Unterseite {{BT("AddonConfigUser")}} auf die Dateien in diesem Verzeichnis zugreifen.
-
-![](../img/downloadpage-user.png)
-
-Wie im Bild zu sehen, existiert dort bereits eine Datei user.js. Diese
-wird beim erstmaligen Start aus einem Template erzeugt.
-
-Durch einen Klick auf die Datei und die Auswahl von "Edit" kann man die
-Datei direkt bearbeiten.
-
-![](../img/viewpage-edit-user.png)
-
-In der Datei sind bereits Beispiele vorhanden für die Möglichkeiten der
-Anpassung. Nach dem Bearbeiten die Datei speichern {{BT("SettingsSave")}} und AvNav neu laden.
-
-Es empfiehlt sich, die Datei in regelmäßigen Abständen nach dem
-Bearbeiten herunterzuladen und noch einmal irgenwo zu speichern - es gibt
-keine Versionsverwaltung in AvNav.  
-Ein erprobter Weg zur Bearbeitung ist die Nutzung von 2 Browserfenstern
-oder Tabs:
-
-* In einem Fenster macht man die Bearbeitung und speichert die Datei
-* Im anderen Fenster lädt man AvNav jeweils neu und testet die
-  Änderungen (dabei ist auch die Nutzung der Browser Entwicklerwerkzeuge
-  hilfreich, weil man hier u.U. Fehlermeldungen sehen kann - oder sogar
-  den Code debuggen kann).
-
-Auf diese Weise kann man recht zügig Änderungen vornehmen und ihre
-Funktion testen.
-
-Das aktuelle Template kann man auch [auf
-github](https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/static/user.js) finden.
 
 Anzeigen (Widgets) {: #widgets}
 -------------------------------
@@ -82,7 +45,7 @@ Man kann die folgenden Arten von Anzeigen hinzufügen:
   20220819 z.B. [SailInstrument](https://github.com/kdschmidt1/Sail_Instrument/blob/e1d87186138e5a3ac894916e9b7e85a3218a4c9a/Sail_Instrument/plugin.js#L223)
 
 Das Interface, über das mit AvNav kommuniziert wird, findet sich [auf
-github](https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js) bzw. im Template Code.  
+github](https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/util/api.js) bzw. im Template Code.  
 Für map Widgets kann über das Api auf die [zugrunde
 liegenden Bibliotheken](https://www.movable-type.co.uk/scripts/geodesy-library.md) für geografische Berechnungen zugegriffen
 werden (Funktion LatLon und Dms).
@@ -140,9 +103,8 @@ unveränderlichen Werten) abhängig sein. Andernfalls werden potentiell
 Für ein selbst geschriebenes Widget können die folgenden
 Funktionen/Eigenschaften implementiert werden:
 
-|  |  |  |  |
-| --- | --- | --- | --- |
 | Name | Typ | Nutzbar bei Typ | Beschreibung |
+| --- | --- | --- | --- |
 | name | String | alle | der Name des Widgets |
 | type | String  (optional) | alle | Bestimmt, welches Widget erzeugt werden soll.  Werte: radialGauge, linearGauge, map  Wenn der Typ nicht gesetzt ist, wird entweder das default widget genutzt (keine Funktion renderHtml und keine Funktion renderCanvas angegeben) - oder ein nutzer definiertes Widget (userWidget) |
 | renderHtml | Funktion  (optional) | userWidget | Diese Methode muss einen String zurückgeben, der dann als HTML code in das Widget eingebaut wird.  Falls eventHandler für Elemente genutzt werden sollen, müssen diese vorher registriert werden (siehe initFunction) und werden im HTML code einfach mit  ``` <button onclick="myHandler">Click!</button> ``` angegeben (das ist keine exakte HTML Syntax, da nur der Name des event handlers angegeben wird, kein java script code).    Die "this" variable innerhalb von renderHtml zeigt auf ein Objekt, das spezifisch für das Widget ist (Kontext).  Wenn der EventHandler aufgerufen wird, zeigt this ebenfalls auf diesen Kontext.    Das als Parameter an renderHtml übergebene Objekt enthält die unter storeKeys definierten Werte.  Die Funktion wird jedesmal erneut aufgerufen, wenn sich die Werte geändert haben. |
@@ -157,9 +119,8 @@ Funktionen/Eigenschaften implementiert werden:
 
 Der java script code erhält folgende globale Variablen:
 
-|  |  |  |
-| --- | --- | --- |
 | Name | plugin.js/user.js | Beschreibung |
+| --- | --- | --- |
 | AVNAV\_BASE\_URL | beide | die URL zum Verzeichnis, aus dem die Java script Datei geladen wurde. Diese kann z.B. verwendet werden, um weitere Elemente von dort zu laden. Für die user.js können Dateien aus dem images Verzeichnis über AVNAV\_BASE\_URL+"../images" erreicht werden.  Für plugins kann über AVNAV\_BASE\_URL+"/api" die Kommunikation mit dem Python Anteil erreicht werden. |
 | AVNAV\_PLUGIN\_NAME | plugin.js | Der Name des Plugins. |
 
@@ -200,9 +161,8 @@ aufeinanderfolgenden Aufrufen benötigt werden.
 Ausserdem enthält er einige Funktionen, die vom Widget Code aufgerufen
 werden können.
 
-|  |  |  |  |
-| --- | --- | --- | --- |
 | Name | Widget | Parameter | Beschreibung |
+| --- | --- | --- | --- |
 | eventHandler | userWidget | --- | eventHandler ist keine Funktion sondern ein array. Falls im renderHtml event Handler angegeben werden - z.B. <button onclick="clickHandler"/>, dann muss in der initFunction  eine Funktion clickHandler hier registriert werden:  this.eventHandler.clickHandler=function(ev){...}  Siehe [TestPlugin](https://github.com/wellenvogel/avnav/blob/7035cba511ea400ebcd7a972b6b0baf79deba04d/server/plugins/testPlugin/plugin.js#L150). |
 | triggerRedraw | userWidget | --- | Diese Funktion muss gerufen werden, wenn das Widget (z.B. nach einer Kommunikation mit dem Server) möchte, das es neu gezeichnet wird.  Siehe [TestPlugin](https://github.com/wellenvogel/avnav/blob/7035cba511ea400ebcd7a972b6b0baf79deba04d/server/plugins/testPlugin/plugin.js#L160). |
 | lonLatToPixel | map | lon,lat | Konvertiert die Koordinaten in pixel Koordinaten für das Zeichnen in renderCanvas.  Gibt ein array mit x,y Koordinate zurück. |
@@ -227,9 +187,8 @@ renderCanvas Funktionen zur Verfügung (Ausnahme: Typ KEY, hier wird
 der  aus dem Speicher gelesene Wert zur Verfügung gestellt).  
 Für jeden Parameter kann man die folgenden Werte angeben:
 
-|  |  |  |
-| --- | --- | --- |
 | Name | Type | Beschreibung |
+| --- | --- | --- |
 |  | key | Der Name des Parameters so wie er im Layout Editor angezeigt werden soll, und wie er den renderXXX Funktionen zur Verfügung stehen soll. |
 | type | String | STRING, NUMBER,FLOAT, KEY, SELECT, ARRAY, BOOLEAN, COLOR  Der Typ für den Parameter. Je nach Typ wird er dem Nutzer unterschiedlich angezeigt.  Für COLOR eine Farb-Auswahl, für SELECT eine AuswahlListe und für KEY die Liste der momentan verfügbaren Werte im Store.  Für ein Array kann eine durch Komma getrennte Liste angegeben werden. |
 | default | je nach type | Der default Wert.   Für COLOR eine color css Property - also z.B. "rgba(200, 50, 50, .75)" |
@@ -271,8 +230,7 @@ Formatierer (Formatter) {: #formatter}
 
 Neben den eigentlichen Anzeigen können auch eigene Formatierer
 geschrieben werden, die die Werte für die Anzeige aufbereiten.  
-Im System sind bereits eine Reihe von Formatierern vorhanden - siehe [Layout
-Editor](layouts.md#formatter).
+Im System sind bereits eine Reihe von Formatierern vorhanden - siehe [Layout Editor](layout.md#formatter).
 
 Ab Version 20210106 können eigene Formatierer bei AvNav registriert
 werden und stehen dann allen Widgets zur Verfügung. Ein Formatierer ist
@@ -284,8 +242,7 @@ Dashboard-Seiten nicht zu stören.
 
 Eine Formatierer-Funktion kann zusätzliche Parameter akzeptieren, um die
 Umwandlung zu steuern. Diese werden über die Widget Eigenschaft
-formatterParameters typischerweise im [Layout
-Editor](layouts.md#formatter) gesetzt.
+formatterParameters typischerweise im [Layout Editor](layout.md#formatter) gesetzt.
 
 Beispiel:
 

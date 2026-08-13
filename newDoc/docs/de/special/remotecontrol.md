@@ -14,7 +14,7 @@ z.B. mit einem am Körper befindlichen anderen Gerät - oder mit einer
 Fernsteuerung - die Anzeige auf dem Display umschalten.
 
 Ausserdem können die Linux- und Windows Versionen Fernsteuerkommandos per UDP empfangen, die dann auch an angeschlossene Displays weitergegeben werden können.
-Auch [Plugins](TODO) können Fernsteuerkommandos senden.
+Auch [Plugins](plugins.md#pluginpython) können Fernsteuerkommandos senden.
 
 Es existiert ein Plugin für die [OpenBoat Projects IR Fernbedienung](https://github.com/wellenvogel/avnav-obp-rc-remote-plugin) von [chrhartz](https://www.segeln-forum.de/cms/user/19350-chrhartz/).
 Damit kann diese Fernbedienung ebenfalls zur Fernsteuerung genutzt werdn.
