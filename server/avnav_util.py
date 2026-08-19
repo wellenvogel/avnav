@@ -510,6 +510,17 @@ class AVNUtil(object):
         "to_port": int,  # C
         "to_starboard": int,  # D
     }
+    @classmethod
+    def computeDim(cls,data,target,p1,p2):
+        p1r=data.get(p1)
+        p2r=data.get(p2)
+        if p1r is None and p2r is None:
+            return
+        if p1r is None and p2r is not None:
+            p1r=0
+        if p2r is None and p1r is not None:
+            p2r=0
+        data[target]=p1r+p2r
 
     @classmethod
     def convertAIS(cls, aisdata):
@@ -525,8 +536,8 @@ class AVNUtil(object):
                 rt[k] = None  # explicitly map invalid data to none
 
         try:
-            rt["beam"] = rt["to_port"] + rt["to_starboard"]
-            rt["length"] = rt["to_bow"] + rt["to_stern"]
+            cls.computeDim(rt,"beam","to_port","to_starboard")
+            cls.computeDim(rt,"length","to_bow","to_stern")
         except:
             pass
 

@@ -122,7 +122,7 @@ def cnb_second_format(n):
 
 # Common Navigation Block is the format for AIS types 1, 2, and 3
 cnb = (
-    bitfield("status",   4, 'unsigned', 0,         "Navigation Status",
+    bitfield("status",   4, 'unsigned', None,         "Navigation Status",
              formatter=cnb_status_legends),
     bitfield("turn",     8, 'signed',   -128,      "Rate of Turn",
              formatter=cnb_rot_format),       
@@ -848,7 +848,7 @@ type25 = (
 type27 = (
     bitfield("accuracy", 1,  'unsigned', None,      "Position Accuracy"),
     bitfield("raim",     1,  'unsigned', None,      "RAIM flag"),
-    bitfield("status",   4,  'unsigned', 0,         "Navigation Status",
+    bitfield("status",   4,  'unsigned', None,         "Navigation Status",
              formatter=cnb_status_legends),
     bitfield("lon",      18, 'signed',   0x1a838,   "Longitude",
              formatter=short_latlon_format),
