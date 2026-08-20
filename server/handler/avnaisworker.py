@@ -35,21 +35,12 @@ class AVNAISWorker(AVNWorker):
     P_AIS_EXPIRYTIME = WorkerParameter('aisExpiryTime', 1200, type=WorkerParameter.T_FLOAT,
                                        description="expiry time in seconds for AIS data")
     P_OWNMMSI = WorkerParameter('ownMMSI', '', type=WorkerParameter.T_STRING,
-                                description='if set - do not store AIS messages with this MMSI')
+                                description='if set - do not store AIS messages with this MMSI',
+                                mandatory=False)
 
     def __init__(self,cfgparam):
       self.baseConfig = None
       super(AVNAISWorker,self).__init__(cfgparam)
-
-    def getParam(self, child=None, filtered=False):
-        rt=super().getParam(child, filtered)
-        if child is None and rt is not None and self.baseConfig is not None:
-            for p in [self.P_AIS_EXPIRYTIME.name,self.P_OWNMMSI.name]:
-                if rt.get(p) is None:
-                    migrated=self.baseConfig.param.get(p)
-                    if migrated:
-                        rt[p]=migrated
-        return rt
 
     @classmethod
     def getKind(cls):
@@ -59,7 +50,7 @@ class AVNAISWorker(AVNWorker):
         if aisParam is not None:
             setParam={}
             for p in [self.P_OWNMMSI,self.P_AIS_EXPIRYTIME]:
-                if aisParam.get(p.name) is not None:
+                if p.name in aisParam:
                     setParam[p.name]=p.fromDict(aisParam)
             navdata.updateBaseConfig(aisExpiry=setParam.get(self.P_AIS_EXPIRYTIME.name),ownMMSI=setParam.get(self.P_OWNMMSI.name))
 
@@ -69,8 +60,32 @@ class AVNAISWorker(AVNWorker):
             self._updateParam(param,self.navdata)
 
     def startInstance(self, navdata:AVNStore):
-        self.baseConfig=findHandlerByConfigName(AVNBaseConfig.getConfigName())
+        self.baseConfig=self.findHandlerByName(AVNBaseConfig.getConfigName())
         aisParam=self.getParam()
+        updates = {}
+        if self.baseConfig is not None:
+            #try top migrate old settings from baseConfig
+            #and remove them there
+            legacyParam=self.baseConfig.getParam()
+            for p in [self.P_OWNMMSI,self.P_AIS_EXPIRYTIME]:
+                own=p.fromDict(aisParam)
+                if own == p.default:
+                    other=p.fromDict(legacyParam)
+                    if other is not None and other != own:
+                        updates[p.name]=other
+            #remove parameters at legacy
+            legacyChanger=self.baseConfig.configChanger
+            legacyParam=self.baseConfig.param
+            for p in [self.P_OWNMMSI,self.P_AIS_EXPIRYTIME]:
+                try:
+                    del legacyParam[p.name]
+                except:
+                    pass
+                legacyChanger.removeAttribute(p.name, delayUpdate=True)
+            legacyChanger.handleChange()
+            if len(updates) > 0:
+                self.changeMultiConfig(updates)
+                aisParam=self.getParam()
         self._updateParam(aisParam,navdata)
         super().startInstance(navdata)
 

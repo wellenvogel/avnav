@@ -109,10 +109,12 @@ class AVNBaseConfig(AVNWorker):
   P_SETTIME_CMD=WorkerParameter('settimecmd','',editable=False,description='if set, use this to set the system time')
   P_EXPIRY_TIME=WorkerParameter('expiryTime',30,type=WorkerParameter.T_FLOAT,
                                 description="expiry in seconds for NMEA data")
-  P_AIS_EXPIRYTIME=WorkerParameter('aisExpiryTime',1200,type=WorkerParameter.T_FLOAT,
-                                   description="expiry time in seconds for AIS data")
-  P_OWNMMSI=WorkerParameter('ownMMSI','',type=WorkerParameter.T_STRING,
-                            description='if set - do not store AIS messages with this MMSI')
+  P_AIS_EXPIRYTIME=WorkerParameter('aisExpiryTime',None,type=WorkerParameter.T_FLOAT,
+                                   mandatory=False,
+                                   description="expiry time in seconds for AIS data", editable=False)
+  P_OWNMMSI=WorkerParameter('ownMMSI',None,type=WorkerParameter.T_STRING,
+                            mandatory=False,
+                            description='if set - do not store AIS messages with this MMSI',editable=False)
   P_DEBUGTOLOG=WorkerParameter('debugToLog', False,type=WorkerParameter.T_BOOLEAN,editable=False)
   P_MAXTIMEBACK=WorkerParameter('maxtimeback',5,type=WorkerParameter.T_FLOAT,
                                 description='how many seconds we allow time to go back before we reset (2...)')
@@ -159,7 +161,9 @@ class AVNBaseConfig(AVNWorker):
             cls.P_SYSTIMEDIFF,
             cls.P_SETTIME_PERIOD,
             cls.P_NTP,
-            cls.P_SWITCHTIME
+            cls.P_SWITCHTIME,
+            cls.P_OWNMMSI,
+            cls.P_AIS_EXPIRYTIME
     ]
 
   @classmethod

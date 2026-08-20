@@ -275,10 +275,13 @@ def main(argv):
     optPort=getattr(options,A_SERVERPORT)
     if optPort is not None:
       httpServer.param[AVNHttpServer.PORT_CONFIG]=optPort
+  aishandler=AVNWorker.findHandlerByName('AVNAISWorker')
+  if aishandler is None:
+      aishandler=baseConfig
   navData=AVNStore(
     expiryTime=baseConfig.getWParam(baseConfig.P_EXPIRY_TIME),
-    aisExpiryTime=baseConfig.getWParam(baseConfig.P_AIS_EXPIRYTIME),
-    ownMMSI=baseConfig.getWParam(baseConfig.P_OWNMMSI)
+    aisExpiryTime=aishandler.getWParam(aishandler.P_AIS_EXPIRYTIME),
+    ownMMSI=aishandler.getWParam(aishandler.P_OWNMMSI)
     )
   navData.setValue(navData.KEY_VERSION,usedVersion,keepAlways=True)
   NMEAParser.registerKeys(navData)
