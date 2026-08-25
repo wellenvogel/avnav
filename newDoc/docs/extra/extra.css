@@ -26,8 +26,7 @@ body.iconset-legacy .icon-default{
     background-color: var(--md-accent-bg-color);
 }
 .glightbox img {
-    width: 800px;
-    max-width: 100%;
+    max-width: calc(min(100%, 800px));
     height: auto;
 }
 .glightbox img.small{

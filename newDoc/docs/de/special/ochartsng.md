@@ -115,6 +115,8 @@ Prozeß möglich.
 
 ### Der Offline Prozeß {: #offlineprocess}
 
+**Nicht für Android - dort bitte den [Online Prozeß](#onlineprocess) nutzen**
+
 Dieser besteht aus den folgenden Schritten:
 
 1. Erzeugung eines "Fingerprints" für das System, auf dem die Karten
@@ -246,6 +248,9 @@ Nun sind die Karten verfügbar und erscheinen auf der Navigationsseite in der Ka
 
 ### Der Online Prozeß {: #onlineprocess}
 
+**Für Android muss vorher die AvOcharts App installiert werden - siehe die [Hinweise für Android](#android)**
+
+
 Damit man den Online Prozeß nutzen kann, muss das System, auf dem AvNav
 läuft(der Server, nicht der Browser!) mit dem Internet verbunden sein.
 
@@ -268,7 +273,7 @@ sicheren WLAN befindet (z.B. hinter einem LTE Router oder einem mobilen
 Hotspot) - niemals aber direkt in einem öffentlichen WLAN wenn der Browser
 und der Server nicht auf dem gleichen Rechner laufen.
 
-![](../img/ochartsng-shop1.png)
+![](../../img/ochartsng-shop1.png)
 
 Wenn man den "Shop" Reiter öffnet ist man zunächst nicht im Shop
 eingelogged. Man kann sehen, ob momentan ein Dongle aktiv ist oder nicht.
@@ -278,7 +283,7 @@ es macht mehr Sinn, sich zunächst einzuloggen).
 Mit einem Klick auf "Login" und eingabe von Nutzername und Passwort
 logged man sich im o-charts Shop ein.
 
-![](../img/ochartsng-shoploggedin.png)
+![](../../img/ochartsng-shoploggedin.png)
 
 Wenn das System bereits im Shop registriert wurde, wird der "Shop name"
 (d.h. der dort genutzte Name für das System) angezeigt und die Liste der
@@ -287,9 +292,9 @@ Prozeß](#offlineprocess)) wird angezeigt.
 Wenn eine Version einer Karte im Shop neuer ist als die lokale (oder eine
 Karten lokal noch nicht vorhanden ist) kann man sie direkt installieren.
 
-![](../img/ochartsng-shopupdate.png)
+![](../../img/ochartsng-shopupdate.png)
 
-![](../img/ochartsng-shopdownload.png)
+![](../../img/ochartsng-shopdownload.png)
 
 Nach dem Herunterladen wird die Karten entpackt und kann sofort genutzt
 werden. Wenn es ein update für eine existierende Karte ist, wird die neue
@@ -307,7 +312,7 @@ herunterladen.
 Wenn das System im Shop noch nicht bekannt ist, kann man es hier
 registrieren.
 
-![](../img/ochartsng-shopunknown.png)
+![](../../img/ochartsng-shopunknown.png)
 
 Auf einem Linux System wird man nach einem Namen für das System gefragt,
 unter Android ist der Name voreingestellt und kann nicht geändert werden.  
@@ -317,8 +322,7 @@ Shop Webseite gehen und Karten kaufen bzw. zuordnen. Wenn man von dort
 zurückkehrt muss man über "Refresh" die Liste der zugeordneten Karten
 aktualisieren.
 
-Anpassung des Aussehens {: #MainSettings}
------------------------------------------
+## Anpassung des Aussehens {: #MainSettings}
 
 Da die O-charts Karten als Vektorkarten vorhanden sind, kann in weiten
 Bereichen das Aussehen der Karten angepasst werden. Dabei sind allerdings
@@ -330,9 +334,13 @@ einige Einschränkungen zu beachten:
    gespeicherten Kartenkacheln gelöscht, so das es auf langsamen Systemen
    danach leichte Verzögerungen geben kann.
 
-Die Veränderung der Parameter erfolgt über die Oberfläche des Plugins({{BT("DBUserApp")}}->![](../img/ochartsngicon.png)), Reiter "Main Settings".
+Die Veränderung der Parameter erfolgt über die Oberfläche des Plugins
 
-![](../img/ochartsng-settings1.png)Wenn eine Einstellung
+{{MM("MMchartspage")}} -> ![](../../img/icon-ochartsng.svg){: .inline-image }
+
+Reiter "Main Settings".
+
+![](../../img/ochartsng-settings1.png)Wenn eine Einstellung
 geändert wird (1) wird der Parameter fett dargestellt. Die Änderungen werden
 erst wirksam, wenn "Update Settings"(2) angeklickt wird.
 
@@ -343,9 +351,8 @@ vorhandenen Settings](https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:open
 
 Die folgende Tabelle listet die Einstellungen.
 
-|  |  |  |
-| --- | --- | --- |
 | Name | Bedeutung | Default |
+| --- | --- | --- |
 | Show Text | Zeige Texte zu den Objekten auf der Karte | an |
 | Important Text Only | Verberge weniger wichtige Texte | aus |
 | Light Descriptions | Beschreibungen für Feuer | an |
@@ -382,23 +389,20 @@ Unter dem Tab "Detail Settings" können gezielt einzelne Karten-Features
 an- oder abgeschaltet werden. Diese Einstellungen werden nur im
 Anzeige-Modus "User Standard" wirksam.
 
-Feature Info (Object Abfrage) {: #featureinfo}
-----------------------------------------------
+## Feature Info (Object Abfrage) {: #featureinfo}
 
-Wenn man auf die Karte klickt, bekommt man die "Feature Info" von AvNav.
-Diese wird angereichert um wichtige Informationen (Tonne, Feuer) in der
-Nähe des Klick-Punktes.
+Wenn man auf die Karte klickt, bekommt man die [Feature Info](featureinfo.md) von AvNav. Wenn man eine o-charts Karte nutzt und in der Liste das Kartensymbol anklickt, bekommt man die aktuell wichtigste Information in der Nähe des Klick-Punktes (Tonne, Feuer).
 
-![](../img/FeatureInfo-OCharts1.png)
+![](../../img/ochartsng-featureinfo1.png)
 
 Über "Info" können die Roh-Informationen der Karten angezeigt werden.
 
-![](../img/ochartsng-featureinfo2.png)
+![](../../img/ochartsng-featureinfo2.png)
 
 Mit einem Klick auf den (blauen) Karten-Namen bekommt man einige weitere
 Informationen zur Karte.
 
-![](../img/ochartsng-featureinfo3.png)
+![](../../img/ochartsng-featureinfo3.png)
 
 Mit dem Button "Charts" kann man sich eine Liste der an dieser Stelle
 genutzten Karten anzeigen lassen.  
@@ -406,21 +410,18 @@ Mit dem Schalter "RenderedOnly" werden nur die Objekte aus den Karten in der
 Liste angezeigt, die auch momentan im Bild dargestellt wurden (sonst werden
 alle Objekte in der Nähe des Klicks angezeigt).  
 
-Installation {: #Installation}
-------------------------------
+## Installation {: #Installation}
 
 ### Linux/Raspberry
 
 Das Plugin ist als debian Paket vorhanden.  
 Es ist in den normalen Repositories(Verzeichnissen) vorhanden.
 
-Für die [AvNav Images](../install.md#Headless)  kann
-man die Pakete mit dem avnav-updater installieren:
+Für die [AvNav Images](../installation/raspberry.md) ist das Paket
 
 * avnav-ochartsng
 
-Neue Images (nach 202508nn) haben das Paket bereits standardmässig
-installiert.
+bereits installiert.
 
 Wenn man es direkt von der Kommandozeile machen möchte, kann man das mit
 den folgenden Kommandos tun:
@@ -431,28 +432,19 @@ sudo apt-get update
 sudo apt-get install avnav-ochartsng  
 sudo systemctl restart avnav
 ```
-
-Falls man mit anderen Images arbeitet, sollte man das Verzeichnis von
-free-x einrichten ("bullseye" an die eigene Debian Version anpassen):
-
-Siehe die  [AvNav
-Paket-Installationsbeschreibung](../install.md#Packages).
-
-```
-deb https://www.free-x.de/debpreview bullseye main contrib non-free
-```
+Zu allgemeinen Hinweisen für die Installation von AvNav Paketen siehe die [Installationsbeschreibung](../installation/linux.md).
 
 Alternativ kann man die Pakete auch aus dem [daily
-builds Verzeichnis](../../downloads/daily-ochartsng) bzw. [Release
-Verzeichnis](../../downloads/release-ochartsng) herunterladen und installieren.
+builds Verzeichnis]({{DLLINK("daily-ochartsng")}}) bzw. [Release
+Verzeichnis]({{DLLINK("release-ochartsng")}}) herunterladen und installieren.
 
 Das kann man z.B. mit den folgenden Kommandos tun (die Version durch die
 gewünschte ersetzen):
 
 ```
 cd /home/pi/avnav  
-wget -O avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb https://www.wellenvogel.net/software/avnav/downloads/daily-ochartsng/20240214/avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb  
-sudo apt install ./avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb  
+wget -O avnav-ochartsng_20260703-raspbian-trixie_arm64.deb https://www.wellenvogel.net/software/avnav/downloads/daily-ochartsng/20260703/avnav-ochartsng_20260703-raspbian-trixie_arm64.deb  
+sudo apt install  ./avnav-ochartsng_20260703-raspbian-trixie_arm64.deb
 sudo systemctl restart avnav
 ```
 
@@ -462,98 +454,50 @@ dort installieren.
 
 #### AvNav-ocharts und AvNav-ochartsng zusammen
 
-Wenn man das neue ochartsng Plugin installiert, benutzt es initial einen
-anderen Port (8083)  als das alte Plugin, so das es keine Konflikte
-gibt. (Achtung: Beta Versionen vor 20250804 nutzen initial Port 8082 so
-das es einen Konflikt mit dem bisherigen ocharts Plugin geben wird - dann
-umstallen).  
-Im Normalfall sollte man das alte Plugin auf der ![](../viewerimages/icons-new/status.svg) [server/status
-Seite](../userdoc/statuspage.md) disablen.  
+Wenn man das ochartsng Plugin installiert, benutzt es initial einen
+anderen Port (8083)  als das alte Plugin (ocharts), so das es keine Konflikte
+gibt.
+Falls man ein Update auf einem älteren System vornimmt, auf dem noch das ocharts-Plugin installiert ist, sollte man es unter
+
+{{MM("MMpluginspage")}}
+
+disablen.
+
 Im neuen Plugin kann man den Schalter "useLegacy" aktivieren (in der [Plugin
-Konfiguration)](#PluginConfig). Mit diesem Schalter aktiviert benutzt das neue
+Konfiguration](#PluginConfig)). Mit diesem Schalter aktiviert benutzt das neue
 Plugin auch alle Karten, die vorher mit dem alten installiert wurden.
 Alternativ kann man die Karten auch erneut zum neuen Plugin hochladen
 (oder direkt aus dem Shop, wenn sie noch gültig sind).
 
-Wenn man beide Plugins parallel nutzen möchte, muss man z.B. beim neuen
-Plugin den Port ändern (beispielsweise auf 8083). Um beide gemeinsam
-laufen zu lassen, sollte das System über ausreichend RAM verfügen (2GB).
+Wenn man beide Plugins parallel nutzen möchte, sollte das System über ausreichend RAM verfügen (2GB).
 
-### Android
+### Android 
 
 Für Android git es eine eigene App (avocharts) die ochartsng enthält.
 Diese muss separat installiert werden.
 
 Siehe [AndroidApp](#android) weiter unten..
 
-Releases {: #Releases}
-----------------------
+## Releases {: #Releases}
 
 Alle Releases und alle Beta-Versionen (Entwickler Versionen oder daily
 builds) findet man unter:
 
-* [Releases](../../downloads/release-ochartsng)
-* [Daily Builds](../../downloads/daily-ochartsng)
+* [Releases]({{DLLINK("release-ochartsng")}})
+* [Daily Builds]({{DLLINK("daily-ochartsng")}})
 
 
 
 ### Release Versionen
 
-20260703 [link](../../downloads/release-ochartsng/20260703 "release/20260703")
+20260703 [link]({{DLLINK("release-ochartsng/20260703")}})
 
 Vorbereitung für neue AvNav Versionen
 
-20260531 [link](../../downloads/release-ochartsng/20260531 "release/20260531")
+Die Hinweise zu älteren Versionen findet man in der [alten Dokumentation]({{OLDLINK("hints/ochartsng.html#Releases")}}).
 
-Bugfixes
 
-* [#40](https://github.com/wellenvogel/ochartsng/issues/40):
-  Kaputtes Layout der Startseite auf Android 16
-* [#39](https://github.com/wellenvogel/ochartsng/issues/39):
-  Ältere Browser bleiben beim shop login hängen
-* [#36](https://github.com/wellenvogel/ochartsng/issues/36):
-  Extinguished lights sollten in der Karte markiert werden
-* [#38](https://github.com/wellenvogel/ochartsng/issues/40):
-  Fehlender Access-Control-Allow-Methods Header in Token HTTP Responses
-
-20260303 [link](../../downloads/release-ochartsng/20260303 "release/20260303")
-
-Anpassung an das ocharts plugin Version 2.1.5 (der Shop Zugang erfordert
-diese Version).  
-**Hinweis**: Das o-charts Plugin in OpenCPN erlaubt die Nutzung eines
-TPM Modules falls vorhanden. Das kann das AvNav plugin noch nicht. Für die
-Nutzung einer gemeinsamen Kartenlizenz auf einem System daher bitte auch
-in OpenCPN nicht das TPM nutzen.
-
-20250822 [link](../../downloads/release-ochartsng/20250822 "release/20250822")
-
-Kleine Korrekturen und Auswahl des Arbeitsverzeichnisses für Android
-
-* [#27](https://github.com/wellenvogel/ochartsng/issues/27):
-  Android: crash if started without notification permissions
-* [#28](https://github.com/wellenvogel/ochartsng/issues/28):
-  Android: [allow to use the external SD card](#workingdirectory),
-  improved diagnostics for the chart installer
-* [#29](https://github.com/wellenvogel/ochartsng/pull/29):
-  build preparation for debian trixie
-
-20250812
-
-***Nur Android im Store - es ist die gleiche Release wie 20250804 (nur
-eine neue Versionsnummer).***
-
-20250804 [link](../../downloads/release-ochartsng/20250804 "release/20250804")
-
-***Initiale Release***
-
-* **Android**: Falls vorher eine Beta
-  genutzt wurde, bitte den Key dort exportieren und unter Einstellungen
-  "alt key" aktivieren und den exportierten Key importieren. Nur so
-  können die Karten erneut heruntergeladen werden. Siehe auch
-  die [Hinweise](#androidbetarelease).
-
-License Notes {: #License}
---------------------------
+## Lizenz Hinweise {: #License}
 
 Die Nutzung der Karten für AvNav mit dem oesenc-pi Plugin ist so mit
 o-charts diskutiert und abgestimmt worden und ist damit legal im Sinne der
@@ -570,35 +514,37 @@ von einem AvNav Server nutzen.
 
 Für die Software-Lizenzen siehe die [Readme.](https://github.com/wellenvogel/ochartsng/blob/master/Readme.md)
 
-Plugin Konfiguration {: #PluginConfig}
---------------------------------------
+## Plugin Konfiguration {: #PluginConfig}
 
 Nur unter Linux. Für Android siehe [Android/Settings](#androidsettings).  
-Einige Einstellungen für das Plugin können auf der server/status Seite ![](../viewerimages/icons-new/status.svg)
-unter "plugins/system-ochartsng"  geändert werden.
+Einige Einstellungen für das Plugin können unter
 
-![](../img/ochartsng-edit-plugin.png)
+{{MM("MMpluginspage")}}
 
-Those are:
+angepasst werden.
 
-|  |  |  |
-| --- | --- | --- |
+![](../../img/ochartsng-plugin1.png)
+
+Über "Config" kann man die Einstellungen des Plugins anpassen.
+
+![](../../img/ochartsng-plugin2.png)
+
 | Name | Bedeutung | Default |
-| port | Http port | 8082 |
+| --- | --- | --- |
+| port | Http port | 8083 |
 | debug | Level für das Logging, 0-ERROR,1-INFO,2-DEBUG | 1 |
 | memPercent | Der prozentuale Anteil des Systemspeichers, den der Provider maximal nutzen soll. Wenn man diesen nicht setzt (oder zu klein) berechnet der Provider intern einen Minimalwert und nutzt diesen.  Der kann u.U. insbesondere bei der Nutzung von Rasterkarten sehr klein sein und ihn damit zwingen ständig Karten-Dateien zu öffnen und zu schliessen - was die Geschwindigkeit stark reduzieren kann. Wenn man ausreichend Speicher hat (z.B. > 2GB), wird das Arbeiten beschleunigt, wenn man  den Speicher auf 1GB setzt. | 50 |
 | tileCachekb | Speicher in KB für die Speicherung von bereits erzeugten Karten-Kacheln (mit  0 erfolgt keine interne Speicherung) | 40960 |
 | useLegacy | Nutze auch die Karten, die mit dem alten avnav-ocharts-plugin installiert wurden. | aus |
 
-Android App {: #android}
-------------------------
+## Android App {: #android}
 
 AvNav OchartsNG steht auch für Android zur Verfügung und stellt die
-Karten für die [AvNav Android App](../android/android.md)
+Karten für die [AvNav Android App](../installation/android.md)
 bereit.  
-Dazu gibt es die separate Android App  "avocharts".
+Man muss dazu die separate Android App  ["avocharts"](https://play.google.com/store/apps/details?id=de.wellenvogel.ochartsprovider) installieren.
 
-![](../img/ochartsng-android-main.png)
+![](../../img/ochartsng-android-main.png)
 
 Wenn man die App startet kann man zunächst einige Einstellungen anpassen.  
 Wenn man diese Bild sieht (Status rot) läuft der eigentliche Karten-Server
@@ -621,14 +567,12 @@ noch einmal auf "START" klicken.
 Um Einstellungen anzupassen kann man auf die angezeigten Einstellungen
 oder auf das Einstellungssymbol (oben rechts) klicken.
 
-![](../img/ochartsng-android-settings.png)
+![](../../img/ochartsng-android-settings.png)
 
   
-
-|  |  |  |
-| --- | --- | --- |
 | Name | Bedeutung | Default |
-| Port | Der HTTP Port, den der Karten-Server nutzen wird. Wenn man bei Start Fehlermeldungen bekommt und unter "OUT" so etwas wie "address already in use" sieht, muss man diesen Port ändern. | 8082 |
+| --- | --- | --- |
+| Port | Der HTTP Port, den der Karten-Server nutzen wird. Wenn man bei Start Fehlermeldungen bekommt und unter "OUT" so etwas wie "address already in use" sieht, muss man diesen Port ändern. | 8083 |
 | LogLevel | 0 - errors, 1- info, 2- debug | 1 |
 | Workdir | Das [Arbeitsverzeichnis](#workingdirectory) für Karten, Logs und Einstellungen | internal |
 | Shutdown | Teit (in Sekunden) die der Karten-Server auf ein Signal von AvNav (Heartbeat) warten, bevor er automatisch stoppt(das ist nur aktive, wenn avocharts automatisch durch AvNav gestartet wurde) | 30 |
@@ -640,27 +584,25 @@ oder auf das Einstellungssymbol (oben rechts) klicken.
 Wenn man die Einstellungen fertig angepasst hat, geht man mit dem Pfeil
 zurück wieder auf die Hauptseite.
 
-### Arbeitsverzeichnis (neu ab 20250822) {: #workingdirectory}
+### Arbeitsverzeichnis {: #workingdirectory}
 
 AvOcharts speichert Karten, Logs und die Einstellungen von Main Settings
 und Detailled Settings unter einem Verzeichnis auf dem Gerät. (Working
-Directory). Dieses Verzeichnis ist unabhängig vom [AvNav
-Arbeitsverzeichnis](../android/android.md#workingdirectory).
+Directory). Dieses Verzeichnis ist unabhängig vom [AvNav Arbeitsverzeichnis](../installation/android.md#android-main-einstellungen).
 
 Man hat die folgende Auswahl:
 
-![](../img/ochartsng-android-workdir.png)
+![](../../img/ochartsng-android-workdir.png)
 
 Je nach Gerät können Sie verschiedene Speicherorte für Ihre Daten
 auswählen (technische Informationen finden Sie in der [Android-Dokumentation](https://developer.android.com/training/data-storage/app-specific?hl=de)).
 Wenn Ihr Gerät über eine SD-Karte verfügt, gibt es die oben gezeigte
 Auswahl:
 
-|  |  |
-| --- | --- |
 | Name | Bedeutung |
+| --- | --- |
 | Internal Storage | Dies ist ein Speicherort im internen Flash-Speicher Ihres Geräts. Er ist vollständig privat und (sofern Ihr Gerät nicht gerootet ist) nicht für andere Apps wie z. B. einen Dateimanager zugänglich.  Dies ist die Standardeinstellung.  The "\*" in front of the entry shows that this directory was already used as working directory and contains data. |
-| External Storage | Dieser Speicher befindet sich weiterhin im internen Flash-Speicher, wird jedoch vom Android-System anders behandelt (und daher als "extern - emuliert" bezeichnet). Andere Apps können auf diesen Speicherort zugreifen.Der Pfad für einen Dateimanager lautet typischerweise [interner Speicher]/Android/data/de.wellenvogel.avnav.main/files (oder [interner Speicher]/Android/data/de.wellenvogel.avnav.main.beta/files für eine Beta-Version). |
+| External Storage | Dieser Speicher befindet sich weiterhin im internen Flash-Speicher, wird jedoch vom Android-System anders behandelt (und daher als "extern - emuliert" bezeichnet). Andere Apps können auf diesen Speicherort zugreifen.Der Pfad für einen Dateimanager lautet typischerweise [interner Speicher]/Android/data/de.wellenvogel.ochartsprovider.main/files (oder [interner Speicher]/Android/data/de.wellenvogel.ochartsprovider.main.beta/files für eine Beta-Version). |
 | External Storage-1 | Dieser Pfad ist nur sichtbar, wenn Ihr Gerät eine SD-Karte installiert hat. Als Erklärung wird auch „removable [SD-Karte]“ angezeigt.  Falls verfügbar, befindet sich dieses Verzeichnis tatsächlich auf einer externen SD-Karte. Wenn Sie es verwenden möchten, muss die SD-Karte immer installiert ist, wenn avocharts (oder AvNav) läuft. Falls die SD Karten entfernt wird, während avocharts läuft, kann es zum Absturz kommen.  Andere Apps wie ein Dateimanager können auf die Daten zugreifen.  Der Speicherort ist [SD card]/Android/data/de.wellenvogel.ochartsprovider/files (or [SD card]/Android/data/de.wellenvogel.ochartsprovider.beta/files). |
 
 Wenn man das Arbeitsverzeichnis ändert, werden alle Ihre Daten im alten
@@ -691,19 +633,15 @@ Arbeitsverzeichnis abgelegt.
 
 Man kann nun den Karten-Server mit "START" loslaufen lassen.
 
-![](../img/ochartsng-android-running.png)
+![](../../img/ochartsng-android-running.png)
 
 Wenn der Server läuft, wird das in der Benachrichtigungszeile angezeigt.
 Wenn der Start nicht erfolgreich ist (Status wird wieder rot) kann man in
 die Ausgabe ("OUT") und in das Log ("LOG") schauen.
 
 Ein Klick auf "APP" öffnet ein Browser-Fenster mit der ochartsng Seite -
-die gleiche Ansicht, die man auch aus AvNav heraus bekommt.
+die gleiche Ansicht, die man auch aus AvNav heraus bekommt. Das ist aber nur dafür gedacht, zu prüfen, ob alles korrekt läuft. Die eigentliche Nutzung sollte aus AvNav heraus erfolgen.
 
-![](../img/ochartsng-android-webmain.jpg)
-
-Man kann jetzt z.B. das System im o-charts Shop registrieren (unter
-Android geht das nur mit dem [Online Process](#onlineprocess)).
 
 ### Beta and Release Versionen {: #androidbetarelease}
 
@@ -726,23 +664,21 @@ Prozeß](#onlineprocess).
 Bitte auch die Hinweise zum [automatischen
 Start](#androidstartup) beachten.
 
-Technische Details
-------------------
+## Technische Details
 
 Die Karten werden durch einen Server (eigenes Programm) bereitgestellt.  
 Die Kommunikation mit AvNav wird durch ein AvNav [Plugin](plugins.md)
 unter Linux realisiert und durch die avocharts App auf Android.
 
 Die Web-Oberfläche ist eine Reactjs App und wird auch durch den Server
-bereitgestellt. In AvNav ist sie als [User
-App](../userdoc/addonpage.md) integriert.
+bereitgestellt. In AvNav ist sie als UserApp integriert.
 
 Der komplette Code findet sich auf [GitHub](https://github.com/wellenvogel/ochartsng).
 
 Die Installation erfolgt (unter Linux) in
 /usr/lib/avnav/plugins/ochartsng. Das Daten-Verzeichnis ist
 /home/pi/avnav/data/ochartsng. Man kann einige weitere Parameter für das
-plugin direkt in der [avnav\_server.xml](configfile.md)
+plugin direkt in der [avnav_server.xml](configfile.md)
 setzen. Das sollte im Normalfall aber nicht nötig sein.
 
 Man kann z.B. das Daten-Verzeichnis setzen.
@@ -761,21 +697,18 @@ Unverschlüsselte Vektor Karten wie S57 müssen vor der Benutzung in das
 verwendete interne "SENC" Format konvertiert werden.  
 Dafür gibt es 2 Optionen:
 
-#### Konvertierung mit AvNav (ab AvNav 20240520)
+#### Konvertierung mit AvNav
 
-Das avnav-ochartsng-plugin fügt einen Konverter zu AvNav's [Importer](../userdoc/importerpage.md)
-hinzu. Dieser Konverter enthält ein Python Script um S57 in ein zip Archiv
-umzuwandeln, was hochgeladen werden kann.  
+Das avnav-ochartsng-plugin fügt einen Konverter zu AvNav's [Importer](charts.md#converter) hinzu. Dieser Konverter enthält ein Python Script um S57 in ein zip Archiv umzuwandeln, was hochgeladen werden kann.  
 Um die S57 Karten zu nutzen, kann man einfach ein zip mit den S57 Karten
-zu AvNav's [Importer](../userdoc/importerpage.md) hochladen,
-nachdem ochartsng installiert wurde.  
+zu AvNav's [Importer](charts.md#converter) hochladen, nachdem ochartsng installiert wurde.  
 Wenn man AvNav und ochartsng unter Linux nutzt, werden die Karten
 automatisch in ochartsng verfügbar, wenn die Konvertierung abgeschlossen
 wurde.
 
 Wenn man ochartsng auf einem anderen System nutzen möchte (z.B. Android)
-brauchtman zusätzlich eine Installation von AvNav unter [Linux](#Installation)
-oder unter [Windows](../install.md#Windows).
+brauchtman zusätzlich eine Installation von AvNav unter Linux
+oder unter [Windows](../installation/windows.md).
 
 Ochartsng selbst ist nicht unter Windows lauffähig, aber der Konverter
 steht auch für Windows zur Verfügung. Nachdem man AvNav für Windows
@@ -798,7 +731,7 @@ Dafür aktiviert man die Karten in OpenCPN. In den OpenCPN
 Einstellungen/Reiter "chart files" klickt man auf "Prepare all ENC
 Charts".
 
-![](../img/ochartsng-convert-opencpn.png)
+![](../../img/ochartsng-convert-opencpn.png)
 
 Das erzeugt eine Reihe von Dateien mit der Endung .s57 im OpenCPN
 Verzeichznis (unter Linux: ~/.opencpn/SENC). Aus diesem Verzeichnis
