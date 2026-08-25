@@ -338,6 +338,18 @@ def define_env(env):
             return add_lang(old_doc+"/"+env.variables.old_doc_start,lang)
         return add_lang(old_doc+"/"+sub,lang)
     
+    @env.macro
+    def DLLINK(sub=None):
+        base=pageVariables.get(PV_BASE)
+        if not base: 
+            return ''
+        base+=env.variables.download_rel
+        if not sub:
+            return base
+        if not base.endswith("/"):
+            base+="/"
+        return base+sub
+    
 def on_pre_page_macros(env):
     print(f"on_pre_page {env.page.url}")
     lang=None
