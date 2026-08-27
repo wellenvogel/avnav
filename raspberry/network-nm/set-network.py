@@ -130,7 +130,8 @@ SETTINGS={
     'WIFI_BAND':ConfigEntry('band','bg',check=check_band),
     'WIFI_CHANNEL':ConfigEntry('channel','7'),
     'WIFI_ADDRESS':ConfigEntry('address1','192.168.30.10/24',check=check_addr),
-    'HOSTNAME':ConfigEntry('','avnav',type=ChangeType.HOSTNAME,action=hostname_action)
+    'HOSTNAME':ConfigEntry('','avnav',type=ChangeType.HOSTNAME,action=hostname_action),
+    '__ETHIF': ConfigEntry('','eth0')
 }
 
 def get_settings_defaults(values:bool=True):

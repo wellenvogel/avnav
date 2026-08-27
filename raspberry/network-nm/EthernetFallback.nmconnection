@@ -3,7 +3,7 @@ id=EthernetFallback
 uuid=fef06a32-040e-3a41-b64a-1650bcbb9653
 type=ethernet
 autoconnect-priority=-999
-interface-name=end0
+interface-name=eth0
 timestamp=1772375729
 zone=trusted
 
