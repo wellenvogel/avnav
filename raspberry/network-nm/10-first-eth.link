@@ -1,0 +1,7 @@
+[Match]
+Type=ether
+Path=platform*ethernet
+
+[Link]
+Name=eth0
+

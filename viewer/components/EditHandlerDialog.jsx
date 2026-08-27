@@ -36,6 +36,15 @@ import {ConfirmDialog, SelectDialog} from "./BasicDialogs";
 import {useDialogContext} from "./DialogContext";
 import ButtonDefs from "./ButtonDefs";
 
+const undefToNull=(val)=>{
+    if (typeof val !== "object") return val;
+    const rt={...val};
+    for (const k in rt){
+        if (rt[k] === undefined) rt[k]=null;
+    }
+    return rt;
+}
+
 const EditHandlerDialog=(props)=>{
     const [loaded,setLoaded]=useState(false);
     const [parameters,setParameters]=useState([]);
@@ -105,7 +114,7 @@ const EditHandlerDialog=(props)=>{
 
     const updateValues=()=>{
         let param=getRequestParam({command:'setConfig'});
-        RequestHandler.postJson(param,modifiedValues)
+        RequestHandler.postJson(param,undefToNull(modifiedValues))
             .then((data)=>{
                 dialogContext.closeDialog();
             })
@@ -126,7 +135,7 @@ const EditHandlerDialog=(props)=>{
     }
     const addHandler=()=>{
         let param=getRequestParam({handlerName:props.handlerName,command:'createHandler'});
-        RequestHandler.postJson(param,modifiedValues)
+        RequestHandler.postJson(param,undefToNull(modifiedValues))
             .then((data)=>{
                 if (props.createdCallback){
                     props.createdCallback(data.id)

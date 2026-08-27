@@ -91,7 +91,23 @@ class ConfigChanger(object):
     self.acquireLock()
     try:
       self._addToDom()
-      self.elementDom.setAttribute(name,str(value))
+      if value is None:
+          self.elementDom.setAttribute(name,value)
+      else:
+          self.elementDom.setAttribute(name,str(value))
+      self._setDirty()
+      if not delayUpdate:
+        self.handleChange()
+    finally:
+      self.releaseLock()
+
+  def removeAttribute(self,name,delayUpdate=False):
+    self.acquireLock()
+    try:
+      if not self.elementDom.hasAttribute(name):
+          return
+      self._addToDom()
+      self.elementDom.removeAttribute(name)
       self._setDirty()
       if not delayUpdate:
         self.handleChange()

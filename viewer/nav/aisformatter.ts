@@ -164,7 +164,7 @@ const aisparam:Record<string,AisFormatterType> = {
     status:{
         headline: 'Status',
         format: function(v: AisProxyItem) {
-            if (v.status === undefined) return "----";
+            if (v.status == null) return "----";
             const st=parseInt(v.status+"");
             switch (st){
                 case 0: return 'Under way using engine';
