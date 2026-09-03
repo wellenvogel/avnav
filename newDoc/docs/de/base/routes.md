@@ -5,7 +5,8 @@
 # Routen
 Beschäftigen wir uns nun mit der Routen-Funktion. Die Abläufe werden **[in diesem Video]({{VURL("routes")}}){.videolink}** gezeigt.
 
-## Der Routeneditor
+## Der Routeneditor {: #editor }
+
 Das Erstellen einer Route geht am einfachsten direkt aus der [Navigationsseite](navpage.md) über die Schaltfläche {{BT("ToRoute")}}. 
 
 ![](../../img/route-editor.png)
@@ -45,3 +46,90 @@ dem {{BT("NavGoto",False)}} wird {{BT("StopNav",False)}}. Damit lässt sich die 
 Die [WP Buttons](#wp-buttons) bieten auch während des Abfahrens der Route nützliche Funktionen. Sollte man sich spontan entscheiden, einen Wegepunkt auszulassen, ohne die Route gleich in ihrem Ablauf ändern zu wollen, ist der {{BT("NavNext",False)}} die richtige Wahl: klickt man darauf, springt die Route auf den nächsten Wegepunkt. Das kann hilfreich sein, wenn man einen Wegepunkt in einer so großen Entfernung passiert, dass das Erreichen des Wegepunktes vom System nicht automatisch quittiert wird. <br><br>
 
 Der Kurs zum nächsten Wegepunkt wird automatisch aktualisiert und im Standard als ockerfarbene Linie dargestellt. Der bei der bei Beginn des Legs festgelegte Kurs zeigt sich als [gestrichelte schwarze Line](./navpage.md#vectors). Der Button {{BT("NavRestart",False)}} führt (etwa nach Verschieben des Wegepunkts unterwegs) eine neue Erstberechnung aus - dabei wird XTE zurückgesetzt: die gestrichelte und die ockerfarbene Linie liegen wieder zusammen.
+
+## Details
+
+### Wegepunkt Weiterschaltung {: #nextwp}
+
+Für die automatische Weiterschaltung zum nächsten Wegepunkt in einer
+Route müssen immer zwei Bedingungen erfüllt sein:
+
+1. Das Boot muss sich im Annäherungsbereich des Wegepunktes befinden. 
+   Die Entfernung wird unter<br>
+   {{MM("MMroutepage")}}->{{BT("ShowSettings")}}->"Approach"<br>
+   eingestellt. 
+   Das Erreichen des Annäherungsbereiches wird ersichtlich durch einen ausgelösten
+   Wegepunkt-Alarm und eine rote Darstellung im Route-Widget.
+
+2. Je nach eingestelltem Mode unter
+   
+   {{MM("MMroutepage")}}->"Router" {{SB("Edit")}}->"nextWpMode"
+   
+   - "late" (der default und in älteren Versionen): Die Entfernung zum
+   aktuellen Wegepunkt nimmt nicht mehr ab, aber die Entfernung zum nächsten
+   Wegepunkt veringert sich.  
+   - "90": Der Wegepunkt liegt "querab" (genauer: Das Boot hat eine Linie +/-
+   90° zum originalen Wegepunktkurs überquert)  
+   - "early": Nach dem Wegepunkt-Alarm erfolgt die Weiterschaltung nach einer (einstellbaren) Zeit ohne weitere Bedingungen.
+
+Es ist wichtig zu beachten, dass die Weiterschaltung nur erfolgt, wenn beide
+Kriterien erfüllt sind. Falls eine manuelle Weiterschaltung gewünscht ist,
+kann man jederzeit durch Klick auf die Widgets links unten oder über 
+
+{{BT("NavActions")}}->{{BT("ABShowWpButtons",True)}}
+
+die Wegepunkt-Buttons anzeigen und den 
+
+{{BT("NavNext")}}
+
+Button nutzen.  
+
+### Routen Modus (: #mode )
+
+#### [great circle](https://en.wikipedia.org/wiki/Great_circle)
+
+Hier wird eine Route so berechnet, dass man den kürzesten Weg zwischen Start
+und Ziel hat. Der Nachteil daran ist, dass sich der Kurs im Verlauf der Route
+permanent ändert. Eine solche Route ist in der Kartendarstellung keine
+Strecke, sondern eine Kurve.  
+In älteren Versionen hat AvNav immer great circle Routen berechnet, diese
+aber (fälschlich) als Strecken dargestellt.  
+Für kürzere Distanzen (< 100nm) spielt das aber praktisch keine Rolle.
+
+#### [rhumb line](https://en.wikipedia.org/wiki/Rhumb_line)
+
+Hier wird die Route so berechnet, dass ein konstanter Kurs gesteuert werden
+kann. Die Kartendarstellung ist eine Strecke.
+
+Die Umschaltung erfolgt über
+
+{{MM("MMroutepage")}}->"Router"->{{SB("Edit")}}->"useRhumbLine" 
+
+
+Für das {{BT("Measure")}} Mess-Tool kann der Modus in den Einstellungen der Web App 
+
+{{MM("MMsettingspage")}}->"Navigation"->"Measure rhumbLine"
+
+separat eingestellt werden. Damit können leicht die beiden Wege verglichen werden.
+
+### Routen kombinieren
+
+Wenn man Teile einer Route zu einer anderen Route hinzufügen möchte, geht das indem man die Route, aus der man Teile hinzufügen möchte, auf der aktuellen Karte als [Overlay]() konfiguriert.
+
+![Route Overlay](../../img/route-edit-overlay1.png)
+
+Danach wechselt man in den [Routen Editor](#editor) , aktiviert den Punkt der Route (1), hinter dem man die andere Route einfügen möchte und klickt auf den Punkt der Overlay-Route (2) ab dem man einfügen möchte.
+
+![Route Overlay 2](../../img/route-edit-overlay2.png)
+
+Nach Klick auf die Overlay-Route kann man dann mit 
+
+{{DB("DBInsertRouteAfter")}}
+
+die Route einfügen.
+
+![Route Overlay 3](../../img/route-edit-overlay3.png)
+
+Die Punkte der Overlay-Route werden dann in die aktuelle Route kopiert.
+
+
