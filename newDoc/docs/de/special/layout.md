@@ -128,7 +128,7 @@ Wenn man jetzt die Einstellungen mit {{DB("DBOk")}} speichert, werden sie direkt
 
 Man sollte mit dieser Funktion sehr eingeschränkt umgehen und wirklich nur Einstellungen direkt im Layout setzen, die unbedingt nötig sind. Wenn man den Layout-Editor verlässt, können diese Einstellungen nicht mehr über die normalen Menüs geändert werden - nur durch erneuten Aufruf des Layout-Editors.
 
-## Laden und Speichern vom/zum Server
+## Laden und Speichern vom/zum Server {: #save}
 
 Wenn man ein Layout bearbeitet wird es lokal geändert und wird auch auf dem Server gespeichert (den Namen hat man ja beim Start des Layout-Editors gewählt). Es wird jedoch **nicht** sofort auch auf allen anderen Anzeige-Geräten wirksam. Dort wird es nur wirksam, wenn die AvNav Seite neu geladen wird 
 

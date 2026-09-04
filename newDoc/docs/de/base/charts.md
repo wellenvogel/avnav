@@ -54,7 +54,7 @@ Auch hier sieht man in der "Charts"-Spalte die bereits installierten Karten.
 
 Die Spalte "Import" ist für Karten vorgesehen, die vorab gewandelt werden müssen. Wie das im Einzelnen abläuft, kann man in der detaillierten [Dokumentation](../special/charts.md#converter) nachlesen. 
 
-Und die rechte Spalte “Overlays” ist in einem separaten [Kapitel](TODO: overlays.md) beschrieben.
+Und die rechte Spalte “Overlays” ist in einem separaten [Kapitel](overlays.md) beschrieben.
 
 In der Buttonleiste sieht man unten die Schaltfläche OC-NG 
 ![](../../img/icon-ochartsng.svg){: .inline-image }.

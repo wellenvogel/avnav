@@ -25,6 +25,7 @@ nav:
     - base/settings.md
     - base/layout.md
     - base/charts.md
+    - base/layouts.md
     - base/ais.md
   - Details:
     - special/index.md
