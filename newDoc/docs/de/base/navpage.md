@@ -48,7 +48,7 @@ In der rechten Seitenleiste liegt die Buttonleiste, die die wichtigsten Funktio
 
 | Button | Funktion |
 | ------ | -------- |
-| {{BT("AnchorWatch",True)}} | Mit Anchorwatch startet man die AvNav-interne Ankerwache. |
+| {{BT("AnchorWatch",True)}} | Mit Anchorwatch startet man die AvNav-interne [Ankerwache](../special/anchorwatch.md). |
 | {{BT("ABShowWpButtons",True)}} |Show Waypoint Buttons startet eine kleine zusätzliche Buttonleiste, die direkt rechts unten in die Karteneinsicht eingeblendet wird und bezogen auf aktive Waypoints zusätzliche Tools anbietet.|
 | {{BT("CenterAction", True)}} |Mit Info at Crosshair  lassen sich verschiedene Informationen zur angewählten Kartenposition anzeigen. 
 | {{BT("GpsCenter",True)}} |Center Chart GPS macht genau das, was es sagt. Ein Klick zentriert die Karte, visualisiert durch das Fadenkreuz, auf die aktuelle GPS Position, wenn sie denn vorhanden ist.|
@@ -79,3 +79,20 @@ Mit einem Click oder Touch auf die Karte, können zusätzliche Informationen zu 
 ![](../../img/FeatureInfo-Select.png)
 
 Die angezeigte Liste enthält alle Objekte an dieser Stelle, zu denen AvNav nach Selektion (je nach Art) weitere [Aktionen oder Informationen](../special/featureinfo.md) anbieten kann. In diesem Beispiel sind das die eigene Position, ein AIS Objekt, der aktuelle Track sowie die Karte selbst. 
+
+## Dashboards
+
+Über 
+
+{{MM("MMgpspage")}}
+
+oder über den Klick auf die Widgets (ausser in der linken unteren Leiste) gelangt man auf die Dashboard-Seiten.
+
+![Dashboard](../../img/dashboard.png)
+///caption
+Dashboard
+///
+
+Die Anzeigen auf den Dashboards lassen sich über den [Layout-Editor](layout.md) flexibel konfigurieren. Im Bild das Layout "system.modern".
+
+Auf den Dashboard Seiten kann man die [Ankerwache](../special/anchorwatch.md) direkt über den Button {{BT("AnchorWatch")}} aktivieren.
