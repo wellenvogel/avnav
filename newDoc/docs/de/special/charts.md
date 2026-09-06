@@ -13,9 +13,9 @@ Die Anzeige der Karten erfolgt immer in einem Browser - so wie die gesamte Bedie
 
 ## Karten und Overlays {: #overlays }
 Typischerweise benötigt man für die Navigation nicht nur eine Karte sondern auf dieser Karte auch noch verschiedene Zusatz-Informationen. Neben den Informationen, die AvNav selbst bereitstellt - wie die Bootsposition, Kurslinien, die aktuelle Route oder AIS Ziele (siehe [Navigationsseite](../base/navpage.md)) kann man auch sogenannte "Overlays" über die Karte legen.
-Diese Overlays sind im Normalfall Dateien die geografische Informationen sowie Informationen zur Darstellung enthalten. AvNav kann Daten im [GPX Format](https://de.wikipedia.org/wiki/GPS_Exchange_Format), im [GEOJSON Format](https://geojson.org/) oder im [KML/KMZ Format](https://de.wikipedia.org/wiki/Keyhole_Markup_Language) verarbeiten. Daneben können auch in AvNav bereits vorhandene Daten wie Tracks und Routen als Overlays genutzt werden.
-Um komplett flexibel zu sein, kann man auch andere Karten als Overlay zu einer bestimmten Karte hinzufügen. Das kann sehr hilfreich sein, wenn die Karten getrennte Bereiche abdecken - so bekommt man eine übergangsfreie Darstellung.
-Eine Zuordnung, welche vorhandenen Overlays auf einer Karte angezeigt werden sollen, kann im [Overlay Editor](overlays.md) erfolgen.
+
+Eine grundlegende Beschreibung findet sich in der [Einführung](../base/overlays.md). Unter [Overlay Details](overlays.md) findet man noch detaillierte Informationen dazu.
+
 
 
 ## AvNav Kartentypen {: #owntypes }

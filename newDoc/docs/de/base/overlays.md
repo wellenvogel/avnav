@@ -40,21 +40,21 @@ Karte als Overlay
 
 Nach Klick auf {{DB("DBOk")}} landet man wieder im Ausgangsdialog „Edit Overlay“ und bestätigt das neue Overlay nun mit {{DB("DBSave")}}.
 
-Das war es schon. In der Kartenliste erkennst du das Overlay nun am geschwärzten Icon rechts neben dem Kartennamen.
+Das war es schon. In der Kartenliste erkennt man das Overlay nun am geschwärzten Icon rechts neben dem Kartennamen.
 
-Um eine Route, eine Wegepunktliste oder ein Bojenverzeichnis als Overlay einzufügen, musst du die entsprechenden Dateien zuvor irgendwo herunter laden und in AvNav einfügen. AvNav akzeptiert solche Dateien mit den Formaten GPX, KML, KMZ, GEOJSON.
+Um eine Route, eine Wegepunktliste oder ein Bojenverzeichnis als Overlay einzufügen, muss man die entsprechenden Dateien zuvor irgendwo herunter laden und in AvNav einfügen. AvNav akzeptiert solche Dateien mit den Formaten GPX, KML, KMZ, GEOJSON.
 
 Nachdem du die Quelldateien auf deinem Rechner gespeichert hast, wechselst du in AvNav in den Bereich 
 
 {{MM("MMchartspage")}}
 
-In der Spalte "Overlays" kannst du deine Dateien dann hochladen.
+In der Spalte "Overlays" kann man die Dateien dann hochladen.
 Als Beispiel wird hier die Wegepunktliste des NV-Verlags genutzt, die kostenlos zum Download zur Verfügung steht.
 
-Klicke auf "Upload" {{SB("Upload")}}, wähle die Datei aus und überprüfe, ob sie in der Liste unter Overlay sichtbar wird. Nun könntest du den gleichen Weg gehen, der eben für die Karten bereits beschrieben wurde.
+Man klickt auf "Upload" {{SB("Upload")}}, wählt die Datei aus und überprüft, ob sie in der Liste unter Overlay sichtbar wird. Nun kann man den gleichen Weg gehen, der eben für die Karten bereits beschrieben wurde.
 
-Da du aber sowieso schon im Bereich Charts/ Overlays bist, kannst du direkt aus der Overlay-Liste eine Datei einer Karte zuordnen, also quasi der umgekehrte Weg zu eben. 
-Klicke dazu auf das Stiftsymbol neben der gewählten Datei, klicke dann auf Overlays und suche über den aufklappenden Dialog die Karte aus, der du das Overlay zuordnen willst.
+Da man aber sowieso schon im Bereich Charts/ Overlays ist, kann man direkt aus der Overlay-Liste eine Datei einer Karte zuordnen, also quasi der umgekehrte Weg zu eben. 
+Dazu klickt man auf das Stiftsymbol neben der gewählten Datei, klickt dann auf Overlays und sucht über den aufklappenden Dialog die Karte aus, der man das Overlay zuordnen will.
 
 ![Overlays von Datei](../../img/overlays-dialog3.png)
 ///caption
@@ -63,11 +63,46 @@ Wegepunkte als Overlay
 
 Die sollten natürlich zusammen passen. Die Bojen des dänischen Tursejlerverbands werden auf einer deutschen oder niederländischen Karte kaum zu finden sein…
 
-Ist die Zuordnung Overlay zu Karte erzeugt, bestätige im Edit Overlay-Dialog mit {{DB("DBSave")}}. 
+Nach der Zuordnung erhält man einen Dialog, der es ermöglicht, verschiedene Einstellungen für das Overlay vorzunehmen. Für einige Hinweise dazu siehe weiter [unten](#paremeters).
 
-In der Kartenliste auf der Navigationspage findest du nun das aktive Overlaysymbol neben der eben zugeordneten Karte.  
-Übrigens kannst du, wenn du im Edit-Overlay-Dialog auf das Stiftsymbol eines Overlays klickst, weitere Einstellungen am jeweiligen Overlay vornehmen. Die Opazität ist in Dezimalschritten von 0-1 einstellbar. Am besten ist es, wenn du die Werte händisch einträgst, z.B. 0,5 für leicht durchscheinend. Probiere die verschiedenen Möglichkeiten in Ruhe aus, bis du eine Darstellung entwickelt hast, die deinen Bedürfnissen entspricht. 
-Kleiner Tip: Die Wegepunktliste erscheint nur in der Karte, wenn die Textdarstellung ausgewählt ist.
+Ist die Zuordnung Overlay zu Karte erzeugt, bestätigt man im Edit Overlay-Dialog mit {{DB("DBSave")}}. 
+
+In der Kartenliste auf der Navigationspage findet man nun das aktive Overlaysymbol neben der eben zugeordneten Karte.  
+
+Die Einstellungen eines Overlays kann man jederzeit anpassen, wenn man im Edit-Overlay-Dialog auf das {{SB("Edit")}} Symbol eines Overlays klickt. 
+
 Nun sind beide Wege, wie Karten und Overlays zusammengefügt und editiert werden können, gezeigt worden.
-Ein kurzer Hinweis am Ende zum Umgang mit Overlays zum Beispiel während eines Törns. Da kann es gut vorkommen, dass die überlagerten Informationen durch Overlays die Kartendarstellung auch stören. Um die Overlays schnell abschalten zu können, hast du direkt auf der Navigationspage über den Charts-Button und die angezeigte Kartenliste die Möglichkeit dazu, indem du auf „Hide Overlays“ klickst.
-Show Overlays würde danach die Overlays deiner gewählten Karte schnell wieder aktivieren. Damit du nicht durcheinander kommst, ist immer nur die jeweilige Möglichkeit aktiv, die andere ausgegraut.
+
+## Ein- und Ausblenden
+
+Ein kurzer Hinweis am Ende zum Umgang mit Overlays zum Beispiel während eines Törns. Da kann es gut vorkommen, dass die überlagerten Informationen durch Overlays die Kartendarstellung auch stören. Um die Overlays schnell abschalten zu können, hat man direkt auf der Navigationspage über den Charts-Button und die angezeigte Kartenliste die Möglichkeit dazu, indem man auf „Hide Overlays“ klickt.
+
+![Verberge Overlays](../../img/overlays-dialog5.png)
+///caption
+Verbergen von Overlays
+///
+
+Show Overlays würde danach die Overlays der gewählten Karte schnell wieder aktivieren. Damit man nicht durcheinander kommt, ist immer nur die jeweilige Möglichkeit aktiv, die andere ausgegraut.
+
+
+## Einstellungen {: #parameters}
+
+![Overlay Einstellungen](../../img/overlays-dialog4.png)
+///caption
+Overlay Einstellungen
+///
+
+Bei der [Zuordnung](#assign) von Overlays oder durch Klick auf das {{SB("Edit")}} Symbol im Overlay-Dialog erhält man die Möglichkeit Einstellungen für die Anzeige des Overlays auf der gewählten Karte anzupassen. Wenn man ein Overlay mehreren Karten zuordnet, kann man jeweils separate Einstellungen vornehmen.
+
+Die angezeigten Werte sind vom Typ des Overlays abhängig und haben jeweils eine  Hilfe-Funktion, die ihre Funktion beschreibt.
+
+Die `opacity` ist in Dezimalschritten von 0-1 einstellbar.
+
+Die (eingerahmten) Werte `min zoom` und `max zoom` steuern den Auflösungsbereich, in dem das Overlay sichtbar wird. 
+
+`min scale` und `max scale` steuern die Größe von icons. Bei Auflösungen kleiner als `min scale` werden die icons verkleinert, bei Auflösungen größer `max scale` vergrößert.
+`show text` (1) steuert, ob die Beschriftungen in der Karte sichtbar werden.
+
+Mit `default icon` (2) kann ein Icon ausgewählt werden, das für Punkte genutzt werden soll, die in der Overlay-Datei kein eigenes Icon definiert haben (oder wenn das definierrte Icon nicht in AvNav verfügbar ist). Man kann auch mit `icon file`eine (ZIP-) Datei wählen, die Symbole für ein Overlay enthält. Diese muss vorher zu den Overlay-Dateien in AvNav hochgeladen werden.
+
+Für weitere Informationen (auch zur Beschreibung von `feature formatter`(3)) siehe die [Detail-Beschreibungen](../special/overlays.md).

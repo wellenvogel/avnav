@@ -357,7 +357,7 @@ plugin.js)  sind nach dem Schema `api.getBaseUrl()+"/"+name` abrufbar.
 ## Feature Formatierer(featureFormatter) {: #featureFormatter }
 
 Es gibt die Möglichkeit, eigene Funktionen zu
-registrieren, die die Anzeige von Daten aus Overlays aufbereiten.  
+registrieren, die die Anzeige von Daten aus [Overlays](overlays.md#featureFormatter) aufbereiten.  
 Solche Funktionen können in der user.mjs oder in Plugins implementiert
 werden.
 
