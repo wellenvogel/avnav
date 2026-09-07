@@ -33,9 +33,7 @@ Prinzipiell kann man sich auf mehrere Arten mit dem Raspberry verbinden:
 4. Über ein anderes WLAN.  
    Das erfordert aber zunächst eine der anderen Verbindungsmöglichkeiten,
    da man die Zugangsdaten einstellen muss. Außerdem erfordert es einen
-   zusätzlichen WLAN Adapter, der in eine bestimmte USB-Buchse gesteckt
-   werden muss (außer man hat in der Konfiguration "Internal Wifi as
-   Client" gewählt).
+   zusätzlichen WLAN Adapter-
 
 #### Verbindung per Ethernet-Kabel
 
@@ -85,14 +83,13 @@ hier der Zugriff per mDNS funktionieren.
 http://xxx.local
 ```
 
-Falls das nicht funktioniert, kann man es mit den festen IP-Adressen
-192.168.30.10, 192.168.40.10, 192.168.50.10, 192.168.60.10 versuchen:
+Falls das nicht funktioniert, kann man es mit den festen IP-Adressen, die in der [Image Konfiguration](../installation/raspberry.md#preparation) festgelegt wurden versuchen. Der default ist `192.168.30.10`.
 
 ```
 http://192.168.30.10
 ```
 
-Das sollte die [Hauptseite](userdoc/index.md) von AvNav
+Das sollte die [Hauptseite](../base/navpage.md) von AvNav
 laden. Es sollte auch möglich sein, xxxx.local zu benutzen, wenn man sich
 mit dem Raspberry per SSH verbinden will (z.B. [putty](https://www.putty.org/)
 unter Windows).
@@ -146,9 +143,7 @@ einen SSH Zugang.
 #### Verbindung über ein anderes WLAN {: #connect-clientwifi}
 
 Wenn man wie unten beschrieben eine WLAN-Verbindung zu einem anderen
-Netzwerk eingerichtet hat (erfordert einen WLAN Stick oder Umschaltung des
-internen WLANs auf Client), kann man den Zugriff auf den Pi über dieses
-Netzwerk freigeben ("external access" beim Aufsetzen).
+Netzwerk eingerichtet hat (erfordert einen WLAN Stick), kann man den Zugriff auf den Pi über dieses Netzwerk freigeben ("external access" beim Aufsetzen).
 
 Das sollte man aber nur in einem geschützten Netzwerk tun (z.B. das Netz
 eines eigenen LTE Routers). **Auf keinen Fall sollte man das in einem
@@ -193,24 +188,11 @@ Falle den Pi mit angeschlossenem Netzwerkkabel neu starten.
 Dazu wird ein weiterer WLAN-Adapter (USB-Adapter) benötigt. Bitte vorher
 die Kompatibilität mit dem Pi prüfen - z.B. [hier](https://elinux.org/RPi_USB_Wi-Fi_Adapters).
 
-Der Stick muss wie im Bild gesteckt sein (auf dem Pi4/Pi5 die blaue USB
-Buchse an der Platinen-Seite).   
-Der interne Name des Netzwerk-Interfaces ist wlan-av1.
+Über 
 
-![](img/raspi3-wlan.jpg)
+{{MM("MMserverpage")}} -> ![](../../img/wifi.svg){.inline-image}
 
-Alternativ kann in der Image-Konfiguration "InternalWifi as Client"
-gesetzt werden, damit wird der interne WLAN Adapter für die Verbindung zu
-anderen Netzten verfügbar. Dann benötigt man aber einen anderen Zugriff
-zum Verbinden mit dem Pi, da er keinen Access Point mehr aufmacht.
-
-Man kann die Verbindung zu einem WLAN in der [App](userdoc/wpapage.md)
-konfigurieren.  
-Bei jedem WLAN, mit dem man sich verbindet, kann man auswählen, ob ein
-Zugriff auf den Pi von außen möglich sein soll ("external access"). Wenn
-das nicht ausgewählt ist, kann über dieses WLAN nicht auf AvNav
-zugegriffen werden. Bitte die [Hinweise zum
-Zugriff](#connect-clientwifi) beachten.
+kann man den [Wifi Dialog](serverpage.md#wifi) aufrufen.
 
 #### Verbindung über ein per USB angeschlossenes Android Gerät
 
@@ -228,22 +210,10 @@ beim Pi-Neustart normalerweise ausgeschaltet).
 
 ### Technische Details
 
-Der Raspberry wird ein (oder mehrere) WLAN-Netzwerke aufsetzen, eines mit
-dem internen Adapter und weitere mit potenziell gesteckten WLAN-Sticks.
-Diese Netzwerke haben die Adressen:192.168.20.0/24, 192.168.30.0/24,
-192.168.40.0/24, 192.168.50.0/24. Der Raspberry selbst hat dabei jeweils
-die Adresse 192.168.x.10.
-
-Auf dem Raspberry wird dazu ein DHCP-Server und ein DNS-Server
-eingerichtet (dnsmasqd).
-
-Wenn der Raspberry über ein Ethernet-Kabel verbunden wird, versucht er
-per DHCP eine Adresse aus dem Netzwerk zu erhalten. Er setzt dann eine
-NAT-Weiterleitung aus seinem WLAN-Netz zum Ethernet auf. So kann z.B. eine
-Internetverbindung aufgebaut werden, während man in das WLAN des Raspberry
-eingewählt ist.
+Auf dem Raspberry wird [NetworkManager](https://networkmanager.dev/) für die Netzwerk-Konfiguration verwendet.
+Das Paket `avnav-raspi-network` bringt Basis-Konfigurationen mit, die dafür sorgen, das sich das Ethernet-Interface seine IP per DHCP holt und ein Hotspot auf dem internen Wifi Interface aufgesetzt wird.
+Einige Parameter lassen sich für die Images [anpassen](../installation/raspberry.md#preparation).
+Ausserdem wird mit [firewalld](https://firewalld.org/) eine Firewall so aufgesetzt, das Ethernet und Hotspot in einer "trusted" Zone sind - und eine potentiell zusätzliche Wifi Verbindung ja nach Konfiguration entweder auch in dieser zone ist (`externalAccess` eingeschaltet) - oder in einer separaten "public" Zone.
 
 Für die meisten Aktionen sollte ein Kommandozeilen-Zugang jedoch nicht
 erforderlich sein. Für Updates nutzt man das bereits vorinstallierte [Update-Plugin](https://github.com/wellenvogel/avnav-update-plugin).
-Die Server-Konfiguration kann innerhalb der App auf der [Server/Status](userdoc/statuspage.md)-Seite
-vorgenommen werden.
