@@ -39,7 +39,7 @@ Es gibt zwei Wege für die Installation von Plugins:
      
      Dazu muss die ZIP Datei genau einen Ordner mit dem Namen des Plugins enhalten. Code und Daten müssen sich unterhalb dieses Ordner befinden. Eine solche Zip-Datei kann dann über 
 
-     {{MM("MMpluginpage")}}=>{{BT("Upload")}}
+     {{MM("MMpluginspage")}}=>{{BT("Upload")}}
 
      in AvNav installiert werden. Sie werden im AvNav Datenverzeichnis unter `plugins` installiert.
 

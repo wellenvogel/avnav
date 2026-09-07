@@ -25,7 +25,7 @@ Das Setzen von Wegepunkten erfolgt in AvNav, indem das Fadenkreuz auf die Positi
 - ### Wegepunke bearbeiten
 Um einen Wegepunkt zu verschieben, muss er zunächst direkt markiert werden. Das geht etwa in der Karte durch Klick oder durch Auswahl seines Listeneintrags im RTE Widget. Anschließend die gewünschte Position unter das Fadenkreuz setzen und den Wegepunkt mit {{BT("NavToCenter")}} verlegen. Analog kann man den Wegepunkt löschen - dafür nutzt man den Button {{BT("NavDelete")}}.<br>Die Arbeit mit dem Fadenkreuz mag im ersten Augenblick etwas umständlich wirken im Vergleich zu direkten Klicks auf den Touchscreen. In Situationen mit einem sich stark bewegenden Schiff, auf einem kleineren Bildschirm, und mit klammen Fingern wird man diese Art der Bedienung aber zu schätzen lernen.
 
-## Routen speichern und laden
+## Routen speichern und laden {: #management}
 Änderungen an Routen werden in der Regel sofort am AvNav Server gespeichert. Ist dieses Systemverhalten unerwünscht, weil man beispielsweise die gerade aktive Route bearbeitet, bietet sich der sogenannte disconnected Mode an: dabei bleiben Änderungen lokal im Browser und werden bis auf Weiteres nicht zum Server synchronisiert. Diese Trennung erreicht man durch Deaktivieren des connected Mode über den Button {{BT("DBConnect")}} im Display des Funktionsbereich "Routes". Änderungen bleiben solange lokal, bis man den connected Mode wieder aktiviert - dann wird gefragt, was mit den Änderungen geschehen soll - sie können übernommen oder verworfen werden.
 
 ![](../../img/routespage.png)

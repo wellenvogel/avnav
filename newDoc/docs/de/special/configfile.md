@@ -45,6 +45,16 @@ Die Parameter, die hier bearbeitet werden können, stimmen (unter Linux/Windows)
 
 Wenn die Einstellungen mit {{DB("DBOk")}} gespeichert werden, werden sie sofort wirksam. Unter Linux/Raspberry/Windows werden sie in der `avnav_server.xml` gespeichert, unter Android in den Nutzerdaten.
 
+## Verbindungsseite (: #channelspage)
+
+Alle ein- und ausgehenden (NMEA)-Verbindungen lassen sich über 
+
+{{MM("MMchannelspage")}}
+
+konfigurieren. Auch neue Verbindungen können dort angelegt werden.
+
+## Serverseite {: #serverpage}
+
 Für eine Übersicht über alle Server-Funktionen kann man die Seite 
 
 {{MM("MMserverpage")}}
@@ -137,9 +147,8 @@ Grundsätzlich gibt es 3 Kategorien von solchen Handlern:
 Es gibt einige Eigenschaften, die an mehreren Bestandteilen auftauchen,
 für diese hier eine Erklärung.
 
-|  |  |  |
-| --- | --- | --- |
 | Name | Beschreibung | Beispiel |
+| --- | --- | --- |
 | enabled | Viele Handler können auf der Server/Status Seite mit diesem Parameter ein- bzw. ausgeschaltet werdem | ein |
 | name | Name eines Input oder Output Kanals. Dieser wird auf der Status-Seite angezeigt und kann auch im Parameter [blackList](#blackList) für Filterungen genutzt werden | nmea0183tosignalk |
 | filter | Filterung von NMEA Daten. hier können durch Komma getrennte Filter angegeben werden, die bestimmen, welche NMEA Daten durchgelassen werden. Um sie unabhängig von Talker Ids zu machen, werden die 2 Zeichen nach einem $ nicht berücksichtigt. Ein Filter für $GPRMC sieht dann so aus: $RMC.  Wenn dem Filter ein ^ vorangestellt wird, wird er negiert, also ^$RMC heisst: keine RMC records. AIS Daten kann man mit dem Filter "!" oder "!AIVDM" matchen.  Mehrere Enträge müssen durch , getrennt werden. | $RMC,^$RMB,!AIVDM |

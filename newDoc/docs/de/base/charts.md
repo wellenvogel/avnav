@@ -33,7 +33,7 @@ Vor allem von O-Charts mit dem passenden [PlugIn](../special/ochartsng.md).
   Mit entsprechenden Plugins lassen sich weitere Kartenformate, zum Beispiel 
   Vektorkacheln, verwenden. Das braucht allerdings einiges an Vorarbeit und soll im Video kein Thema werden. In der [Dokumentation](../special/charts.md#insertingdefs) findet man dazu weitere Unterstützung.
 
-## Verwaltung
+## Verwaltung {: #management}
 
 Mit der Installation von AvNav werden bereits einige Karten z.B. vom BSH oder von OpenSeaMap bereit gestellt. Man erreicht die Übersicht über bereits vorhandene Karten direkt aus der Navigationsseite über den Button {{BT("NavSelectChart")}}. Über den Select Charts-Dialog kann man alle bereits installierten Karten sehen.
 
