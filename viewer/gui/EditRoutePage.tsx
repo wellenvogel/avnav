@@ -269,6 +269,7 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
     const dialogContext=useDialogContext();
     const [,,connectedModeRef]=useStoreState(keys.gui.global.connectedMode);
     const [wrOnly,setWrOnly,wrOnlyRef]=useStateRef(true);
+    const [sortAscending,setSortAscending]=useState(true);
     const itemActions=createItemActions('route').copy({
         canModify:(item:RouteInfo)=>(!item.server || connectedModeRef.current),
         show:(item:RouteInfo)=>{
@@ -301,6 +302,14 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
             noExtra={true}
             infoMode={DownloadItemInfoMode.ICONS}
             itemActions={itemActions}
+            sortFunction={(a,b)=>{
+                const result=(a.name || '').localeCompare(
+                    b.name || '',
+                    undefined,
+                    {numeric:true,sensitivity:'base'}
+                );
+                return sortAscending ? result : -result;
+            }}
         />
         <UploadHandler
             local={true}
@@ -329,11 +338,17 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
         />
         <DialogButtons buttonList={[
             {
+                name:'RouteSort',
+                shortText:sortAscending ? 'Sort Z-A' : 'Sort A-Z',
+                close:false,
+                onClick:()=>setSortAscending((current)=>!current)
+            },
+            {
                 ...ButtonDefs.Upload,
-                onClick: ()=>uploadClick((ev)=>{
+                onClick:()=>uploadClick((ev)=>{
                     setUploadFile(ev.target.files[0]);
                 },".gpx"),
-                visible: allowUpload,
+                visible:allowUpload,
                 close:false
             },
             DBCancel()
