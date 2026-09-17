@@ -112,6 +112,73 @@ Für das {{BT("Measure")}} Mess-Tool kann der Modus in den Einstellungen der We
 
 separat eingestellt werden. Damit können leicht die beiden Wege verglichen werden.
 
+### Disconnected Modus {: #disconnected}
+
+AvNav ermöglicht es, Routen zu bearbeiten oder zu ändern, während momentan gerade eine Route aktv ist. Damit kann z.B. ein Navigator verschiedene Alternativen erstellen und vergleichen, währen der Rudergänger ungestört der aktuellen Route folgen kann.
+
+Dazu dient der sogenannte "Disconnected" (getrennte) Modus. In diesem Modus erfolgen alle Routen-Funktionen nur lokal auf dem Anzeigegerät (Browser). In diesem Modus werden die meisten Schreibvorgänge auf den Server unterbunden.
+
+Über
+
+{{MM("MMroutepage")}}->{{BT("Connected")}} 
+
+kann dieser Modus aktviert und deaktviert werden: (1) im Bild. Der Button ist grün, wenn der Modus ausgeschaltet ist (d.h. wenn die Routen auf dem Server bearbeitet werden).
+
+![Route Disconnect](../../img/routes-disconnected.png)
+///caption
+Route Disconnected
+///
+
+Über den Button {{BT("SyncRoutes")}} (2) können die Routen mit dem Server [synchronisiert](#sync) werden.
+
+Wenn der "Disconnected" Modus aktiv ist, wird das durch ein rotes Icon in der Titelzeile angezeigt.
+
+![Route Disconnected](../../img/routes-disconnected2.png)
+///caption
+Route Disconnected aktiv
+///
+
+In diesem Modus können keine Routen bearbeitet werden, die auf dem Server {{ICON("Server")}} gespeichert sind. Man erkennt das am fehlenden {{ICON("Edit")}} bei solchen Routen. Man kann aber eine Kopie erzeugen und diese dann bearbeiten.
+
+Im Routen-Editor (und auch während der Navigation) wird im Routen-Widget angezeigt, ob es sich um eine lokale Route handelt.
+
+![Route Lokal](../../img/routes-disconnected3.png)
+///caption
+Lokale Route
+///
+
+Man kann eine solche lokale Route ganz normal starten - und es stehen alle Routen-Funktionen zur Verfügung. Es gibt allerdings die folgenden Einschränkungen:
+
+  * keine Ausgabe von RMB und APB Datensätzen, keine Übertragung der Route zu SignalK
+  * kein Wegepunkt-Alarm
+
+#### Synchronisierung von Routen {: #sync}
+
+Über das Icon {{ICON("Disconnect")}} in der Titelzeile oder über
+
+{{MM("MMroutepage")}}->{{BT("Connected")}}
+
+kann man den "Disconnected" Modus wieder verlassen. 
+
+AvNav vergleicht dann die lokal gespeicherten Routen mit den momentan auf dem Server vorhandenen und bietet eine Synchronisierung an.
+
+![Routes Sync](../../img/routes-disconnected-sync.png)
+///caption
+Routen Synchronisierung
+///
+
+Für jede lokale Route werden die möglichen Optionen angeboten:
+
+  * **delete**: Lösche die lokale Route
+  * **upload**: Lade die Route zum Server
+  * **keep local**: Behalte die lokale Route
+
+`upload` wird dabei nur angeboten, wenn die Route auf dem Server ncht vorhanden ist - oder `overwrite on server` aktiviert wurde.
+
+Mit dem Button {{BT("SyncRoutes")}} kann man jederzeit diese Synchroniserung erneut anstossen.
+
+
+
 ### Routen kombinieren
 
 Wenn man Teile einer Route zu einer anderen Route hinzufügen möchte, geht das indem man die Route, aus der man Teile hinzufügen möchte, auf der aktuellen Karte als [Overlay]() konfiguriert.
