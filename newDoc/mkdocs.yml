@@ -31,8 +31,6 @@ nav:
     - special/index.md
     - special/tags.md
     - buttons/buttons.md
-  - Alte Doku:
-    - converted/beschreibung.md
 plugins:
   - i18n:
       docs_structure: folder
