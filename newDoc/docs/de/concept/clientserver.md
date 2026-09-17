@@ -1,3 +1,8 @@
+---
+  tags:
+    - Client
+    - Server
+---
 # Systemkonzept: wie funktioniert AvNav
 
 Um AvNav im Alltag richtig bedienen und einrichten zu können, ist es hilfreich, die Grundidee der Software zu verstehen. Ein Geheimnis der Leistungsfähigkeit von AvNav liegt in seiner Trennung von Rechenarbeit und Anzeige – der sogenannten Client-Server-Architektur. 

@@ -1,4 +1,8 @@
-
+---
+  tags:
+    - Einstellungen
+    - Settings
+---
 
 [Hier]({{VURL("settings")}}){.videolink} geht es zum Video, das einige Punkte aus diesem Kapitel visualisiert.
 

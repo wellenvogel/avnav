@@ -1,3 +1,8 @@
+---
+  tags:
+    - Layout
+    - Layouteditor
+---
 # Layout
 
 [Hier]({{VURL("layouts")}}){.videolink} geht es zum Video, das die wichtigsten Layout-Funktionen erklärt.
@@ -22,7 +27,7 @@ Es kann immer nur das aktuelle, das „current“ Layout editiert werden. Das wi
 
 Im Augenblick ist das Layout user.test aktiviert. In der Liste darunter finden sich alle anderen gespeicherten Layouts.
 
-Das vorangestellte „user“ macht klar, das ist ein vom User erzeugtes Layout. Die Layouts mit vorangestelltem „system“ sind voreingestellt und nicht editierbar.
+Das vorangestellte „user“ macht klar, das ist ein vom User erzeugtes Layout. Die Layouts mit vorangestelltem „ystem“ sind voreingestellt und nicht editierbar.
 
 Auch [Plugins](../special/plugins.md) können Layouts mitbringen. Diese sind dann am Prefix "plugin" erkennbar - und ebenfalls nicht editierbar.
 

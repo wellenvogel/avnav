@@ -1,3 +1,10 @@
+---
+  tags:
+    - Navigation
+    - Buttonleiste
+    - Dashboard
+---
+
 # Navigationsseite 
 
  Ein Teil der Inhalte dieses Abschnittes wird auch im **[Video hier]({{VURL("navigation")}}){.videolink}** vorgestellt
