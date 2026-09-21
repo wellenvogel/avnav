@@ -6,7 +6,7 @@
 
 # NMEA0183 Datensätze
 
-Wie im Kapitel [TODO](TODO datenfluss) beschrieben, verarbeitet AvNav eine Reihe von NMEA0183 Datensätzen. Diese unterscheiden sich minimal zwischen der Android Variante und der Linux/Windows Variante.
+Wie im Kapitel [Datenfluss](../base/dataflow.md) beschrieben, verarbeitet AvNav eine Reihe von NMEA0183 Datensätzen. Diese unterscheiden sich minimal zwischen der Android Variante und der Linux/Windows Variante.
 Daneben erzeugt AvNav auch einige (wenige) Datensätze selbst und gibt sie aus.
 
 **Hinweis:** Der [AvNav Muliplexer](TODO: struktur, muliplexer) verarbeitet alle NMEA0183 Daten - uanbhängig davon, ob AvNav selbst sie versteht.

@@ -7,11 +7,11 @@
 Konvertierung von Tracks zu Routen
 ==================================
 
-AvNav zeichnet permanent [Tracks](TODO)
+AvNav zeichnet permanent [Tracks](tracks.md)
 auf. Für jeden Tag wird eine neue gpx Datei mit dem aktuellen Datum
 geschrieben.
 
-Diese Tracks (oder auch Tracks, die auf der [Tracks Seite](TODO)
+Diese Tracks (oder auch Tracks, die auf der [Tracks Seite](tracks.md)
 Seite hochgeladen wurden) können in Routen umgewandelt werden, um sie zur
 Navigation zu nutzen.
 
@@ -38,8 +38,8 @@ ggf. noch etwas nachbearbeiten.
 Ablauf
 ------
 
-Man kann den Dialog für die Konvertierung entweder von der [Tracks Seite](TODO)
-Seite nack Klick auf einen Track über {{BT("ToRoute")}}oder aus dem Info Dialog, falls man einen Track als [Overlay](TODO)
+Man kann den Dialog für die Konvertierung entweder von der [Tracks Seite](tracks.md)
+Seite nack Klick auf einen Track über {{BT("ToRoute")}}oder aus dem Info Dialog, falls man einen Track als [Overlay](../base/overlays.md)
 auf der Karte hat, und einen Punkt in diesem anklickt. Im Info Dialog
 wieder den Button {{DB("ToRoute")}} nutzen - siehe Bild.
 

@@ -20,6 +20,7 @@ nav:
     - installation/windows.md
   - Basisfunktionen:
     - base/navpage.md
+    - base/dataflow.md
     - base/routes.md
     - base/userapps.md
     - base/settings.md

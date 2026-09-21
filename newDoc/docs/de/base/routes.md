@@ -86,7 +86,7 @@ die Wegepunkt-Buttons anzeigen und den
 
 Button nutzen.  
 
-### Routen Modus (: #mode )
+### Routen Modus {: #mode }
 
 #### [great circle](https://en.wikipedia.org/wiki/Great_circle)
 

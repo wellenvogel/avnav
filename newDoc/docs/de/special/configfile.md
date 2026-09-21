@@ -45,7 +45,7 @@ Die Parameter, die hier bearbeitet werden können, stimmen (unter Linux/Windows)
 
 Wenn die Einstellungen mit {{DB("DBOk")}} gespeichert werden, werden sie sofort wirksam. Unter Linux/Raspberry/Windows werden sie in der `avnav_server.xml` gespeichert, unter Android in den Nutzerdaten.
 
-## Verbindungsseite (: #channelspage)
+## Verbindungsseite {: #channelspage}
 
 Alle ein- und ausgehenden (NMEA)-Verbindungen lassen sich über 
 
@@ -543,8 +543,8 @@ der AP Daten. Kategorie 2 (einmal, optional).
 | interval | X | Intervall (in s) zwischen RMB Datensätzen | 5 |
 | computeRMB | X | berechne einen RMB Datensatz wenn ein Wegpunkt aktiv ist | true |
 | computeAPB | X | berechne einen APB Datensatz | false |
-| useRhumbLine  | X | benutze den [rhumb line Modus](TODO: rhumbline) für Routen | false |
-| nextWpMode  | X | Auswahl des [Weiterschaltungs-Modus für den nächsten Wegepunkt](TODO: nextwp) in einer Route (late, 90, early) | late |
+| useRhumbLine  | X | benutze den [rhumb line Modus](../base/routes.md#mode) für Routen | false |
+| nextWpMode  | X | Auswahl des [Weiterschaltungs-Modus für den nächsten Wegepunkt](../base/routes.md#nextwp) in einer Route (late, 90, early) | late |
 | nextWpTime  | X | Die Wartezeit nach dem Wegepunktalarm (in Sekunden) bis zur Weiterschaltung zum nächsten Wegepunkt (nur nextWpMode = early) | 10 |
 
 ### AVNNmeaLogger
@@ -810,8 +810,8 @@ spezifischen Parameter beschrieben.
 | --- | --- | --- |
 | computeRMB | erzeuge NMEA-RMB-Datensätze, wenn ein Routing aktiv ist. | an |
 | computeAPB | rezeuge NMEA-APB Datensätze, wenn ein Routing aktiv ist | an |
-| useRhumbLine | setze den [Routing Mode](TODO: rhumbline) auf rhumbLine | aus |
-| nextWpMode | setze den [Modus zum Wegepunkt Weiterschalten](TODO: nextwp) - late/early/90 | late |
+| useRhumbLine | setze den [Routing Mode](../base/routes.md#mode) auf rhumbLine | aus |
+| nextWpMode | setze den [Modus zum Wegepunkt Weiterschalten](../base/routes.md#nextwp) - late/early/90 | late |
 | nextWpTime | im Modus "early" die Zeit (in s) nach dem Wegepunkt-Alarm bis zum Weiterschalten auf den nächsten Wegepunkt | 10 |
 
 ### Track
