@@ -5,7 +5,7 @@
     - Bookworm
 ---
 
-Die Wifi-Konfigurationsseite
+Die Legacy Wifi-Konfigurationsseite
 ============================
 __Achtung:__
 Diese Seite beschreibt die AvNav Wifi Konfiguration auf [AvNav bookworm images](../installation/raspberry.md#images). Auf images für trixie (und neuer) gibt es eine [neue Konfiguration](wifi.md).
