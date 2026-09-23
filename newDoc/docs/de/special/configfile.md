@@ -129,6 +129,21 @@ sudo systemctl start avnav
 Die Option -e verhindert, dass im Fehlerfall die `avnav_server.xml.ok` geladen wird. ^C bricht das laufende
 AvNav wieder ab.
 
+### NMEA Filter {: #filter}
+
+An verschiedenen Stellen können Filter angegeben werden, die beeinflussen welche NMEA Daten jeweils passieren können und welche nicht.
+
+Hier können durch Komma getrennte NMEA-Nachrichten angegeben werden. Um sie unabhängig von Talker Ids zu machen, werden die 2 Zeichen nach einem $ nicht berücksichtigt. Ein Filter für $GPRMC sieht dann so aus: $RMC.  Wenn dem Filter ein ^ vorangestellt wird, wird er negiert, also ^$RMC heisst: keine RMC records. AIS Daten kann man mit dem Filter "!" oder "!AIVDM" matchen.
+
+Beispiele:
+
+* `!` - nur alle AIS Nachrichten
+* `^!` - keine AIS Nachrichten
+* `$RMC,$RMB` - RMC und RMB Records
+* `!,$RMC` - alls AIS Nachrichten und RMC Records
+* `^$APB,^$RMB` - keine APB und keine RMB Records
+
+
 ### Funktionseinheiten (Handler)
 
 Innerhalb der Konfiguration sind Einträge für die einzelnen Handler enthalten.
@@ -151,7 +166,7 @@ für diese hier eine Erklärung.
 | --- | --- | --- |
 | enabled | Viele Handler können auf der Server/Status Seite mit diesem Parameter ein- bzw. ausgeschaltet werdem | ein |
 | name | Name eines Input oder Output Kanals. Dieser wird auf der Status-Seite angezeigt und kann auch im Parameter [blackList](#blackList) für Filterungen genutzt werden | nmea0183tosignalk |
-| filter | Filterung von NMEA Daten. hier können durch Komma getrennte Filter angegeben werden, die bestimmen, welche NMEA Daten durchgelassen werden. Um sie unabhängig von Talker Ids zu machen, werden die 2 Zeichen nach einem $ nicht berücksichtigt. Ein Filter für $GPRMC sieht dann so aus: $RMC.  Wenn dem Filter ein ^ vorangestellt wird, wird er negiert, also ^$RMC heisst: keine RMC records. AIS Daten kann man mit dem Filter "!" oder "!AIVDM" matchen.  Mehrere Enträge müssen durch , getrennt werden. | $RMC,^$RMB,!AIVDM |
+| filter |[NMEA Filter](#filter)|
 | readFilter | Für kombinierte Reader/Writer ein Filter für die Eingangsseite. Siehe [filter](#filter) |  |
 | blackList | Liste von Kanal-Namen, deren Daten nicht ausgesendet werden sollen. Schreibweise beachten (grosses L) | nmea0183tosignalk |
 | priority  (since 20220421) | Alle NMEA Input Kanäle haben ein priority Feld. Dieses beeinflusst, welcher Wert gewinnt, wenn die gleichen Werte von mehreren Kanälen dekodiert werden. Die default priority ist 50, sie kann nach oben und unten geändert werden. Die SignalK Integration hat die default Priority 40. | 50 |
