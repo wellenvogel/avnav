@@ -50,7 +50,7 @@ Mit einem Klick auf den jeweiligen Button wird die entsprechende Seite in AvNav 
 | {{MB("MMlayoutspage")}} | Aufruf der [Layoutverwaltung](../base/layout.md) (auch Start des Layout Editors) |
 | {{MB("MMpluginspage")}} | Aufruf der [Pluginverwaltung](plugins.md#installation) | 
 | {{MB("MMaddonconfigpage")}} | Aufruf der Seite für die Konfiguration von [UserApps](../base/userapps.md), für [Nutzer-CSS](usercss.md), für [Nutzer-JavaScript](userjs.md) und die Konfiguration von [Tastaturbefehlen](keyboard.md) oder [Icons](usericons.md) |
-| {{MB("MMchannelspage")}}| Aufruf der [Verwaltung von (NMEA) Verbindungen](configfile.md#channelspage) |
+| {{MB("MMchannelspage")}}| Aufruf der [Verwaltung von (NMEA) Verbindungen](connections.md) |
 | {{MB("MMserverpage")}} | Aufruf der [Serververwaltung](serverpage.md) |
 | {{MB("MMremotepage")}} | Aufrufe der [Verwaltung für die Fernsteuerung](remotecontrol.md)|
 

@@ -51,7 +51,7 @@ Alle ein- und ausgehenden (NMEA)-Verbindungen lassen sich über
 
 {{MM("MMchannelspage")}}
 
-konfigurieren. Auch neue Verbindungen können dort angelegt werden.
+konfigurieren. Auch neue Verbindungen können dort angelegt werden.Siehe dazu auch die [Details zu Verbindungen](connections.md).
 
 ## Serverseite {: #serverpage}
 
