@@ -33,7 +33,7 @@ AvNav selbst kann nur NMEA0183 Daten verarbeiten. Zur Verbindung mit NMEA2000 Bu
 
 Besondere Hinweise zur Zusammenarbeit mit SignalK findet man in einer [separaten Beschreibung](signalk.md).
 
-## Verbindungsseite {. #channelspage}
+## Verbindungsseite {: #channelspage}
 
 Die Konfiguration von Verbindungen in AvNav erfolgt über
 
@@ -58,7 +58,7 @@ Neben den verbindungs-spezifischen Parametern (wie den Port für eine TCP Verbin
 
 ## Verbindungstypen
 
-In der folgenden Tabelle kann man durch Klick auf den Type-Namen zur Beschreibung der konfigurierbarene Parameter gelangen.
+In der folgenden Tabelle kann man durch Klick auf den Type-Namen zur Beschreibung der konfigurierbaren Parameter gelangen.
 Hinweis: An einigen Stellen unter Linux/Windows haben die Namen noch ein vorangestelltes "AVN" - das ist in der Tabelle weggelassen.
 
 | Name Linux/Windows| Name Android | Beschreibung |
@@ -68,7 +68,7 @@ Hinweis: An einigen Stellen unter Linux/Windows haben die Namen noch ein vorange
 | [BluetoothReader](configfile.md#avnbluetoothreader)| [Bluetooth](configfile.md#bluetooth)| Unter Linux: Ähnlich wie für USB Geräte werden Bluetooth-Geräte mit einem serielle Profil erkannt und zum Datenempfang konfiguriert.<br>Unter Android: Wenn ein Bluetooth Gerät verwendet werden soll, muss es zunächst verbunden ("paired") werden. Danach kann eine Verbindung zu einem solchen Gerät angelegt werden |
 | [SocketWriter](configfile.md#avnsocketwriter)|[TcpWriter](configfile.md#tcpwriter)| Es wird ein TCP Server konfiguriert. Der Port auf dem AvNav Verbindungen annehmen soll, muss angegeben werden. Dazu kann ausgewählt werden, ob nur lokal zugegriffen werden kann oder auch Zugriff von anderen Computern aus möglich sein soll (Android: `externalAccess`, Linux/Windows: `host 0.0.0.0`). Senden und empfangen ist möglich - default: senden.|
 | [SocketReader](configfile.md#avnsocketreader) | [TcpReader](configfile.md#tcpreader) | Es wird eine TCP Client Verbindung konfiguriert zu einem anderen System, das als Server konfiguriert ist. Die IP Adresse und der Port müssen angegeben werden. Statt der IP Adresse kann auch ein Hostname angegeben werden. Es kann insbesondere auch ein Name der Form `name.local` - also eine MDNS Adresse genutzt werden. Daten können empfangen und gesendet werden. Default: empfangen|
-| [Nmea0183ServiceReader](configfile.md#avnnmea0183servicereader) | [NMEA0183 service](configfile.md#nmea0183service)| Die gleiche Funktion wie ein SocketReader. Statt IP und Port wirde jedoch der Name eines Bonjour-Services angegeben (Auswahl aus einer Liste). Der Vorteil dieser Konfiguration ist, das die Verbindungen automatisch immer wieder aufgebaut werden, auch wenn sich z.B. das Wifi Netzwerk ändert, das genutzt wird. |
+| [Nmea0183ServiceReader](configfile.md#avnnmea0183servicereader) | [NMEA0183 service](configfile.md#nmea0183service)| Die gleiche Funktion wie ein SocketReader. Statt IP und Port wird jedoch der Name eines Bonjour-Services angegeben (Auswahl aus einer Liste). Der Vorteil dieser Konfiguration ist, das die Verbindungen automatisch immer wieder aufgebaut werden, auch wenn sich z.B. das Wifi Netzwerk ändert, das genutzt wird. |
 | [UdpReader](configfile.md#avnudpreader)|[UdpReader](configfile.md#udpreader)| AvNav öffnet einen UDP Socket und empfängt Nachrichten. Es kann entschieden werden, ob nur Nachrichten vom eigenen Computer oder auch von anderen Computern emfangen werden.(Android: `externalAccess`, Linux/Windows: `host 0.0.0.0`) |
 | [UdpWriter](configfile.md#avnudpwriter) | [UdpWriter](configfile.md#udpwriter)| AvNav sendet UDP Nachrichten zu einem anderen System. Ip Adresse und port müssen angegeben werden.|
 | [SignalKhandler](configfile.md#avnsignalkhandler)| --- | Eine spezielle Verbindung zu [SignalK](signalk.md). Die von dort empfanenen Daten gehen **nicht** in den Multiplexer sondern nur in den internen Datenspeicher|
