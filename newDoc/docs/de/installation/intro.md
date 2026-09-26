@@ -11,7 +11,7 @@ AvNav steht für verschiedene Plattformen und Betriebssysteme bereit.
 
 ## Versionen
 
-AvNav wird als fertiges Paket, als installierbare Zip Datei oder als eine APK für Android ausgeliefert. In Abständen gibt es neue "freigegebene" Versionen (Releases). Zwischen den Releases werden Entwickler-Versionen (Beta) bereitgestellt. Diese dienen dem zeitigen Test neuer Funktionen - können aber noch Fehler enthalten.
+AvNav wird als fertiges Raspberry-Pi-Image, als Paket, als installierbare Zip Datei oder als eine APK für Android ausgeliefert. In Abständen gibt es neue "freigegebene" Versionen (Releases). Zwischen den Releases werden Entwickler-Versionen (Beta) bereitgestellt. Diese dienen dem zeitigen Test neuer Funktionen - können aber noch Fehler enthalten.
 
 ## Liste der Releases und Beta Versionen.
 

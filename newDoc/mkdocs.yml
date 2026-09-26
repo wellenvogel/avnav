@@ -29,7 +29,6 @@ nav:
     - base/overlays.md
     - base/ais.md
   - Details:
-    - special/index.md
     - special/tags.md
     - buttons/buttons.md
 plugins:
