@@ -173,3 +173,15 @@ To link to a video chapter use
 The chapter index starts at 0.
 
 Example: [navpage.md](docs/de/base/navpage.md).
+
+### Linking to old doc
+```
+[ocharts]({{OLDLINK("hints/ocharts.html")}})
+```
+The parameter can be empty.
+
+### Linking to the download area
+```
+[Some Download]({{DLLINK("test/test.txt")}})
+```
+

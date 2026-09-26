@@ -7,7 +7,7 @@
 In diesem Dokument werden einige Details beschrieben, die erklären, wie AvNav mit Karten umgeht, welche Kartentypen es gibt, wie man neue Karten anlegen kann und wie man das Karten-Handling erweitern kann. Der erste Teil richtet sich an alle Nutzer und beschreibt ein wenig genauer, welche Karten genutzt werden können und wie man sie in AvNav installieren bzw. importieren oder konvertieren kann. Im [zweiten Teil](#definitions) werden die Möglichkeiten beschrieben, wie man eigene Kartenquellen erzeugen kann und wie man das Kartenhandling in AvNav erweitern kann. Dieser Teil richtet sich an fortgeschrittene Nutzer.
 
 ## Grundaufbau
-Die Karten in AvNav sind entweder auf dem AvNav Server gespeichert oder können (je nach Typ) auch während der Nutzung direkt aus dem Internet geladen werden. Mit dem [mapproxy-plugin](TODO: mapproxy) gibt es eine Mischform, die Karten aus dem Internet lädt, anzeigt und gleichzeitig auf dem AvNav Server speichert. Unter Andorid ist der AvNav Server direkt in der App integriert.
+Die Karten in AvNav sind entweder auf dem AvNav Server gespeichert oder können (je nach Typ) auch während der Nutzung direkt aus dem Internet geladen werden. Mit dem [mapproxy-plugin](https://github.com/wellenvogel/avnav-mapproxy-plugin) gibt es eine Mischform, die Karten aus dem Internet lädt, anzeigt und gleichzeitig auf dem AvNav Server speichert. Unter Andorid ist der AvNav Server direkt in der App integriert.
 
 Die Anzeige der Karten erfolgt immer in einem Browser - so wie die gesamte Bedienoberfläche von AvNav. Wie im [Technischen Hintergrund](#background) beschrieben, werden dazu entsprechende JavaScript Bibliotheken genutzt.
 
@@ -30,7 +30,7 @@ AvNav unterstützt die folgenden Kartentypen
 | Typ | Datei-Endung | Beschreibung |
 | --- | --- | --- |
 | [GEMF](http://www.cgtk.co.uk/gemf) | .gemf | Ein für das Lesen optimiertes Kartenformat, das intern ein Verzeichnis der vorhandenen Kacheln enthält. Dieses Format wird auch vom [AvNav Importer](#importer) aus verschiedenen anderen Formaten erzeugt. Dieses Format kann intern mehrere Layer mit unterschiedlichen Auflösungen enthalten. |
-| [mbtiles](https://wiki.openstreetmap.org/wiki/MBTiles) | .mbtiles | Eine [sqlite](https://sqlite.org/) Datenbank, die neben den Kartenkacheln auch noch Metadaten enthält. Leider gibt es hier verschiedene Kodierungen der y Koordinate - die aber nicht immer korrekt bezeichnet werden. Daher kann man diese per [Hand umstellen](TODO: #scheme). |
+| [mbtiles](https://wiki.openstreetmap.org/wiki/MBTiles) | .mbtiles | Eine [sqlite](https://sqlite.org/) Datenbank, die neben den Kartenkacheln auch noch Metadaten enthält. Leider gibt es hier verschiedene Kodierungen der y Koordinate - die aber nicht immer korrekt bezeichnet werden. Daher kann man diese per [Hand umstellen](#scheme). |
 | [PMTiles](https://docs.protomaps.com/pmtiles/) | .pmtiles | Ein modernes binäres Dateiformat, das insbesondere für die Nutzung über einfache Webserver optimiert ist. Wenn man .pmtiles Dateien hochlädt, unterstützt AvNav zunächst nur Rasterkarten in diesem Format.Dazu wird die Information im Header der PMTiles Datei ausgewertet. Dort ist der Typ der Kartenkacheln vermerkt. AvNav erlaubt die Typen `Unknown(0), Png(2), Webp(4),Jpeg(3)` als Rastertypen. Auch Vektorkarten im PMTiles Format können verarbeitet werden. Das erfordert jedoch eine spezielle [Kartendefinition](#vectorlayer) mit dem entsprechenden Style-Dokument. |
 | XML | .xml | Wie [unten](#exampledef) beschrieben kann man mit xml Dateien direkt eine Kartendefinition erstellen. Die XML Datei enthält dabei noch nicht die eigentlichen Kartendaten sonder nur einen Verweis auf diese - und Informationen zur Nutzung |
 
@@ -40,11 +40,11 @@ Plugins können im Prinzip beliebige weitere Kartentypen zu AvNav hinzufügen. D
 
 | Plugin | Kartentyp | Beschreibung |
 | --- | --- | --- |
-| [ochartsng](TODO ochartsng) | Vektor Karten | Das ochartsng Plugin dient zur Anzeige von [o-charts](https://o-charts.org/?lng=de) **Vektorkarten**. Diese müssen im o-charts Shop gekauft werden und wie im Plugin beschrieben hochgeladen werde. **Hinweis**: Das Hochladen kann nicht auf der "Charts" Seite in AvNav erfolgen. Daneben können auch noch unverschlüsselte ENC (S57) nach einer [Konvertierung](#converter) angezeigt werden. _Nur Linux und Android._|
-| [ocharts](TODO: ocharts) | Verktor- und Raster Karten | Das ocharts (legacy) Plugin dient eben falls zur Anzeige von Karten aus dem [o-charts](https://o-charts.org/?lng=de). Es kann auch Rasterkarten aus dem Shop nutzen. Auf neueren Systemen steht es nicht mehr zur Verfügung. _Nur Linux_ |
+| [ochartsng](ochartsng.md) | Vektor Karten | Das ochartsng Plugin dient zur Anzeige von [o-charts](https://o-charts.org/?lng=de) **Vektorkarten**. Diese müssen im o-charts Shop gekauft werden und wie im Plugin beschrieben hochgeladen werde. **Hinweis**: Das Hochladen kann nicht auf der "Charts" Seite in AvNav erfolgen. Daneben können auch noch unverschlüsselte ENC (S57) nach einer [Konvertierung](#converter) angezeigt werden. _Nur Linux und Android._|
+| [ocharts]({{OLDLINK("hints/ocharts.html")}}) | Verktor- und Raster Karten | Das ocharts (legacy) Plugin dient eben falls zur Anzeige von Karten aus dem [o-charts](https://o-charts.org/?lng=de). Es kann auch Rasterkarten aus dem Shop nutzen. Auf neueren Systemen steht es nicht mehr zur Verfügung. _Nur Linux_ |
 | [mapproxy](https://github.com/wellenvogel/avnav-mapproxy-plugin) | Online Karten | Das mapproxy Plugin erlaubt über eigene Definitionen den Zugriff auf online Kartendienste. Die Karten werden im AvNav Server zwischengespeichert und stehen damit auch ohne Internet zur Verfügung. _Nur für Linux_ |
 
-Daneben gibt es u.U. noch weitere Plugins für andere Kartentypen. Siehe dazu auch die [Liste der Plugins](TODO: pluginlist).
+Daneben gibt es u.U. noch weitere Plugins für andere Kartentypen. Siehe dazu auch die [Liste der Plugins](plugin-list.md).
 
 ## Verwalten von Karten
 
@@ -69,7 +69,7 @@ Es gibt zwei Optionen
 | tms | y-Koordinate 0 ist Süden |
 | zxy | y-Koordinate 0 ist Norden |
 
-Der Default ist `tms`. Leider gibt es oft MBTiles Dateien, die `zxy` nutzen aber das nicht in der Datei vermerken. Im Zweifel muss man daher probieren und das Schema ggf. umstellen, wenn die Karte falsch dargestellt wird. AvNav schgreibt eine eigene Information in die MBTiles Datei, wenn man es im Dialog umstellt. Damit kann diese Datei dann auch auf anderen AvNav Systemen sofort korrekt genutzt werden.
+Der Default ist `tms`. Leider gibt es oft MBTiles Dateien, die `zxy` nutzen aber das nicht in der Datei vermerken. Im Zweifel muss man daher probieren und das Schema ggf. umstellen, wenn die Karte falsch dargestellt wird. AvNav schreibt eine eigene Information in die MBTiles Datei, wenn man es im Dialog umstellt. Damit kann diese Datei dann auch auf anderen AvNav Systemen sofort korrekt genutzt werden.
 
 Der mittlere Tab "Imports" zeigt Informationen über Karten, die in den [Konverter](#converter) von AvNav geladen wurden. Auf Android ist der Konverter nicht vorhanden.
 
@@ -92,7 +92,7 @@ Es können die folgenden Kartentypen umgewandelt werden:
 | --- | --- | --- |
 | [BSB](https://www.gisbox.com/en/articles/v1/25k7r9xewlwy/) | .kap | Rasterkarten. Typischerweise viele einzelne Dateien. Bei Hochladen zum Konverter kann man ein Verzeichnis angeben, das wird dann zum Namen der erzeugten Karte. Bei vielen Karten ist der Prozeß langwierig - insbesondere auf einem RaspberryPi |
 | [BSB](https://www.gisbox.com/en/articles/v1/25k7r9xewlwy/) | .zip | Ein zip Archiv mit BSB Karten, die zu einer gemeinsamen Karte umgewandelt werden |
-| [S57 ENC](https://de.wikipedia.org/wiki/IHO-S-57) | .zip | Mit plugin [ochartsng](TODO ochartsng). Die S57 ENC werden in ein OpenCPN spezifisches Binärformat (senc) umgewandelt und direkt dem ochartsng Plugin übergeben. _Auf Linux und Windows_. Ochartsng selbst läuft nicht auf Windows, aber der Konverter ist verfügbar und kann installiert werden. Damit können z.B. S57 Karten für Android dort konvertiert werden (unter Android ist der Konverter nicht vorhanden) |
+| [S57 ENC](https://de.wikipedia.org/wiki/IHO-S-57) | .zip | Mit plugin [ochartsng](ochartsng.md). Die S57 ENC werden in ein OpenCPN spezifisches Binärformat (senc) umgewandelt und direkt dem ochartsng Plugin übergeben. _Auf Linux und Windows_. Ochartsng selbst läuft nicht auf Windows, aber der Konverter ist verfügbar und kann installiert werden. Damit können z.B. S57 Karten für Android dort konvertiert werden (unter Android ist der Konverter nicht vorhanden) |
 
 Um Karten zum Konverter hochzuladen nutzt man
 
@@ -114,14 +114,14 @@ Wenn man das rot markierte {{ICON("Edit")}} Icon klickt, öffnet sich ein Dialog
 * Download mit dem [Mobile
   Atlas Creator](http://mobac.sourceforge.net/).
 * Kaufen von Karten bei [o-charts](https://o-charts.org/)
-  und Nutzung mit dem [ochartsng](TODO:ochartsng.md)
+  und Nutzung mit dem [ochartsng](ochartsng.md)
   Plugin
-* Download von S57 und Konvertierung/Nutzung mit dem [ochartsng](TODO: ochartsng.md)
+* Download von S57 und Konvertierung/Nutzung mit dem [ochartsng](ochartsng.md#chartconversions)
   plugin
 * Nutzung von Karten vom [SignalK
   Chart Provider](https://github.com/SignalK/charts-plugin)   (wenn die [SignalK-Integration](signalk.md) aktiv ist).
 * Karten von [freenauticalchart.net](https://freenauticalchart.net/download/de/).
-* Inland ENC vom [WSV (Elwis)](https://www.elwis.de/DE/dynamisch/IENC/) - Konvertierung/Nutzung mit dem [ochartsng](TODO: ochartsng.md)
+* Inland ENC vom [WSV (Elwis)](https://www.elwis.de/DE/dynamisch/IENC/) - Konvertierung/Nutzung mit dem [ochartsng](ochartsng.md#chartconversions)
   plugin
 
 **Hinweis**: ENC werden oft als viele einzelne ZIP Dateien bereitgestellt. Wenn man möchte, das diese in AvNav als eine gemeinsame Karte konvertiert und angezeigt werden, sollte man die ZIP-Archive vor dem Hochladen zu AvNav in ein gemeinsames Archiv zusammenpacken. 
@@ -370,7 +370,7 @@ Die finale URL für die Abfrage des WMS wird dann durch die bei "url"angegebene 
 
 **Layer encrypt**
 
-Dieser Layer ist ein Speziallayer für das [ochartsng](TODO: ochartsng) und das ocharts Plugin. Als "profile" werden die Werte `'encrypted-zxy','encrypted-zxy-mercator'` akzeptiert.
+Dieser Layer ist ein Speziallayer für das [ochartsng](ochartsng.md) und das ocharts Plugin. Als "profile" werden die Werte `'encrypted-zxy','encrypted-zxy-mercator'` akzeptiert.
 
 **Layer PMTiles**
 
@@ -437,7 +437,7 @@ Als Erweiterung zu MapLibre kann das Style-Dokument auch ein [yaml Dokument](htt
 !!! Experten
     Das Erstellen eigener Kartenlayer erfordert JavaScript Know How und auch eine gewisse Einarbeitung in das Handling der Kartenbibliotheken. Daher wird eine solche Erweiterung meist in [Plugins](plugins-extensions.md) eingebaut.
 
-Eigene Kartenlayer erweitern die vorhandenen Kartenlayer. Damit kann man z.B. vor der Nutzung noch mit dem Kartenserver kommunizieren (z.B. einen [GetCapabilities](https://docs.geoserver.org/main/en/user/services/wms/reference/) Request an einen WMS Server schicken, um die verfügbaren Layer zu ermitteln ), man kann Nutzer-Präferenzen setzen oder z.B. Karteninformationen abrufen und aufbereiten für die [FeatureListe](TODO: featurelist).
+Eigene Kartenlayer erweitern die vorhandenen Kartenlayer. Damit kann man z.B. vor der Nutzung noch mit dem Kartenserver kommunizieren (z.B. einen [GetCapabilities](https://docs.geoserver.org/main/en/user/services/wms/reference/) Request an einen WMS Server schicken, um die verfügbaren Layer zu ermitteln ), man kann Nutzer-Präferenzen setzen oder z.B. Karteninformationen abrufen und aufbereiten für die [FeatureListe](featureinfo.md).
 
 ### Registrierung {: #registerlayer }
 
@@ -494,7 +494,7 @@ Diese Objekte sind durch parsen der GeoJSON Darstellung von [MapLibre](https://m
 
 Die Rückgabe des Formatters muss ein Array mit Objekten vom Typ [FeatureInfoType](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L68) sein.
 
-Die als Resultat zurückgegebenen Objekte werden in einem [Feature List Dialog](TODO: feature list) angezeigt. Für ein gutes Nutzererlebnis sollte die Rückgabe nur ein einziges Objekt enthalten mit einer akkumulierten Darstellung der wichtigsten Features (z.B. Typ, Top-Zeichen und Licht einer Tonne).
+Die als Resultat zurückgegebenen Objekte werden in einem [Feature List Dialog](featureinfo.md) angezeigt. Für ein gutes Nutzererlebnis sollte die Rückgabe nur ein einziges Objekt enthalten mit einer akkumulierten Darstellung der wichtigsten Features (z.B. Typ, Top-Zeichen und Licht einer Tonne).
 
 Eine aufbereitete Liste mit den Informationen aller Objekte sollte HTML formatiert im Wert `htmlInfo` des Objektes hinterlegt werden (oder über `link` als URL abrufbar sein).
 

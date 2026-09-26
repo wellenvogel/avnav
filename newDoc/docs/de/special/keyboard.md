@@ -144,7 +144,7 @@ Zuweisungen
 |  |  |  Gps9 | "9" | Dashboard #9 |
 |  |  |  Gps10 | "0" | Dashboard #10 |
 | navpage (Navigationsseite) | widget | AisTarget | "a" | geht zur [Ais Info](ais.md#aisinfo)) |
-|  |  | COG | "d" |geht zum [Dashboard](TODO dashboardpage.md), mit d kann man so zwischen Navigationsseite und Dashboard hin- und herschalten |
+|  |  | COG | "d" |geht zum [Dashboard](../base/navpage.md#dashboards), mit d kann man so zwischen Navigationsseite und Dashboard hin- und herschalten |
 |  | button | LockMarker  | "g" | starte Navigation zur Kartenmitte|
 |  |  | StopNav | "s" |
 |  |  | ShowRoutePanel  | ["Control-r","r"] | (gehe zum [Routen-Editor](../base/routes.md)) |

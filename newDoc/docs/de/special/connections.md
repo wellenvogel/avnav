@@ -12,7 +12,7 @@ Damit AvNav die Daten von Instrumenten verarbeiten kann, können Verbindungen zu
 
 In diesem Kapitel werden einige weitere Details beschrieben.
 
-## Struktur 
+## Struktur {: #structure}
 
 Wie bereits in der [Einführung](../concept/clientserver.md) kurz beschrieben besteht AvNav aus einem Server-Teil, der die Navigationsdaten und Karten verarbeitet und speichert und einem Anzeige-Teil (Client), der in einem Browser läuft. Die Verbindungen zu den Bordnetzwerken werden im Server-Teil hergestellt.
 
