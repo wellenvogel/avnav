@@ -380,11 +380,17 @@ class SKAlarm(object):
       return True
     return self.skValue is not None and other.skValue is not None
   def isInState(self,active):
-    if active and self.skValue is not None:
-      return True
-    if not active and self.skValue is None:
-      return True
-    return False
+    skActive=True
+    if self.skValue is None:
+        skActive=False
+    else:
+        if type(self.skValue) is dict:
+            if self.skValue.get('state') == 'normal':
+                skActive=False
+    if active:
+        return skActive
+    else:
+        return not skActive
   def shouldDo(self):
     return self.shouldSend
   def psKey(self):
