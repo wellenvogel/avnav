@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block config %}
+      {% set _ = namespace() %}
+      {% set _.annotate = config.extra.annotate %}
+      {% set _.tags = config.extra.tags %}
+      {%- if config.extra.version -%}
+        {%- set mike = config.plugins.mike -%}
+        {%- if not mike or mike.config.version_selector -%}
+          {%- set _.version = config.extra.version -%}
+        {%- endif -%}
+      {%- endif -%}
+      {%- if page and page.meta -%}
+        {% set squery= "?lang="+ page.meta.i18nlang  %}
+      {%- else -%}
+        {% set squery= "" %}  
+      {%- endif -%}
+      {% set surl = "assets/javascripts/workers/searchtest.js" + squery %}
+      <script id="__config" type="application/json">
+        {{- {
+          "base": base_url,
+          "features": features,
+          "translations": {
+            "clipboard.copy": lang.t("clipboard.copy"),
+            "clipboard.copied": lang.t("clipboard.copied"),
+            "search.result.placeholder": lang.t("search.result.placeholder"),
+            "search.result.none": lang.t("search.result.none"),
+            "search.result.one": lang.t("search.result.one"),
+            "search.result.other": lang.t("search.result.other"),
+            "search.result.more.one": lang.t("search.result.more.one"),
+            "search.result.more.other": lang.t("search.result.more.other"),
+            "search.result.term.missing": lang.t("search.result.term.missing"),
+            "select.version": lang.t("select.version")
+          },
+          "search_ori": "assets/javascripts/workers/search.2c215733.min.js" | url,
+          "search": surl | url,
+          "annotate": _.annotate or none,
+          "tags": _.tags or none,
+          "version": _.version or none
+        } | tojson -}}
+      </script>
+    {% endblock %}
