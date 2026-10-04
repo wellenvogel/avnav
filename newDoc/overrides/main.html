@@ -13,9 +13,9 @@
       {%- if page and page.meta -%}
         {% set squery= "?lang="+ page.meta.i18nlang  %}
       {%- else -%}
-        {% set squery= "" %}  
+        {% set squery= "?lang=de" %}  
       {%- endif -%}
-      {% set surl = "assets/javascripts/workers/searchtest.js" + squery %}
+      {% set surl = "assets/javascripts/workers/searchtest.js" + squery+"&worker=search.2c215733.min.js" %}
       <script id="__config" type="application/json">
         {{- {
           "base": base_url,
@@ -39,4 +39,6 @@
           "version": _.version or none
         } | tojson -}}
       </script>
+      {% set injecturl="assets/javascripts/injectsearch.js"|url %}
+      <script src="{{injecturl+squery+'&worker=search.2c215733.min.js'}}" type="text/javascript"></script>
     {% endblock %}
