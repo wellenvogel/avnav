@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block config %}
+{#-
+ Add a small script (injectsearch.js) that will modify the search worker url
+ At this place the config has already been added to the DOM as a script tag with the id __config.
+ We pass the current page language as a query parameter to the script url.
+ The injectsearch.js script will forward this language parameter to the custom search worker
+-#}
       {{super()}}
       {%- if page and page.meta -%}
             {% set squery= "?lang="+ page.meta.i18nlang  %}
@@ -8,4 +14,4 @@
       {%- endif -%}
       {% set injecturl="assets/javascripts/injectsearch.js"|url %}
       <script src="{{injecturl+squery}}" type="text/javascript"></script>
-    {% endblock %}
+{% endblock %}
