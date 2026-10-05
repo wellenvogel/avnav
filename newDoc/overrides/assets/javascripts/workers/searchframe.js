@@ -1,4 +1,4 @@
-console.log("searchtest loaded")
+console.log("searchframe loaded")
 async function handler(message) {
     console.log({ message })
 }
@@ -14,14 +14,14 @@ const filterByLanguage=(docs)=>{
         return false;
     })
 }
-
-let oworker=new Worker("search.2c215733.min.js");
+const workerUrl=new URLSearchParams(location.search).get("worker")||"search.2c215733.min.js";
+let oworker=new Worker(workerUrl);
 oworker.onmessage=async (msg) => {
     console.log("oworker onmessage", msg);
     postMessage(msg.data);
 }
 self.onmessage=async (msg) => {
-        console.log("searchtest onmessage", msg)
+        console.log("searchframe onmessage", msg)
         if (msg.data && msg.data.type == 0) {
             //filter docs by language
             let fdocs=filterByLanguage(msg.data.data.docs);
