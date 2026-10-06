@@ -34,6 +34,7 @@ const update=(initial)=>{
 document$.subscribe(()=>{
     let iconSet;
     let videobase;
+    let samePage=false;
     try{
         iconset=localStorage.getItem(LSNAME)
         if (! iconset) iconset='iconset-default';
@@ -52,6 +53,9 @@ document$.subscribe(()=>{
             if (key == 'videobase'){
                 videobase=value;    
             }
+            if (key == 'samepage'){
+                samePage=true;
+            }
         }
     }
     document.body.classList.add(iconset);
@@ -64,7 +68,9 @@ document$.subscribe(()=>{
     }
     const videoLinks=Array.from(document.querySelectorAll('a.videolink'))
     for (const a of videoLinks){
-        a.setAttribute("target","_blank");
+        if (!samePage){
+            a.setAttribute("target","_blank");
+        }
     }
     for (const a of Array.from(document.querySelectorAll('a'))){
         if (a.classList.contains('video')){
@@ -81,9 +87,19 @@ document$.subscribe(()=>{
             }
         }
         const url=new URL(a.getAttribute('href'),window.location.href);
-        if (videobase && url.origin == window.location.origin){
-            url.searchParams.set('videobase',videobase);
-            a.setAttribute('href',url.href);
+        if (url.origin == window.location.origin){
+            let changed=false;
+            if (videobase){
+                url.searchParams.set('videobase',videobase);
+                changed=true;
+            }
+            if (samePage){
+                url.searchParams.set('samepage','true');
+                changed=true;
+            }
+            if (changed){
+                a.setAttribute('href',url.href);
+            }
         }
     }
     const videochapters=Array.from(document.querySelectorAll('.videochapter'));

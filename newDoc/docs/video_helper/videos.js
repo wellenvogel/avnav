@@ -8,6 +8,15 @@
         document.body.insertBefore(error,document.body.firstChild);
     }
     window.document.addEventListener("DOMContentLoaded",()=>{
+        const back=document.getElementById('back');
+        if (back){
+            if (window.history.length <= 1){
+                back.style.display='none';
+            }
+            back.addEventListener("click",()=>{ 
+                window.history.back();
+            })
+        }
         const s=window.location.search;
         let video;
         let track;

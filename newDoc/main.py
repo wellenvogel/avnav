@@ -268,7 +268,7 @@ def define_env(env):
         if not lurl:
             return '<div class="error">no url for video '+name+'</div>'
         yturl=video_url(video,mode=M_YT,kind=VK_LINK)
-        return f"<a class=\"video\" target=\"_blank\" data-localurl=\"{lurl}\" data-yturl=\"{yturl}\" data-name=\"{name}\">{text or name}</a>"
+        return f"<a class=\"video videolink\" data-localurl=\"{lurl}\" data-yturl=\"{yturl}\" data-name=\"{name}\">{text or name}</a>"
     
     def add_lang(url,lang):
         if not lang:
