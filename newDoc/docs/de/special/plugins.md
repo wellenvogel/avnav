@@ -139,7 +139,7 @@ Die Einträge für den Parameter userApps müssen folgende Werte enthalten:
 | Name | Typ | Beschreibung |
 | --- | --- | --- |
 | url | String, erforderlich | die URL für die User App. Kann eine relativer Pfad zu einer HTML Datei im Plugin sein |
-| icon | String | relativer Pfad zu einer Icon Datei. Alternativ per CSS.|
+| iconFile | String | relativer Pfad zu einer Icon Datei. Alternativ per CSS.|
 | shortText  | String | Kurztext für den Button. Alternativ per CSS |
 | longText | String | Langtext für den Button. Alternativ per CSS |
 | title | String | Titel für die Anzeige. Wenn nicht gesetzt, wird keine Titelzeile angezeigt |
