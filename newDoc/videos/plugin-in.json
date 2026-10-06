@@ -1,0 +1,13 @@
+{
+  "version": "20261006",
+  "description": "AvNav Documentation videos",
+  "userApps": [
+    {
+      "url": "/plugins/user-documentation/site/index.html?videobase=/user-docvideos",
+      "iconFile": "video-help.svg",
+      "tile": "Documentation(Videos)",
+      "shortText":"VHelp",
+      "longText":"Doc local videos"
+    }
+  ]
+}
