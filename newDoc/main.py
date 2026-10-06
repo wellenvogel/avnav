@@ -123,12 +123,6 @@ def buildButtonCss(buttons,icons,btcss):
                     str+=f"  content: \"{txt}\";"+"\n}\n"
             oh.write(str)
 
-def get_video_mode(env):
-    VMODE=env.conf.extra.get('video_mode')
-    if VMODE not in [M_YT,M_INTERN]:
-        assert False, f"invalid video_mode {VMODE}, expected {M_YT} or {M_INTERN}"
-    return VMODE
-
 def define_env(env):
     global cssbuild
     print("macro script loading...")
@@ -137,7 +131,6 @@ def define_env(env):
     videos={}
     btf=os.path.join(env.project_dir,BTJSON)
     iconf=os.path.join(env.project_dir,ICONJSON)
-    VMODE=get_video_mode(env)
     if not os.path.exists(btf) or not os.path.exists(iconf):
         print(f"WARNING: buton defs {btf} / icon defs {iconf} not found")
     else:
@@ -242,14 +235,14 @@ def define_env(env):
             return url
         chr='&' if url.find('?') >= 0 else '?'
         return url+chr+param
-    def video_url(item,kind=VK_EMBED):
+    def video_url(item,kind=VK_EMBED,mode=None):
         if not item:
             return ''
-        rt=item.get(VMODE)
+        rt=item.get(mode)
         lang=pageVariables.get(PV_LANG)
         if not rt:
             return ''
-        if VMODE == M_YT:
+        if mode == M_YT:
             prefix="https://www.youtube.com/embed/" if kind==VK_EMBED else "https://www.youtube.com/watch?v="
             if item.get('kind') == 'playlist':
                 prefix="https://www.youtube.com/playlist?list="
@@ -260,68 +253,22 @@ def define_env(env):
                 rt=append_param(rt,"cc_load_policy=0")
             else:
                 rt=append_param(rt,"cc_lang_pref="+lang+"&cc_load_policy=1")
-        if VMODE == M_INTERN:
-            prefix=pageVariables.get(PV_BASE)+"videos/video.html?video="
+        if mode == M_INTERN:
+            prefix=pageVariables.get(PV_BASE)+"video_helper/video.html?video="
             rt=prefix+rt
             if lang == 'en':
                 rt+="&lang=en"
         return rt
     @env.macro
-    def VIDEO(name):
+    def VIDEO(text,name):
         video,chapters=get_video(name)
         if not video:
-            return '{# unknown video '+name+'#}'
-        url=video_url(video)
-        if not url:
-            return '{# no url for video '+name+'#}'
-        return "![type:video]("+url+"){ #video_"+name+" }"
-    
-    @env.macro
-    def VCALL(name):
-        video,chapters=get_video(name)
-        if not video:
-            return '{# unknown video '+(name or '??')+'#}'
-        if not chapters:
-            return '{# no chapters for video '+name+'#}'
-        rt='<ul class="videochapters">'
-        vurl=video_url(video)
-        for c in chapters:
-            url=append_param(vurl,c.get(VMODE))
-            rt+='<li class="videochapter" data-url="'+ url+'" data-name="'+name+'">'+ chapter_title(c)+'</li>\n'
-        rt+='</ul>'
-        return rt
-    
-    @env.macro
-    def VCSINGLE(name,idx,text=None):
-        video,chapters=get_video(name)
-        if not video:
-            return '{# unknown video '+(name or '??')+'#}'
-        if not chapters:
-            return '{# no chapters for video '+name+'#}' 
-        if idx < 0 or idx >= len(chapters):
-            return '{# chapter '+idx+' not found for '+name+'#}'
-        vurl=video_url(video)
-        c=chapters[idx]
-        return '<a class="videochapter" data-url="'+ append_param(vurl,c.get(VMODE))+'" data-name="'+name+'">'+(text or chapter_title(c))+'</a>'
-    
-    @env.macro
-    def VURL(name):
-        video,chapters=get_video(name)
-        if not video:
-            return ''
-        return video_url(video,kind=VK_LINK)
-    
-    @env.macro
-    def VCURL(name,idx):
-        video,chapters=get_video(name)
-        if not video or not chapters:
-            return ''
-        if idx is None or idx < 0 or idx >= len(chapters):
-            return ''
-        vurl=video_url(video,kind=VK_LINK)
-        c=chapters[idx]
-        return append_param(vurl,c.get(VMODE))
-        
+            return '<div class="error">unknown video '+(name or '??')+'</div>'
+        lurl=video_url(video,mode=M_INTERN,kind=VK_LINK)
+        if not lurl:
+            return '<div class="error">no url for video '+name+'</div>'
+        yturl=video_url(video,mode=M_YT,kind=VK_LINK)
+        return f"<a class=\"video\" target=\"_blank\" data-localurl=\"{lurl}\" data-yturl=\"{yturl}\" data-name=\"{name}\">{text or name}</a>"
     
     def add_lang(url,lang):
         if not lang:
@@ -389,29 +336,3 @@ def on_pre_page_macros(env):
 def on_post_page_macros(env):
     for k,v in pageVariables.items():
         env.page.meta[k]=v
-
-def on_post_build(env):
-    print("on post_build")
-    VMODE=get_video_mode(env)
-    if VMODE == M_INTERN:        
-        src=os.path.join(env.project_dir,'videos')
-        dst=os.path.join(env.conf['site_dir'],'videos')
-        print(f"internal video mode, copying videos from {src} to {dst}")
-        if os.path.isdir(src):
-            if not os.path.isdir(dst):
-                os.makedirs(dst)
-            for f in os.listdir(src):
-                if f == '.' or f == '..':
-                    continue
-                path,ext=os.path.splitext(f)
-                if ext in ['.sh']:
-                    continue
-                sfile=os.path.join(src,f)
-                dfile=os.path.join(dst,f)
-                if os.path.exists(dfile):
-                    stime=os.stat(sfile).st_mtime
-                    dtime=os.stat(dfile).st_mtime
-                    if dtime >= stime:
-                        continue
-                print(f"Copy {sfile} to {dfile}")
-                shutil.copyfile(sfile,dfile)

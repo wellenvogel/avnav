@@ -4,7 +4,7 @@
 ---
 # Karten
 
-[Hier]({{VURL("charts")}}){.videolink} geht es zu einem Einführungsvideo zum Thema Karten in AvNav.
+{{VIDEO("Hier","charts")}} geht es zu einem Einführungsvideo zum Thema Karten in AvNav.
 
 ## Formate {: #formats}
 
@@ -59,7 +59,7 @@ Und die rechte Spalte “Overlays” ist in einem separaten [Kapitel](overlays.m
 In der Buttonleiste sieht man unten die Schaltfläche OC-NG 
 ![](../../img/icon-ochartsng.svg){: .inline-image }.
 
-Sie ist für die Installation von O-Charts-Karten zuständig. Im [Video]({{VURL("charts")}}){.videolink} wird die Installation von o-charts Karten gezeigt, zum Nachlesen kann man die [detaillierte Dokumentation](../special/ochartsng.md) benutzen.
+Sie ist für die Installation von O-Charts-Karten zuständig. Im {{VIDEO("Video","charts")}} wird die Installation von o-charts Karten gezeigt, zum Nachlesen kann man die [detaillierte Dokumentation](../special/ochartsng.md) benutzen.
 
 
 

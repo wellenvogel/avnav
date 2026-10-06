@@ -8,7 +8,7 @@
 
 # Datenfluss
 
-[Hier]({{VIDEO("dataflow")}}){.videolink} geht es zum Einführungsvideo zum Thema NMEA Daten und Datenfluss.
+{{VIDEO("Hier","dataflow")}} geht es zum Einführungsvideo zum Thema NMEA Daten und Datenfluss.
 
 ## Details
 

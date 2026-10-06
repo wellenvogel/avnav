@@ -3,7 +3,7 @@
     - Erweiterungen
     - User Apps
 ---
-Ein Teil der Inhalte dieses Abschnittes wird auch im **[Video hier]({{VURL("userapps")}}){.videolink}** vorgestellt.   
+Ein Teil der Inhalte dieses Abschnittes wird auch im **{{VIDEO("Video hier","userapps")}}** vorgestellt.   
 ## User Apps vs. Plugins
 
 AvNav lässt sich vielseitig anpassen und erweitern - zu den Erweiterungen zählen die sogenannten User Apps. Das sind eigenständige Anwendungen, deren Benutzeroberfläche über einen Webbrowser aufrufbar ist. Beispiele hierfür sind der Datenserver SignalK oder der AIS-Catcher. Damit ein ständiger Wechsel zwischen verschiedenen Browser-Tabs vermieden wird, lassen sich diese Anwendungen nahtlos als Schaltflächen direkt in die Bedienoberfläche von AvNav integrieren. 

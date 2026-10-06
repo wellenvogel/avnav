@@ -5,7 +5,7 @@
 ---
 # Layout
 
-[Hier]({{VURL("layouts")}}){.videolink} geht es zum Video, das die wichtigsten Layout-Funktionen erklärt.
+{{VIDEO("Hier","layouts")}} geht es zum Video, das die wichtigsten Layout-Funktionen erklärt.
 
 Layouts bestimmen in AvNav, wie die Anzeigen ([Widgets](navpage.md#widgets)) auf der Navigationsseite und auf den Dashboard-Seiten angeordnet werden. Es gibt von AvNav vordefinierte Layouts und man kann beliebig weitere Layouts erzeugen und anpassen. 
 Für jedes Anzeige-Gerät kann man das Layout auswählen - so kann man bei Bedarf verschiedene Anzeigen zusammenstellen.
@@ -40,7 +40,7 @@ Nun erscheint etwas verkleinert die NavPage rot umrahmt, um anzuzeigen, dass etw
 Layout Editor Navigationsseite
 ///
 
-Wie man den Layout-Editor nutzt, kann man im [Video]({{VURL("layouts")}}){.videolink} sehr gut sehen.
+Wie man den Layout-Editor nutzt, kann man im {{VIDEO("Video","layouts")}} sehr gut sehen.
 
 ## Navigationsseite bearbeiten {: #navpage }
 Hier nun einige Funktionen in Kurzform, falls man das Video nicht komplett anschauen möchte.

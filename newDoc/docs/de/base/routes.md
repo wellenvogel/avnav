@@ -5,7 +5,7 @@
     - Wegepunkt
 ---
 # Routen
-Beschäftigen wir uns nun mit der Routen-Funktion. Die Abläufe werden **[in diesem Video]({{VURL("routes")}}){.videolink}** gezeigt.
+Beschäftigen wir uns nun mit der Routen-Funktion. Die Abläufe werden **{{VIDEO("in diesem Video","routes")}}** gezeigt.
 
 ## Der Routeneditor {: #editor }
 

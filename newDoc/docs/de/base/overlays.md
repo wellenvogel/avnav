@@ -6,7 +6,7 @@
 
 # Overlays
 
-[Hier]({{VURL("overlays")}}){.videolink} geht es zu einem Video, das die Basisfunktionen erklärt.
+{{VIDEO("Hier","overlays")}} geht es zu einem Video, das die Basisfunktionen erklärt.
 
 ## Einführung
 

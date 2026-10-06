@@ -33,27 +33,26 @@ const update=(initial)=>{
 }
 document$.subscribe(()=>{
     let iconSet;
+    let videobase;
     try{
         iconset=localStorage.getItem(LSNAME)
         if (! iconset) iconset='iconset-default';
     }catch (e){};
     if (window.location.search){
-        const param=window.location.search.split('&');
-        param.forEach((p)=>{
-            let [n,v]=p.split("=");
-            n=n.replace(/^\?/,'');
-            v=decodeURIComponent(v);
-            n=decodeURIComponent(n);
-            if (n == 'iconset'){
-                if (v == 'legacy' || v == 'default'){
-                    iconset='iconset-'+v;
+        const searchparams=new URLSearchParams(window.location.search);
+        for (const [key,value] of searchparams.entries()){
+            if (key == 'iconset'){
+                if (value == 'legacy' || value == 'default'){
+                    iconset='iconset-'+value;
                     try{
                         localStorage.setItem(LSNAME,iconset);
                     }catch (e){}
                 }
             }
-
-        })
+            if (key == 'videobase'){
+                videobase=value;    
+            }
+        }
     }
     document.body.classList.add(iconset);
     update(true);
@@ -66,6 +65,26 @@ document$.subscribe(()=>{
     const videoLinks=Array.from(document.querySelectorAll('a.videolink'))
     for (const a of videoLinks){
         a.setAttribute("target","_blank");
+    }
+    for (const a of Array.from(document.querySelectorAll('a'))){
+        if (a.classList.contains('video')){
+            if (videobase){
+                const url=a.getAttribute('data-localurl');
+                if (url){
+                    a.setAttribute('href',url+"&videobase="+encodeURIComponent(videobase));
+                }
+            }else{
+                const url=a.getAttribute('data-yturl');
+                if (url){
+                    a.setAttribute('href',url);
+                }
+            }
+        }
+        const url=new URL(a.getAttribute('href'),window.location.href);
+        if (videobase && url.origin == window.location.origin){
+            url.searchParams.set('videobase',videobase);
+            a.setAttribute('href',url.href);
+        }
     }
     const videochapters=Array.from(document.querySelectorAll('.videochapter'));
     for (const vc of videochapters){
