@@ -17,7 +17,7 @@ Alle Versionen von AvNav können NMEA0183 Daten von [SignalK](https://signalk.or
 Es gibt dabei verschiedene Optionen, wie die Daten von SignalK in AvNav verarbeitet und genutzt werden.
 
 ### NMEA0183 Daten
-Diese Daten durchlaufen ganz normal den [Multiplexer](TODO) und [Decoder](TODO) in AvNav und die dekodierten Daten können zur Navigation und Anzeige genutzt werden - genauso, wie alle anderen empfangenen NMEA Daten.
+Diese Daten durchlaufen ganz normal den [Multiplexer](connections.md#structure) und [Decoder](connections.md#structure) in AvNav und die dekodierten Daten können zur Navigation und Anzeige genutzt werden - genauso, wie alle anderen empfangenen NMEA Daten.
 
 Da AvNav alle NMEA Daten auch an Schnittstellen (TCP, UDP, Seriell,...) bereitstellt, können auf diesem Weg auch Daten zu SignalK gesendet werden.
 

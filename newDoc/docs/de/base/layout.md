@@ -87,7 +87,7 @@ Für die Navigationsseite sind zwei Konditionen verfügbar:
 
   * anchor
 
-    Wird aktiv sobald man die [Ankerwache](TODO: Ankerwache) aktiviert.
+    Wird aktiv sobald man die [Ankerwache](../special/anchorwatch.md) aktiviert.
 
 Während man im Layout-Editor arbeitet, werden diese Konditionen **nicht automatisch** gesetzt - d.h. ein Drehen des Displays aktiviert nicht den "small" Modus. Um die Konditionen zu aktivieren muss man den Konfigurationsdialog nutzen.
 

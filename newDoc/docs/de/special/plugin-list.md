@@ -20,7 +20,7 @@ Die Spalte 'Image' gibt an, ob das Plugin standardmässig in den [AvNav Images](
 | [Update](https://github.com/wellenvogel/avnav-update-plugin) | Paket | ja | ja  | Update von AvNav (und den dazugehörigen Paketen) ohne die  Kommandozeile nutzen zu müssen. Konfig-Editor und Log-Viewer für AvNav |
 | [MapProxy](https://github.com/wellenvogel/avnav-mapproxy-plugin)| Paket | ja | ja | integriert [MapProxy](https://mapproxy.org/) für Zugriff  und Download verschiedener online Kartenquellen |
 | [Obp-RC-Remote](https://github.com/wellenvogel/avnav-obp-rc-remote-plugin) | Paket | ja | ja | plugin für die Nutzung der [Fernbedienung](https://www.segeln-forum.de/thread/78328-fernbedienung-f%C3%BCr-den-raspberry/?postID=2237852#post2237852)   von [Christian](https://www.segeln-forum.de/cms/user/19350-chrhartz/)|
-| [Sail-Instrument-Plugin](https://github.com/kdschmidt1/Sail_Instrument)| Paket | TODO | TODO | Dekodierung und Berechnung von weiteren Kurs- und Winddaten,Sail Instrument |
+| [Sail-Instrument-Plugin](https://github.com/kdschmidt1/Sail_Instrument)| Paket | ja | nein | Dekodierung und Berechnung von weiteren Kurs- und Winddaten,Sail Instrument |
 | [Obp-PlotterV3](https://github.com/wellenvogel/avnav-obp-plotterv3-plugin)| Paket | ja | ja | Spezialfunktionen für den Open Boat Projects 10 Zoll Plotter (V3) |
 | [Font Noto](https://github.com/wellenvogel/avnav-font-noto)| Zip | nein | nein | Noto Fonts für die Nutzung in AvNav |
 | [Font Roboto](https://github.com/wellenvogel/avnav-font-roboto)| Zip | nein | nein | Roboto Fonts für die Nutzung in AvNav |
@@ -29,3 +29,5 @@ Die Spalte 'Image' gibt an, ob das Plugin standardmässig in den [AvNav Images](
 | [Legacy Display II](https://github.com/wellenvogel/avnav-simpledashplugin) | Zip | nein | nein | Andere Variante für ein Display auf alten Browsern wie E-Book-Readern. Anpassung der Displays durch den Nutzer über das Editieren von HTML Seiten - oder mit KI. _Alle Platformen (auch Android)_ |
 |[ocharts - legacy ](ocharts.md)| Paket | nein | nein | Karten von [o-charts](https://o-charts.org/) |
 | [rudder-angle](https://gitlab.strukturpunkt.de/kfr/avnav-rudder-angel)| zip | nein | nein |Anzeige des Ruderwinkels (über SignalK, _nur Linux/Raspberry_) |
+| [AvNav Dokumentation]({{DLLINK("release")}})| zip | nein | nein | Diese AvNav Dokumentation als Plugin. Bitte jeweils das documentation-xxxx.zip installieren.|
+| [AvNav Dokumentation Videos]({{DLLINK("supplement/docvideos.zip")}})| zip | nein | nein | Die Videos zur AvNav Dokumentation. Damit sind die Vidoes auch offline verfügbar, wenn die Dokumentation über dieses Plugin geöffnet wird.|

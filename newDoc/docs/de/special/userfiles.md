@@ -28,7 +28,7 @@ Initial sind dort nur einige Template Dateien vorhanden:
 * [user.css](usercss.md): Anpassung per CSS
 * [user.mjs](userjs.md): Nutzer JavaScript
 * [keys.json](keyboard.md): Tastatur Kürzel
-* [splitkeys.json](TODO: split mode): Anpassungen für den Split Mode
+* [splitkeys.json](splitmode.md): Anpassungen für den Split Mode
 
 Nach Klick auf eine Datei erhält man einen Dialog mit einigen Zusatz-Informationen und mit verschiedenen möglichen Aktionen.
 

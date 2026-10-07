@@ -61,7 +61,7 @@ Durch Klick auf einen Eintrag erhält man einen Dialog.
 Plugin Dialog
 ///
 
-Falls es sich um ein `user-` Plugin wie im Beispiel handlet, kann man es hier löschen oder als Zip Datei herunterladen. Falls das Plugin eine [UserApp](TODO: #userapp) mitbringt, kann man diese direkt über den Button {{DB("DBUserApp")}} von hier erreichen.
+Falls es sich um ein `user-` Plugin wie im Beispiel handlet, kann man es hier löschen oder als Zip Datei herunterladen. Falls das Plugin eine [UserApp](../base/userapps.md) mitbringt, kann man diese direkt über den Button {{DB("DBUserApp")}} von hier erreichen.
 
 Über {{DB("DBConfig")}} kann man Parameter für das Plugin ändern - oder es ggf. deaktivieren.
 {: #pluginconfig }
@@ -165,7 +165,7 @@ einspeisen kann.
 | --- | --- | --- |
 | A | Einspeisen von NMEA Daten in die interne Liste. Diese stehen dann an allen Ausgängen zur Verfügung.  Hinweis: Solche Daten stehen zunächst nicht für die WebApp zur Verfügung, solange es keinen Dekoder für diesen Datensatz gibt. | Auslesen eines Sensors und Erzeugen des passenden NMEA0183 Datensatzes. |
 | B | Auslesen von empfangenen NMEA Daten. Hier können (ggf. mit einem Filter) alle in AvNav durchlaufenden NMEA Daten gelesen werden. | In Zusammenspiel mit Punkt "C" Dekodieren von NMEA Datensätzen |
-| C | Einspeisen von Daten in den internen Speicher von AvNav. Die Daten im internen Speicher sind in einer Baumstruktur abgelegt. Jedes Element ist durch einen Schlüssel der Form "a.b.c...." adressiert. Beispiel: "gps.lat".  Alle Schlüsselwerte, die mit "gps." starten, werden automatisch an die WebApp übertragen und sind dann dort unter "nav.gps...." verfügbar. (siehe [Layout Editor](TODO layouts.md) und [nutzerspezifisches Java Script](userjs.md)).  Schlüsselwerte müssen vorher durch das Plugin angemeldet werden, es ist nicht möglich, bereits im System genutzte Schlüssel zu überschreiben. Ausnahme: Der Nutzer konfiguriert für das Plugin den Wert "allowKeyOverride" auf true. | Einspeisen eines von einem Sensor gelesenen Wertes - z.B. gps.temperature.outside oder von dekodierten NMEA Daten. |
+| C | Einspeisen von Daten in den internen Speicher von AvNav. Die Daten im internen Speicher sind in einer Baumstruktur abgelegt. Jedes Element ist durch einen Schlüssel der Form "a.b.c...." adressiert. Beispiel: "gps.lat".  Alle Schlüsselwerte, die mit "gps." starten, werden automatisch an die WebApp übertragen und sind dann dort unter "nav.gps...." verfügbar. (siehe [Layout Editor](../base/layout.md) und [nutzerspezifisches Java Script](userjs.md)).  Schlüsselwerte müssen vorher durch das Plugin angemeldet werden, es ist nicht möglich, bereits im System genutzte Schlüssel zu überschreiben. Ausnahme: Der Nutzer konfiguriert für das Plugin den Wert "allowKeyOverride" auf true. | Einspeisen eines von einem Sensor gelesenen Wertes - z.B. gps.temperature.outside oder von dekodierten NMEA Daten. |
 | D | Auslesen von Daten aus dem internen Speicher. | Berechnung neuer Daten und Einspeisung unter "C" - oder Weiterreichen an eine externe Verbindung. |
 | E | Bearbeiten von HTTP Requests | Die Java script Anteile können einen HTTP request senden, der im python code bearbeitet werden kann.  Anworten typischerweise in Json |
 

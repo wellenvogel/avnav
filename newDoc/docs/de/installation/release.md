@@ -5,7 +5,7 @@
 Avnav Releases
 ==============
 {% if not config.extra.no_version %}
-Das Verzeichnis mit allen Releases findet man [hier](../../downloads/release/).  
+Das Verzeichnis mit allen Releases findet man [hier]({{DLLINK("release")}}).  
 {% endif %}
 
 Hinweise

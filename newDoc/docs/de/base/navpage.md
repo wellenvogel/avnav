@@ -48,7 +48,7 @@ In der rechten Seitenleiste liegt die Buttonleiste, die die wichtigsten Funktio
 | {{BT("Split",True)}} | Hier kann der Split Mode ein- und ausgeschaltet werden. Einfach gesagt laufen in dieser Betriebsart zwei AvNav-Instanzen auf dem Display nebeneinander. Dazu gibt es spezielle Hinweise und Anleitungen [hier](../special/splitmode.md). |
 | {{BT("ReloadUI",True)}} | Neuerliches Laden Browserfensters mit den Daten vom AvNav Server|
 | {{BT("StatusShutdown", True)}} | Läuft das System auf einem Raspberry Image, startet dieser Button das geordnete Herunterfahren des Systems. |
-|  {{BT("MainExit",True)}} | Nur Android: Beendet die [AvNav App](TODO) oder setzt sie in den Hintergrund-Modus. |
+|  {{BT("MainExit",True)}} | Nur Android: Beendet die [AvNav App](../installation/android.md) oder setzt sie in den Hintergrund-Modus. |
 
 ## Navigation Tools Buttons
 ![Navigation Tools](../../img/navtools.png)
