@@ -884,6 +884,9 @@ task buildNewDocRelease(type: NewDocBuild){
     description "build new documentation with release check"
     workingDir "newDoc"
     avnavVersion=project.avnavVersion
+    outputFiles=project.fileTree("newDoc/site",{
+        include "**/*"
+    })
     commandLine "./build.sh","-d","-b","-c","-v","$project.avnavVersion","build"
 }
 
