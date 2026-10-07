@@ -138,41 +138,28 @@ The YT url should just be the ID. This way we can easily create links to YT or e
 
 Currently YT links will hide subtitles when the current language is german and will enable english subtitles if the current language is english.
 
-### Embedding Videos
-To embed a video on a page use the macro VIDEO
-```
-{{VIDEO("navigation")}}
-```
-This will embed a video on the page.
-
-To embed all chapters as a list with links use
-```
-{{VCALL("navigation")}}
-```
-This will create a list using the chapter titles from videos.yml (TODO: languages).
-
-To just create a link to a single chapter use
-```
-{{VCSINGLE("navigation",1)}}
-or
-{{VCSINGLE("navigation",1,"chapter 2")}}
-```
-The chapter index starts at 0. The second form allows to use a different title from the one used in the video.yml file.
-
 ### Linking Videos
-To link a video use 
+To link a video on a page use the macro VIDEO
 ```
-[Navpage]({{VLINK("navigation")}}){.videolink}
+{{VIDEO("Linktext","navigation")}}
 ```
-The added class `videolink` will allow to control if this link should be opened in a new Window (for now: default on).
+You can use 
+```
+{{VIDEO(None,"navigation")}}
+```
+to take the title from the videos.yml as link text.
 
-To link to a video chapter use 
-```
-[Chapter 1]({{VCLINK("navigation",0)}}){.videolink}
-```
-The chapter index starts at 0.
+For the normal usage on the AvNav homepage the YT videos will be linked.
 
-Example: [navpage.md](docs/de/base/navpage.md).
+For the usage as AvNav plugin you can install a second plugin that has all the videos embedded. This will call 
+the startpage with some additional URL parameters:
+
+```
+http://..../index.html?videobase=/plugins/user-docvideos&samepage=true
+```
+
+This will use the videos from the provided videobase and call an own videoplayer.
+
 
 ### Linking to old doc
 ```
