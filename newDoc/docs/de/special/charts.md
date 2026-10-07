@@ -72,6 +72,7 @@ Es gibt zwei Optionen
 Der Default ist `tms`. Leider gibt es oft MBTiles Dateien, die `zxy` nutzen aber das nicht in der Datei vermerken. Im Zweifel muss man daher probieren und das Schema ggf. umstellen, wenn die Karte falsch dargestellt wird. AvNav schreibt eine eigene Information in die MBTiles Datei, wenn man es im Dialog umstellt. Damit kann diese Datei dann auch auf anderen AvNav Systemen sofort korrekt genutzt werden.
 
 Der mittlere Tab "Imports" zeigt Informationen über Karten, die in den [Konverter](#converter) von AvNav geladen wurden. Auf Android ist der Konverter nicht vorhanden.
+{: #importer}
 
 Im Tab "Overlay Files" werden die Dateien aufgelistet, die man als [Overlays](overlays.md) zu Karten hinzufügen kann.
 
@@ -185,7 +186,7 @@ Kartendefinitionen können auf verschiedene Art in AvNav eingebracht werden.
 **XML Datei**
 {: #xmldef }
 
-Wie im [Beispiel](#exampldef) beschrieben können Kartendefinitionen als XML Datei zu AvNav hochgeladen werden.
+Wie im [Beispiel](#exampledef) beschrieben können Kartendefinitionen als XML Datei zu AvNav hochgeladen werden.
 
 **plugin.json**
 {: #pluginjsondef }
@@ -247,7 +248,7 @@ Der dort übergebene Callback wird gerufen, wenn AvNav die Liste seiner Karten e
     `http://nn.nn.nn.nn:8082/charts/testchart/avnav.xml` abgerufen. Die Kartenlayer im XML Dokument müssen dann nicht mehr unbedingt eine URL enthalten - es wird dann die Basis-URL `http://nn.nn.nn.nn:8082/charts/testchart` genutzt.
 
 
-### Layer Typen {: #layertyes }
+### Layer Typen {: #layertypes }
 
 AvNav hat eine Reihe von eingebauten Karten-Layer Typen. Diese erwarten die Kartendaten jeweils in einem bestimmten Format und laden sie über bestimmte URLs. [Plugins](plugins-extensions.md) oder [Nutzer-JavaScript](userjs.md) können weitere Layer Typen ergänzen.
 Diese Layer erzeugen intern jeweils ein Kartenlayer für [openlayers](http://www.openlayers.org/) oder [MapLibre](https://maplibre.org/).
@@ -259,7 +260,7 @@ Paremeter, die von mehreren Layern verstanden werden:
 
   * url (alternativ kann "href" genutzt werden)
 
-    Dieser kann weggelassen werden, wenn die Kartendaten unter der gleichen Basis-URL wie die Kartenbeschreibung gefunden werden. Für Details siehe die Java Script Interface [Beschreibung](#interface).
+    Dieser kann weggelassen werden, wenn die Kartendaten unter der gleichen Basis-URL wie die Kartenbeschreibung gefunden werden. Für Details siehe die Java Script Interface [Beschreibung](#registerlayer).
 
   * minzoom - Integer, der minimale Zoomlevel
   * maxzoom - Integer, der maximale Zoomlevel
@@ -498,7 +499,7 @@ Die als Resultat zurückgegebenen Objekte werden in einem [Feature List Dialog](
 
 Eine aufbereitete Liste mit den Informationen aller Objekte sollte HTML formatiert im Wert `htmlInfo` des Objektes hinterlegt werden (oder über `link` als URL abrufbar sein).
 
-Siehe auch [FeatureFormatter](userjs.md#featureformatter).
+Siehe auch [FeatureFormatter](userjs.md#featureFormatter).
 
 Ein Bespiel findet sich im [Plugin für freenauticalcharts](https://github.com/wellenvogel/avnav-freenauticalcharts/blob/f9859b10d99cc77ec830b39d33b5da04b667e7dd/freenauticalcharts/plugin.mjs#L271).
 

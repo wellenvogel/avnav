@@ -111,7 +111,7 @@ Die CSS Daten werden direkt im Layout gespeichert und sind nicht als separate Da
 
 Alle Änderungen werden erst dann permanent gespeichert, wenn das Layout am Ende der Bearbeitung gespeichert wird.
 
-## Einstellungen (Display Settings)
+## Einstellungen (Display Settings) {: #display-settings}
 
 Es gibt einige [Einstellungen](../base/settings.md), die ein Layout u.U. massgeblich beeinflussen. Ein typischer Kandidat ist die Einstellung "2 widget rows" unter "General". Diese enstcheidet, ob auf der Navigationsseite unten zwei Zeilen mit Widgets angezeigt werden, wenn sonst der Platz nicht ausreicht. Wenn man das für ein bestimmtes Layout verhindern möchte, kann man **während man das Layout bearbeitet** die Einstellungen z.B. mit
 

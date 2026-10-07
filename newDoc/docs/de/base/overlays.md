@@ -69,7 +69,7 @@ Wegepunkte als Overlay
 
 Die sollten natürlich zusammen passen. Die Bojen des dänischen Tursejlerverbands werden auf einer deutschen oder niederländischen Karte kaum zu finden sein…
 
-Nach der Zuordnung erhält man einen Dialog, der es ermöglicht, verschiedene Einstellungen für das Overlay vorzunehmen. Für einige Hinweise dazu siehe weiter [unten](#paremeters).
+Nach der Zuordnung erhält man einen Dialog, der es ermöglicht, verschiedene Einstellungen für das Overlay vorzunehmen. Für einige Hinweise dazu siehe weiter [unten](#parameters).
 
 Ist die Zuordnung Overlay zu Karte erzeugt, bestätigt man im Edit Overlay-Dialog mit {{DB("DBSave")}}. 
 

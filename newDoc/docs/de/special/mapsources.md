@@ -26,12 +26,12 @@ Für Mobac Version 2.2.1 bitte die Datei [avnav-mapsources-before222.zip](../../
 nutzen.  
 Für Mobac Versionen < 2.2.1 bitte die Datei [avnav-mapsources-before22.zip](../../../downloads/avnav-mapsources-before22.zip)
 nutzen.  
-Dann erhält man u.a. ein "mashUp" aus den BSH-Kartendiensten (siehe auch [bsh-viewer](../../bshviewer/bshviewer.md)) und OpenSeaMap
+Dann erhält man u.a. ein "mashUp" aus den BSH-Kartendiensten (siehe auch [bsh-viewer](https://www.wellenvogel.net/software/bshviewer/bshviewer.html)) und OpenSeaMap
 ("BSH OpenSeaMap 2021 Extended"). Außerdem noch BSH alleine ("BSH 2021
 Extended") oder OpenSeaMap + OpenStreetMap ("OWS OpenSeaMap 2021"). Wenn
 jemand "spielen" möchte, kann man die .exml entsprechend anpassen.
 Spannend sind insbesondere die Layer für die BSH-Abfrage. Die kann man mit
-meinem [bsh-viewer](../../bshviewer/bshviewer.md)
+meinem [bsh-viewer](https://www.wellenvogel.net/software/bshviewer/bshviewer.html)
 ausprobieren (jeweils rechts in der Quelle editieren). Außerdem kann man
 bei Bedarf die Farben noch etwas anpassen - ich habe mich bemüht, etwas
 mehr Kontrast zu erzeugen. Wenn man etwas ändern will - eine der Karten

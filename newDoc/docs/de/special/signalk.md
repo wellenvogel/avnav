@@ -43,7 +43,7 @@ Je nach Nutzer Vorlieben und fertigen Systemkonfigurationen gibt es also mehrere
    SignalK-Daten, die noch nicht in AvNav vorhanden sind (z.B. Sensoren) können (über den SignalK handler als [zusätzliche Daten](#addon)) wieder zu AvNav geschickt werden und dann dort auch angezeigt werden.  
    Die Daten, die AvNav zur Navigation nutzt (inklusive der AIS Daten),
    werden hier direkt von AvNav aus den NMEA-Daten dekodiert.  
-   NMEA2000-Daten wird man normalerweise immer auch direkt zu SignalK schicken, damit diese dort direkt dekodiert werden können. AvNav kann diese Daten über [Canboat](#Canboat) empfangen - oder von SignalK erhalten (dann erzeugt man aber einen gemischten Fluss und muss sicherstellen, das man keine Schleifen erzeugt)
+   NMEA2000-Daten wird man normalerweise immer auch direkt zu SignalK schicken, damit diese dort direkt dekodiert werden können. AvNav kann diese Daten über [Canboat](nmea2000.md) empfangen - oder von SignalK erhalten (dann erzeugt man aber einen gemischten Fluss und muss sicherstellen, das man keine Schleifen erzeugt)
 
 2. NMEA-Daten landen zunächst in SignalK und können von dort per
    [Signalk Handler](#decode) zu AvNav weiter geleitet werden.  
@@ -76,7 +76,7 @@ client zu Port 34568 angelegt werden (in den images bereits angelegt).
 Der AVNSignalKHandler ist per default so konfiguriert, dass er SignalK
 über localhost:3000 erreicht und alle Daten von vessels.self liest. Diese
 werden dann unter gps.signalk,... in AvNav abgespeichert und können so in
-[Anzeigen](layouts.md) verwendet werden.  
+[Anzeigen](../base/layout.md) verwendet werden.  
 Dabei wird eine Mischung aus polling per HTTP-Json und einer Websocket-Verbindung genutzt. Das Polling sorgt für eine sichere Aktualisierung, die
 Websocket-Verbindung für ein zeitnahes Update.
 
@@ -284,7 +284,7 @@ warn -> alarm
 
 alarm -> alarm
 
-Im AVNAlarmHandler können auch weitere Alarme [konfiguriert ](configfile.md#AVNAlarmHandler) werden (als Name muss dan sk:name verwendet werden). Diese werden dann entsprechend ihrer konfiguration behandelt.
+Im AVNAlarmHandler können auch weitere Alarme [konfiguriert ](configfile.md#avnalarmhandler) werden (als Name muss dan sk:name verwendet werden). Diese werden dann entsprechend ihrer konfiguration behandelt.
 
 ### SignalK - Karten {: #SignalKCharts}
 

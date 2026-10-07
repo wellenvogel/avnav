@@ -50,7 +50,7 @@ um NMEA-Daten für andere Android-Apps bereitzustellen. In AvNav
 konfiguriert man dazu einen TcpWriter, in den zugreifenden Apps verbindet
 man sich über die Adresse 127.0.0.1 und den beim TcpWriter konfigurierten Port.
 
-## Karten und gespeicherte Daten (Arbeitsverzeichnis)
+## Karten und gespeicherte Daten (Arbeitsverzeichnis) {: #workingdirectory}
 
 AvNav speichert alle
 seine Daten und die Karten in einem Arbeitsverzeichnis.

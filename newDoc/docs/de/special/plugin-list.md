@@ -27,7 +27,7 @@ Die Spalte 'Image' gibt an, ob das Plugin standardmässig in den [AvNav Images](
 | [Logbuch](https://github.com/Surfer2010/avnav-logbuch-plugin/tree/main) | Zip | Nein | Nein | Ein Logbuch Plugin für AvNav (nur Windows/Linux/Raspberry) |
 | [Legacy Display](https://github.com/Surfer2010/avnav-legacy-display)| Zip | nein | nein | Anzeige auf alten Browsern (z.B. E-Book-Reader) auf denen AvNav sonst nicht läuft. _Nur Windows/Linux/Raspberry_ |
 | [Legacy Display II](https://github.com/wellenvogel/avnav-simpledashplugin) | Zip | nein | nein | Andere Variante für ein Display auf alten Browsern wie E-Book-Readern. Anpassung der Displays durch den Nutzer über das Editieren von HTML Seiten - oder mit KI. _Alle Platformen (auch Android)_ |
-|[ocharts - legacy ](ocharts.md)| Paket | nein | nein | Karten von [o-charts](https://o-charts.org/) |
+|[ocharts - legacy ]({{OLDLINK("hints/ocharts.html")}})| Paket | nein | nein | Karten von [o-charts](https://o-charts.org/) |
 | [rudder-angle](https://gitlab.strukturpunkt.de/kfr/avnav-rudder-angel)| zip | nein | nein |Anzeige des Ruderwinkels (über SignalK, _nur Linux/Raspberry_) |
 | [AvNav Dokumentation]({{DLLINK("release")}})| zip | nein | nein | Diese AvNav Dokumentation als Plugin. Bitte jeweils das documentation-xxxx.zip installieren.|
 | [AvNav Dokumentation Videos]({{DLLINK("supplement/docvideos.zip")}})| zip | nein | nein | Die Videos zur AvNav Dokumentation. Damit sind die Vidoes auch offline verfügbar, wenn die Dokumentation über dieses Plugin geöffnet wird.|

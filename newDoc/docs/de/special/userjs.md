@@ -116,7 +116,7 @@ formatAmperePercent.parameters=[
 ]
 api.registerFormatter("formatAmperePercent",formatAmperePercent);
 ```
-Die Parameter für einen Formatter werden ähnlich beschrieben, wie [Widget Parameter](#widgetparameters), nur das sie als Array angegeben werden mit einem zusätzlichen Feld "name"
+Die Parameter für einen Formatter werden ähnlich beschrieben, wie [Widget Parameter](#widgetparameter), nur das sie als Array angegeben werden mit einem zusätzlichen Feld "name"
 Wenn man num im Layout-Editor den neuen Formatter nutzt, sieht das Bild so aus:
 
 ![Formatter](../../img/userjs-formatter.png)
@@ -301,6 +301,7 @@ Reihe von vordefinierten Parametern für den Layout Editor. Bei diesen wird
 zur Beschreibung kein Objekt mit Eigenschaften angegeben, sonder nur true
 oder false (das zeigt, ob sie zum Ändern angeboten werden sollen oder
 nicht).
+{: #predefinedparameters}
 
 Das sind:
 

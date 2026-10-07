@@ -100,7 +100,7 @@ nutzen kann - einen [BonjourBrowser](https://play.google.com/store/apps/details?
 Tool](https://apps.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829) - auch wenn dort der Eintrag "xxx.local" im Browser
 funktioniert. Man wird seinen Raspberry mit dem AvNav-Image in den
 Browsern unter dem Namen "avnav-server" finden. Typischerweise wird man
-noch einen zweiten Eintrag "avnav" sehen - dahinter verbirgt sich der [SignalK](hints/CanboatAndSignalk.md)-Server auf dem
+noch einen zweiten Eintrag "avnav" sehen - dahinter verbirgt sich der [SignalK](signalk.md)-Server auf dem
 Raspberry.  
 Wenn man seinen Raspberry im Bonjour-Browser sehen kann, der Aufruf der
 Seite dann aber fehlschlägt, kann es an einer Besonderheit von Android

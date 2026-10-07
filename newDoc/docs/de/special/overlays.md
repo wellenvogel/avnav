@@ -21,7 +21,7 @@ Je nach Overlay-Typ haben diese Eigenschaften feste Werte oder die Werte müssen
 
 Dabei können im [Eigenschaften-Dialog](../base/overlays.md#parameters) immer nur die Werte für alle Objekte eines Typs in einer Overlay-Datei festgelegt werden (also z.B. die Strichstärke oder -Farbe für alle Linien). In den Dateien selbst können diese Eigenschaften aber u.U. für jedes Objekt verschieden sein (z.B. KML Dateien).
 
-Neben den Eigenschaften, die direkt die Anzeige beeinflussen, können die Geometrie-Objekte noch weitere Eigenschaften haben (also z.B. einen erläuternden Text - oder ganze HTML Seiten). Diese werden im Normalfall nicht auf der Karte angezeigt, können aber (nach Klick auf die Karte) über die [Feature Info](#featureInfo) angezeigt werden. Siehe dazu auch unter [Feature Formatter](#featureformatter).
+Neben den Eigenschaften, die direkt die Anzeige beeinflussen, können die Geometrie-Objekte noch weitere Eigenschaften haben (also z.B. einen erläuternden Text - oder ganze HTML Seiten). Diese werden im Normalfall nicht auf der Karte angezeigt, können aber (nach Klick auf die Karte) über die [Feature Info](#featureInfo) angezeigt werden. Siehe dazu auch unter [Feature Formatter](#featureFormatter).
 
 ## Anzeige-Eigenschaften
 
@@ -33,7 +33,7 @@ Einige Overlay-Dateitypen (z.B. KML/KMZ) unterstützen die Angabe einer Icon-Url
 
 Damit diese Icons angezeigt werden können, müssen sie natürlich vorhanden sein. Für externe URLs muss im Dialog `allow online` gesetzt werden, damit diese angezeigt werden. Für relative URLs müssen die Icons entweder in das Overlay-Verzeichnis (als Overlay Datei) hochgeladen werden - oder sie müssen in einer Zip-Datei eingepcakt sein (mit Pfaden so, wie sie in der Overlay Datei stehen). Diese Zip Datei muss dann ebenfalls als Overlay-Datei zu AvNav hochgeladen werden und als Parameter `icon file` im Dialog angegeben werden.
 
-Die Objekt-Eigenschaftt, die das Icon beschreibt ist `sym`. Unter [Feature Formatierer](#featureformatter) ist noch beschrieben, wie man die Ermittlung der Icon-URL beeinflussen kann.
+Die Objekt-Eigenschaftt, die das Icon beschreibt ist `sym`. Unter [Feature Formatierer](#featureFormatter) ist noch beschrieben, wie man die Ermittlung der Icon-URL beeinflussen kann.
 
 ## Feature Info {: #featureInfo }
 
@@ -84,7 +84,7 @@ Im Wesentlichen muss man dazu die Datei `user.mjs` bearbeiten:
 
 {{MM("MMaddonconfigpage")}}->"User Files" -> "user.mjs" -> {{DB("Edit")}}
 
-und dort einen Eintrag für den Formatierer hinzufügen, so wie unter [Nutzer-Java-Script](userjs.md#featureformatter) beschrieben.
+und dort einen Eintrag für den Formatierer hinzufügen, so wie unter [Nutzer-Java-Script](userjs.md#featureFormatter) beschrieben.
 
 Auch [Plugins](plugins.md) können solche Feature Formatierer mitbringen.
 

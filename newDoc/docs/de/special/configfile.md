@@ -143,6 +143,10 @@ Beispiele:
 * `!,$RMC` - alls AIS Nachrichten und RMC Records
 * `^$APB,^$RMB` - keine APB und keine RMB Records
 
+### BlackList {: #blackList}
+
+Eine Blackliste enthält Namen von Input-Kanälen (Handlern), deren Daten an diesem Interface nicht ausgegeben werden sollen. Mehrere Einträge werden durch , getrennt.
+
 
 ### Funktionseinheiten (Handler)
 
@@ -282,7 +286,7 @@ Nur möglich, wenn das Gerät ein Bluetooth Device hat.
 
 Lesen von seriellen Geräten. Kategorie 3 (mehrfach, optional). Dieser
 Reader sollte nur für direkt per Hardware (UART) verbundene Geräte genutzt
-werden, für Geräte, die per USB angeschlossen sind ist der [AVNUsbSerialReader](#AVNUsbSerialReader)
+werden, für Geräte, die per USB angeschlossen sind ist der [AVNUsbSerialReader](#avnusbserialreader)
 zuständig.
 
 |  |  |  |  |
@@ -308,7 +312,7 @@ zuständig.
 
 Ausgang über ein serielles Gerät. Auch kombiniert Ein- und Ausgang.
 Kategorie 3 (optional)  
-Nur für direkte serielle Geräte, nicht für USB-Wandler ([AVNUsbSerialReader](#AVNUsbSerialReader)
+Nur für direkte serielle Geräte, nicht für USB-Wandler ([AVNUsbSerialReader](#avnusbserialreader)
 für diese)
 
 |  |  |  |  |
@@ -331,8 +335,7 @@ normalerweise komplett automatisch von AvNav erkannt.
 Man kann für einzelne Geräte Regeln definieren, um sie speziell zu
 behandeln. Als Identifikation für ein Gerät wird dabei eine ID genutzt,
 die die enstprechende USB Buchse identifiziert. Mann kann diese ID am
-einfachsten ermitteln, indem man bei Einstecken des Gerätes die [Status
-Seite](../userdoc/statuspage.md) beobachtet.
+einfachsten ermitteln, indem man bei Einstecken des Gerätes die [Verbindungs Seite](connections.md#channelspage) beobachtet.
 
 Die Parameter gliedern sich in 2 Teile:
 
@@ -714,7 +717,7 @@ der Kategorie und dem plugin Verzeichnis. Beispiel:
 | systemDir | Verzeichnis für Plugins, die als separate Pakete installiert werden | /usr/lib/avnav/plugins |
 | userDir | Verzeichnis für Nutzer Plugins | $DATADIR/plugins |
 
-#### Parameter für [builtin-canboat](CanboatAndSignalk.md)
+#### Parameter für [builtin-canboat](nmea2000.md)
 
 |  |  |  |  |
 | --- | --- | --- | --- |

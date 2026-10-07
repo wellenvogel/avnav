@@ -47,7 +47,7 @@ Es gibt zwei Wege für die Installation von Plugins:
 
 Daneben gibt es noch einige Plugins, die direkt mit AvNav ausgeliefert werden. Diese sind mit dem Prefix `builtin-` sichtbar.
 
-Auf der Plugin Seite {{MM("MMpluginpage")}} erhält man eine liste der momentan installierten Plugins.
+Auf der Plugin Seite {{MM("MMpluginspage")}} erhält man eine liste der momentan installierten Plugins.
 
 ![Plugins](../../img/plugins-list.png)
 ///caption
@@ -128,7 +128,7 @@ Die Keys und ihre Bedeutung (alle sind optional).
 | version | String | Die plugin Version |
 | description | String | Eine kurze Beschreibung des Plugins (max. 80 Zeichen) |
 | charts | Array | Eine Beschreibung von [Karten](charts.md#pluginjsondef), die das Plugin mitbringt.|
-| userApps | Array | Eine Liste von UserApps - siehe [unten](#pluginusermaps) |
+| userApps | Array | Eine Liste von UserApps - siehe [unten](#pluginuserapps) |
 | layouts | Array | Eine Liste von Objekten, die Layouts beschreiben. Jedes Element muss die Keys `name`für den Namen des Layouts und `file` für einen relativen Dateinamen zum Layout-JSON-File enthalten |
 
 
@@ -225,7 +225,7 @@ stehen die folgenden Funktionen zur Verfügung
 | registerChartProvider | Falls das Plugin [Karten](charts.md#insertingpython) bereitstellt, wird hier ein callback registriert, der eine Liste der Karten zurückgibt. |
 | registerRequestHandler | Falls das Plugin HTTP requests bearbeiten soll (Interface E) muss hier ein callback registriert werden, der den Request behandelt. Die url für den Aufruf ist:  <pluginBase>/api  Dabei ist pluginBase der unter getBaseUrl zurückgegebene Wert.  Die [java script Anteile](#jscode) können die API url mit der Funktion `api.getBaseUrl()+"/api"` bilden. Im einfachsten Fall kann die aufgerufene callback-Funktion ein dictionary zurückgeben, dieses wird als Json zurück gesendet. |
 | getBaseUrl | gib die Basis URL für das Plugin zurück |
-| registerUsbHandler  (ab 20201227) | registriert einen Callback für ein USB Gerät. Mit dieser Registrierung wird AvNav mitgeteilt, dass es das USB Gerät nicht beachten soll. Der Callback wird mit dem Device-Pfad für das Gerät aufgerufen, wenn das Gerät erkannt wurde.  Die USB-Id kann am einfachsten durch Beobachten der Status-Seite beim Einstecken des Gerätes ermittelt werden. Siehe auch [AVNUsbSerialReader](configfile.md#AVNUsbSerialReader). Damit kann ein Plugin selbst einfach das Handling für ein spezielles Gerät übernehmen, Ein Beispiel findet sich auf [GitHub](https://github.com/wellenvogel/avnav-seatalk-remote-plugin/blob/master/plugin.py). |
+| registerUsbHandler  (ab 20201227) | registriert einen Callback für ein USB Gerät. Mit dieser Registrierung wird AvNav mitgeteilt, dass es das USB Gerät nicht beachten soll. Der Callback wird mit dem Device-Pfad für das Gerät aufgerufen, wenn das Gerät erkannt wurde.  Die USB-Id kann am einfachsten durch Beobachten der Status-Seite beim Einstecken des Gerätes ermittelt werden. Siehe auch [AVNUsbSerialReader](configfile.md#avnusbserialreader). Damit kann ein Plugin selbst einfach das Handling für ein spezielles Gerät übernehmen, Ein Beispiel findet sich auf [GitHub](https://github.com/wellenvogel/avnav-seatalk-remote-plugin/blob/master/plugin.py). |
 | getAvNavVersion  (ab 20210115) | Aktuelle AvNav Version (int) |
 | saveConfigValues  (ab 20210322) | Speichere config Werte für das Plugin in avnav\_server.xml. Der Parameter muss ein dictionary mit den Werten sein. Das Plugin muss sicherstellen, dass es später mit diesen Werten wieder starten kann. |
 | registerEditableParameters  (ab 20210322) | Registriert eine Liste mit config Werten, die zur Laufzeit geändert werden können. Der erste Parameter ist eine Liste von dictionaries mit den Parameter Beschreibungen, der zweite ein callback, der bei Änderungen mit den geänderten Werten aufgerufen wird (wird typischerweise saveConfigValues rufen).  Die Syntax für die Parameter-Liste ist im [Source Code](https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py) beschrieben. |
@@ -235,7 +235,7 @@ stehen die folgenden Funktionen zur Verfügung
 | shouldStopMainThread  (ab 20210322) | Kann in der Hauptschleife genutzt werden, um zu prüfen, ob das Plugin gestoppt werden soll. In jedem anderen Thread wird immer True zurück gegeben. |
 | sendRemoteCommand  (ab 20230426) | Sende ein Fernsteuerungskommando, siehe den [Source Code](https://github.com/wellenvogel/avnav/blob/3a291c2e08bfaa13b12246f9a456a4a896533d52/server/avnav_api.py#L344) für Details. |
 | registerSettingsFile  (ab 20230426) | Mache eine Datei mit gespeicherten Einstellungen bekannt. Diese kann vom Nutzer dann geladen werden. |
-| registerCommand  (ab 20230426) | Registriere ein Kommando, das von AvNav ausgeführt werden kann. Dieses kann z.B. dafür genutzt werden ein bereits vorhandenes Kommando zu ersetzen. Auch neue Kommandos sind möglich. Siehe den [Source Code](https://github.com/wellenvogel/avnav/blob/3a291c2e08bfaa13b12246f9a456a4a896533d52/server/avnav_api.py#L364) oder die [AVNCommandHandler Konfiguration](configfile.md#AVNCommandHandler) für Details. |
+| registerCommand  (ab 20230426) | Registriere ein Kommando, das von AvNav ausgeführt werden kann. Dieses kann z.B. dafür genutzt werden ein bereits vorhandenes Kommando zu ersetzen. Auch neue Kommandos sind möglich. Siehe den [Source Code](https://github.com/wellenvogel/avnav/blob/3a291c2e08bfaa13b12246f9a456a4a896533d52/server/avnav_api.py#L364) oder die [AVNCommandHandler Konfiguration](configfile.md#avncommandhandler) für Details. |
 | registerConverter  (since 20240520) | Registriere einen Karten-Konverter  Für ein Beispiel siehe das [ochartsng plugin](https://github.com/wellenvogel/ochartsng/blob/f10d8aa8b10ce89320b939a91e14ceaa822054a0/avnav-plugin/plugin.py#L407) |
 | deregisterConverter  (since 20240520) | Deregistriere einen Karten-Konverter |
 | clearAlarms (20250723) | Lösche alle Alarme |

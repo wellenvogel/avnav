@@ -45,21 +45,21 @@ Diese Images enthalten
 * avnav-raspi-base
 * avnav-raspi-network
 * [avnav-update-plugin](https://github.com/wellenvogel/avnav-update-plugin)
-* [avnav-ocharts-plugin](hints/ocharts.md)
+* [avnav-ochartsng-plugin](../special/ochartsng.md)
 * [avnav-mapproxy-plugin](https://github.com/wellenvogel/avnav-mapproxy-plugin)
 * [avnav-history-plugin](https://github.com/wellenvogel/avnav-history-plugin)
-* [SignalK](hints/CanboatAndSignalk.md)
-* [Canboat](hints/CanboatAndSignalk.md)
+* [SignalK](../special/signalk.md)
+* [Canboat](../special/nmea2000.md)
 * Support for [MCS](https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/)
 * optional einen X-Server mit openbox und firefox im Kiosk Modus
 * Unterstützung für verschiedene [HATs](#configHATS)
 
 Die Images sind so vorkonfiguriert, dass NMEA0183-Daten von allen Interfaces
-zu AvNav und von dort zu [SignalK](hints/CanboatAndSignalk.md)
+zu AvNav und von dort zu [SignalK](../special/signalk.md)
 geleitet werden. AvNav holt sich zusätzlich alle Daten von SignalK und kann
-diese anzeigen. Für Details zur SignalK-Integration siehe die [Beschreibung](hints/CanboatAndSignalk.md#SignalK).  
+diese anzeigen. Für Details zur SignalK-Integration siehe die [Beschreibung](../special/signalk.md).  
 NMEA2000-Daten laufen über Canboat zu SignalK und zu AvNav.  
-Für Details zu Canboat siehe [CanBoatAndSignalK](hints/CanboatAndSignalk.md).
+Für Details zu Canboat siehe [NMEA2000](../special/nmea2000.md).
 
 ### Image Vorbereitung {: #preparation}
 

@@ -199,6 +199,7 @@ Reihe von vordefinierten Parametern für den Layout Editor. Bei diesen wird
 zur Beschreibung kein Objekt mit Eigenschaften angegeben, sonder nur true
 oder false (das zeigt, ob sie zum Ändern angeboten werden sollen oder
 nicht).
+{: #predefinedparameters}
 
 Das sind:
 
@@ -321,4 +322,4 @@ Mit
 avnav.api.registerFeatureFormatter('myHtmlInfo',myHtmlInfoFunction);
 ```
 
-werden sie registriert. Für Details siehe [Overlays](overlays.md#adaptation).
+werden sie registriert. Für Details siehe [Overlays](overlays.md#featureFormatter).

@@ -982,6 +982,7 @@ task newDocBrokenLinks(type: DefaultTask){
     doLast(){
         brokenLinks(baseDir,list,["md-sidebar","md-header"])
     }
+    dependsOn buildNewDoc
 }
 
 

@@ -43,7 +43,7 @@ Mit einem Klick auf den jeweiligen Button wird die entsprechende Seite in AvNav 
 | {{MB("MMgpspage")}} | Aufruf der [Dashboard Seiten](../base/navpage.md#dashboards)|
 | {{MB("MMaddonpage")}} | Aufruf der [User App Seite](../base/userapps.md)|
 | {{MB("MMchartspage")}} | Aufruf der [Kartenverwaltung](../base/charts.md#management) |
-| {{MB("MMroutepage")}} | Aufruf der [Routenverwaltung](../base/routes.md#mangement) |
+| {{MB("MMroutepage")}} | Aufruf der [Routenverwaltung](../base/routes.md#management) |
 | {{MB("MMtrackspage")}} | Aufruf der [Verwaltung von Tracks und NMEA Logs](tracks.md) |
 | {{MB("MMaiscfgpage")}} | Aufruf der [AIS Konfiguration und Anzeige](ais.md) |
 | {{MB("MMsettingspage")}} | Aufruf der [Display Settings](../base/settings.md) |

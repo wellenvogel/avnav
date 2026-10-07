@@ -8,7 +8,7 @@
 Die Legacy Wifi-Konfigurationsseite
 ============================
 __Achtung:__
-Diese Seite beschreibt die AvNav Wifi Konfiguration auf [AvNav bookworm images](../installation/raspberry.md#images). Auf images für trixie (und neuer) gibt es eine [neue Konfiguration](wifi.md).
+Diese Seite beschreibt die AvNav Wifi Konfiguration auf [AvNav bookworm images](../installation/raspberry.md#images). Auf images für trixie (und neuer) gibt es eine [neue Konfiguration](serverpage.md#wifi).
 
 
 Von der [ServerSeite](serverpage.md) kommt man mit dem
@@ -19,7 +19,7 @@ Button{{BT("StatusWpa")}} zu dieser Seite.
 Diese Seite wird nur angezeigt, wenn das Wifi Client Handling
 in der avnav\_server.xml  konfiguriert ist (als default an). Man kann
 nur Verbindungen konfigurieren, wenn ein WLAN-Adapter in der richtigen
-USB-Buchse eingesteckt wurde oder in der [avnav.conf](../install.md#preparation)
+USB-Buchse eingesteckt wurde oder in der [avnav.conf](../installation/raspberry.md#preparation)
 InternalWifi as Client auf "yes" gesetzt wurde.
 
 ![](../img/raspi3-wlan.jpg)

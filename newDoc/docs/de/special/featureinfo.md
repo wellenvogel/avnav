@@ -19,7 +19,7 @@ In dieser Liste findet man alle Anzeige-Layer, die an der angeklickten Position 
 
 ## Feature Info
 
-Der Inhalt der Detail-Information ist vom Anzeige-Layer (also z.B. vom [Overlay](overlays.md#featureinfo)) abhängig.
+Der Inhalt der Detail-Information ist vom Anzeige-Layer (also z.B. vom [Overlay](overlays.md#featureInfo)) abhängig.
 
 ![Feature Info Route](../../img/feature-info-route.png)
 ///caption
@@ -43,6 +43,6 @@ Feature Info Vektorkarte
 
 ## Anpassungen
 
-Die in einer Feature-Info angezeigten Informationen können sowohl durch [Nutzer-JavaScript](userjs.md#featureformatter) als auch durch [Plugins](plugins.md) angepasst werden. 
+Die in einer Feature-Info angezeigten Informationen können sowohl durch [Nutzer-JavaScript](userjs.md#featureFormatter) als auch durch [Plugins](plugins.md) angepasst werden. 
 
 Auch [Zusätzliche Kartentypen](charts.md#owntypes) können die Anzeige in der Feature-Info beeinflussen. Über die {{DB("DBInfo")}} Funktion lassen sich auch Webseiten oder externe Links hinterlegen.

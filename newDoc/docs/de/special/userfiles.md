@@ -68,7 +68,7 @@ Besonders nützlich können HTML Dateien sein. Da alle Dateien aus diesem Verzei
 ```
   http://nn.nn.nn.nn:8080/user/viewer/xxx
 ```
-von einem Webbrowser aus erreichbar sind, kann man damit sehr einfach zusätzliche Seiten schaffen, die innerhalb von AvNav (oder auch ausserhalb) angezeigt werden können. Dazu steht (auf der gleichen Seite unter {{BT("AddonConfigAddons")}}) die Möglichkeit zur Verfügung, die Dateien als sogenannte "[User App](../base/userapps.md)" bzw. AddOn einzurichten.
+von einem Webbrowser aus erreichbar sind, kann man damit sehr einfach zusätzliche Seiten schaffen, die innerhalb von AvNav (oder auch ausserhalb) angezeigt werden können. Dazu steht (auf der gleichen Seite unter {{BT("AddonConfigAddOns")}}) die Möglichkeit zur Verfügung, die Dateien als sogenannte "[User App](../base/userapps.md)" bzw. AddOn einzurichten.
 
 ## Beispiel für eine HTML Datei { #userappexample }
 
@@ -112,7 +112,7 @@ Einrichtung UserApp
 ///
 Man füllt die markierten Werte aus, unter icon wählt man das hochgeladene Icon aus und speichert mit {{DB("DBOk")}}.
 
-Im Tab {{BT("AddonConfigAddons")}} wird man nun die neue UserApp sehen können mit dem gewählten Icon. Mit einem Klick auf das Icon kann man sich die neu gebaute Seite anzeigen lassen.
+Im Tab {{BT("AddonConfigAddOns")}} wird man nun die neue UserApp sehen können mit dem gewählten Icon. Mit einem Klick auf das Icon kann man sich die neu gebaute Seite anzeigen lassen.
 
 Man findet den neu angelegten Button später unter 
 {{MM("MMaddonpage")}}
