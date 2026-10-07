@@ -897,6 +897,28 @@ task uploadNewDoc(type: UploadTask){
     dependsOn buildNewDocRelease
 }
 
+def NDHTACCES="$project.buildDir/distributions/htaccess"
+task uploadNewDocLatest(type: UploadTask){
+    group NDGROUP
+    description "upload the htaccess to set the current version as latest"
+    deleteTargetDir=false
+    baseDir="../newDoc"
+    useHashes=false
+    inputFile=file(NDHTACCES)
+    getTargetName = { file ->
+                return ".htaccess"
+    }
+    dependsOn buildNewDocRelease
+    doFirst{
+        def htaccess=inputFile
+        if (!htaccess.getParentFile().isDirectory()) htaccess.getParentFile().mkdirs()
+        htaccess.withWriter('utf-8'){ wr->
+            wr.println("RewriteCond %{REQUEST_URI} \"latest/.*\"")
+            wr.println("RewriteRule ^latest/(.*)\$ ${project.avnavVersion}/\$1 [L]")
+        }
+    }
+}
+
 task addNewDocVersion(type: DefaultTask){
     group NDGROUP
     description "add new documentation version to list"
@@ -1009,7 +1031,7 @@ task uploadRelease{
     if (buildAndroid){
         dependsOn uploadAndroidRelease
     }
-    dependsOn uploadNewDocPluginRelease,uploadNewDoc
+    dependsOn uploadNewDocPluginRelease,uploadNewDoc,uploadNewDocLatest
 }
 
 afterEvaluate{
