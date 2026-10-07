@@ -15,6 +15,10 @@ Contact via the [Segeln Forum](https://www.segeln-forum.de/board/195-open-boat-p
 
 Special thanks go to the diligent helpers who make this documentation possible:
 
-* [Moeritsen](https://www.segeln-forum.de/cms/user/20863-moeritsen/) - especially also for the videos and icons
+* [Moeritsen](https://www.segeln-forum.de/cms/user/20863-moeritsen/) - especially for the videos and icons
 * [NoStress](https://www.segeln-forum.de/cms/user/31846-nostress/)
 * [BlackSea](https://www.segeln-forum.de/cms/user/27970-blacksea/)
+
+## Note
+
+The translations (other than German) were created using AI tools.

@@ -19,3 +19,6 @@ Besonderer Dank geht an die fleissigen Helfer, die diese Dokumentation ermöglic
 * [NoStress](https://www.segeln-forum.de/cms/user/31846-nostress/)
 * [BlackSea](https://www.segeln-forum.de/cms/user/27970-blacksea/)
 
+## Hinweis
+
+Die Übersetzungen (ausser Deutsch) wurden unter Nutzung von KI Tools erstellt.
