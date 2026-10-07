@@ -2,6 +2,9 @@ playlistall:
   kind: playlist
   youtube: PLB4qZR2gxXsI
 navigation:
+  title:
+    de: AvNav Navigation
+    en: AvNav Navigation
   youtube: "as62-dDtmQ4"
   intern: navigationsseite.mp4
   chapters:
@@ -36,6 +39,9 @@ navigation:
 routes:
   youtube: "YbCWn0XAWmA"
   intern: routing.mp4
+  title:
+    de: AvNav Routing
+    en: AvNav Routing
   chapters:
     de:
       - 00:00 Start
@@ -43,18 +49,30 @@ routes:
       - 00:00 Start
 
 settings:
+  title:
+    de: AvNav Einstellungen
+    en: AvNav Settings
   youtube: 5otVXjEH0EE
   intern: settings.mp4
 
 layouts:
+  title:
+    de: AvNav Layouts
+    en: AvNav Layouts
   youtube: kIQuY4qUxGE
   intern: layouts.mp4
 
 userapps:
+  title:
+    de: AvNav User Apps
+    en: AvNav User Apps
   youtube: "P-i5Eb_7IsQ"
   intern: userapps.mp4
 
 charts:
+  title:
+    de: AvNav Karten
+    en: AvNav Charts
   youtube: "as62-dDtmQ4"
   intern: charts.mp4
   

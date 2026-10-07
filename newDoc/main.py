@@ -219,12 +219,16 @@ def define_env(env):
 
     def get_video(name):
         if not name:
-            return [None,None]
+            return [None,None,None]
         video=videos.get(name)
         if not video:    
-            return [None,None]
+            return [None,None,None]
         chapters=video.get(pageVariables.get(PV_LANG)) or video.get('de')
-        return [video,chapters]
+        title=None
+        tb=video.get('title')
+        if tb:
+            title=tb.get(pageVariables.get(PV_LANG)) or tb.get('de')
+        return [video,chapters,title]
     def chapter_title(chapter):
         #TODO: language
         if not chapter:
@@ -261,14 +265,16 @@ def define_env(env):
         return rt
     @env.macro
     def VIDEO(text,name):
-        video,chapters=get_video(name)
+        video,chapters,title=get_video(name)
         if not video:
+            return '<div class="error">unknown video '+(name or '??')+'</div>'
+        if video.get('kind') == 'playlist':
             return '<div class="error">unknown video '+(name or '??')+'</div>'
         lurl=video_url(video,mode=M_INTERN,kind=VK_LINK)
         if not lurl:
             return '<div class="error">no url for video '+name+'</div>'
         yturl=video_url(video,mode=M_YT,kind=VK_LINK)
-        return f"<a class=\"video videolink\" data-localurl=\"{lurl}\" data-yturl=\"{yturl}\" data-name=\"{name}\">{text or name}</a>"
+        return f"<a class=\"video videolink\" data-localurl=\"{lurl}\" data-yturl=\"{yturl}\" data-name=\"{name}\" data-title=\"{title}\">{text or title or name}</a>" 
     
     def add_lang(url,lang):
         if not lang:
