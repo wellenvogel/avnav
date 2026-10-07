@@ -71,7 +71,8 @@ class UploadTask extends DefaultTask{
      * @param client
      * @param path
      */
-    private void createRemoteDir(FTPClient client,String path){
+    protected void createRemoteDir(FTPClient client,String path){
+        logger.info("create remote dir $path")
         if (createdDirs.contains(path)) {
             client.changeWorkingDirectory(path)
             String wd=client.printWorkingDirectory()
@@ -104,16 +105,17 @@ class UploadTask extends DefaultTask{
                 res=client.changeWorkingDirectory(dir)
             }
             else{
+                logger.info("creating directory $dir")
                 client.makeDirectory(dir)
                 res=client.changeWorkingDirectory(dir)
             }
             assert res,"unable to change to ftp directory $curpath"
             createdDirs.add(curpath)
         }
+        createdDirs.add(path)
     }
 
     protected void uploadFile(FTPClient ftp,String dir,File ifile){
-        createRemoteDir(ftp,dir)
         ftp.setFileType(FTP.BINARY_FILE_TYPE)
         FileInputStream is=new FileInputStream(ifile)
         logger.lifecycle("uploading $ifile to $dir")
@@ -228,6 +230,7 @@ class UploadTask extends DefaultTask{
         if (inputFile != null){
             assert inputFile.exists(),"input file $inputFile does not exist"
             if (deleteTargetDir) removeRemoteDir(ftp,remoteDir)
+            createRemoteDir(ftp,remoteDir)
             uploadFile(ftp,remoteDir,inputFile)
         }
         else{
@@ -270,6 +273,7 @@ class UploadTask extends DefaultTask{
                     if (hasChanges) ftp.deleteFile(remoteDir+"/"+hashFileName)
                 }
             }
+            def lastDirname=null
             inputFiles.visit { FileVisitDetails element->
                 if (!element.isDirectory()) {
                     if (skipList.get(element.getPath())){
@@ -277,6 +281,10 @@ class UploadTask extends DefaultTask{
                         return
                     }
                     String dirname = (remoteDir + "/" + element.relativePath.getPathString()).replaceAll('/[^/]*$', '')
+                    if (dirname != lastDirname){
+                        createRemoteDir(ftp,dirname)
+                        lastDirname=dirname
+                    }
                     uploadFile(ftp, dirname, element.getFile())
                 }
             }

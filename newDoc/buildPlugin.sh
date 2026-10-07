@@ -8,7 +8,7 @@ cd `dirname $0`|| err "unable to cd to $0"
 base="documentation" 
 config="plugin-in.json"
 tconfig="plugin.json"
-target="../build"
+target="../build/distributions"
 ziptool="../tools/zipTool.py"
 if [ ! -x "$ziptool" ] ; then
     echo "zip tool $ziptool not found"

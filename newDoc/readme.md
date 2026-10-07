@@ -160,7 +160,6 @@ http://..../index.html?videobase=/plugins/user-docvideos&samepage=true
 
 This will use the videos from the provided videobase and call an own videoplayer.
 
-
 ### Linking to old doc
 ```
 [ocharts]({{OLDLINK("hints/ocharts.html")}})

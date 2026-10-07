@@ -809,17 +809,6 @@ task findBrokenLinks(type: DefaultTask){
     }
 }
 
-task newDocBrokenLinks(type: DefaultTask){
-    group "documentation"
-    def baseDir="newDoc/site"
-    def list=fileTree(baseDir,{
-                    include "**/*html"
-            })
-    inputs.files list 
-    doLast(){
-        brokenLinks(baseDir,list,["md-sidebar","md-header"])
-    }
-}
 
 task findImages(type: DefaultTask){
     doFirst(){
@@ -858,6 +847,122 @@ task findUnusedImages(type: DefaultTask){
         }
     }
 }
+//new documentation
+def NDGROUP="newdoc"
+def NDPLUGIN="$project.buildDir/distributions/documentation-${project.avnavVersion}.zip"
+def NDVIDEOS="$project.buildDir/distributions/docvideos-${project.avnavVersion}.zip"
+class NewDocBuild extends Exec{
+    public NewDocBuild(){
+        workingDir "newDoc"
+    }
+    @InputFiles
+    def FileTree inputFiles=project.fileTree("newDoc",{
+        exclude "site/**"
+        exclude "build/**"
+        exclude "transcripts/**"
+        include "**/*"
+    })
+    @Optional
+    @Input
+    def String avnavVersion
+    @OutputFiles
+    @Optional
+    def FileTree outputFiles
+    @Internal
+    def site=project.fileTree("newDoc"){
+        include "site/**"
+    }
+}
+task buildNewDoc(type: NewDocBuild){
+    group NDGROUP
+    description "build new documentation"
+    outputFiles=site
+    commandLine "./build.sh","-d","-b","-v","$project.avnavVersion","build"
+}
+task buildNewDocRelease(type: NewDocBuild){
+    group NDGROUP
+    description "build new documentation with release check"
+    workingDir "newDoc"
+    avnavVersion=project.avnavVersion
+    commandLine "./build.sh","-d","-b","-c","-v","$project.avnavVersion","build"
+}
+
+task uploadNewDoc(type: UploadTask){
+    group NDGROUP
+    description "upload new documentation"
+    inputFiles=buildNewDocRelease.outputFiles
+    deleteTargetDir=false
+    baseDir="../newDoc/${project.avnavVersion}"
+    useHashes=true
+    dependsOn buildNewDocRelease
+}
+
+task addNewDocVersion(type: DefaultTask){
+    group NDGROUP
+    description "add new documentation version to list"
+    def indexFile=file("newDoc/versions.txt")
+    inputs.file indexFile
+    doLast(){
+        for (String line : indexFile.readLines()){
+            if (line.trim() == project.avnavVersion){
+                logger.lifecycle("version ${project.avnavVersion} already in version.txt")
+                return
+            }
+        }
+        indexFile.append("${project.avnavVersion}\n")
+    }
+}
+
+task buildNewDocPlugin(type: NewDocBuild){
+    group NDGROUP
+    description "build new documentation plugin"
+    outputs.file file(NDPLUGIN)
+    commandLine "./buildPlugin.sh","$project.avnavVersion"
+}
+
+task buildNewDocVideos(type: NewDocBuild){
+    group NDGROUP
+    description "build new documentation videos"
+    workingDir "newDoc/videos"
+    outputs.file file(NDVIDEOS)
+    commandLine "./build.sh","$project.avnavVersion"
+}
+
+task uploadNewDocVideos(type: UploadTask){
+    group NDGROUP
+    description "upload new documentation videos"
+    inputFile=buildNewDocVideos.outputs.files.singleFile
+    deleteTargetDir=false
+    baseDir="supplement"
+    useHashes=true
+    dependsOn buildNewDocVideos
+    getTargetName = { file ->
+                return "docvideos.zip"
+    }
+}
+
+task uploadNewDocPluginRelease(type: UploadTask){
+    group=UPLOAD_GROUP
+    inputFile=buildNewDocPlugin.outputs.files.singleFile
+    deleteTargetDir=false
+    dependsOn buildNewDocPlugin
+    baseDir="daily/${project.avnavVersion}"
+}
+
+task newDocBrokenLinks(type: DefaultTask){
+    group NDGROUP
+    description "check for broken links in new documentation"
+    def baseDir="newDoc/site"
+    def list=fileTree(baseDir,{
+                    include "**/*html"
+            })
+    inputs.files list 
+    doLast(){
+        brokenLinks(baseDir,list,["md-sidebar","md-header"])
+    }
+}
+
+
 
 task getTimeZones{
     doLast{
@@ -904,6 +1009,7 @@ task uploadRelease{
     if (buildAndroid){
         dependsOn uploadAndroidRelease
     }
+    dependsOn uploadNewDocPluginRelease,uploadNewDoc
 }
 
 afterEvaluate{
