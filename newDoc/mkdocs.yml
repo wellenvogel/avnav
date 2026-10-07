@@ -2,6 +2,7 @@ site_name: AvNav Dokumentation
 theme: 
   name: material
   custom_dir: overrides
+  logo: img/sailboat512r.png
   features:
     - search.suggest
     - search.highlight
@@ -50,6 +51,9 @@ plugins:
             Einleitung: Introduction
             Basisfunktionen: Base Functions
             "Alte Doku": Old Docs
+          extra:
+            homepage: en/index.html
+            
   - autorefs
   - search
   - macros
@@ -73,6 +77,7 @@ extra:
   old_doc_start: "beschreibung.html"
   version: !ENV [AVNAV_VERSION,202608xx]
   no_version: !ENV AVNAV_NOVERSION
+  homepage: index.html
 markdown_extensions:
   - admonition
   - pymdownx.details
