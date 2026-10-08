@@ -72,11 +72,17 @@ extra_javascript:
   - extra/extra.js
 use_directory_urls: false
 extra:
-  old_doc_rel: "../../docs"
-  download_rel: "../../downloads"
+  # path from doc base to avnav on HP
+  base_internal: "../.."
+  # external URL to avnav on HP
+  base_external: "https://wellenvogel.de/software/avnav"
+  # build for doc on HP or external
+  ext_build: !ENV AVNAV_EXTDOC
+  # rel to base on HP
+  old_doc_rel: "docs"
+  download_rel: "downloads"
   old_doc_start: "beschreibung.html"
   version: !ENV [AVNAV_VERSION,202608xx]
-  no_version: !ENV AVNAV_NOVERSION
   homepage: index.html
 markdown_extensions:
   - admonition

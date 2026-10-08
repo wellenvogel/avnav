@@ -34,8 +34,8 @@ while getopts "dhp:a:bncv:" arg; do
       address=$OPTARG
       ;;
     n)
-      AVNAV_NOVERSION=true
-      export AVNAV_NOVERSION
+      AVNAV_EXTDOC=true
+      export AVNAV_EXTDOC
       noversion="-n"
       ;;
     v)

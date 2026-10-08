@@ -123,6 +123,19 @@ def buildButtonCss(buttons,icons,btcss):
                     str+=f"  content: \"{txt}\";"+"\n}\n"
             oh.write(str)
 
+def get_hp_base(env,addKey=None):
+        ext_build=env.variables.ext_build
+        base=None
+        if ext_build:
+            base=env.variables.base_external
+        else:
+            base=pageVariables[PV_BASE] + "/" + env.variables.base_internal
+        if addKey:
+            addV=env.variables.get(addKey)
+            if addV:
+                base+="/"+addV
+        return base
+
 def define_env(env):
     global cssbuild
     print("macro script loading...")
@@ -280,10 +293,10 @@ def define_env(env):
         if not lang:
             return url
         return url+"?lang="+lang
-    
+
     @env.macro
     def OLDLINK(sub=None):
-        old_doc=pageVariables.get(PV_OLD)
+        old_doc=get_hp_base(env,'old_doc_rel')
         if not old_doc:
             return ''
         lang=pageVariables.get(PV_LANG)
@@ -293,15 +306,26 @@ def define_env(env):
     
     @env.macro
     def DLLINK(sub=None):
-        base=pageVariables.get(PV_BASE)
+        base=get_hp_base(env,'download_rel')
         if not base: 
             return ''
-        base+=env.variables.download_rel
         if not sub:
             return base
         if not base.endswith("/"):
             base+="/"
         return base+sub
+
+    @env.macro
+    def HPLINK(sub=None):
+        base=get_hp_base(env)
+        if not base:
+            return ''
+        if not sub:
+            return base
+        if not base.endswith("/"):
+            base+="/"
+        return base+sub
+    
     
 def on_pre_page_macros(env):
     print(f"on_pre_page {env.page.url}")
@@ -319,11 +343,9 @@ def on_pre_page_macros(env):
     base_url=''
     for i in range(0,num):
         base_url+="../"
-    old_doc=base_url+env.variables.old_doc_rel if base_url else env.variables.old_doc_rel
-    pageVariables[PV_OLD]=old_doc
     pageVariables[PV_BASE]=base_url
     pageVariables[PV_LANG]=lang
-    pageVariables[PV_OLDBASE]=old_doc+"/"+env.variables.old_doc_start+"?lang="+lang
+    pageVariables[PV_OLDBASE]=get_hp_base(env,'old_doc_rel')+"/"+env.variables.old_doc_start+"?lang="+lang
     def versionLink(version):
         return base_url+'../'+str(version)+'/'+env.page.url
     versionWithLinks=[]

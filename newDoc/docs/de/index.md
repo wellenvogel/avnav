@@ -3,9 +3,7 @@ Hier findet man die AvNav Dokumentation für Version {{config.extra.version}}.
 Für andere Versionen bitte in der Kopfzeile die Version auswählen.
 
 ![logo](../img/sailboat512r.png){.small}
-{% if not config.extra.no_version %}
 * [Demo](special/demo.md)
-{% endif %}
 
 ## Autoren
 

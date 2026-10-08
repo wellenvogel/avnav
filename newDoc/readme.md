@@ -160,6 +160,10 @@ http://..../index.html?videobase=/plugins/user-docvideos&samepage=true
 
 This will use the videos from the provided videobase and call an own videoplayer.
 
+The links below will work different whether build with -n or without.
+Without -n the generated site is expected to be written to the homepage. The links will be relative links (same origin).
+With -n the links will go to https://wellenvogel.de/... - intended to be used for the doc as plugin.
+
 ### Linking to old doc
 ```
 [ocharts]({{OLDLINK("hints/ocharts.html")}})
@@ -171,3 +175,8 @@ The parameter can be empty.
 [Some Download]({{DLLINK("test/test.txt")}})
 ```
 
+### Linking to other files on the homepage
+```
+[Some Page]({{HPLINK("../bshviewer/index.html")}})
+```
+HPLINK points to ethe ...software/avnav directory.
