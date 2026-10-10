@@ -11,7 +11,7 @@ buildscript {
 
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
+        classpath 'com.android.tools.build:gradle:8.12.3'
     }
 }
 repositories{
@@ -74,19 +74,13 @@ android {
         versionName "avnav-$avnavVersion"
         versionCode Integer.parseInt(project.avnavVersion)
         manifestPlaceholders(['label':'avNav'])
-        targetSdkVersion 34
+        targetSdkVersion 35
         multiDexEnabled true //https://stackoverflow.com/questions/60919046/how-to-fix-build-gradle
         minSdkVersion 19
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
     }
-    lintOptions {
-        abortOnError false
-    }
-    aaptOptions{
-        noCompress '.json'
-    }
     //original:
-    compileSdkVersion 34
+    compileSdkVersion 35
 
     sourceSets {
         main {
@@ -179,6 +173,12 @@ android {
         renderScript true
         aidl true
     }
+    androidResources {
+        noCompress '.json'
+    }
+    lint {
+        abortOnError false
+    }
     applicationVariants.all { variant ->
         project.logger.lifecycle("Variant: " + variant.getName())
         def vname=variant.getName()
@@ -239,10 +239,10 @@ afterEvaluate {
     generateDebugAssets.dependsOn(copyToAssetsViewerDebug)
     generateReleaseAssets.dependsOn(copyToAssetsViewerRelease)
     generateBetaAssets.dependsOn(copyToAssetsViewerRelease)
-    [lintVitalReportBeta,lintVitalAnalyzeBeta,lintVitalReportRelease, lintVitalAnalyzeRelease].each { task ->
+    /*[lintVitalAnalyzeBeta, lintVitalAnalyzeRelease].each { task ->
         task.dependsOn(copyToAssetsViewerRelease)
         task.dependsOn(copySounds)
-    }
+    }*/
     //lintVitalReportDebug.dependsOn(copyToAssetsViewerDebug)
     //lintVitalReportDebug.dependsOn(copySounds)
 }
@@ -250,7 +250,6 @@ afterEvaluate {
 
 clean.delete.add "assets/viewer"
 clean.dependsOn cleanViewer
-
 
 
 

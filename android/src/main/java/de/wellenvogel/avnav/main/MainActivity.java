@@ -70,6 +70,7 @@ import de.wellenvogel.avnav.appapi.WebServer;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.EdgeToEdge;
 import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.NeededPermissions;
@@ -763,6 +764,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         try {
             showsDialog = false;
             setContentView(R.layout.main);
+            EdgeToEdge.configure(this);
             dlProgress = findViewById(R.id.dlIndicator);
             dlProgress.setOnClickListener(view -> {
                 if (download != null) download.stop();
