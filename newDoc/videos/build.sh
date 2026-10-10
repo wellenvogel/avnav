@@ -24,4 +24,4 @@ if [ ! -f "$tconfig" ] ; then
 fi
 name="$target/$base-$version.zip"
 echo "creating $name"
-"$ziptool" -p "$base" -x "ytdl.sh" -x "build.sh" -x "plugin-in.json" "$name" *
+"$ziptool" -p "$base" -x "ytdl.sh" -x "build.sh" -x "download.py" -x "plugin-in.json" "$name" *
