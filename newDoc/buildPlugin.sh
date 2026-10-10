@@ -28,7 +28,7 @@ if [ ! -f "$tconfig" ] ; then
 fi
 name="$target/$base-$version.zip"
 echo "creating $name"
-./build.sh -d -n -b build || err "build error"
+./build.sh -d -n -v "$version" -b build || err "build error"
 "$ziptool" -p "$base" -x converted "$name" site plugin.json plugin.css menu_book.svg
 
 
