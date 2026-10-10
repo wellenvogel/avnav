@@ -74,9 +74,9 @@ einem Texteditor angepasst werden.
 Dort kann auch eingestellt werden, ob ein lokaler Bildschirm genutzt
 werden soll ("Touch Variante")
 
-Einfacher geht es mit einer kleinen Web-Oberfläche [hier](../../configGen/index.html).
+Einfacher geht es mit einer kleinen Web-Oberfläche [hier]({{HPLINK("configGen/index.html")}}).
 
-[![](../img/ConfigImagesUi.png)](../../configGen/index.html)
+[![](../img/ConfigImagesUi.png)]({{HPLINK("configGen/index.html")}})
 
 Die Bedeutung der Felder:
 
