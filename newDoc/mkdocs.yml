@@ -2,6 +2,7 @@ site_name: AvNav Dokumentation
 theme: 
   name: material
   custom_dir: overrides
+  logo: img/sailboat512r.png
   features:
     - search.suggest
     - search.highlight
@@ -20,18 +21,17 @@ nav:
     - installation/windows.md
   - Basisfunktionen:
     - base/navpage.md
+    - base/dataflow.md
     - base/routes.md
     - base/userapps.md
     - base/settings.md
     - base/layout.md
     - base/charts.md
+    - base/overlays.md
     - base/ais.md
   - Details:
-    - special/index.md
     - special/tags.md
     - buttons/buttons.md
-  - Alte Doku:
-    - converted/beschreibung.md
 plugins:
   - i18n:
       docs_structure: folder
@@ -51,6 +51,9 @@ plugins:
             Einleitung: Introduction
             Basisfunktionen: Base Functions
             "Alte Doku": Old Docs
+          extra:
+            homepage: en/index.html
+            
   - autorefs
   - search
   - macros
@@ -69,12 +72,18 @@ extra_javascript:
   - extra/extra.js
 use_directory_urls: false
 extra:
-  old_doc_rel: "../../docs"
-  download_rel: "../../downloads"
+  # path from doc base to avnav on HP
+  base_internal: "../.."
+  # external URL to avnav on HP
+  base_external: "https://wellenvogel.de/software/avnav"
+  # build for doc on HP or external
+  ext_build: !ENV AVNAV_EXTDOC
+  # rel to base on HP
+  old_doc_rel: "docs"
+  download_rel: "downloads"
   old_doc_start: "beschreibung.html"
   version: !ENV [AVNAV_VERSION,202608xx]
-  no_version: !ENV AVNAV_NOVERSION
-  video_mode: !ENV [AVNAV_VIDEOMODE,youtube]
+  homepage: index.html
 markdown_extensions:
   - admonition
   - pymdownx.details

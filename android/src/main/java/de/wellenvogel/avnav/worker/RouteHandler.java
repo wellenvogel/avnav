@@ -222,6 +222,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
         private Route route=null;
         private int currentTarget=-1;
         private boolean active=false;
+        private boolean approach=false;
         private double anchorDistance=-1;
         private double approachDistance=-1;
         JSONObject jsonData=null;
@@ -264,30 +265,11 @@ public class RouteHandler extends DirectoryRequestHandler  {
             else{
                 route=null;
             }
-            if (o.has("currentTarget")){
-                currentTarget=o.getInt("currentTarget");
-            }
-            else{
-                currentTarget=-1;
-            }
-            if (o.has("approachDistance")){
-                approachDistance=o.getDouble("approachDistance");
-            }
-            else{
-                approachDistance=-1;
-            }
-            if (o.has("anchorDistance")){
-                anchorDistance=o.getDouble("anchorDistance");
-            }
-            else{
-                anchorDistance=-1;
-            }
-            if (o.has("active")){
-                active=o.getBoolean("active");
-            }
-            else{
-                active=false;
-            }
+            currentTarget=o.optInt("currentTarget",-1);
+            approachDistance=o.optDouble("approachDistance",-1);
+            anchorDistance=o.optDouble("anchorDistance",-1);
+            active=o.optBoolean("active",false);
+            approach=o.optBoolean("approach",false);
             jsonData=o;
         }
         JSONObject getJsonData() throws JSONException{
@@ -299,6 +281,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
             if (approachDistance > 0) rt.put("approachDistance",approachDistance);
             if (anchorDistance > 0) rt.put("anchorDistance",anchorDistance);
             rt.put("active",active);
+            rt.put("approach",approach);
             return rt;
         }
         JSONObject toJson() throws JSONException {
@@ -795,6 +778,14 @@ public class RouteHandler extends DirectoryRequestHandler  {
         }
         return false;
     }
+    private void setAndSaveLeg(RoutingLeg leg){
+        try {
+            setCurrentLeg(leg);
+            saveCurrentLeg(leg);
+        } catch (Exception e) {
+            AvnLog.e("unabel to save leg",e);
+        }
+    }
     public boolean handleApproach(Location currentPosition) throws JSONException {
         boolean useRhumbLine=useRhumbLine();
         RoutingLeg leg=this.getCurrentLeg();
@@ -823,8 +814,22 @@ public class RouteHandler extends DirectoryRequestHandler  {
         double currentDistance = AvnUtil.distance(leg.to.toLocation(), currentPosition, useRhumbLine);
         if (currentDistance > leg.approachDistance) {
             resetLast();
+            if (leg.approach){
+                leg.approach=false;
+                setCurrentLeg(leg);
+                try {
+                    saveCurrentLeg(leg);
+                } catch (Exception e) {
+                    AvnLog.e("unable to save current leg",e);
+                }
+            }
             lastApproachTime=0;
             return false;
+        }
+        boolean mustSave=false;
+        if (! leg.approach){
+            leg.approach=true;
+            mustSave=true;
         }
         if (lastApproachTime == 0) lastApproachTime=System.currentTimeMillis();
         double tolerance = leg.approachDistance / 10; //some tolerance for positions
@@ -845,6 +850,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                 //first time..
                 lastDistanceToCurrent = currentDistance;
                 lastDistanceToNext = nextDistance;
+                if (mustSave)setAndSaveLeg(leg);
                 return true;
             }
             if (currentDistance <= (lastDistanceToCurrent + tolerance)) {
@@ -853,6 +859,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                     lastDistanceToCurrent = currentDistance;
                     lastDistanceToNext = nextDistance;
                 }
+                if (mustSave)setAndSaveLeg(leg);
                 return true;
             }
             if (nextIdx >= 0 && (nextDistance > (lastDistanceToNext - tolerance))) {
@@ -861,6 +868,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                     lastDistanceToCurrent = currentDistance;
                     lastDistanceToNext = nextDistance;
                 }
+                if (mustSave)setAndSaveLeg(leg);
                 return true;
             }
             switchWp = true;
@@ -877,8 +885,8 @@ public class RouteHandler extends DirectoryRequestHandler  {
                 switchWp=true;
             }
         }
-        if (switchWp){
-            AvnLog.i("switching to next wp mode="+mode+", nextIdx="+nextIdx);
+        if (switchWp) {
+            AvnLog.i("switching to next wp mode=" + mode + ", nextIdx=" + nextIdx);
             if (nextTarget == null) {
                 //switch of routing
                 leg.active = false;
@@ -889,17 +897,10 @@ public class RouteHandler extends DirectoryRequestHandler  {
                 leg.to = nextTarget;
             }
             resetLast();
-            try {
-                setCurrentLeg(leg);
-                saveCurrentLeg(leg);
-            } catch (Exception e) {
-                AvnLog.e("error saving current leg ", e);
-            }
+            mustSave = true;
         }
-        else{
-            return true;
-        }
-        return false;
+        if (mustSave) setAndSaveLeg(leg);
+        return !switchWp;
     }
 
     public RoutePoint getCurrentTarget(){

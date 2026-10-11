@@ -70,6 +70,7 @@ import de.wellenvogel.avnav.appapi.WebServer;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.EdgeToEdge;
 import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.NeededPermissions;
@@ -779,6 +780,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 PreferenceManager.setDefaultValues(this, Constants.PREFNAME, Context.MODE_PRIVATE, R.xml.main_preferences, true);
                 sharedPrefs.edit().putBoolean(Constants.DEFAULTS_SET,true).apply();
             }
+            EdgeToEdge.configure(this, sharedPrefs.getBoolean(Constants.HIDE_BARS, false));
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             assetManager = getAssets();
             sharedPrefs.registerOnSharedPreferenceChangeListener(this);
@@ -808,6 +810,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         if (key.equals(Constants.CHARTDIR)){
             updateWorkDir(sharedPreferences.getString(Constants.CHARTDIR,""));
             serviceNeedsRestart=true;
+        }
+        if (key.equals(Constants.HIDE_BARS)){
+            handleBars();
         }
     }
 
@@ -991,6 +996,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         boolean hideStatus=sharedPrefs.getBoolean(Constants.HIDE_BARS,false);
         AvnLog.dfk(LOGPRFX,"handleBars,hide=%s",hideStatus);
+        EdgeToEdge.setSystemBarsHidden(this, hideStatus);
         View decorView = getWindow().getDecorView();
         int flags=0;
         if (hideStatus ) {

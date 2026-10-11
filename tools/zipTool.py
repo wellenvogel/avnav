@@ -19,14 +19,20 @@ def zip_path(name,prefix):
     return os.path.join(prefix,name)
 def main(flist,outfile,prefix=None,excluded=None):
     createdDirs={}
+    if os.path.isfile(outfile):
+        os.unlink(outfile)
     with ZipFile(outfile,"w",compression=ZIP_DEFLATED) as zip:
         for f in flist:
             f=os.path.relpath(f)
             if os.path.isfile(f):
+                if excluded and os.path.basename(f) in excluded:
+                    print(f"skipping {f} because excluded")
+                    continue
                 bd=os.path.dirname(f)
                 if not createdDirs.get(bd):
                     createdDirs[bd]=True
                     zip.mkdir(zip_path(bd,prefix))
+                print(f"adding {f} as {zip_path(f,prefix)}")    
                 zip.write(f,zip_path(f,prefix))
             elif os.path.isdir(f):
                 for root,dirs,files in os.walk(f):

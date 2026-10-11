@@ -1,6 +1,10 @@
+---
+  tags:
+    - Einstellungen
+    - Settings
+---
 
-
-[Hier]({{VURL("settings")}}){.videolink} geht es zum Video, das einige Punkte aus diesem Kapitel visualisiert.
+{{VIDEO("Hier","settings")}} geht es zum Video, das einige Punkte aus diesem Kapitel visualisiert.
 
 ## Display Settings vs. Layout
 

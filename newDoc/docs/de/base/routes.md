@@ -1,11 +1,14 @@
 ---
   tags:
     - Route
+    - Disconnected
+    - Wegepunkt
 ---
 # Routen
-Beschäftigen wir uns nun mit der Routen-Funktion. Die Abläufe werden **[in diesem Video]({{VURL("routes")}}){.videolink}** gezeigt.
+Beschäftigen wir uns nun mit der Routen-Funktion. Die Abläufe werden **{{VIDEO("in diesem Video","routes")}}** gezeigt.
 
-## Der Routeneditor
+## Der Routeneditor {: #editor }
+
 Das Erstellen einer Route geht am einfachsten direkt aus der [Navigationsseite](navpage.md) über die Schaltfläche {{BT("ToRoute")}}. 
 
 ![](../../img/route-editor.png)
@@ -24,7 +27,7 @@ Das Setzen von Wegepunkten erfolgt in AvNav, indem das Fadenkreuz auf die Positi
 - ### Wegepunke bearbeiten
 Um einen Wegepunkt zu verschieben, muss er zunächst direkt markiert werden. Das geht etwa in der Karte durch Klick oder durch Auswahl seines Listeneintrags im RTE Widget. Anschließend die gewünschte Position unter das Fadenkreuz setzen und den Wegepunkt mit {{BT("NavToCenter")}} verlegen. Analog kann man den Wegepunkt löschen - dafür nutzt man den Button {{BT("NavDelete")}}.<br>Die Arbeit mit dem Fadenkreuz mag im ersten Augenblick etwas umständlich wirken im Vergleich zu direkten Klicks auf den Touchscreen. In Situationen mit einem sich stark bewegenden Schiff, auf einem kleineren Bildschirm, und mit klammen Fingern wird man diese Art der Bedienung aber zu schätzen lernen.
 
-## Routen speichern und laden
+## Routen speichern und laden {: #management}
 Änderungen an Routen werden in der Regel sofort am AvNav Server gespeichert. Ist dieses Systemverhalten unerwünscht, weil man beispielsweise die gerade aktive Route bearbeitet, bietet sich der sogenannte disconnected Mode an: dabei bleiben Änderungen lokal im Browser und werden bis auf Weiteres nicht zum Server synchronisiert. Diese Trennung erreicht man durch Deaktivieren des connected Mode über den Button {{BT("DBConnect")}} im Display des Funktionsbereich "Routes". Änderungen bleiben solange lokal, bis man den connected Mode wieder aktiviert - dann wird gefragt, was mit den Änderungen geschehen soll - sie können übernommen oder verworfen werden.
 
 ![](../../img/routespage.png)
@@ -45,3 +48,157 @@ dem {{BT("NavGoto",False)}} wird {{BT("StopNav",False)}}. Damit lässt sich die 
 Die [WP Buttons](#wp-buttons) bieten auch während des Abfahrens der Route nützliche Funktionen. Sollte man sich spontan entscheiden, einen Wegepunkt auszulassen, ohne die Route gleich in ihrem Ablauf ändern zu wollen, ist der {{BT("NavNext",False)}} die richtige Wahl: klickt man darauf, springt die Route auf den nächsten Wegepunkt. Das kann hilfreich sein, wenn man einen Wegepunkt in einer so großen Entfernung passiert, dass das Erreichen des Wegepunktes vom System nicht automatisch quittiert wird. <br><br>
 
 Der Kurs zum nächsten Wegepunkt wird automatisch aktualisiert und im Standard als ockerfarbene Linie dargestellt. Der bei der bei Beginn des Legs festgelegte Kurs zeigt sich als [gestrichelte schwarze Line](./navpage.md#vectors). Der Button {{BT("NavRestart",False)}} führt (etwa nach Verschieben des Wegepunkts unterwegs) eine neue Erstberechnung aus - dabei wird XTE zurückgesetzt: die gestrichelte und die ockerfarbene Linie liegen wieder zusammen.
+
+## Details
+
+### Wegepunkt Weiterschaltung {: #nextwp}
+
+Für die automatische Weiterschaltung zum nächsten Wegepunkt in einer
+Route müssen immer zwei Bedingungen erfüllt sein:
+
+1. Das Boot muss sich im Annäherungsbereich des Wegepunktes befinden. 
+   Die Entfernung wird unter<br>
+   {{MM("MMroutepage")}}->{{BT("ShowSettings")}}->"Approach"<br>
+   eingestellt. 
+   Das Erreichen des Annäherungsbereiches wird ersichtlich durch einen ausgelösten
+   Wegepunkt-Alarm und eine rote Darstellung im Route-Widget.
+
+2. Je nach eingestelltem Mode unter
+   
+   {{MM("MMroutepage")}}->"Router" {{SB("Edit")}}->"nextWpMode"
+   
+   - "late" (der default und in älteren Versionen): Die Entfernung zum
+   aktuellen Wegepunkt nimmt nicht mehr ab, aber die Entfernung zum nächsten
+   Wegepunkt veringert sich.  
+   - "90": Der Wegepunkt liegt "querab" (genauer: Das Boot hat eine Linie +/-
+   90° zum originalen Wegepunktkurs überquert)  
+   - "early": Nach dem Wegepunkt-Alarm erfolgt die Weiterschaltung nach einer (einstellbaren) Zeit ohne weitere Bedingungen.
+
+Es ist wichtig zu beachten, dass die Weiterschaltung nur erfolgt, wenn beide
+Kriterien erfüllt sind. Falls eine manuelle Weiterschaltung gewünscht ist,
+kann man jederzeit durch Klick auf die Widgets links unten oder über 
+
+{{BT("NavActions")}}->{{BT("ABShowWpButtons",True)}}
+
+die Wegepunkt-Buttons anzeigen und den 
+
+{{BT("NavNext")}}
+
+Button nutzen.  
+
+### Routen Modus {: #mode }
+
+#### [great circle](https://en.wikipedia.org/wiki/Great_circle)
+
+Hier wird eine Route so berechnet, dass man den kürzesten Weg zwischen Start
+und Ziel hat. Der Nachteil daran ist, dass sich der Kurs im Verlauf der Route
+permanent ändert. Eine solche Route ist in der Kartendarstellung keine
+Strecke, sondern eine Kurve.  
+In älteren Versionen hat AvNav immer great circle Routen berechnet, diese
+aber (fälschlich) als Strecken dargestellt.  
+Für kürzere Distanzen (< 100nm) spielt das aber praktisch keine Rolle.
+
+#### [rhumb line](https://en.wikipedia.org/wiki/Rhumb_line)
+
+Hier wird die Route so berechnet, dass ein konstanter Kurs gesteuert werden
+kann. Die Kartendarstellung ist eine Strecke.
+
+Die Umschaltung erfolgt über
+
+{{MM("MMroutepage")}}->"Router"->{{SB("Edit")}}->"useRhumbLine" 
+
+
+Für das {{BT("Measure")}} Mess-Tool kann der Modus in den Einstellungen der Web App 
+
+{{MM("MMsettingspage")}}->"Navigation"->"Measure rhumbLine"
+
+separat eingestellt werden. Damit können leicht die beiden Wege verglichen werden.
+
+### Disconnected Modus {: #disconnected}
+
+AvNav ermöglicht es, Routen zu bearbeiten oder zu ändern, während momentan gerade eine Route aktv ist. Damit kann z.B. ein Navigator verschiedene Alternativen erstellen und vergleichen, währen der Rudergänger ungestört der aktuellen Route folgen kann.
+
+Dazu dient der sogenannte "Disconnected" (getrennte) Modus. In diesem Modus erfolgen alle Routen-Funktionen nur lokal auf dem Anzeigegerät (Browser). In diesem Modus werden die meisten Schreibvorgänge auf den Server unterbunden.
+
+Über
+
+{{MM("MMroutepage")}}->{{BT("Connected")}} 
+
+kann dieser Modus aktviert und deaktviert werden: (1) im Bild. Der Button ist grün, wenn der Modus ausgeschaltet ist (d.h. wenn die Routen auf dem Server bearbeitet werden).
+
+![Route Disconnect](../../img/routes-disconnected.png)
+///caption
+Route Disconnected
+///
+
+Über den Button {{BT("SyncRoutes")}} (2) können die Routen mit dem Server [synchronisiert](#sync) werden.
+
+Wenn der "Disconnected" Modus aktiv ist, wird das durch ein rotes Icon in der Titelzeile angezeigt.
+
+![Route Disconnected](../../img/routes-disconnected2.png)
+///caption
+Route Disconnected aktiv
+///
+
+In diesem Modus können keine Routen bearbeitet werden, die auf dem Server {{ICON("Server")}} gespeichert sind. Man erkennt das am fehlenden {{ICON("Edit")}} bei solchen Routen. Man kann aber eine Kopie erzeugen und diese dann bearbeiten.
+
+Im Routen-Editor (und auch während der Navigation) wird im Routen-Widget angezeigt, ob es sich um eine lokale Route handelt.
+
+![Route Lokal](../../img/routes-disconnected3.png)
+///caption
+Lokale Route
+///
+
+Man kann eine solche lokale Route ganz normal starten - und es stehen alle Routen-Funktionen zur Verfügung. Es gibt allerdings die folgenden Einschränkungen:
+
+  * keine Ausgabe von RMB und APB Datensätzen, keine Übertragung der Route zu SignalK
+  * kein Wegepunkt-Alarm
+
+#### Synchronisierung von Routen {: #sync}
+
+Über das Icon {{ICON("Disconnect")}} in der Titelzeile oder über
+
+{{MM("MMroutepage")}}->{{BT("Connected")}}
+
+kann man den "Disconnected" Modus wieder verlassen. 
+
+AvNav vergleicht dann die lokal gespeicherten Routen mit den momentan auf dem Server vorhandenen und bietet eine Synchronisierung an.
+
+![Routes Sync](../../img/routes-disconnected-sync.png)
+///caption
+Routen Synchronisierung
+///
+
+Für jede lokale Route werden die möglichen Optionen angeboten:
+
+  * **delete**: Lösche die lokale Route
+  * **upload**: Lade die Route zum Server
+  * **keep local**: Behalte die lokale Route
+
+`upload` wird dabei nur angeboten, wenn die Route auf dem Server ncht vorhanden ist - oder `overwrite on server` aktiviert wurde.
+
+Mit dem Button {{BT("SyncRoutes")}} kann man jederzeit diese Synchroniserung erneut anstossen.
+
+
+
+### Routen kombinieren
+
+Wenn man Teile einer Route zu einer anderen Route hinzufügen möchte, geht das indem man die Route, aus der man Teile hinzufügen möchte, auf der aktuellen Karte als [Overlay]() konfiguriert.
+
+![Route Overlay](../../img/route-edit-overlay1.png)
+
+Danach wechselt man in den [Routen Editor](#editor) , aktiviert den Punkt der Route (1), hinter dem man die andere Route einfügen möchte und klickt auf den Punkt der Overlay-Route (2) ab dem man einfügen möchte.
+
+![Route Overlay 2](../../img/route-edit-overlay2.png)
+
+Nach Klick auf die Overlay-Route kann man dann mit 
+
+{{DB("DBInsertRouteAfter")}}
+
+die Route einfügen.
+
+![Route Overlay 3](../../img/route-edit-overlay3.png)
+
+Die Punkte der Overlay-Route werden dann in die aktuelle Route kopiert.
+
+

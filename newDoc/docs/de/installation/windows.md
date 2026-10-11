@@ -7,7 +7,7 @@
 # Windows
 
 Für Windows gibt es einen Installer (neu ab 20240520). Die aktuelle
-Version zum Download findet man [hier](../../downloads/release/latest/avnav-service-latest.exe).
+Version zum Download findet man [hier]({{DLLINK("release/latest/avnav-service-latest.exe")}}).
 Dieser Installer erzeugt eine App "avnavservice" die (als default)
 automatisch startet(User autostart). Dieser Service erzeugt eine
 Notifikation (Icon), die bei Klick ein Menü mit den wichtigsten Funktionen
@@ -42,7 +42,7 @@ Nach Klick auf Install/Update wird ein kleiner Dialog angezeigt.
 
 Die hier eingetragene URL zeigt auf die aktuelle AvNav-Software. Aber man
 kann hier jede URL eingeben, die auf ein aktuelles AvNav-Softwarepaket zeigt
-(zip Datei) - z.B. von den [daily](../downloads/daily) oder [release](../downloads/release) Seiten.   
+(zip Datei) - z.B. von den [daily]({{DLLINK("daily") }}) oder [release]({{DLLINK("release")}}) Seiten.   
 
 Nach OK wird ein Fenster mit dem Installationsfortschritt angezeigt.
 

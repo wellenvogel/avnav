@@ -74,8 +74,8 @@ sudo apt install avnav
 Alternativ kann man auch die Debian/RPM -Pakete/ direkt von der Download-Seite
 herunterladen:  
 
-* [Releases](../../downloads/release "downloads/releases")
-* [Tägliche Builds](../../downloads/daily)
+* [Releases]({{DLLINK("release")}})
+* [Tägliche Builds]({{DLLINK("daily")}})
 
 Nach dem Herunterladen kann man die Pakete mit
 

@@ -28,6 +28,7 @@ import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.EdgeToEdge;
 import de.wellenvogel.avnav.worker.RouteHandler;
 
 /**
@@ -168,6 +169,7 @@ public class RouteReceiver extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.route_receiver);
+        EdgeToEdge.configure(this);
         ListView receiverInfo = findViewById(R.id.receiverInfo);
         Button button = findViewById(R.id.btReceiverOk);
         Toolbar toolbar = findViewById(R.id.toolbar);

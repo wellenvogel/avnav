@@ -151,8 +151,7 @@ dazu.
 
 **Hinweis**: Wenn die Karten auf dem gleichen System bereits für
 OpenCPN registriert sind, dann kann man direkt mit Schritt 6 starten (aber
-nicht für Android - siehe die  [Einschränkungen](#restrictions)
-oben).
+nicht für Android - dort kann für OpenCPN und AvNav nicht die gleiche Lizenz genutzt werden).
 
 #### Erzeugung des Fingerprints
 
@@ -561,6 +560,7 @@ release App starten, eine AvNav beta app eine avocharts beta.
 Wenn man also die avocharts beta installiert und mit AvNav (release - aus
 dem Store) nutzen möchte, muss man avocharts per Hand starten und auch
 noch einmal auf "START" klicken.
+{: #androidstartup}
 
 ### Einstellungen {: #androidsettings}
 

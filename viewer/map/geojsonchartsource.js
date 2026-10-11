@@ -176,7 +176,7 @@ class GeoJsonChartSource extends ChartSourceBase{
         let isCloned=false;
         let userInfo=this.formatFeatureInfo(this.styleParameters[supportedStyleParameters.featureFormatter],{name:feature.getProperties().name},feature,false);
             if (userInfo.sym){
-                let icon=this.userIcons(userInfo.sym);
+                let icon=this.userIcons[userInfo.sym];
                 if (! icon){
                     icon=new olIcon({src:userInfo.sym});
                     this.userIcons[userInfo.sym]=icon;

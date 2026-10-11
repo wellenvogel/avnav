@@ -45,6 +45,16 @@ Die Parameter, die hier bearbeitet werden können, stimmen (unter Linux/Windows)
 
 Wenn die Einstellungen mit {{DB("DBOk")}} gespeichert werden, werden sie sofort wirksam. Unter Linux/Raspberry/Windows werden sie in der `avnav_server.xml` gespeichert, unter Android in den Nutzerdaten.
 
+## Verbindungsseite {: #channelspage}
+
+Alle ein- und ausgehenden (NMEA)-Verbindungen lassen sich über 
+
+{{MM("MMchannelspage")}}
+
+konfigurieren. Auch neue Verbindungen können dort angelegt werden.Siehe dazu auch die [Details zu Verbindungen](connections.md).
+
+## Serverseite {: #serverpage}
+
 Für eine Übersicht über alle Server-Funktionen kann man die Seite 
 
 {{MM("MMserverpage")}}
@@ -119,6 +129,25 @@ sudo systemctl start avnav
 Die Option -e verhindert, dass im Fehlerfall die `avnav_server.xml.ok` geladen wird. ^C bricht das laufende
 AvNav wieder ab.
 
+### NMEA Filter {: #filter}
+
+An verschiedenen Stellen können Filter angegeben werden, die beeinflussen welche NMEA Daten jeweils passieren können und welche nicht.
+
+Hier können durch Komma getrennte NMEA-Nachrichten angegeben werden. Um sie unabhängig von Talker Ids zu machen, werden die 2 Zeichen nach einem $ nicht berücksichtigt. Ein Filter für $GPRMC sieht dann so aus: $RMC.  Wenn dem Filter ein ^ vorangestellt wird, wird er negiert, also ^$RMC heisst: keine RMC records. AIS Daten kann man mit dem Filter "!" oder "!AIVDM" matchen.
+
+Beispiele:
+
+* `!` - nur alle AIS Nachrichten
+* `^!` - keine AIS Nachrichten
+* `$RMC,$RMB` - RMC und RMB Records
+* `!,$RMC` - alls AIS Nachrichten und RMC Records
+* `^$APB,^$RMB` - keine APB und keine RMB Records
+
+### BlackList {: #blackList}
+
+Eine Blackliste enthält Namen von Input-Kanälen (Handlern), deren Daten an diesem Interface nicht ausgegeben werden sollen. Mehrere Einträge werden durch , getrennt.
+
+
 ### Funktionseinheiten (Handler)
 
 Innerhalb der Konfiguration sind Einträge für die einzelnen Handler enthalten.
@@ -137,12 +166,11 @@ Grundsätzlich gibt es 3 Kategorien von solchen Handlern:
 Es gibt einige Eigenschaften, die an mehreren Bestandteilen auftauchen,
 für diese hier eine Erklärung.
 
-|  |  |  |
-| --- | --- | --- |
 | Name | Beschreibung | Beispiel |
+| --- | --- | --- |
 | enabled | Viele Handler können auf der Server/Status Seite mit diesem Parameter ein- bzw. ausgeschaltet werdem | ein |
 | name | Name eines Input oder Output Kanals. Dieser wird auf der Status-Seite angezeigt und kann auch im Parameter [blackList](#blackList) für Filterungen genutzt werden | nmea0183tosignalk |
-| filter | Filterung von NMEA Daten. hier können durch Komma getrennte Filter angegeben werden, die bestimmen, welche NMEA Daten durchgelassen werden. Um sie unabhängig von Talker Ids zu machen, werden die 2 Zeichen nach einem $ nicht berücksichtigt. Ein Filter für $GPRMC sieht dann so aus: $RMC.  Wenn dem Filter ein ^ vorangestellt wird, wird er negiert, also ^$RMC heisst: keine RMC records. AIS Daten kann man mit dem Filter "!" oder "!AIVDM" matchen.  Mehrere Enträge müssen durch , getrennt werden. | $RMC,^$RMB,!AIVDM |
+| filter |[NMEA Filter](#filter)|
 | readFilter | Für kombinierte Reader/Writer ein Filter für die Eingangsseite. Siehe [filter](#filter) |  |
 | blackList | Liste von Kanal-Namen, deren Daten nicht ausgesendet werden sollen. Schreibweise beachten (grosses L) | nmea0183tosignalk |
 | priority  (since 20220421) | Alle NMEA Input Kanäle haben ein priority Feld. Dieses beeinflusst, welcher Wert gewinnt, wenn die gleichen Werte von mehreren Kanälen dekodiert werden. Die default priority ist 50, sie kann nach oben und unten geändert werden. Die SignalK Integration hat die default Priority 40. | 50 |
@@ -258,7 +286,7 @@ Nur möglich, wenn das Gerät ein Bluetooth Device hat.
 
 Lesen von seriellen Geräten. Kategorie 3 (mehrfach, optional). Dieser
 Reader sollte nur für direkt per Hardware (UART) verbundene Geräte genutzt
-werden, für Geräte, die per USB angeschlossen sind ist der [AVNUsbSerialReader](#AVNUsbSerialReader)
+werden, für Geräte, die per USB angeschlossen sind ist der [AVNUsbSerialReader](#avnusbserialreader)
 zuständig.
 
 |  |  |  |  |
@@ -284,7 +312,7 @@ zuständig.
 
 Ausgang über ein serielles Gerät. Auch kombiniert Ein- und Ausgang.
 Kategorie 3 (optional)  
-Nur für direkte serielle Geräte, nicht für USB-Wandler ([AVNUsbSerialReader](#AVNUsbSerialReader)
+Nur für direkte serielle Geräte, nicht für USB-Wandler ([AVNUsbSerialReader](#avnusbserialreader)
 für diese)
 
 |  |  |  |  |
@@ -307,8 +335,7 @@ normalerweise komplett automatisch von AvNav erkannt.
 Man kann für einzelne Geräte Regeln definieren, um sie speziell zu
 behandeln. Als Identifikation für ein Gerät wird dabei eine ID genutzt,
 die die enstprechende USB Buchse identifiziert. Mann kann diese ID am
-einfachsten ermitteln, indem man bei Einstecken des Gerätes die [Status
-Seite](../userdoc/statuspage.md) beobachtet.
+einfachsten ermitteln, indem man bei Einstecken des Gerätes die [Verbindungs Seite](connections.md#channelspage) beobachtet.
 
 Die Parameter gliedern sich in 2 Teile:
 
@@ -534,8 +561,8 @@ der AP Daten. Kategorie 2 (einmal, optional).
 | interval | X | Intervall (in s) zwischen RMB Datensätzen | 5 |
 | computeRMB | X | berechne einen RMB Datensatz wenn ein Wegpunkt aktiv ist | true |
 | computeAPB | X | berechne einen APB Datensatz | false |
-| useRhumbLine  | X | benutze den [rhumb line Modus](TODO: rhumbline) für Routen | false |
-| nextWpMode  | X | Auswahl des [Weiterschaltungs-Modus für den nächsten Wegepunkt](TODO: nextwp) in einer Route (late, 90, early) | late |
+| useRhumbLine  | X | benutze den [rhumb line Modus](../base/routes.md#mode) für Routen | false |
+| nextWpMode  | X | Auswahl des [Weiterschaltungs-Modus für den nächsten Wegepunkt](../base/routes.md#nextwp) in einer Route (late, 90, early) | late |
 | nextWpTime  | X | Die Wartezeit nach dem Wegepunktalarm (in Sekunden) bis zur Weiterschaltung zum nächsten Wegepunkt (nur nextWpMode = early) | 10 |
 
 ### AVNNmeaLogger
@@ -690,7 +717,7 @@ der Kategorie und dem plugin Verzeichnis. Beispiel:
 | systemDir | Verzeichnis für Plugins, die als separate Pakete installiert werden | /usr/lib/avnav/plugins |
 | userDir | Verzeichnis für Nutzer Plugins | $DATADIR/plugins |
 
-#### Parameter für [builtin-canboat](CanboatAndSignalk.md)
+#### Parameter für [builtin-canboat](nmea2000.md)
 
 |  |  |  |  |
 | --- | --- | --- | --- |
@@ -801,8 +828,8 @@ spezifischen Parameter beschrieben.
 | --- | --- | --- |
 | computeRMB | erzeuge NMEA-RMB-Datensätze, wenn ein Routing aktiv ist. | an |
 | computeAPB | rezeuge NMEA-APB Datensätze, wenn ein Routing aktiv ist | an |
-| useRhumbLine | setze den [Routing Mode](TODO: rhumbline) auf rhumbLine | aus |
-| nextWpMode | setze den [Modus zum Wegepunkt Weiterschalten](TODO: nextwp) - late/early/90 | late |
+| useRhumbLine | setze den [Routing Mode](../base/routes.md#mode) auf rhumbLine | aus |
+| nextWpMode | setze den [Modus zum Wegepunkt Weiterschalten](../base/routes.md#nextwp) - late/early/90 | late |
 | nextWpTime | im Modus "early" die Zeit (in s) nach dem Wegepunkt-Alarm bis zum Weiterschalten auf den nächsten Wegepunkt | 10 |
 
 ### Track

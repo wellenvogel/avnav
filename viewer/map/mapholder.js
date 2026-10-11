@@ -577,6 +577,9 @@ class MapHolder extends DrawingPositionConverter {
         }
         if (! div){
             this.deregisterKeyHandler();
+            if (this._lastMapDiv){
+                this.saveCenter(true);
+            }
         }
         else{
             if (this.registrations.length === 0){
@@ -2001,10 +2004,12 @@ class MapHolder extends DrawingPositionConverter {
         });
         if (opt_force){
             LocalStorage.setItem(STORAGE_NAMES.CENTER, undefined, raw);
+            base.log("save center force",raw)
         }
         else {
             this.saveCenterTimer = window.setTimeout(() => {
                 LocalStorage.setItem(STORAGE_NAMES.CENTER, undefined, raw);
+                base.log("save center timer",raw);
             }, globalStore.getData(keys.properties.mapSaveCenterTimeout) * 1000);
         }
 

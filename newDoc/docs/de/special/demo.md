@@ -6,7 +6,7 @@
 Demo
 ====
 
-Die [Demo]((../../../viewern/avnav_viewer.html?navurl=../viewer/avnav_navi.php&readOnlyServer=true)) gibt einen kleinen Einblick in die Programm-Funktionen.  
+Die [Demo](https://www.wellenvogel.net/software/avnav/viewern/avnav_viewer.html?navurl=../viewer/avnav_navi.php&readOnlyServer=true) gibt einen kleinen Einblick in die Programm-Funktionen.  
 Der "connected" mode - also die Übertragung des Routing-Ziels von einem
 Browser zum anderen - funktioniert hier nicht.
 
@@ -33,5 +33,4 @@ Die upload- und download-Funktionen werden potenziell nicht in allen
 Browsern korrekt im Demo Mode arbeiten. Mit Firefox und Chrome sollten sie
 aber testbar sein.
 
-[Neueste
-Version (Vorschau)](../../../viewern/avnav_viewer.html?navurl=../viewer/avnav_navi.php&readOnlyServer=true)
+[NeuesteVersion (Vorschau)](https://www.wellenvogel.net/software/avnav/viewern/avnav_viewer.html?navurl=../viewer/avnav_navi.php&readOnlyServer=true)

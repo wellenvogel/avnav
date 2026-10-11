@@ -116,7 +116,7 @@ formatAmperePercent.parameters=[
 ]
 api.registerFormatter("formatAmperePercent",formatAmperePercent);
 ```
-Die Parameter für einen Formatter werden ähnlich beschrieben, wie [Widget Parameter](#widgetparameters), nur das sie als Array angegeben werden mit einem zusätzlichen Feld "name"
+Die Parameter für einen Formatter werden ähnlich beschrieben, wie [Widget Parameter](#widgetparameter), nur das sie als Array angegeben werden mit einem zusätzlichen Feld "name"
 Wenn man num im Layout-Editor den neuen Formatter nutzt, sieht das Bild so aus:
 
 ![Formatter](../../img/userjs-formatter.png)
@@ -301,6 +301,7 @@ Reihe von vordefinierten Parametern für den Layout Editor. Bei diesen wird
 zur Beschreibung kein Objekt mit Eigenschaften angegeben, sonder nur true
 oder false (das zeigt, ob sie zum Ändern angeboten werden sollen oder
 nicht).
+{: #predefinedparameters}
 
 Das sind:
 
@@ -357,7 +358,7 @@ plugin.js)  sind nach dem Schema `api.getBaseUrl()+"/"+name` abrufbar.
 ## Feature Formatierer(featureFormatter) {: #featureFormatter }
 
 Es gibt die Möglichkeit, eigene Funktionen zu
-registrieren, die die Anzeige von Daten aus Overlays aufbereiten.  
+registrieren, die die Anzeige von Daten aus [Overlays](overlays.md#featureFormatter) aufbereiten.  
 Solche Funktionen können in der user.mjs oder in Plugins implementiert
 werden.
 
@@ -377,7 +378,7 @@ Die folgenden Eigenschaften können zurückgegeben werden:
 
 | Name | Bedeutung |
 | --- | --- |
-| sym | die URL für ein anzuzeigendes Icon. Das kann eine relative URL sein, diese ist dann eine Icon Datei innerhalb der [konfigurierten](TODO: overlay config) userIcons Datei, ein absoluter Pfad wie z.B. /user/images/myImage.png oder eine mit http: beginnende externe URL (natürlich dann nur mit Internet Verbindung nutzbar). |
+| sym | die URL für ein anzuzeigendes Icon. Das kann eine relative URL sein, diese ist dann eine Icon Datei innerhalb der [konfigurierten](../base/overlays.md#parameters) userIcons Datei, ein absoluter Pfad wie z.B. /user/images/myImage.png oder eine mit http: beginnende externe URL (natürlich dann nur mit Internet Verbindung nutzbar). |
 | name | der anzuzeigende Name |
 | desc | der unter "description" anzuzeigende Text |
 | htmlInfo | ein html String, der dann bei Klick auf den {{DB("DBInfo")}} Button angezeigt wird. |
@@ -411,7 +412,7 @@ Parameter. Falls extended auf "false" gesetzt ist, sollte die Funktion
 keine zeitraubenden Operationen ausführen, da sie potentiell für jedes
 Element aus dem Overlay aufgerufen wird.
 
-Nachdem eine solche Funktion registriert wurde, kann sie für ein Overlay in der [Konfiguration](TODO: overlay config) ausgewählt werden.
+Nachdem eine solche Funktion registriert wurde, kann sie für ein Overlay in der [Konfiguration](../base/overlays.md#parameters) ausgewählt werden.
 
 
 ## Kartenlayer (User Map Layer) {: #usermaplayer }

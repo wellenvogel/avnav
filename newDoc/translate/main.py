@@ -34,6 +34,7 @@ def translate_file(file_path, output_path):
         file_path (str): The path to the input file to be translated.
         output_path (str): The path to the output file where the translated content will be saved.
     """
+    print(f"translating '{file_path}' to '{output_path}'")
     # Read the system instructions from promt.md
     with open(os.path.join(dir_path, 'prompt.md'), 'r', encoding='utf-8') as file:
         system_instructions = file.read()
@@ -71,35 +72,7 @@ def translate_file(file_path, output_path):
         print(f"\033[91mFailed to translate: {file_path[len(dir_path):]}\033[0m")
 
 
-def err(txt,prefix='ERROR: '):
-    print(f"{prefix or ''} {txt}",file=sys.stderr)
-    sys.exit(1)
-ARGS='lhm:af'
-USAGE=f"Usage: {sys.argv[0]} [-l] [-m model] [-h] [-a] [-f] <input-file> [<output-file>]"
-if __name__ == '__main__':
-    automode=False
-    force=False
-    optlist, args = getopt.getopt(sys.argv[1:], ARGS)
-    for o, a in optlist:
-        if o == '-l':
-            list_models()
-            sys.exit(0)
-        elif o == '-h':
-            print(USAGE)
-            sys.exit(0)
-        elif o == '-m':
-            MODEL = a
-        elif o == '-a':
-            automode=True
-        elif o == '-f':
-            force=True
-        else:
-            assert False, "unhandled option"
-    minargs=2 if not automode else 1
-    if len(args) < minargs:
-        print(USAGE)
-        sys.exit(1)
-    infile = args[0]
+def handleFile(infile, outfile, automode, force,dryRun):
     if not os.path.exists(infile):
         err(f"File not found: {infile}",prefix='')
     if automode:
@@ -121,13 +94,67 @@ if __name__ == '__main__':
             otime=os.stat(outfile).st_mtime
             if itime <= otime:
                 print(f"File '{outfile}' is newer than '{infile}', skipping")
-                sys.exit(0)
-        print(f"translating '{infile}' to '{outfile}'")
+                return 0
     else:
-        outfile = args[1]
+        outfile = outfile
+    if dryRun:
+        print(f"Dry run: would translate '{infile}' to '{outfile}'")
+        return
     outdir=os.path.dirname(outfile)
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
     if not os.path.isdir(outdir):
         err(f"unable to create output directory {outdir}")
     translate_file(infile, outfile)
+
+def err(txt,prefix='ERROR: '):
+    print(f"{prefix or ''} {txt}",file=sys.stderr)
+    sys.exit(1)
+
+ARGS='lhm:afnr'
+USAGE=f"Usage: {sys.argv[0]} [-l] [-m model] [-h] [-r] [-a] [-n] [-f] <input-file> [<output-file>]"
+if __name__ == '__main__':
+    automode=False
+    force=False
+    dryRun=False
+    recurse=False
+    optlist, args = getopt.getopt(sys.argv[1:], ARGS)
+    for o, a in optlist:
+        if o == '-l':
+            list_models()
+            sys.exit(0)
+        elif o == '-h':
+            print(USAGE)
+            sys.exit(0)
+        elif o == '-m':
+            MODEL = a
+        elif o == '-a':
+            automode=True
+        elif o == '-f':
+            force=True
+        elif o == '-n':
+            dryRun=True
+            automode=True
+        elif o == '-r':
+            recurse=True
+        else:
+            assert False, "unhandled option"
+    minargs=2 if not automode else 1
+    if len(args) < minargs:
+        print(USAGE)
+        sys.exit(1)
+    infile=args[0]
+    if recurse:
+        for root, dirs, files in os.walk(infile):
+            for file in files:
+                ext=os.path.splitext(file)[1]
+                if ext.lower() != '.md':  
+                    continue
+                fname=os.path.join(root, file)
+                if "de/" not in fname:
+                    continue
+                handleFile(fname, None, automode, force, dryRun)
+    else:
+        outfile=args[1] if len(args) > 1 else None
+        handleFile(infile, outfile, automode, force,dryRun)
+    

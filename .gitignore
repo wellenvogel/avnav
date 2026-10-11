@@ -39,4 +39,6 @@ newDoc/docs/generated
 newDoc/docs/de-test
 newDoc/site
 newDoc/*.zip
+newDoc/videos/plugin.json
+newDoc/plugin.json
 **/.venv

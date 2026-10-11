@@ -111,7 +111,7 @@ Die CSS Daten werden direkt im Layout gespeichert und sind nicht als separate Da
 
 Alle Änderungen werden erst dann permanent gespeichert, wenn das Layout am Ende der Bearbeitung gespeichert wird.
 
-## Einstellungen (Display Settings)
+## Einstellungen (Display Settings) {: #display-settings}
 
 Es gibt einige [Einstellungen](../base/settings.md), die ein Layout u.U. massgeblich beeinflussen. Ein typischer Kandidat ist die Einstellung "2 widget rows" unter "General". Diese enstcheidet, ob auf der Navigationsseite unten zwei Zeilen mit Widgets angezeigt werden, wenn sonst der Platz nicht ausreicht. Wenn man das für ein bestimmtes Layout verhindern möchte, kann man **während man das Layout bearbeitet** die Einstellungen z.B. mit
 
@@ -128,7 +128,7 @@ Wenn man jetzt die Einstellungen mit {{DB("DBOk")}} speichert, werden sie direkt
 
 Man sollte mit dieser Funktion sehr eingeschränkt umgehen und wirklich nur Einstellungen direkt im Layout setzen, die unbedingt nötig sind. Wenn man den Layout-Editor verlässt, können diese Einstellungen nicht mehr über die normalen Menüs geändert werden - nur durch erneuten Aufruf des Layout-Editors.
 
-## Laden und Speichern vom/zum Server
+## Laden und Speichern vom/zum Server {: #save}
 
 Wenn man ein Layout bearbeitet wird es lokal geändert und wird auch auf dem Server gespeichert (den Namen hat man ja beim Start des Layout-Editors gewählt). Es wird jedoch **nicht** sofort auch auf allen anderen Anzeige-Geräten wirksam. Dort wird es nur wirksam, wenn die AvNav Seite neu geladen wird 
 

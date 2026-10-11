@@ -1,6 +1,13 @@
+---
+  tags:
+    - Navigation
+    - Buttonleiste
+    - Dashboard
+---
+
 # Navigationsseite 
 
- Ein Teil der Inhalte dieses Abschnittes wird auch im **[Video hier]({{VURL("navigation")}}){.videolink}** vorgestellt
+ Ein Teil der Inhalte dieses Abschnittes wird auch im **{{VIDEO("Video hier","navigation")}}** vorgestellt
 
  Beim Start von AvNav landet man sofort in der Navigationsansicht,
  in der die zuletzt benutzte Karte geladen wird. Lässt sich diese nicht feststellen, folgt die Aufforderung zur Auswahl einer Karte.
@@ -16,7 +23,7 @@ In der rechten Seitenleiste liegt die Buttonleiste, die die wichtigsten Funktio
 
 | Button | Funktion |
 | ------ | -------- |
-| {{BT("MainNav",False)}} | Eine der grundlegendsten Neuerungen 2026 ist das "Main Menu" oben rechts, welches bei Klick eine Übersicht der verfügbaren Funktionsbereiche von AvNav öffnet. Diese lassen sich direkt auswählen oder über {{ICON("MNCollapsed")}} aufklappen. Durch das Aufklappen eines Funktionsbereichs sieht man die dort relevanten Schaltflächen, hier aber mit längerem und aussagekräftigerem Text. <br><br> Der Funktionsbereich "Actions" öffnet ein Spezialmenü, welches besondere Aktionen auslöst, die übergreifend von sämtlichen Funktionsbereichen erreichbar sein sollen. Mehr dazu [weiter unten](#actions-buttons). <br><br> Über [Settings/Main Menu](settings.md) oder direkt im Menü über den Button {{ICON("Settings")}} lässt sich das Menü verkürzen, um es für Navigationsaufgaben unterwegs handlicher zu machen, denn viele Funktionsbereiche werden mit hoher Wahrscheinlichkeit nicht täglich benötigt. |
+| {{BT("MainNav",False)}} | Eine der grundlegendsten Neuerungen 2026 ist das ["Main Menu"](../special/mainmenu.md) oben rechts, welches bei Klick eine Übersicht der verfügbaren Funktionsbereiche von AvNav öffnet. Diese lassen sich direkt auswählen oder über {{ICON("MNCollapsed")}} aufklappen. Durch das Aufklappen eines Funktionsbereichs sieht man die dort relevanten Schaltflächen, hier aber mit längerem und aussagekräftigerem Text. <br><br> Der Funktionsbereich "Actions" öffnet ein Spezialmenü, welches besondere Aktionen auslöst, die übergreifend von sämtlichen Funktionsbereichen erreichbar sein sollen. Mehr dazu [weiter unten](#actions-buttons). <br><br> Über [Settings/Main Menu](settings.md) oder direkt im Menü über den Button {{ICON("Settings")}} lässt sich das Menü verkürzen, um es für Navigationsaufgaben unterwegs handlicher zu machen, denn viele Funktionsbereiche werden mit hoher Wahrscheinlichkeit nicht täglich benötigt. |
 | {{BT("MOB",False)}} |Der Mob-Button befindet sich immer an gleicher Stelle auf jeder Seite. Ein Klick auf ihn erzeugt erst einmal einen lauten Alarm, sofern ein lautgebendes Element an das Gerät angeschlossen ist. Es gibt zudem einen visuellen Alarm. Die aktuelle Position wird angesprungen und deutlich markiert. In den zuständigen Widgets werden die Entfernung und der Kurs zum MOB angezeigt. Ein weiterer Klick auf MOB deaktiviert den Mob Alarm wieder.  |
 | {{BT("ChartsView")}} |Durch Klick auf den Charts-Button können zuvor hochgeladene Karten aktiviert werden. Näheres dazu im Abschnitt [Karten und Overlays](charts.md) Neben der Kartenauswahl bietet AvNav die Möglichkeit, unterschiedliche Overlays hinzuzufügen. Mit Overlays können neben der reinen Karte weitere Elemente in die Kartenansicht eingeblendet werden. Das können Satellitenbilder sein, bereits gefahrene Tracks, weitere Karten oder Dateien mit Tonnenpositionen. Das ist besonders hilfreich, wenn man z.B. im Grenzbereich zweier Karten navigieren und die Karten nicht immer wechseln will.|
 | {{BT("ZoomIn")}} {{BT("ZoomOut")}} | Hiermit wird der Kartenausschnitt vergrößert und verkleinert. Dabei bleibt (anders etwa als bei Nutzung des Mausrads) das eigene Boot zentriert.|
@@ -41,14 +48,14 @@ In der rechten Seitenleiste liegt die Buttonleiste, die die wichtigsten Funktio
 | {{BT("Split",True)}} | Hier kann der Split Mode ein- und ausgeschaltet werden. Einfach gesagt laufen in dieser Betriebsart zwei AvNav-Instanzen auf dem Display nebeneinander. Dazu gibt es spezielle Hinweise und Anleitungen [hier](../special/splitmode.md). |
 | {{BT("ReloadUI",True)}} | Neuerliches Laden Browserfensters mit den Daten vom AvNav Server|
 | {{BT("StatusShutdown", True)}} | Läuft das System auf einem Raspberry Image, startet dieser Button das geordnete Herunterfahren des Systems. |
-|  {{BT("MainExit",True)}} | Nur Android: Beendet die [AvNav App](TODO) oder setzt sie in den Hintergrund-Modus. |
+|  {{BT("MainExit",True)}} | Nur Android: Beendet die [AvNav App](../installation/android.md) oder setzt sie in den Hintergrund-Modus. |
 
 ## Navigation Tools Buttons
 ![Navigation Tools](../../img/navtools.png)
 
 | Button | Funktion |
 | ------ | -------- |
-| {{BT("AnchorWatch",True)}} | Mit Anchorwatch startet man die AvNav-interne Ankerwache. |
+| {{BT("AnchorWatch",True)}} | Mit Anchorwatch startet man die AvNav-interne [Ankerwache](../special/anchorwatch.md). |
 | {{BT("ABShowWpButtons",True)}} |Show Waypoint Buttons startet eine kleine zusätzliche Buttonleiste, die direkt rechts unten in die Karteneinsicht eingeblendet wird und bezogen auf aktive Waypoints zusätzliche Tools anbietet.|
 | {{BT("CenterAction", True)}} |Mit Info at Crosshair  lassen sich verschiedene Informationen zur angewählten Kartenposition anzeigen. 
 | {{BT("GpsCenter",True)}} |Center Chart GPS macht genau das, was es sagt. Ein Klick zentriert die Karte, visualisiert durch das Fadenkreuz, auf die aktuelle GPS Position, wenn sie denn vorhanden ist.|
@@ -79,3 +86,20 @@ Mit einem Click oder Touch auf die Karte, können zusätzliche Informationen zu 
 ![](../../img/FeatureInfo-Select.png)
 
 Die angezeigte Liste enthält alle Objekte an dieser Stelle, zu denen AvNav nach Selektion (je nach Art) weitere [Aktionen oder Informationen](../special/featureinfo.md) anbieten kann. In diesem Beispiel sind das die eigene Position, ein AIS Objekt, der aktuelle Track sowie die Karte selbst. 
+
+## Dashboards
+
+Über 
+
+{{MM("MMgpspage")}}
+
+oder über den Klick auf die Widgets (ausser in der linken unteren Leiste) gelangt man auf die Dashboard-Seiten.
+
+![Dashboard](../../img/dashboard.png)
+///caption
+Dashboard
+///
+
+Die Anzeigen auf den Dashboards lassen sich über den [Layout-Editor](layout.md) flexibel konfigurieren. Im Bild das Layout "system.modern".
+
+Auf den Dashboard Seiten kann man die [Ankerwache](../special/anchorwatch.md) direkt über den Button {{BT("AnchorWatch")}} aktivieren.
