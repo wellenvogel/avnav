@@ -32,10 +32,17 @@ Die beschriebenen Geräte liefern ihre Daten in unterschiedlichen Formaten an. I
 
 ## Datenfluss nur über AvNav
 
+
 ### NMEA0183 per USB
 
 Betrachten wir zu Beginn den einfachsten Fall: GPS-Daten einer GPS-Maus sollen AvNav erreichen:
-Wir nutzen eine GPS-Maus, die NMEA0183-Daten liefert. Damit ist das Format geklärt. Am Ende des Kabels sitzt ein USB-Stecker. Damit ist auch die Schnittstelle geklärt, es handelt sich um USB, also eine serielle Schnittstelle. AvNav erkennt auf Linux-Systemen automatisch, wenn an einer der seriellen Schnittstellen  Daten auflaufen, und richtet im Bereich Connections sogenannte Reader ein. Sie regeln auf der Softwareseite, dass die NMEA0183-Daten AvNav erreichen und dort zur Navigation genutzt werden können. Auf Android Systemen müssen diese Connections händisch eingerichtet werden.
+Wir nutzen eine GPS-Maus, die NMEA0183-Daten liefert. Damit ist das Format geklärt. Am Ende des Kabels sitzt ein USB-Stecker. Damit ist auch die Schnittstelle geklärt, es handelt sich um USB, also eine serielle Schnittstelle. AvNav erkennt auf Linux-Systemen automatisch, wenn an einer der seriellen Schnittstellen  Daten auflaufen, und richtet im Bereich Connections sogenannte Reader ein. 
+
+![Screenshot](../../img/channelspage.png)
+
+Sie regeln auf der Softwareseite, dass die NMEA0183-Daten AvNav erreichen und dort zur Navigation genutzt werden können. 
+
+Auf Android Systemen ist die Einrichtung über ein internes GPS noch einfacher, die Connections müssen allerdings händisch eingerichtet werden.
 
 
 ### NMEA0183 per seriellem Wandler
@@ -49,6 +56,8 @@ Ein dritter Weg ist der über ein WLAN, wie ihn zum Beispiel der Open Source Win
 
 Zwei Dinge sind an dieser Stelle wichtig: Einmal: Daten im NMEA0183-Format können nur direkt von Gerät zu Gerät übertragen werden, das heißt, jedes sendende Gerät braucht einen eigenen Wandler oder einen Eingang beim Empfänger, also dem AvNav-Rechner. Oder eben eine eigene Netzwerkadresse im Netz. 
 Und dann muss man wissen, dass AvNav selbst nur NMEA0183-Daten verarbeitet. 
+
+![Screenshot](../../img/Dataflows_nmea0183.png)
 
 
 ### NMEA 2000
@@ -64,8 +73,9 @@ Es können auch CAN-Adapter eingebunden werden, wie sie auf HAT-Platinen für Ra
 
 Je nach Datenformat und verwendeter Hardware können bestimmte Daten AvNav auch wieder verlassen: Über die NMEA2000-Wandler und -Adapter, über serielle Schnittstellen oder LAN und WLAN stellt AvNav NMEA0183-Daten vor allem für die Versorgung eines Autopiloten zur Verfügung. Welche Datensätze das im Einzelnen sind, findet sich [hier].
 
+![Screenshot](../../img/Dataflows_nmea2k.png)
 
-# SignalK
+## SignalK
 
 Wenn man mehr Flexibilität im Umgang mit Daten möchte und vor allem mehr als nur Autopilot-Daten versenden will, kommt ein zweiter mächtiger Spieler auf das Parkett, der Teil des Headless- Images ist: Der SignalK-Server. Der ist bereits datentechnisch mit AvNav verbunden und kann durch seine PlugIns eine Menge weiterer Funktionalität in das gesamte System bringen. Er läuft  leider nicht auf Android-Systemen.
 
@@ -79,12 +89,16 @@ AvNAv und SignalK sind über mehrere Datenformate miteinander verknüpft.
 
 Man kann daher alle eben beschriebenen Datenverbindungen auch dem SignalK-Sever zuordnen und von dort konfigurieren. So wird es auf dem Open Source-System Openplotter gemacht.  Dann allerdings musst du damit leben, dass ein Ausfall des SignalK-Servers auch die Datenverbindungen zu AvNav mitreißt.
 
+![Screenshot](../../img/Dataflows_signalK.png)
+
 
 ## Datenfluss über AVan und SignalK (Misch-Variante)
 
 Es sind auch gemischte Konfigurationen möglich, das bedeutet, man kann einen Teil der Daten direkt in AvNav einspeisen und einen anderen Teil über den SignalK-Server. Das kann interessant werden, wenn Alarmmeldungen im SignalK-Server generiert werden und über AvNav ausgegeben werden sollen. 
 
 Ebenso können Apps wie NodeRED oder KIP, die über den SignalK-Server installiert  werden, zur Aufbereitung und Anzeige von Daten verwendet werden. Die Daten dafür können dann von AvNav kommen oder zu AvNav gesendet werden.
+
+![Screenshot](../../img/Dataflows_mixedFlows.png)
 
 Denn bei solchen Mischsystemen ist es äußerst wichtig, den erzeugten Datenfluss so aufzubauen, dass man keinen Kreisverkehr erzeugt. Sprich dass die gleichen Daten zwischen SignalK und AvNav immer wieder hin- und her gesendet werden. Das würde das Gesamtsystem ordentlich ausbremsen.
 Wenn man also so etwas vorhast, kann man mit Filtern arbeiten. Mit Filtern kann  das Senden oder Empfangen von Daten beeinflusst werden. Das geht sowohl im SignalK-Server, als auch in AvNav. Du solltest also genau wissen, was du tust. 
