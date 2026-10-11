@@ -74,11 +74,9 @@ The prefix ‘user’ makes it clear that this is a  layout created by the user.
 00:02:40.000 --> 00:03:08.489
 layout using the Edit button. A brief dialogue  box prompts you to enter a new name; otherwise,  
 
-00:03:08.489 --> 00:03:08.648
-clicking Edit will edit the current layout. The NavPage now appears slightly reduced in  
-
-00:03:08.648 --> 00:03:09.083
-the button bar on the right has also changed. If you click directly on a widget, you can  
+00:03:08.489 --> 00:03:09.083
+clicking Edit will edit the current layout. The NavPage now appears slightly reduced in
+the button bar on the right has also changed. If you click directly on a widget, you can
 
 00:03:09.083 --> 00:03:09.720
 make changes. The most important option  is likely to be the “New Widget” line,  
@@ -110,11 +108,9 @@ for the edited widget are: Caption, which is the text displayed
 00:04:28.000 --> 00:04:30.317
 alongside the value shown in the widget. Formatter. This is where the display of  
 
-00:04:30.317 --> 00:04:30.476
-the value is defined, along with the Unit  field. The format is usually already set. 
-
-00:04:30.476 --> 00:04:31.360
-Let’s take a closer look at this. We exit the  widget editing dialogue by clicking Cancel  
+00:04:30.317 --> 00:04:31.360
+the value is defined, along with the Unit  field. The format is usually already set.
+Let’s take a closer look at this. We exit the  widget editing dialogue by clicking Cancel
 
 00:04:31.360 --> 00:04:35.080
 and then click the Config button. Here you can specify two things: firstly, which  
@@ -140,11 +136,9 @@ page. It’s no coincidence that the  button bar includes a button for the
 00:05:28.760 --> 00:05:31.665
 route editor. If you click this button,  you can customise the widgets that are to  
 
-00:05:31.665 --> 00:05:31.832
-be displayed specifically on the route page. But be careful. Don’t delete the route widget,  
-
-00:05:31.832 --> 00:05:42.540
-be displayed specifically on the route page. But be careful. Don’t delete the route widget,  
+00:05:31.665 --> 00:05:42.540
+be displayed specifically on the route page. But be careful. Don’t delete the route widget,
+be displayed specifically on the route page. But be careful. Don’t delete the route widget,
 
 00:05:42.540 --> 00:05:43.316
 These are also edited via layouts. To do this,  go to the dashboards page via the main menu. 

@@ -75,4 +75,10 @@ charts:
     en: AvNav Charts
   youtube: "as62-dDtmQ4"
   intern: charts.mp4
-  
+
+dataflow:
+  title:
+    de: AvNav Datenfluss
+    en: AvNav Data Flow
+  youtube: "Mpn85QlzESo"
+  intern: dataflow.mp4

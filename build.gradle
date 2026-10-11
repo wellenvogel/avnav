@@ -890,7 +890,7 @@ task buildNewDocRelease(type: NewDocBuild){
     commandLine "./build.sh","-d","-b","-c","-v","$project.avnavVersion","build"
 }
 
-task uploadNewDoc(type: UploadTask){
+task uploadNewDocRelease(type: UploadTask){
     group NDGROUP
     description "upload new documentation"
     inputFiles=buildNewDocRelease.outputFiles
@@ -1035,7 +1035,7 @@ task uploadRelease{
     if (buildAndroid){
         dependsOn uploadAndroidRelease
     }
-    dependsOn uploadNewDocPluginRelease,uploadNewDoc,uploadNewDocLatest
+    dependsOn uploadNewDocPluginRelease,uploadNewDocRelease,uploadNewDocLatest
 }
 
 afterEvaluate{

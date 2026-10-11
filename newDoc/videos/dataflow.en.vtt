@@ -1,0 +1,274 @@
+WEBVTT
+Kind: captions
+Language: en
+
+00:00:05.000 --> 00:00:11.800
+For navigation software like AvNav to function, it necessarily needs data.
+
+00:00:11.800 --> 00:00:18.760
+This video aims to demonstrate how AvNav processes different types of navigation data. It is intended
+
+00:00:18.760 --> 00:00:24.000
+for beginners and users who want to understand and implement common data traffic scenarios with AvNav
+
+00:00:24.000 --> 00:00:29.880
+on board. In fact, processing
+
+00:00:29.880 --> 00:00:36.200
+data with AvNav can be a complex undertaking requiring in-depth training
+
+00:00:36.200 --> 00:00:42.320
+if you want to explore all its features and possibilities. The corresponding
+
+00:00:42.320 --> 00:00:50.240
+articles in the documentation, in the section for specialists, provide further information. Let's begin by considering which devices
+
+00:00:50.240 --> 00:00:56.880
+typically provide navigation data for AvNav on board.
+
+00:00:56.880 --> 00:01:04.800
+This is usually GPS, primarily for position, SOG, and time.
+
+00:01:04.800 --> 00:01:08.840
+We then receive water depth from an echo sounder, data for
+
+00:01:08.840 --> 00:01:14.440
+relative wind speed and angle from a wind sensor,
+
+00:01:14.440 --> 00:01:20.240
+and the position data of other vessels transmitted via the AIS system.
+
+00:01:20.240 --> 00:01:27.040
+AvNav can not only process incoming data but also output processed data.
+
+00:01:27.040 --> 00:01:33.400
+This is particularly relevant for feeding data to autopilots or secondary displays.
+
+00:01:33.400 --> 00:01:36.400
+This is intended to describe the minimum amount of data
+
+00:01:36.400 --> 00:01:42.240
+assumed in this video. The devices described deliver their
+
+00:01:42.240 --> 00:01:51.480
+data in different formats. These are typically NMEA0183, NMEA2000, and Seatalk.
+
+00:01:51.480 --> 00:01:57.720
+To make the data available to AvNav in these different formats, hardware is needed,
+
+00:01:57.720 --> 00:02:04.640
+specifically converters or interfaces, because depending on the computer AvNav is running on,
+
+00:02:04.640 --> 00:02:11.760
+the data must reach AvNav somehow. Let's start with the simplest case:
+
+00:02:11.760 --> 00:02:21.560
+GPS data from a GPS mouse should reach AvNav. We'll use a GPS mouse that
+
+00:02:21.560 --> 00:02:28.200
+delivers NMEA0183 data. That clarifies the format. A USB connector is at the end of the cable. This
+
+00:02:28.200 --> 00:02:34.480
+also clarifies the interface; it's USB, i.e., a serial interface.
+
+00:02:34.480 --> 00:02:40.240
+On Linux systems, AvNav automatically detects when data
+
+00:02:40.240 --> 00:02:46.960
+is arriving at one of the serial interfaces and sets up so-called readers in the Connections section. On the software side, they configure the
+
+00:02:46.960 --> 00:02:53.520
+system so that the NMEA0183 data can reach AvNav and
+
+00:02:53.520 --> 00:03:00.600
+be used for navigation. On Android systems, these connections must
+
+00:03:00.600 --> 00:03:09.720
+be set up manually. This was manageable and quite simple. With a fish finder that provides NMEA0183 data
+
+00:03:09.720 --> 00:03:15.840
+or a marine radio that transmits AIS data, it's a bit different, because you
+
+00:03:15.840 --> 00:03:22.000
+'ll usually only find open cable ends on these devices. These devices typically use the
+
+00:03:22.000 --> 00:03:30.960
+RS485 or RS232 interface. Like USB, these are also serial interfaces.
+
+00:03:30.960 --> 00:03:38.080
+Hardware versions are available as add-on boards or HATs for a Raspberry Pi, or as USB adapters.
+
+00:03:38.080 --> 00:03:44.160
+This is where it gets a bit more complicated, because hardware needs to be installed.
+
+00:03:44.160 --> 00:03:49.120
+You can find instructions on how to do this in the documentation for the device you're using.
+
+00:03:49.120 --> 00:03:54.280
+A third option is via Wi-Fi, as used, for example, by the open-source wind sensor
+
+00:03:54.280 --> 00:03:59.920
+"Yachta" from the Open Boat Project. However, this requires an onboard network
+
+00:03:59.920 --> 00:04:05.640
+that provides Wi-Fi. For instructions on how to do this with AvNav or an additional
+
+00:04:05.640 --> 00:04:13.320
+Wi-Fi router, please refer to the documentation. Two things are important here:
+
+00:04:13.320 --> 00:04:21.560
+First, data in NMEA0183 format can only be transmitted directly from device to device. This means that
+
+00:04:21.560 --> 00:04:27.040
+each sending device needs its own converter or an input on the receiver,
+
+00:04:27.040 --> 00:04:32.840
+i.e., the AvNav computer. Alternatively, it needs its own network address.
+
+00:04:32.840 --> 00:04:35.360
+Second, it's important to know that, for licensing reasons, AvNav itself only
+
+00:04:35.360 --> 00:04:42.320
+processes NMEA0183 data. However, most recreational boats nowadays use
+
+00:04:42.320 --> 00:04:50.360
+NMEA2000 networks. On the CAN bus used there, any
+
+00:04:50.360 --> 00:04:56.960
+connected device can act as both a sender and a receiver. Therefore, to integrate your AvNav computer into such a
+
+00:04:56.960 --> 00:05:01.240
+CAN bus system, you will definitely need a converter
+
+00:05:01.240 --> 00:05:10.600
+that transforms NMEA2000 data into NMEA0183 for AvNav and vice versa.
+
+00:05:10.600 --> 00:05:19.840
+Unlike NMEA0183, the number of devices connected to the NMEA2000 bus is irrelevant.
+
+00:05:19.840 --> 00:05:24.240
+Several types of converters are suitable: one being the
+
+00:05:24.240 --> 00:05:32.960
+N2K gateway, specifically developed for AvNav, which converts the NMEA2000 data and transmits it via WLAN and USB.
+
+00:05:33.480 --> 00:05:39.840
+With a plug-in add-on module, the data can also be converted to RS485.
+
+00:05:39.840 --> 00:05:43.920
+This hardware option is well-suited for
+
+00:05:43.920 --> 00:05:50.880
+integrating an Android-based AvNav into an NMEA2000 network. This allows
+
+00:05:50.880 --> 00:05:57.360
+the use of converters from various other manufacturers with different functionalities. A brief overview is available here:
+
+00:05:57.360 --> 00:05:58.920
+https://open-boat-projects.org/de/nmea2k-wlan-bridge-eine-marktuebersicht/
+
+00:05:59.480 --> 00:06:05.400
+CAN adapters, such as those
+
+00:06:05.400 --> 00:06:15.280
+found on HAT boards for Raspberry Pis or USB devices (e.g., from Actisense), which do not convert to NMEA0183 themselves, can also be integrated. The conversion
+
+00:06:15.280 --> 00:06:22.280
+to and from NMEA0183 is then performed via additional software on the headless AvNav images, called CanBoat.
+
+00:06:22.280 --> 00:06:29.320
+Depending on the data format and
+
+00:06:29.320 --> 00:06:37.360
+hardware used, certain data can also leave AvNav: Via NMEA2000 converters and adapters,
+
+00:06:37.360 --> 00:06:44.800
+serial interfaces, or LAN and WLAN, AvNav provides NMEA0183 data, primarily for
+
+00:06:44.800 --> 00:06:50.600
+supplying an autopilot. Please refer to the documentation for
+
+00:06:50.600 --> 00:06:57.040
+details on which specific data sets are available . If you
+
+00:06:57.040 --> 00:07:02.440
+want more flexibility in handling data, and especially if you want to send more than just autopilot data,
+
+00:07:02.440 --> 00:07:10.160
+a second powerful component comes into play, which is part of the headless image: the SignalK server.
+
+00:07:10.160 --> 00:07:16.000
+It is already connected to AvNav and can
+
+00:07:16.000 --> 00:07:21.960
+add a great deal of additional functionality to the entire system through its plugins. Unfortunately, it does not run on Android systems.
+
+00:07:22.680 --> 00:07:27.840
+If you would like to delve deeper into the SignalK server, please consult the relevant
+
+00:07:27.840 --> 00:07:34.400
+manuals; otherwise, this video would become considerably too long.
+
+00:07:34.400 --> 00:07:40.200
+Just a brief overview of SignalK and AvNav, which is what makes the whole thing quite complex:
+
+00:07:40.200 --> 00:07:47.040
+AvNav and SignalK are linked via several data formats. You can therefore
+
+00:07:47.040 --> 00:07:54.120
+assign all the data connections described above to the SignalK server and configure them from there.
+
+00:07:54.120 --> 00:08:00.520
+This is how it's done on the open-source system Openplotter. However, you then have to accept
+
+00:08:00.520 --> 00:08:07.400
+that a SignalK server failure will also take down the data connections to AvNav.
+
+00:08:07.400 --> 00:08:12.480
+Mixed configurations are also possible, meaning you can
+
+00:08:12.480 --> 00:08:19.680
+feed some of your data directly into AvNav and another part via the SignalK server. This can
+
+00:08:19.680 --> 00:08:25.680
+be useful if alarm messages are generated in the SignalK server and
+
+00:08:25.680 --> 00:08:32.720
+are to be output via AvNav. Similarly, apps like Node-RED or KIP, which are installed via the SignalK server, can
+
+00:08:32.720 --> 00:08:38.480
+be used to process and display data. The data for this can then
+
+00:08:38.480 --> 00:08:46.040
+come from AvNav or be sent to AvNav. It sounds complicated, and it is. With such
+
+00:08:46.040 --> 00:08:51.360
+mixed systems, it's extremely important to structure the generated data flow in such a way
+
+00:08:51.360 --> 00:08:56.920
+that you don't create a loop. That is, to avoid repeatedly sending the same data back and forth between SignalK and
+
+00:08:56.920 --> 00:09:04.640
+AvNav. This would significantly slow down the entire system.
+
+00:09:04.640 --> 00:09:11.840
+So, if you're planning something like this, you can use filters. Filters allow you
+
+00:09:11.840 --> 00:09:19.240
+to control the sending and receiving of data. This works in both the SignalK server and AvNav.
+
+00:09:19.240 --> 00:09:22.390
+Therefore, you should know exactly what you're doing. And before you begin, work through the chapters in the documentation that
+
+00:09:22.390 --> 00:09:24.720
+explain all the data traffic in AvNav. The flexibility in configuring
+
+00:09:24.720 --> 00:09:30.960
+AvNav's data traffic, with or without the SignalK server, offers many possibilities,
+
+00:09:30.960 --> 00:09:39.320
+but can also cause some problems. Fortunately, as the user, you're in control.
+
+00:09:42.288 --> 00:09:49.180
+That's it. Have fun setting up your data connections, and above all, good luck!
+
