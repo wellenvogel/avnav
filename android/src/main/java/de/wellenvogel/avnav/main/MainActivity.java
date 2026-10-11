@@ -764,7 +764,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         try {
             showsDialog = false;
             setContentView(R.layout.main);
-            EdgeToEdge.configure(this);
             dlProgress = findViewById(R.id.dlIndicator);
             dlProgress.setOnClickListener(view -> {
                 if (download != null) download.stop();
@@ -781,6 +780,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 PreferenceManager.setDefaultValues(this, Constants.PREFNAME, Context.MODE_PRIVATE, R.xml.main_preferences, true);
                 sharedPrefs.edit().putBoolean(Constants.DEFAULTS_SET,true).apply();
             }
+            EdgeToEdge.configure(this, sharedPrefs.getBoolean(Constants.HIDE_BARS, false));
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             assetManager = getAssets();
             sharedPrefs.registerOnSharedPreferenceChangeListener(this);
@@ -810,6 +810,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         if (key.equals(Constants.CHARTDIR)){
             updateWorkDir(sharedPreferences.getString(Constants.CHARTDIR,""));
             serviceNeedsRestart=true;
+        }
+        if (key.equals(Constants.HIDE_BARS)){
+            handleBars();
         }
     }
 
@@ -993,6 +996,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         boolean hideStatus=sharedPrefs.getBoolean(Constants.HIDE_BARS,false);
         AvnLog.dfk(LOGPRFX,"handleBars,hide=%s",hideStatus);
+        EdgeToEdge.setSystemBarsHidden(this, hideStatus);
         View decorView = getWindow().getDecorView();
         int flags=0;
         if (hideStatus ) {
