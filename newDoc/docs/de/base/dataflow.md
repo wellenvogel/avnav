@@ -14,7 +14,7 @@ Damit eine Navigationssoftware wie AvNav arbeiten kann, braucht sie notwendigerw
 
 In diesem Abschnitt geht es darum, welche Navigationsdaten wie von AvNav verarbeitet werden. Es richtet sich an Einsteiger und Benutzer, die geläufige Szenarien für den Datenverkehr mit AvNav an Bord verstehen und aufbauen wollen.
 
-Tatsächlich kann die Verarbeitung von Daten mit AvNav eine komplexe Angelegenheit werden, die profunde Einarbeitung benötigt, wenn man auch die letzten Ecken und Möglichkeiten ausloten möchte. Dazu dienen die entsprechenden [Artikel](../special/signalk.md) im Bereich "Details".
+Tatsächlich kann die Verarbeitung von Daten mit AvNav eine komplexe Angelegenheit werden, die profunde Einarbeitung benötigt, wenn man auch die letzten Ecken und Möglichkeiten ausloten möchte. Dazu dienen die entsprechenden [Artikel](../special/connections.md) im Bereich "Details".
 
 
 ## Datenlieferanten
@@ -41,13 +41,19 @@ Betrachten wir zu Beginn den einfachsten Fall: GPS-Daten einer GPS-Maus sollen A
 
 Wir nutzen eine GPS-Maus, die NMEA0183-Daten liefert. Damit ist das Format geklärt. Am Ende des Kabels sitzt ein USB-Stecker. Damit ist auch die Schnittstelle geklärt, es handelt sich um USB, also eine serielle Schnittstelle. 
 
-AvNav erkennt auf Linux-Systemen automatisch, wenn an einer der seriellen Schnittstellen  Daten auflaufen, und richtet über das AvNav-Menü im Bereich *Connections* sogenannte Reader ein. 
+AvNav erkennt auf Linux-Systemen automatisch, wenn an einer der seriellen Schnittstellen  Daten auflaufen, und richtet über 
+
+{{MM("MMchannelspage")}}
+
+sogenannte Reader ein. 
 
 ![Screenshot](../../img/channelspage.png)
 
 Sie regeln auf der Softwareseite, dass die NMEA0183-Daten AvNav erreichen und dort zur Navigation genutzt werden können. 
 
-Auf Android Systemen ist die Einrichtung über ein internes GPS noch einfacher, die *Connections* müssen allerdings händisch eingerichtet werden.
+Auf Android Systemen ist die Einrichtung über ein internes GPS noch einfacher - auch hier erfolgt die Einrichtung wieder über
+
+{{MM("MMchannelspage")}}
 
 
 ### NMEA0183 per seriellem Wandler
@@ -86,7 +92,7 @@ Dann können Wandler verschiedener anderer Hersteller mit unterschiedlichen Funk
 
 Einen kleinen Überblick liefert die Webseite vom [Open Boat Project](https://open-boat-projects.org/de/nmea2k-wlan-bridge-eine-marktuebersicht/).
 
-Es können auch CAN-Adapter eingebunden werden, wie sie auf HAT-Platinen für Raspberrys oder USB-Devices zB von Actisense zu finden sind, die nicht selbst nach NMEA0183 konvertieren. Über eine Zusatzsoftware auf den Headless-AvNav-Images, das sogenannte *CanBoat*, wird dann die Konvertierung nach NMEA0183 und zurück durchgeführt.
+Es können auch CAN-Adapter eingebunden werden, wie sie auf HAT-Platinen für Raspberrys oder USB-Devices zB von Actisense zu finden sind, die nicht selbst nach NMEA0183 konvertieren. Über eine Zusatzsoftware auf den Headless-AvNav-Images, das sogenannte [*CanBoat*](../special/nmea2000.md), wird dann die Konvertierung nach NMEA0183 und zurück durchgeführt.
 
 Je nach Datenformat und verwendeter Hardware können bestimmte Daten AvNav auch wieder verlassen: Über die NMEA2000-Wandler und -Adapter, über serielle Schnittstellen oder LAN und WLAN stellt AvNav NMEA0183-Daten vor allem für die Versorgung eines Autopiloten zur Verfügung. 
 
@@ -96,7 +102,7 @@ Welche Datensätze das im Einzelnen sind, findet sich in Abschnitt [Details](../
 
 ## SignalK
 
-Wenn man mehr Flexibilität im Umgang mit Daten möchte und vor allem mehr als nur Autopilot-Daten versenden will, kommt ein zweiter mächtiger Spieler auf das Parkett, der Teil des Headless- Images ist: Der SignalK-Server. 
+Wenn man mehr Flexibilität im Umgang mit Daten möchte und vor allem mehr als nur Autopilot-Daten versenden will, kommt ein zweiter mächtiger Spieler auf das Parkett, der Teil des Headless- Images ist: Der [SignalK-Server](../special/signalk.md). 
 
 Der ist bereits datentechnisch mit AvNav verbunden und kann durch seine PlugIns eine Menge weiterer Funktionalität in das gesamte System bringen. Er läuft  leider nicht auf Android-Systemen.
 
