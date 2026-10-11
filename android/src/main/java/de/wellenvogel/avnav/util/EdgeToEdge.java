@@ -79,6 +79,7 @@ public final class EdgeToEdge {
         InsetsState state = tag instanceof InsetsState ? (InsetsState) tag : null;
         if (state == null || state.hideSystemBars == hidden) return;
         state.hideSystemBars = hidden;
+        state.statusBarScrim.setVisibility(hidden ? View.GONE : View.VISIBLE);
         ViewCompat.requestApplyInsets(content);
     }
 
