@@ -129,7 +129,7 @@ def get_hp_base(env,addKey=None):
         if ext_build:
             base=env.variables.base_external
         else:
-            base=pageVariables[PV_BASE] + "/" + env.variables.base_internal
+            base=pageVariables[PV_BASE] + env.variables.base_internal
         if addKey:
             addV=env.variables.get(addKey)
             if addV:
