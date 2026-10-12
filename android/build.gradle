@@ -11,7 +11,7 @@ buildscript {
 
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
+        classpath 'com.android.tools.build:gradle:8.12.3'
     }
 }
 repositories{
@@ -74,19 +74,13 @@ android {
         versionName "avnav-$avnavVersion"
         versionCode Integer.parseInt(project.avnavVersion)
         manifestPlaceholders(['label':'avNav'])
-        targetSdkVersion 34
+        targetSdkVersion 35
         multiDexEnabled true //https://stackoverflow.com/questions/60919046/how-to-fix-build-gradle
         minSdkVersion 19
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
     }
-    lintOptions {
-        abortOnError false
-    }
-    aaptOptions{
-        noCompress '.json'
-    }
     //original:
-    compileSdkVersion 34
+    compileSdkVersion 35
 
     sourceSets {
         main {
@@ -179,6 +173,12 @@ android {
         renderScript true
         aidl true
     }
+    androidResources {
+        noCompress '.json'
+    }
+    lint {
+        abortOnError false
+    }
     applicationVariants.all { variant ->
         project.logger.lifecycle("Variant: " + variant.getName())
         def vname=variant.getName()
@@ -213,44 +213,92 @@ task cleanViewer(type: GradleBuild){
     setDir "../viewer"
     setTasks(["clean"])
 }
+// The class must be 'abstract' and extends Gradle's native 'Copy' task
+abstract class CustomAssetCopyTask extends Copy {
 
-task copyToAssetsViewerDebug(type: org.gradle.api.tasks.Copy) {
+    // AGP requires this explicit @OutputDirectory property to dynamically inject the build path
+    @OutputDirectory
+    abstract DirectoryProperty getOutputFolder()
+
+    @Input
+    abstract Property<String> getSubdir()
+
+    CustomAssetCopyTask() {
+        def sd=getSubdir()
+        if (sd != null) {
+            into(getOutputFolder().dir(sd))
+        }
+        else {
+            into(getOutputFolder())
+        }
+    }
+}
+
+task copyToAssetsViewerDebug(type: CustomAssetCopyTask) {
     group = taskgroup
     from("$viewerDir/debug")
-    into new File(assetsDir, "viewer")
+    subdir.set("viewer")
+    doLast {
+        def ddir=destinationDir.getAbsolutePath()
+        println("copying viewer debug to assets, $ddir")
+    }
+    dependsOn(buildViewerDebug)
 }
-copyToAssetsViewerDebug.dependsOn(buildViewerDebug)
-task copyToAssetsViewerRelease(type: org.gradle.api.tasks.Copy) {
+task copyToAssetsViewerRelease(type: CustomAssetCopyTask) {
     group = taskgroup
     from("$viewerDir/release")
-    into new File(assetsDir, "viewer")
+    subdir.set("viewer")
+    doLast {
+        def ddir=destinationDir.getAbsolutePath()
+        println("copying viewer release to assets, $ddir")
+    }
+    dependsOn(buildViewerRelease)
 }
-copyToAssetsViewerRelease.dependsOn(buildViewerRelease)
 
-task copySounds(type: org.gradle.api.tasks.Copy) {
+
+
+
+
+task copySounds(type: CustomAssetCopyTask) {
     group = taskgroup
     from("../sounds")
-    into new File(assetsDir, "sounds")
-}
-copyToAssetsViewerRelease.dependsOn(copySounds)
-copyToAssetsViewerDebug.dependsOn(copySounds)
-
-afterEvaluate {
-    generateDebugAssets.dependsOn(copyToAssetsViewerDebug)
-    generateReleaseAssets.dependsOn(copyToAssetsViewerRelease)
-    generateBetaAssets.dependsOn(copyToAssetsViewerRelease)
-    [lintVitalReportBeta,lintVitalAnalyzeBeta,lintVitalReportRelease, lintVitalAnalyzeRelease].each { task ->
-        task.dependsOn(copyToAssetsViewerRelease)
-        task.dependsOn(copySounds)
+    subdir.set("sounds")
+    doLast {
+        def ddir=destinationDir.getAbsolutePath()
+        println("copying sounds to assets, $ddir")
     }
-    //lintVitalReportDebug.dependsOn(copyToAssetsViewerDebug)
-    //lintVitalReportDebug.dependsOn(copySounds)
 }
 
 
-clean.delete.add "assets/viewer"
-clean.dependsOn cleanViewer
+androidComponents {
+    def copySoundsP = tasks.named("copySounds")
+    onVariants(selector().all()) { variant ->
+        variant.sources.assets.addGeneratedSourceDirectory(
+                copySoundsP,
+                CustomAssetCopyTask::getOutputFolder
+        )
+        println("variant: " + variant.getName())
+        if (variant.getName().equals("debug")) {
+            def copyViewerP = tasks.named("copyToAssetsViewerDebug")
+            println("adding viewer debug to assets")
+            variant.sources.assets.addGeneratedSourceDirectory(
+                    copyViewerP,
+                    CustomAssetCopyTask::getOutputFolder
+            )
+        }
+        else  {
+            def copyViewerP = tasks.named("copyToAssetsViewerRelease")
+            println("adding viewer release to assets")
+            variant.sources.assets.addGeneratedSourceDirectory(
+                    copyViewerP,
+                    CustomAssetCopyTask::getOutputFolder
+            )
+        }
+    }
+}
 
+//clean.delete.add "assets/viewer"
+clean.dependsOn cleanViewer
 
 
 

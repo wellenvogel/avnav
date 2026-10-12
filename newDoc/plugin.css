@@ -1,8 +1,8 @@
 .icon-legacy{
-    --plugin-doc-icon: url('menu_book.svg')
+    --plugin-doc-icon: url('manual.svg')
 }
 .icon-default{
-    --plugin-doc-icon: url('menu_book.svg')
+    --plugin-doc-icon: url('manual.svg')
 }
 /*
 set the icon url for the plugin running as user plugin

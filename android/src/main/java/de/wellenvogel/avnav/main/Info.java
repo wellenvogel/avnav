@@ -19,6 +19,7 @@ import java.util.HashMap;
 
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.ActionBarHandler;
+import de.wellenvogel.avnav.util.EdgeToEdge;
 
 /**
  * Created by andreas on 30.12.14.
@@ -34,6 +35,7 @@ public class Info extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.info);
+        EdgeToEdge.configure(this);
         TextView version=(TextView)findViewById(R.id.txVersion);
         try {
             String versionName = getPackageManager()

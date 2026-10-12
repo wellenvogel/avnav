@@ -46,6 +46,7 @@ import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.EdgeToEdge;
 import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
@@ -241,6 +242,7 @@ public class SettingsActivity extends PreferenceActivity {
         resultHandler.clear();
         keepOpen=false;
         injectToolbar();
+        EdgeToEdge.configure(this);
         getToolbar().setOnMenuItemClickListener(this);
         updateHeaderSummaries(true);
         boolean checkInitially=false;
@@ -666,4 +668,3 @@ public class SettingsActivity extends PreferenceActivity {
         callbacks.remove(cb);
     }
 }
-
