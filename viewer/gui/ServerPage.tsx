@@ -212,7 +212,7 @@ const ServerPage = (iprops: PageBaseProps) => {
             <PageLeft id={PAGEIDS.SERVER} title={serverError ? "Server Connection lost" : title}>
                 <StatusView
                     focusItem={focusId}
-                    allowEdit={true}
+                    allowEdit={props.config}
                     kinds={showAll?undefined:[ChannelKinds.OTHER]}
                     callback={(handlerList?: any[]) => {
                         if (!handlerList) {

@@ -30,6 +30,7 @@
     </queries>
     <application
         android:hardwareAccelerated="true"
+        android:enableOnBackInvokedCallback="false"
         android:icon="@drawable/sailboatr"
         android:theme="@style/AppTheme"
         android:label="${label}"
