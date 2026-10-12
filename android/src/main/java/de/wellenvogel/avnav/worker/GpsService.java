@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -232,6 +233,16 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         else o.put("updateleg",-1);
     }
 
+    private boolean allowRemoteRequest(String request, String handlerId){
+        if (handlerId == null) return false;
+        int id=Integer.parseInt(handlerId);
+        if (id == WPLUGINS.id|| id == WOCHARTS.id){
+            String [] ALLOWED_PLUGINREMOTE={"getEditables","setConfig","deleteChild","deleteHandler"};
+            return Arrays.stream(ALLOWED_PLUGINREMOTE).anyMatch(request::equals);
+        }
+        return false;
+    }
+
     @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if ("capabilities".equals(command)){
@@ -268,8 +279,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             }
             return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("handler",getStatus()));
         }
+        String handlerIdStr=uri.getQueryParameter("handlerId");
         if (serverInfo != null){
-            return RequestHandler.getErrorReturn("can only handle config locally");
+            if (! allowRemoteRequest(command,handlerIdStr)) {
+                return RequestHandler.getErrorReturn("can only handle config locally");
+            }
         }
         if ("createHandler".equals(command)){
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
@@ -297,7 +311,8 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if ("canRestart".equals(command)){
             return RequestHandler.getReturn(new AvnUtil.KeyValue<Boolean>("canRestart",false));
         }
-        int id=Integer.parseInt(AvnUtil.getMandatoryParameter(uri,"handlerId"));
+        if (handlerIdStr == null) throw new Exception("missing parameter handlerId");
+        int id=Integer.parseInt(handlerIdStr);
         String child=uri.getQueryParameter("child");
         IWorker worker=findWorkerById(id);
         if (worker == null){
