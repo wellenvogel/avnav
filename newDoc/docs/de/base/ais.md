@@ -11,11 +11,26 @@ Neben der Darstellung auf der Karte erfolgt auch eine Berechnung der voraussicht
 
 ## Anzeige von Objekten
 
-Dreieck zeigen, Infos einstellen
+In der Kartendarstellung werden andere Schiffe oder AIS-Targets als grüne Dreiecke dargestellt. 
+
+![AIS-Targets](../../img/aisvectors-tmv.png)
+
+Die vorauseilende, grüne Linie ist der sogenannte Kursvektor, der zeigt, wo das jeweilige AIS-Ziel in der vorab eingestellten Zeit sein wird. Die Standardeinstellng beträgt 10min. 
+
+Diese und andere Einstellungen können im Menüpunk *Settings* und dort in den *SettingsGroups* im Bereich *AIS* vorgenommen werden.
+
+![AIS-Targets](../../img/ais-settingsgroups.png)
+
+![AIS-Targets](../../img/ais-settings1.png)
+
+Äußerst wichtig bei der Navigation ist es zu bedenken, dass nicht alle Schiffe in der Umgebung ein AIS-Signal aussenden. Ein regelmäßiger Ausguck ist totz der AIS-Darstellung in der Karte daher unerlässlich.
+
 
 ## Widget-Funktionen
 
-Wichtige Informationen bewerten
+Um einen aktuellen Überblick zu bekommen, welche AIS-Targets unter Umständen eine Kollisionsgefahr hervorrufen können, lässt sich das AIS-Widget in der Kartendarstellung nutzen.
+
+
 
 ## AIS-Objekt-Liste
 
