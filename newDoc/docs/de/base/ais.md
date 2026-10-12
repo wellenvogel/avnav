@@ -56,11 +56,11 @@ Für eine frühzeitige Reaktion auf mögliche Annäherungen ist die Locate-Funkt
 
 Dort wird nun das "located"-AIS-Ziel statt des nächstliegenden Ziels im Widget dargestellt, solange kein anderes Ziel auf Kollisionskurs ist.
 
-Diese Funktion kann sehr hilfreich sein, um zum Beispiel Fähren im Blick z behalten, die in den gleichen Hafen einlaufen werden und eigene Manöver dann beeinflussen können.
+Diese Funktion kann sehr hilfreich sein, um zum Beispiel Fähren im Blick zu behalten, die in den gleichen Hafen einlaufen werden und eigene Manöver dann beeinflussen können.
 
 ## AIS-Menü
 
-Die AIS-Funktionen lassen sich nut nur über die Kartendarstellung, sondern auch über das Menü und dort über den Menüpunkt *AIS* erreichen.
+Die AIS-Funktionen lassen sich nicht nur über die Kartendarstellung, sondern auch über das Menü und dort über den Menüpunkt *AIS* erreichen.
 
 ![AIS-Targets](../../img/ais-menue.png)
 
