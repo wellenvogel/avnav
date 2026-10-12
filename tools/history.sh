@@ -2,9 +2,11 @@
 # list issues that got the label "ready" after the date of a tag as markdown
 usage() {
   cat <<EOF
-usage: $0 [-s] [-t] [-m model] [-p promptfile] [-l label] [-r repo] tag
+usage: $0 [-s] [-c comment] [-t] [-m model] [-p promptfile] [-l label] [-r repo] tag
   list all issues that got the label (default: ready) assigned after the date of tag
   -s        silent: no progress info on stderr
+  -c comment  instead of the markdown list output a gh command per issue that closes it
+            with this comment (markdown allowed); no titles, no translation
   -t        translate the titles to german with gemini (one request, needs GEMINI_API_KEY
             and python google-genai, uses newDoc/translate/main.py)
   -m model  gemini model for -t (default: gemini-3.1-flash-lite)
@@ -19,14 +21,16 @@ EOF
 label=ready
 translate=0
 silent=0
+ccomment=
 repo=
 model=gemini-3.1-flash-lite
 scriptdir=$(cd "$(dirname "$0")" && pwd)
 tdir="$scriptdir/../newDoc/translate"
 prompt="$tdir/issue-titles-prompt.md"
-while getopts "stm:p:l:r:" opt; do
+while getopts "sc:tm:p:l:r:" opt; do
   case $opt in
     s) silent=1;;
+    c) ccomment="$OPTARG";;
     t) translate=1;;
     m) model="$OPTARG";;
     p) prompt="$OPTARG";;
@@ -38,6 +42,7 @@ done
 shift $((OPTIND-1))
 tag="$1"
 [ -z "$tag" ] && usage
+[ -n "$ccomment" ] && translate=0
 log() { [ $silent = 1 ] || echo "$@" >&2; }
 for c in gh jq git; do
   command -v $c >/dev/null || { echo "$c not found" >&2; exit 1; }
@@ -77,6 +82,12 @@ for n in $numbers; do
   hit=$(gh api --paginate "repos/$repo/issues/$n/events?per_page=100" \
     --jq ".[] | select(.event==\"labeled\" and .label.name==\"$label\" and .created_at > \"$since\") | .created_at" | head -1)
   [ -z "$hit" ] && continue
+  if [ -n "$ccomment" ] ; then
+    log "  selected #$n"
+    titles[$n]=""
+    order+=("$n")
+    continue
+  fi
   title=$(gh api "repos/$repo/issues/$n" --jq .title)
   title=${title//$'\n'/ }
   titles[$n]="$title"
@@ -95,6 +106,13 @@ if [ $translate = 1 ] && [ ${#order[@]} -gt 0 ] ; then
   done <<< "$out"
 fi
 log "${#order[@]} issues selected"
+if [ -n "$ccomment" ] ; then
+  qcomment="'${ccomment//\'/\'\\\'\'}'"
+  for n in "${order[@]}"; do
+    echo "gh issue close $n --repo $repo --comment $qcomment"
+  done
+  exit 0
+fi
 for n in "${order[@]}"; do
   echo "* [#$n](https://github.com/$repo/issues/$n) ${translated[$n]:-${titles[$n]}}"
 done
