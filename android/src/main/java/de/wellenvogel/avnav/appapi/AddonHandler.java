@@ -44,6 +44,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         public static final String ORIGINAL_URL = "originalUrl";
         public static final String KEY = "key";
         public static final String LONG_TEXT = "longText";
+        public static final String SOURCE = "source";
         public String name;
         public String url;
         public String icon;
@@ -54,7 +55,8 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                 SHORT_TEXT,
                 LONG_TEXT,
                 PAGE,
-                NEW_WINDOW
+                NEW_WINDOW,
+                SOURCE
         };
 
         public boolean compare(@Nullable AddonInfo obj) {
@@ -124,6 +126,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         for (PluginItem pi:items){
             JSONObject piJson=pi.toJson();
             piJson.put(AddonInfo.NAME,pluginName+"-"+pi.name);
+            piJson.put(AddonInfo.SOURCE,"plugin-"+pluginName);
             addons.add(AddonInfo.fromJson(piJson));
         }
         synchronized (externalAddons){
