@@ -26,5 +26,4 @@ Die Installation hängt vom verwendeten System ab und ist in den Installationsan
 Versionen
 ---------
 
-### 202608xx
-Erste Version mit neuem Main-Menü.
+### [202608xx](versions/202610xx.md)
