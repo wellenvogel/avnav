@@ -9,6 +9,7 @@ import getopt
 #MODEL="gemini-3.5-flash"
 MODEL="gemini-3.1-flash-lite"
 TARGET='en'
+PROMPT_FILE=None #default: prompt.md next to this script
 from google import genai
 # Get the directory path of the current file
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -36,7 +37,7 @@ def translate_file(file_path, output_path):
     """
     print(f"translating '{file_path}' to '{output_path}'")
     # Read the system instructions from promt.md
-    with open(os.path.join(dir_path, 'prompt.md'), 'r', encoding='utf-8') as file:
+    with open(PROMPT_FILE or os.path.join(dir_path, 'prompt.md'), 'r', encoding='utf-8') as file:
         system_instructions = file.read()
     response = None
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -70,6 +71,23 @@ def translate_file(file_path, output_path):
         else:
             print(f"Error: {e}")
         print(f"\033[91mFailed to translate: {file_path[len(dir_path):]}\033[0m")
+
+
+def translate_stdin():
+    """
+    Translates all of stdin with a single request and writes the result to stdout.
+    """
+    with open(PROMPT_FILE or os.path.join(dir_path, 'prompt.md'), 'r', encoding='utf-8') as file:
+        system_instructions = file.read()
+    content = sys.stdin.read()
+    client = get_api()
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=system_instructions + "\n" + content,
+    )
+    if not response.text:
+        err("no translation returned")
+    print(response.text.strip())
 
 
 def handleFile(infile, outfile, automode, force,dryRun):
@@ -111,13 +129,14 @@ def err(txt,prefix='ERROR: '):
     print(f"{prefix or ''} {txt}",file=sys.stderr)
     sys.exit(1)
 
-ARGS='lhm:afnr'
-USAGE=f"Usage: {sys.argv[0]} [-l] [-m model] [-h] [-r] [-a] [-n] [-f] <input-file> [<output-file>]"
+ARGS='lhm:afnrp:s'
+USAGE=f"Usage: {sys.argv[0]} [-l] [-m model] [-p promptfile] [-s] [-h] [-r] [-a] [-n] [-f] <input-file> [<output-file>]\n  -p: markdown file with the translation instructions (default prompt.md)\n  -s: translate stdin to stdout with one request"
 if __name__ == '__main__':
     automode=False
     force=False
     dryRun=False
     recurse=False
+    stdinMode=False
     optlist, args = getopt.getopt(sys.argv[1:], ARGS)
     for o, a in optlist:
         if o == '-l':
@@ -128,6 +147,10 @@ if __name__ == '__main__':
             sys.exit(0)
         elif o == '-m':
             MODEL = a
+        elif o == '-p':
+            PROMPT_FILE = a
+        elif o == '-s':
+            stdinMode=True
         elif o == '-a':
             automode=True
         elif o == '-f':
@@ -139,6 +162,9 @@ if __name__ == '__main__':
             recurse=True
         else:
             assert False, "unhandled option"
+    if stdinMode:
+        translate_stdin()
+        sys.exit(0)
     minargs=2 if not automode else 1
     if len(args) < minargs:
         print(USAGE)

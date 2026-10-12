@@ -2,17 +2,17 @@
   tags:
     - Releases
 ---
-Avnav Releases
+AvNav Releases
 ==============
-The directory containing all releases can be found [here]({{DLLINK("release/")}}).  
+You can find the directory with all releases [here]({{DLLINK("release")}}).  
 
 Notes
 -----
 
-On this page, you will find information regarding the individual release versions.  
-Information about developer versions (betas) can be found at this [link](beta.md).
+On this page, you will find information about the individual release versions.  
+Information regarding developer versions (betas) can be found under this [link](beta.md).
 
-Installation depends on the system used and is described in the installation guides:
+The installation depends on the system used and is described in the installation instructions:
 
 * [Raspberry Pi](raspberry.md)
 * [Linux](linux.md)
@@ -26,5 +26,4 @@ Installation depends on the system used and is described in the installation gui
 Versions
 --------
 
-### 202608xx
-First version with the new main menu.
+### [202608xx](versions/202610xx.md)
