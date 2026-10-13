@@ -35,6 +35,7 @@ import {getPageTitle} from "../components/pagetitles";
 
 const ChannelsPage=(props:PageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
+     const [config]=useStoreState(keys.gui.capabilities.config);
      const history=useHistory();
      const [foucsId,setFoucsId]=useState<string|number>();
      const buttonListRef=useRef<ButtonDef[]>();
@@ -58,6 +59,7 @@ const ChannelsPage=(props:PageProps)=>{
             <StatusView
                 focusItem={foucsId}
                 kinds={[ChannelKinds.CHANNEL]}
+                allowEdit={config}
             ></StatusView>
         </PageLeft>
          <ButtonList
