@@ -18,7 +18,8 @@ Damit die neue App in der AvNav-Oberfläche zu erkennen ist, muss man ihr ein ei
 
 ![Load Image](../../img/userapp-addimage.png)
 
- Werden auf einem kleineren Display nicht alle Spalten angezeigt, erreicht man die Spalte "Image Files" durch Wischen oder  {{BT('AddonConfigImages')}} in der Buttonleiste.
+ Werden auf einem kleineren Display nicht alle Spalten angezeigt, erreicht man die Spalte "Image Files" durch Wischen oder nutzt den Button {{BT('AddonConfigImages')}} in der Buttonleiste.
+ 
  Nach Klicken des Upload file Buttons 
  {{BT("Upload")}} lädt man das gewünschte Icon, sodass es dem System bei der Konfiguration zur Verfügung steht.
 

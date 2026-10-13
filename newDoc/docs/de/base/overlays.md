@@ -57,7 +57,7 @@ Nachdem die Quelldateien auf dem Rechner gespeichert wurden, wechselt man in AvN
 In der Spalte "Overlays" kann man die Dateien dann hochladen.
 Als Beispiel wird hier die Wegepunktliste des NV-Verlags genutzt, die kostenlos zum Download zur Verfügung steht.
 
-Man klickt auf "Upload" {{SB("Upload")}}, wählt die Datei aus und überprüft, ob sie in der Liste unter *Overlay* sichtbar wird. Nun kann man den gleichen Weg gehen, der eben für die Karten bereits beschrieben wurde.
+Man klickt auf {{BT("Upload")}}, wählt die Datei aus und überprüft, ob sie in der Liste unter *Overlay* sichtbar wird. Nun kann man den gleichen Weg gehen, der eben für die Karten bereits beschrieben wurde.
 
 Da man aber sowieso schon im Bereich Charts/ Overlays ist, kann man direkt aus der Overlay-Liste eine Datei einer Karte zuordnen, also quasi der umgekehrte Weg zu eben. 
 Dazu klickt man auf das Stiftsymbol neben der gewählten Datei, klickt dann auf Overlays und sucht über den aufklappenden Dialog die Karte aus, der man das Overlay zuordnen will.

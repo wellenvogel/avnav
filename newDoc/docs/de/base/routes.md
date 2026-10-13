@@ -79,21 +79,17 @@ Route müssen immer zwei Bedingungen erfüllt sein:
    Das Erreichen des Annäherungsbereiches wird ersichtlich durch einen ausgelösten
    Wegepunkt-Alarm und eine rote Darstellung im Route-Widget.
 
-2. Je nach eingestelltem Mode unter
-   
-   {{MM("MMroutepage")}} -> "Router" {{SB("Edit")}} -> "nextWpMode"
-   
-   - "late" (der default und in älteren Versionen): Die Entfernung zum
-   aktuellen Wegepunkt nimmt nicht mehr ab, aber die Entfernung zum nächsten
-   Wegepunkt veringert sich.  
-   - "90": Der Wegepunkt liegt "querab" (genauer: Das Boot hat eine Linie +/-
+2. Je nach eingestelltem Mode unter <br> {{MM("MMroutepage")}} -> "Router" {{SB("Edit")}} -> "nextWpMode"
+    - "late" Die Entfernung zum aktuellen Wegepunkt nimmt nicht mehr ab, aber die Entfernung zum nächsten Wegepunkt verringert sich. (Default-Einstellung und ältere Versionen)  
+     - "90": Der Wegepunkt liegt "querab" (genauer: Das Boot hat eine Linie +/-
    90° zum originalen Wegepunktkurs überquert)  
-   - "early": Nach dem Wegepunkt-Alarm erfolgt die Weiterschaltung nach einer (einstellbaren) Zeit ohne weitere Bedingungen.
+     - "early": Nach dem Wegepunkt-Alarm erfolgt die Weiterschaltung nach einer (einstellbaren) Zeit ohne weitere Bedingungen.
 
-Es ist wichtig zu beachten, dass die Weiterschaltung nur erfolgt, wenn beide
-Kriterien erfüllt sind. Falls eine manuelle Weiterschaltung gewünscht ist, kann man jederzeit durch Klick auf die Widgets links unten oder über {{BT("NavActions")}}->{{BT("ABShowWpButtons",True)}} die Wegepunkt-Buttons anzeigen und den {{BT("NavNext")}} Button nutzen.  
+Es ist wichtig zu beachten, dass die automatische Weiterschaltung nur erfolgt, wenn beide Kriterien (1. und 2.) erfüllt sind. 
 
-### Routen Modus {: #mode }
+Falls eine manuelle Weiterschaltung gewünscht ist, kann man jederzeit durch Klick auf die Widgets links unten oder über {{BT("NavActions")}}->{{BT("ABShowWpButtons",True)}} die Wegepunkt-Buttons anzeigen und den {{BT("NavNext")}} Button nutzen.  
+
+### Routen-Modus {: #mode }
 
 #### [great circle](https://en.wikipedia.org/wiki/Great_circle)
 
@@ -187,7 +183,6 @@ Für jede lokale Route werden die möglichen Optionen angeboten:
 Mit dem Button {{BT("SyncRoutes")}} kann man jederzeit diese Synchroniserung erneut anstossen.
 
 
-
 ### Routen kombinieren
 
 Wenn man Teile einer Route zu einer anderen Route hinzufügen möchte, geht das, indem man die Route, aus der man Teile hinzufügen möchte, auf der aktuellen Karte als [Overlay]() konfiguriert.
@@ -198,11 +193,7 @@ Danach wechselt man in den [Routen Editor](#editor) , aktiviert den Punkt der Ro
 
 ![Route Overlay 2](../../img/route-edit-overlay2.png)
 
-Nach Klick auf die Overlay-Route kann man dann mit 
-
-{{DB("DBInsertRouteAfter")}}
-
-die Route einfügen.
+Nach Klick auf die Overlay-Route kann man dann mit {{DB("DBInsertRouteAfter")}} die Route einfügen.
 
 ![Route Overlay 3](../../img/route-edit-overlay3.png)
 

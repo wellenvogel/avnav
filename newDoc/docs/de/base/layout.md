@@ -25,15 +25,15 @@ Um Layouts zu verwalten oder zu bearbeiten, wechseln wir auf die Layout Page.
 
 Es kann immer nur das aktuelle, das „current“ Layout editiert werden. Das wird prominent in der ersten Zeile dargestellt. 
 
-Im Augenblick ist das Layout user.test aktiviert. In der Liste darunter finden sich alle anderen gespeicherten Layouts.
+Im Augenblick ist das Layout *user.test* aktiviert. In der Liste darunter finden sich alle anderen gespeicherten Layouts.
 
-Das vorangestellte „user“ macht klar, das ist ein vom User erzeugtes Layout. Die Layouts mit vorangestelltem „ystem“ sind voreingestellt und nicht editierbar.
+Das vorangestellte „user“ macht klar, das ist ein vom User erzeugtes Layout. Die Layouts mit vorangestelltem „system“ sind voreingestellt und nicht editierbar.
 
 Auch [Plugins](../special/plugins.md) können Layouts mitbringen. Diese sind dann am Prefix "plugin" erkennbar - und ebenfalls nicht editierbar.
 
-Über die Edit-Schaltfläche kann man nun das Editieren des aktiven Layouts starten. Ein kurzer Dialog bietet das Eingeben eines neuen Namens an, wenn es sich um ein System-Layout handelt.  Ansonsten wird nach Klick auf Edit das aktuelle Layout editiert.
+Über die Edit-Schaltfläche kann man nun das Editieren des aktiven Layouts starten. Ein kurzer Dialog bietet das Eingeben eines neuen Namens an, wenn es sich um ein System-Layout handelt.  Ansonsten wird nach Klick auf *Edit* das aktuelle Layout editiert.
 
-Nun erscheint etwas verkleinert die NavPage rot umrahmt, um anzuzeigen, dass etwas besonderes passiert, außerdem hat sich die Buttonleiste rechts verändert.
+Nun erscheint etwas verkleinert die NavPage rot umrahmt, um anzuzeigen, dass nun der Edit-Modus aktiviert ist, außerdem hat sich die Buttonleiste rechts verändert.
 
 ![Layout Editor Navigationsseite](../../img/layouteditor1.png)
 ///caption
@@ -51,13 +51,13 @@ Wenn man direkt auf ein Widget klickt, kann man Änderungen vornehmen. Am wichti
 
 Ein Klick auf den aktuellen Namen öffnet eine Auswahlliste aller verfügbaren Widgets. 
 
-Als Beispiel wird COG ausgewählt. Wenn man nun direkt auf „Update“ klickt, ändert man das aktuelle Widget, das zuvor ausgewählt wurde. 
+Als Beispiel wird *COG* ausgewählt. Wenn man nun direkt auf „Update“ klickt, ändert man das aktuelle Widget, das zuvor ausgewählt wurde. 
 
-Wichtig: Über die Schaltflächen *Before* und *After* fügt man ein neues COG-Widget vor oder nach dem aktuellen hinzu. Das aktive bleibt unverändert.
+**Wichtig:** Über die Schaltflächen *Before* und *After* fügt man ein neues COG-Widget vor oder nach dem aktuellen hinzu. Das aktive bleibt unverändert.
 
 Wenn man von vornherein ein neues Widget einfügen möchte, klickt man in den leeren Bereich neben der Karte und wird dann durch die Einrichtung eines neuen Widgets geführt.
 
-Weitere Einstellmöglichkeiten für das editierte Widgets sind (je nach Widget):
+Weitere wichtige Einstellmöglichkeiten für das editierte Widgets sind (je nach Widget):
 
   * "Caption":
     Das ist der Text, der zum dargestellten Wert im Widget zu sehen ist.
@@ -65,7 +65,7 @@ Weitere Einstellmöglichkeiten für das editierte Widgets sind (je nach Widget):
     Dort wird die Darstellung des Wertes zusammen mit der Zeile *Unit* festgelegt. Das Format ist in der Regel bereits festgelegt.
 
 Über die Zeile ganz oben, nämlich "Panel", wird festgelegt, wo das Widget auf der Seite abgelegt wird.
-je nach Seiten (Navigationsseite/Dashboard Seiten) gibt es verschiedene Bereiche, in denen Widgets plaziert werden können.
+je nach Seiten (Navigationsseite/Dashboard Seiten) gibt es verschiedene Bereiche, in denen Widgets platziert werden können.
 
 ### Seitenkonfiguration {: #config-nav }
 Über {{BT("EditPage")}} wird ein Konfigurationsdialog geöffnet.
@@ -75,17 +75,18 @@ je nach Seiten (Navigationsseite/Dashboard Seiten) gibt es verschiedene Bereiche
 Layout Konfiguration Navigationsseite
 ///
 
-Hier kann man genau festlegen, welche Bereiche rund um die Karte überhaupt Widgets aufnehmen sollen. Außerdem können verschiedene Konditionen für die Darstellung festgelegt werden. Je nachdem, welche Kondition gerade zutrifft, kann man verschiedene Widgets plazieren. Das ist z.B. sinnvoll, wenn die Ankerwache läuft - dann kann man statt der Wegepunkt-Informationen die Daten der Ankerwache anzeigen (wird in den System-Layouts genutzt).
+Hier kann man genau festlegen, welche Bereiche rund um die Karte überhaupt Widgets aufnehmen sollen. 
 
+Außerdem können verschiedene Konditionen für die Darstellung festgelegt werden. Je nachdem, welche Kondition gerade zutrifft, kann man verschiedene Widgets plazieren. Das ist z.B. sinnvoll, wenn die Ankerwache läuft - dann kann man statt der Wegepunkt-Informationen die Daten der Ankerwache anzeigen (wird in den System-Layouts genutzt).
 
 Für die Navigationsseite sind zwei Konditionen verfügbar:
 
   * small
 
     Falls das genutzte Anzeigegerät beispielsweise zwischen horizontaler und vertikaler Ausrichtung wechseln kann, ist es sinnvoll, für die vertikale Ausrichtung (="small" - also kleines Display) andere Widgets zu konfigurieren als für den horizontalen Modus.
-    Der Wert der Bildschirmbreite (in Pixeln), unter dem "small" aktiv ist, kann man in den Einstellungen
+    Der Wert der Bildschirmbreite (in Pixeln), ab dem "small" aktiv wird, kann an in den Einstellungen
     {{MM("MMsettingspage")}}->"General"->"portrait layout below"
-    setzen.
+    gesetzt werden.
 
   * anchor
 
@@ -102,13 +103,13 @@ Im Beispielbild bedeutet das:
   3. Panel "top" wird nicht angezeigt
   4. Panel "bottomRight" hat keine spezielle Konfiguration - d.h. es wird die Konfiguration ohne Konditionen genutzt
 
-Wenn die Konfiguration abgeschlossen ist, kann man die Dialog mit {{DB("DBOk")}} verlassen. 
+Wenn die Konfiguration abgeschlossen ist, kann man den Dialog mit {{DB("DBOk")}} verlassen. 
 
 **Hinweis:** Je nach gewählten Konditionen bearbeitet man jetzt die Panels für diese Koditionen!
 
 ### Widgets verschieben
 
-Man kann im Layout-Editor Widgets per Drag and Drop verschieben. Das geht sowohl innerhalb eines Panels, als auch zwischen den Panelen.
+Man kann im Layout-Editor Widgets per Drag and Drop verschieben. Das geht sowohl innerhalb eines Panels, als auch zwischen ihnen.
 
 ### Undo
 
@@ -118,7 +119,7 @@ Mit dem Button {{BT("RevertLayout")}} kann man schrittweise die letzten Änderun
 
 Über 
 {{MM("MMgpspage")}} 
-wechselt man im Layout-Editor zu den Dashboard-Seiten. Die Bearbeitung der Widgets ist erfolgt identisch zur Bearbeitung auf der [Navigationsseite](#navpage).
+wechselt man im Layout-Editor zu den Dashboard-Seiten. Die Bearbeitung der Widgets erfolgt identisch zur Bearbeitung auf der [Navigationsseite](#navpage).
 
 ### Seitenkonfiguration {: #config-gps}
 
