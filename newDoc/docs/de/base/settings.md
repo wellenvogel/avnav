@@ -14,15 +14,15 @@ Die Display Settings umfassen alle Einstellungen, die eine Anpassung der Benutze
 
 ## Display Settings
 
-Der Zugriff auf die Display Settings ist auf verschiedenen Wegen möglich: zum einen über die Schaltfläche {{BT('ShowSettings')}} in der Buttonleiste jener Seiten, die eigene Einstellungen besitzen – oder alternativ über {{BT("ShowSettings",True)}} im Hauptmenü des jeweiligen Abschnitts. Um den Zugriff zu erleichtern und den Blick auf das Wesentliche zu lenken, wird in diesen Fällen nur die für die aktuelle Seite zutreffende Kategorie (*Settings Group*) angezeigt.<br><br>
+Der Zugriff auf die Display Settings ist auf verschiedenen Wegen möglich: Zum einen über die Schaltfläche {{BT('ShowSettings')}} in der Buttonleiste jener Seiten, die eigene Einstellungen besitzen, oder alternativ über {{BT("ShowSettings",True)}} im Hauptmenü des jeweiligen Abschnitts. Um den Zugriff zu erleichtern und den Blick auf das Wesentliche zu lenken, wird in diesen Fällen nur die für die aktuelle Seite zutreffende Kategorie (*Settings Group*) angezeigt.<br><br>
 
-Die zentrale Stelle erreicht man hingegen im Hauptmenü über {{MB("MMsettingspage")}}, wo eine vollständige Übersicht über sämtliche verfügbaren Kategorien geboten wird.
+Die zentrale Seite erreicht man hingegen im Hauptmenü über {{MB("MMsettingspage")}}, wo eine vollständige Übersicht über sämtliche verfügbaren Kategorien geboten wird.
 
 ![](../../img/settings-page.png)
 
-Es sind zwei Bereiche sichtbar: links die Settings Groups und rechts die Stored Settings. Auf kleinen Bildschirmen, wie beispielsweise bei Smartphones, ist der rechte Bereich durch Wischen oder Klick auf {{BT('SettingsItems')}} erreichbar.
+Es sind zwei Bereiche sichtbar: Links die *Settings Groups* und rechts die *Stored Settings*. Auf kleinen Bildschirmen wie beispielsweise bei Smartphones ist der rechte Bereich durch Wischen oder Klick auf {{BT('SettingsItems')}} erreichbar.
 
-Die Settings Groups gliedern die Kategorien, innerhalb derer Anpassungen vorgenommen werden können – für jede Gruppe öffnet sich jeweils eine Dialogbox. Die Felder darin verfügen weitestgehend über einen erklärenden Hilfetext. Über {{DB('DBReset')}} stellt man die Defaultwerte wieder her. Hier eine grobe Übersicht über die Inhalte:
+Die *Settings Groups* gliedern die Kategorien, innerhalb derer Anpassungen vorgenommen werden können – für jede Gruppe öffnet sich jeweils eine Dialogbox. Die Felder darin verfügen weitestgehend über einen erklärenden Hilfetext. Über {{DB('DBReset')}} stellt man die Defaultwerte wieder her. Hier eine grobe Übersicht über die Inhalte:
 
 | Settings Group | Inhalte |
 | -------------- | ------- |
@@ -31,15 +31,15 @@ Die Settings Groups gliedern die Kategorien, innerhalb derer Anpassungen vorgeno
 | General | definiert die Basisschriftgrößen, die maximale Anzahl von Dashboardseiten, die Abdunkelung bei Nacht, Alarmlautstärke, Verhalten des roten Warn-Icons |
 | Main Menu | definiert Verhalten und Umfang des Hauptmenüs |
 | Navigation | definiert die navigationsrelevanten Merkmale wie Länge und Farbe der Kurse und des Bewegungsvektors, Abstandskreise, Größe des Boots-Icons, Mittelwertbildung für COG, SOG und Position, Parameter der Ankerwache |
-| Map | definiert vielfältige Parameter zum Verhalten der Kartenanzeige, wie Anzeige der Gitternetzlinien, Kompass, Maßstabsanzeige, Zoomstufen, Fadenkreuzstärke und -farbe. Manche dieser Einstellungen werden [im Kapitel Karten](./charts.md) näher erläutert |
-| AIS | definiert, ob und wie AIS-Objekte dargestellt werden, Distanzen, Abstände für Warnungen nach CPA und TPA. Manche dieser Einstellungen werden [im Kapitel AIS](../special/ais.md) näher erläutert |
+| Map | definiert vielfältige Parameter zum Verhalten der Kartenanzeige wie Anzeige der Gitternetzlinien, Kompass, Maßstabsanzeige, Zoomstufen, Fadenkreuzstärke und -farbe. Manche dieser Einstellungen werden im Kapitel [Karten](./charts.md) näher erläutert |
+| AIS | definiert, ob und wie AIS-Objekte dargestellt werden, Distanzen, Abstände für Warnungen nach CPA und TPA. Manche dieser Einstellungen werden im Kapitel [AIS](../special/ais.md) näher erläutert |
 | Track | definiert, wie Tracks dargestellt werden |
 | Route | definiert, wie Routen dargestellt werden |
-| Remote | definiert, wie die AvNav-Fernsteuerung eingerichtet ist. Diese Einstellungen werden [im Spezial Kapitel Fernsteuerung](../special/remotecontrol.md) erläutert |
+| Remote | definiert, wie die AvNav-Fernsteuerung eingerichtet ist. Diese Einstellungen werden im Detals-Kapitel [Fernsteuerung](../special/remotecontrol.md) erläutert |
 
 ## Settings speichern
 
-Sobald eine Einstellung geändert ist, wird die Gruppe fett markiert, und es erscheint oben rechts ein kleines rotes Settings-Symbol – sozusagen als ständige Erinnerung daran, dass Änderungen zu speichern sind. Nach dem Klick darauf kann direkt ein Name für das neue Setting eingegeben oder der vorgeschlagene Name belassen und anschließend zum Speichern auf {{DB('DBOk')}} geklickt werden:
+Sobald eine Einstellung geändert ist, wird die Gruppe fett markiert und es erscheint oben rechts ein kleines rotes Settings-Symbol – sozusagen als ständige Erinnerung daran, dass Änderungen zu speichern sind. Nach dem Klick darauf kann direkt ein Name für das neue Setting eingegeben oder der vorgeschlagene Name belassen und anschließend zum Speichern auf {{DB('DBOk')}} geklickt werden:
 
 ![](../../img/settings-save.png)
 

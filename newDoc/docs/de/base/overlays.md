@@ -15,7 +15,7 @@ Das bedeutet, dass Karten mit weiteren Daten und Darstellungen hinterlegt werden
 
 Ein Beispiel ist die Nutzung einer Karte für Deutschland - das Fahrtgebiet ist aber der  Grenzbereich zwischen Deutschland und Dänemark in der Flensburger Förde.
 
-Das würde bedeuten, je nach Kurs und Position immer wieder zwischen einer dänischen und einer deutschen Karte hin- und her zu schalten. Um das zu vermeiden, kannt man in AvNav einer Karte eine weitere Karte als Overlay zufügen. So werden beide Karten in der Navigationsansicht sichtbar und erzeugen einen nahtlosen Übergang.
+Das würde bedeuten, je nach Kurs und Position immer wieder zwischen einer dänischen und einer deutschen Karte hin- und her schalten zu müssen. Um das zu vermeiden, kannt man in AvNav einer Karte eine weitere Karte als Overlay zufügen. So werden beide Karten in der Navigationsansicht sichtbar und erzeugen einen nahtlosen Übergang.
 
 Ebenso kann man Informationen aus anderen Quellen herunterladen, um ein Wegepunktverzeichnis in der Karte darzustellen oder zum Beispiel ein Verzeichnis dänischer Ankerbojen und vieles mehr.
 
@@ -46,18 +46,18 @@ Karte als Overlay
 
 Nach Klick auf {{DB("DBOk")}} landet man wieder im Ausgangsdialog „Edit Overlay“ und bestätigt das neue Overlay nun mit {{DB("DBSave")}}.
 
-Das war es schon. In der Kartenliste erkennt man das Overlay nun am geschwärzten Icon rechts neben dem Kartennamen.
+In der Kartenliste erkennt man das Overlay nun am geschwärzten Icon rechts neben dem Kartennamen.
 
 Um eine Route, eine Wegepunktliste oder ein Bojenverzeichnis als Overlay einzufügen, muss man die entsprechenden Dateien zuvor irgendwo herunter laden und in AvNav einfügen. AvNav akzeptiert solche Dateien mit den Formaten GPX, KML, KMZ, GEOJSON.
 
-Nachdem du die Quelldateien auf deinem Rechner gespeichert hast, wechselst du in AvNav in den Bereich 
+Nachdem die Quelldateien auf dem Rechner gespeichert wurden, wechselt man in AvNav in den Bereich 
 
 {{MM("MMchartspage")}}
 
 In der Spalte "Overlays" kann man die Dateien dann hochladen.
 Als Beispiel wird hier die Wegepunktliste des NV-Verlags genutzt, die kostenlos zum Download zur Verfügung steht.
 
-Man klickt auf "Upload" {{SB("Upload")}}, wählt die Datei aus und überprüft, ob sie in der Liste unter Overlay sichtbar wird. Nun kann man den gleichen Weg gehen, der eben für die Karten bereits beschrieben wurde.
+Man klickt auf {{BT("Upload")}}, wählt die Datei aus und überprüft, ob sie in der Liste unter *Overlay* sichtbar wird. Nun kann man den gleichen Weg gehen, der eben für die Karten bereits beschrieben wurde.
 
 Da man aber sowieso schon im Bereich Charts/ Overlays ist, kann man direkt aus der Overlay-Liste eine Datei einer Karte zuordnen, also quasi der umgekehrte Weg zu eben. 
 Dazu klickt man auf das Stiftsymbol neben der gewählten Datei, klickt dann auf Overlays und sucht über den aufklappenden Dialog die Karte aus, der man das Overlay zuordnen will.
@@ -81,14 +81,14 @@ Nun sind beide Wege, wie Karten und Overlays zusammengefügt und editiert werden
 
 ## Ein- und Ausblenden
 
-Ein kurzer Hinweis am Ende zum Umgang mit Overlays zum Beispiel während eines Törns. Da kann es gut vorkommen, dass die überlagerten Informationen durch Overlays die Kartendarstellung auch stören. Um die Overlays schnell abschalten zu können, hat man direkt auf der Navigationspage über den Charts-Button und die angezeigte Kartenliste die Möglichkeit dazu, indem man auf „Hide Overlays“ klickt.
+Ein kurzer Hinweis zum Umgang mit Overlays zum Beispiel während eines Törns. Da kann es gut vorkommen, dass die überlagerten Informationen durch Overlays die Kartendarstellung auch stören. Um die Overlays schnell abschalten zu können, hat man direkt auf der Navigationspage über den Charts-Button und die angezeigte Kartenliste die Möglichkeit dazu, indem man auf „Hide Overlays“ klickt.
 
 ![Verberge Overlays](../../img/overlays-dialog5.png)
 ///caption
 Verbergen von Overlays
 ///
 
-Show Overlays würde danach die Overlays der gewählten Karte schnell wieder aktivieren. Damit man nicht durcheinander kommt, ist immer nur die jeweilige Möglichkeit aktiv, die andere ausgegraut.
+*Show Overlays* würde danach die Overlays der gewählten Karte schnell wieder aktivieren. Damit man nicht durcheinander kommt, ist immer nur die jeweilige Möglichkeit aktiv, die andere ausgegraut.
 
 
 ## Einstellungen {: #parameters}
@@ -98,7 +98,7 @@ Show Overlays würde danach die Overlays der gewählten Karte schnell wieder akt
 Overlay Einstellungen
 ///
 
-Bei der [Zuordnung](#assign) von Overlays oder durch Klick auf das {{SB("Edit")}} Symbol im Overlay-Dialog erhält man die Möglichkeit Einstellungen für die Anzeige des Overlays auf der gewählten Karte anzupassen. Wenn man ein Overlay mehreren Karten zuordnet, kann man jeweils separate Einstellungen vornehmen.
+Bei der [Zuordnung](#assign) von Overlays oder durch Klick auf das {{SB("Edit")}} Symbol im Overlay-Dialog erhält man die Möglichkeit, Einstellungen für die Anzeige des Overlays auf der gewählten Karte anzupassen. Wenn man ein Overlay mehreren Karten zuordnet, kann man jeweils separate Einstellungen vornehmen.
 
 Die angezeigten Werte sind vom Typ des Overlays abhängig und haben jeweils eine  Hilfe-Funktion, die ihre Funktion beschreibt.
 
@@ -109,6 +109,6 @@ Die (eingerahmten) Werte `min zoom` und `max zoom` steuern den Auflösungsbereic
 `min scale` und `max scale` steuern die Größe von icons. Bei Auflösungen kleiner als `min scale` werden die icons verkleinert, bei Auflösungen größer `max scale` vergrößert.
 `show text` (1) steuert, ob die Beschriftungen in der Karte sichtbar werden.
 
-Mit `default icon` (2) kann ein Icon ausgewählt werden, das für Punkte genutzt werden soll, die in der Overlay-Datei kein eigenes Icon definiert haben (oder wenn das definierrte Icon nicht in AvNav verfügbar ist). Man kann auch mit `icon file`eine (ZIP-) Datei wählen, die Symbole für ein Overlay enthält. Diese muss vorher zu den Overlay-Dateien in AvNav hochgeladen werden.
+Mit `default icon` (2) kann ein Icon ausgewählt werden, das für Punkte genutzt werden soll, die in der Overlay-Datei kein eigenes Icon definiert haben (oder wenn das definierte Icon nicht in AvNav verfügbar ist). Man kann auch mit `icon file`eine (ZIP-) Datei wählen, die Symbole für ein Overlay enthält. Diese muss vorher zu den Overlay-Dateien in AvNav hochgeladen werden.
 
 Für weitere Informationen (auch zur Beschreibung von `feature formatter`(3)) siehe die [Detail-Beschreibungen](../special/overlays.md).

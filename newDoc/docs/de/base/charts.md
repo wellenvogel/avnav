@@ -16,22 +16,23 @@ AvNav unterstützt verschiedene Kartenformate, beispielsweise:
   Frei verfügbare Rasterkarten gibt 
   es unter anderem von OpenSeaMap und FreeNauticalChart. 
   Rasterkarten aus verschiedenen Quellen können auch selbst hergestellt und in AvNav hochgeladen oder mit der Mapproxy-App erzeugt werden. Näheres dazu findet man in der [Dokumentation](../special/charts.md).
-  Mit dem Tool [Mobile Atlas Creator](https://mobac.sourceforge.io/) können Karten verschiedener Online-Quellen heruntergeladen werden und danach in AvNav installiert werden. Hinweise dazu findet man unter [Mobile Atlas Creator](../special/mapsources.md).
+  Mit dem Tool [Mobile Atlas Creator](https://mobac.sourceforge.io/) können Karten verschiedener Online-Quellen heruntergeladen und danach in AvNav installiert werden. Hinweise dazu findet man unter [Mobile Atlas Creator](../special/mapsources.md).
   Man findet im Internet auch weitere Tools, die das Herunterladen von Karten ermöglichen.
 
 ### Vektorkarten
 
-Vor allem von O-Charts mit dem passenden [PlugIn](../special/ochartsng.md). 
-  Mit den O-Charts-Karten können alle gängigen Seegebiete in Europa zu günstigen Preisen abgedeckt werden. Sie basieren auf den amtlichen Karten der jeweiligen Länder und enthalten alle Informationen, die du für die Navigation mit Sportbooten benötigst. Die O-Charts-Karten laufen leider nicht auf Windows-Systemen.
-  Außerdem lassen sich Karten von  Binnenwasserstraßen im iENC-Format und Vektorkarten von NOAA kostenlos herunterladen.
+AvNav nutzt vor allem Vektorkarten von *O-Charts* mit dem passenden [PlugIn](../special/ochartsng.md). 
+  Mit den O-Charts-Karten können alle gängigen Seegebiete in Europa zu günstigen Preisen abgedeckt werden. Sie basieren auf den amtlichen Karten der jeweiligen Länder und enthalten alle Informationen, die man für die Navigation mit Sportbooten benötigt. Die O-Charts-Karten laufen leider nicht auf Windows-Systemen.
+  
+  Außerdem lassen sich Vektorkarten von  Binnenwasserstraßen im iENC-Format und Vektorkarten von NOAA kostenlos herunterladen.
 
 ### Online-Kartenquellen
-  Die Karten erfordern eine Internetverbindung. Das wäre dann
+  Diese Karten erfordern eine Internetverbindung. Das wäre dann
   z.B. wieder OpenSeaMap in der Online-Version ohne vorherigen Download.
 
 ### Plugins
   Mit entsprechenden Plugins lassen sich weitere Kartenformate, zum Beispiel 
-  Vektorkacheln, verwenden. Das braucht allerdings einiges an Vorarbeit und soll im Video kein Thema werden. In der [Dokumentation](../special/charts.md#insertingdefs) findet man dazu weitere Unterstützung.
+  Vektorkacheln, verwenden. Das braucht allerdings einiges an Vorarbeit. In der [Dokumentation](../special/charts.md#insertingdefs) findet man dazu weitere Unterstützung.
 
 ## Verwaltung {: #management}
 
@@ -41,7 +42,7 @@ Im Bereich
 
 {{MM("MMchartspage")}}
 
-kann man Karten verwalten.
+lassen sich die Karten verwalten.
 
 ![Karten Seite](../../img/chartspage.png)
 ///caption
@@ -50,7 +51,7 @@ Karten-Seite
 
 Auch hier sieht man in der "Charts"-Spalte die bereits installierten Karten. 
 
-Über "Upload File" {{SB("Upload")}} in dieser Spalte kann man Rasterkarten in den unterstützten Formaten zum AvNav-Server hochladen.
+Über "Upload File" {{SB("Upload")}} in dieser Spalte kann man Karten in den unterstützten Formaten zum AvNav-Server hochladen.
 
 Die Spalte "Import" ist für Karten vorgesehen, die vorab gewandelt werden müssen. Wie das im Einzelnen abläuft, kann man in der detaillierten [Dokumentation](../special/charts.md#converter) nachlesen. 
 

@@ -8,26 +8,28 @@ Ein Teil der Inhalte dieses Abschnittes wird auch im **{{VIDEO("Video hier","use
 
 AvNav lässt sich vielseitig anpassen und erweitern - zu den Erweiterungen zählen die sogenannten User Apps. Das sind eigenständige Anwendungen, deren Benutzeroberfläche über einen Webbrowser aufrufbar ist. Beispiele hierfür sind der Datenserver SignalK oder der AIS-Catcher. Damit ein ständiger Wechsel zwischen verschiedenen Browser-Tabs vermieden wird, lassen sich diese Anwendungen nahtlos als Schaltflächen direkt in die Bedienoberfläche von AvNav integrieren. 
 
-Zur Einordnung: neben den User Apps gibt es in AvNav auch Plugins.  Diese sind Programme, die eigenständig direkt mit den internen AvNav-Daten arbeiten (wie etwa das History-, das o-Charts- oder das Update-Plugin). Viele dieser Plugins bringen ebenfalls eine eigene Weboberfläche zur Bedienung mit. Wenn das der Fall ist, verhalten sie sich aus Sicht der Benutzeroberfläche wie User Apps und können auch so eingerichtet sein. (Mehr zu Plugins und auch, wie sie programmiert werden können, in einem separaten, tieferführenden  [Kapitel](../special/plugins-extensions.md)).
+Zur Einordnung: neben den User Apps gibt es in AvNav auch Plugins.  Diese sind Programme, die eigenständig direkt mit den internen AvNav-Daten arbeiten (wie etwa das History-, das O-Charts- oder das Update-Plugin). Viele dieser Plugins bringen ebenfalls eine eigene Weboberfläche zur Bedienung mit. Wenn das der Fall ist, verhalten sie sich aus Sicht der Benutzeroberfläche wie User Apps und können auch so eingerichtet sein. (Mehr zu Plugins und auch, wie sie programmiert werden können, in einem separaten, tieferführenden  [Kapitel](../special/plugins-extensions.md)).
 
 Im Folgenden wird am Beispiel SignalK beschrieben, wie sich eine solche User App in AvNav definieren und in die Oberfläche integrieren lässt.
 
 ## Icon vorbereiten und hochladen
 
-Damit die neue App in der AvNav-Oberfläche zu erkennen ist, muss man ihr ein eigenes, aussagekräftiges Symbol (Icon) zuweisen. Dafür wird zunächst ein passendes Bild (idealerweise im SVG- oder PNG-Format 50x50 px) benötigt. Über {{MB("MMaddonpage")}} betritt man die Seite "CSS, JS, User Apps".
+Damit die neue App in der AvNav-Oberfläche zu erkennen ist, muss man ihr ein eigenes, aussagekräftiges Symbol (Icon) zuweisen. Dafür wird zunächst ein passendes Bild (idealerweise im SVG- oder PNG-Format 50x50 px) benötigt. Über {{MB("MMaddonconfigpage")}} betritt man die Seite "CSS, JS, User Apps".
 
 ![Load Image](../../img/userapp-addimage.png)
 
- Werden auf einem kleineren Display nicht alle Spalten angezeigt, erreicht man die Spalte "Image Files" durch Wischen oder  {{BT('AddonConfigImages')}} in der Buttonleiste.
- Nach Klicken des Upload file icons {{ICON("Upload")}} lädt man das gewünschte Icon, sodass es dem System bei der Konfiguration zur Verfügung steht.
+ Werden auf einem kleineren Display nicht alle Spalten angezeigt, erreicht man die Spalte "Image Files" durch Wischen oder nutzt den Button {{BT('AddonConfigImages')}} in der Buttonleiste.
+ 
+ Nach Klicken des Upload file Buttons 
+ {{BT("Upload")}} lädt man das gewünschte Icon, sodass es dem System bei der Konfiguration zur Verfügung steht.
 
 ## User App definieren
 
-Das eigentliche Definieren der User App erfolgt über den Dialog "Create User App". Dieser öffnet sich über das Icon {{ICON("AddonConfigPlus")}}
+Das eigentliche Definieren der User App erfolgt über den Dialog "Create User App". Dieser öffnet sich über das Icon {{BT("AddonConfigPlus")}}
 
 ![Create User App](../../img/userapp-defSK.png)
 
-Zu den Feldinhalten erhält man über {{ICON("Help")}} einen kurz gefassten Hilfetext. Der Button {# {{ICON("SettingsDefaults")}}  geht nicht? #} {{BT("SettingsDefaults")}} setzt den Feldinhalt auf den Defaultwert zurück. Hier ausführlichere Hinweise:
+Zu den Feldinhalten erhält man über {{BT("Help")}} einen kurz gefassten Hilfetext. Der Button {# {{ICON("SettingsDefaults")}}  geht nicht? #} {{BT("SettingsDefaults")}} setzt den Feldinhalt auf den Defaultwert zurück. Hier ausführlichere Hinweise:
 
 | Feld | Bedeutung |
 | ------ | -------- |
