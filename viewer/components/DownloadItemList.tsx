@@ -123,11 +123,13 @@ export type DownloadItemListProps = {
     itemInfoFunction?:(item?:Item)=>ReactElement
     className?:string
     triggerCreateSequence?:number; //whenever set to != 0 or changed to !=0 a create dialog is triggered
+    sortFunction?:(a:Item,b:Item)=>number;
 }
 
 export const DownloadItemList = (
     {type, selectCallback, uploadFile,infoMode,noExtra,showCreate,itemActions,
-        autoreload,uploadDone,selectedName,scrollSelected,immediateSelect,itemInfoFunction,className,triggerCreateSequence}:DownloadItemListProps) => {
+        autoreload,uploadDone,selectedName,scrollSelected,immediateSelect,itemInfoFunction,className,triggerCreateSequence,
+        sortFunction}:DownloadItemListProps) => {
     const [items, setItems] = useState([]);
     const [vselectedName, setVselectedName,vSelectedNameRef] = useStateRef(selectedName);
     const lastSelectedName=useRef(undefined);
@@ -219,7 +221,7 @@ export const DownloadItemList = (
         displayList.push(DEFAULT_OVERLAY_CHARTENTRY)
     }
     if (type !== 'plugins') {
-        displayList.sort(itemSort);
+        displayList.sort(sortFunction || itemSort);
     }
     if (scrollSelected || vselectedName){
         lastSelectedName.current=vselectedName;
