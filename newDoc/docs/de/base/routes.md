@@ -16,7 +16,7 @@ Das Erstellen einer Route geht am einfachsten direkt aus der [Navigationsseite](
 Die Kartenansicht bleibt, aber die Buttonleiste rechts hat sich verändert. 
 
 - ### Neue Route <br>
-Man klickt links unten in das Routen Widget (RTE) und legt eine neue Route an, indem man nach Klick auf {{DB("DBNewRoute")}} der Route einen neuen Namen (z.B. "Test") gibt und zweimal mit {{DB("DBOk")}} bestätigt.  
+Man klickt links unten in das Routen Widget (RTE) und legt eine neue Route an, indem man nach Klick auf {{BT("DBNewRoute")}} der Route einen neuen Namen (z.B. "Test") gibt und zweimal mit {{BT("DBOk")}} bestätigt.  
 
 Anschließend zeigt der Dialog im Widget, dass nun die Route „Test“ geladen ist und diese noch keinerlei Wegepunkte enthält. 
 ![](../../img/route-NewRoute.png)
@@ -29,7 +29,11 @@ Dieser ist auf der Karte rot und in der WP-Liste des RTE Widgets fett hervorgeho
 
 
 - ### Wegepunke bearbeiten
-Um einen Wegepunkt zu verschieben, muss er zunächst direkt markiert werden. Das geht etwa in der Karte durch Klick oder durch Auswahl seines Listeneintrags im RTE Widget. Anschließend die gewünschte Position unter das Fadenkreuz setzen und den Wegepunkt mit {{BT("NavToCenter")}} verlegen. Analog kann man den Wegepunkt löschen - dafür nutzt man den Button {{BT("NavDelete")}}.<br>Die Arbeit mit dem Fadenkreuz mag im ersten Augenblick etwas umständlich wirken im Vergleich zu direkten Klicks auf den Touchscreen. In Situationen mit einem sich stark bewegenden Schiff, auf einem kleineren Bildschirm, und mit klammen Fingern wird man diese Art der Bedienung aber zu schätzen lernen.
+Um einen Wegepunkt zu verschieben, muss er zunächst direkt markiert werden. Das geht etwa in der Karte durch Klick oder durch Auswahl seines Listeneintrags im RTE Widget. Anschließend die gewünschte Position unter das Fadenkreuz setzen und den Wegepunkt mit {{BT("NavToCenter")}} verlegen. 
+
+Analog kann man den Wegepunkt löschen - dafür nutzt man den Button {{BT("NavDelete")}}.<br>
+
+Die Arbeit mit dem Fadenkreuz mag im ersten Augenblick etwas umständlich wirken im Vergleich zu direkten Klicks auf den Touchscreen. In Situationen mit einem sich stark bewegenden Schiff, auf einem kleineren Bildschirm, und mit klammen Fingern wird man diese Art der Bedienung aber zu schätzen lernen.
 
 ## Routen speichern und laden {: #management}
 Änderungen an Routen werden in der Regel sofort im AvNav Server gespeichert. Ist dieses Systemverhalten unerwünscht, weil man beispielsweise die gerade aktive Route bearbeitet, bietet sich der sogenannte *disconnected* Mode an: dabei bleiben Änderungen lokal im Browser und werden bis auf Weiteres nicht zum Server synchronisiert. 
@@ -41,9 +45,13 @@ Diese Trennung erreicht man durch Deaktivieren des *connected* Mode über den Bu
 In der zweiten Spalte sind die gespeicherten Routen gelistet. Sie können dort unter anderem gelöscht, kopiert, heruntergeladen, aus *.gpx-Dateien importiert oder editiert werden. Auf schmalen Bildschirmen ist diese zweite Spalte eventuell nicht sichtbar - man erreicht sie dann über Wischen.
 
 ## WP Buttons {: #wp-buttons}
-Beim Bearbeiten, aber auch beim Nutzen einer Route bieten sich weitere Möglichkeiten, wenn man die Schaltfläche {{BT("NavActions",False)}} und in "Navigation tools" {{BT("ABShowWpButtons", True)}} anklickt. Die Schaltflächen {{BT("WpNext",False)}} und {{BT("WpPrevious",False)}} bewegen die Markierung von Wegepunkt zu Wegepunkt, wenn die Arbeit im Widget oder in der Karte als ungünstiger empfunden wird.
+Beim Bearbeiten, aber auch beim Nutzen einer Route bieten sich weitere Möglichkeiten, wenn man die Schaltfläche {{BT("NavActions",False)}} und in "Navigation tools" {{BT("ABShowWpButtons", True)}} anklickt. 
 
- Über {{BT("Edit",False)}} kann jeder einzelne Wegepunkt editiert werden, etwa um einen neuen Namen zu vergeben. Mit {{BT("WpLocate",False)}} kann man den angewählten Wegepunkt schnell wieder ins Kartenfenster holen, wenn die Karte aus irgendwelchen Gründen woanders hin verschoben wurde. Das geht allerdings auch mit Anklicken des Wegepunkts im RTE Widget. 
+Die Schaltflächen {{BT("WpNext",False)}} und {{BT("WpPrevious",False)}} bewegen die Markierung von Wegepunkt zu Wegepunkt, wenn die Arbeit im Widget oder in der Karte als ungünstiger empfunden wird.
+
+ Über {{BT("Edit",False)}} kann jeder einzelne Wegepunkt editiert werden, etwa um einen neuen Namen zu vergeben. 
+ 
+ Mit {{BT("WpLocate",False)}} kann man den angewählten Wegepunkt schnell wieder ins Kartenfenster holen, wenn die Karte aus irgendwelchen Gründen woanders hin verschoben wurde. Das geht allerdings auch mit Anklicken des Wegepunkts im RTE Widget. 
 
 ## Route aktivieren
 Sind alle Eingaben erledigt, kann die Route aktiviert werden. Das geht über den Klick auf den Start-Button {{BT("NavGoto",False)}}. Bevor das passiert, sollte noch einmal geprüft werden, welcher Wegepunkt aktuell aktiv ist - dorthin startet die Route. Wir legen also WP 1 als erstes Leg von unserer Position aus fest und klicken auf {{BT("NavGoto",False)}}.  
@@ -66,14 +74,14 @@ Route müssen immer zwei Bedingungen erfüllt sein:
 
 1. Das Boot muss sich im Annäherungsbereich des Wegepunktes befinden. 
    Die Entfernung wird unter<br>
-   {{MM("MMroutepage")}}->{{BT("ShowSettings")}}->"Approach"<br>
-   eingestellt. 
+   {{MM("MMroutepage")}} -> {{BT("ShowSettings")}} -> "Approach"<br>
+   eingestellt.
    Das Erreichen des Annäherungsbereiches wird ersichtlich durch einen ausgelösten
    Wegepunkt-Alarm und eine rote Darstellung im Route-Widget.
 
 2. Je nach eingestelltem Mode unter
    
-   {{MM("MMroutepage")}}->"Router" {{SB("Edit")}}->"nextWpMode"
+   {{MM("MMroutepage")}} -> "Router" {{SB("Edit")}} -> "nextWpMode"
    
    - "late" (der default und in älteren Versionen): Die Entfernung zum
    aktuellen Wegepunkt nimmt nicht mehr ab, aber die Entfernung zum nächsten
@@ -83,16 +91,7 @@ Route müssen immer zwei Bedingungen erfüllt sein:
    - "early": Nach dem Wegepunkt-Alarm erfolgt die Weiterschaltung nach einer (einstellbaren) Zeit ohne weitere Bedingungen.
 
 Es ist wichtig zu beachten, dass die Weiterschaltung nur erfolgt, wenn beide
-Kriterien erfüllt sind. Falls eine manuelle Weiterschaltung gewünscht ist,
-kann man jederzeit durch Klick auf die Widgets links unten oder über 
-
-{{BT("NavActions")}}->{{BT("ABShowWpButtons",True)}}
-
-die Wegepunkt-Buttons anzeigen und den 
-
-{{BT("NavNext")}}
-
-Button nutzen.  
+Kriterien erfüllt sind. Falls eine manuelle Weiterschaltung gewünscht ist, kann man jederzeit durch Klick auf die Widgets links unten oder über {{BT("NavActions")}}->{{BT("ABShowWpButtons",True)}} die Wegepunkt-Buttons anzeigen und den {{BT("NavNext")}} Button nutzen.  
 
 ### Routen Modus {: #mode }
 
