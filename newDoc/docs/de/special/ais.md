@@ -93,7 +93,7 @@ Gekrümmte Vektoren
 ------------------
 
 Aktiviert man in den Einstellungen "curved vectors",
-so wird eine eventuell in den ??? (AIS-DateScreenshot_20260802_120043n) ??? vorhandene "rate of turn" (ROT)
+so wird eine eventuell vorhandene "rate of turn" (ROT)
 ausgewertet und die Drehung des Targets bei der Darstellung der Vektoren
 berücksichtigt. Die TMVs und RMVs werden dann als gekrümmte Linien
 dargestellt. Die gekrümmten Vektoren zeigen eine potenzielle Kollision
