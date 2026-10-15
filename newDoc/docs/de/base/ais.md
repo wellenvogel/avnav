@@ -11,15 +11,22 @@ Neben der Darstellung auf der Karte erfolgt auch eine Berechnung der voraussicht
 
 ## Anzeige von Objekten
 
-In der Kartendarstellung werden andere Schiffe oder AIS-Objekte als grüne Dreiecke dargestellt. 
+In der Kartendarstellung werden andere Schiffe oder AIS-Objekte als farbige Dreiecke dargestellt (die Farben können in den [Einstellungen](#settings) angepasst werden. Als Standard sind die normalen Ziele gelb, das nächste Ziel grün und ein verfolgtes Ziel orange).
 
 ![AIS-Targets](../../img/aisvectors-tmv.png)
 
-Die vorauseilende, grüne Linie ist der sogenannte Kursvektor, der zeigt, wohin sich das jeweilige AIS-Objekt bewegt und wo es in der vorab eingestellten Zeit sein wird. Die Standardeinstellng beträgt 10min. 
+Die vorauseilende Linie ist der sogenannte Kursvektor, der zeigt, wohin sich das jeweilige AIS-Objekt bewegt und wo es in der vorab eingestellten Zeit sein wird. Die Standardeinstellng beträgt 10min. 
 
-Diese und andere Einstellungen können im Menüpunk *Settings* und dort in den *SettingsGroups* im Bereich *AIS* vorgenommen werden.
+## Einstellungen {: #settings}
+
+Diese und andere Einstellungen können unter
+
+{{MM("MMsettingspage")}}
+
+und dort in den *SettingsGroups* im Bereich *AIS* vorgenommen werden.
 
 ![AIS-Targets](../../img/ais-settingsgroups.png)
+
 
 ![AIS-Targets](../../img/ais-settings1.png)
 
@@ -42,27 +49,39 @@ Für eine schnelle visuelle Information sorgt das farbige Rechteck unten: Ist es
 
 **Back** und **Front** zeigen die relative Lage des AIS-Objektes zum eigenen Boot.
 
-Ein Klick auf das AIS-Widget öffnet die AIS-Targets-Liste:
+Ein Klick auf das AIS-Widget öffnet den AIS-Dialog:
 
-## AIS-targets-Liste
+## AIS-targets-Liste und AIS-Dialog
 
-![AIS-Targets](../../img/aislist.png)
+![AIS-Info](../../img/ais-info-dialog.png)
+///caption
+AIS Info
+///
 
-Mit der Liste der *AIS targets* bekommt man unabhängig von der Kartendarstellung eine Übersicht, welche Schiffe in der Umgebunug sind, die AIS-Signale ausstrahlen. Die Liste enthält eine Reihe interessanter weiterer Details zu jedem Schiff.
+Der AIS-Info-Dialog zeigt detaillierte Informationen zu einem Ziel an.
 
-![AIS-Targets](../../img/ais-info-dialog.png)
-
-Für eine frühzeitige Reaktion auf mögliche Annäherungen ist die Locate-Funktion sehr geeignet. Mit ihr holt man das ausgewählte AIS-Ziel quasi "zur Beobachtung" in das AIS-Widget. 
+Für eine frühzeitige Reaktion auf mögliche Annäherungen ist die Locate-Funktion {{DB("AisInfoLocate")}} sehr geeignet. Mit ihr holt man das ausgewählte AIS-Ziel quasi "zur Beobachtung" in das AIS-Widget. 
 
 Dort wird nun das "located"-AIS-Ziel statt des nächstliegenden Ziels im Widget dargestellt, solange kein anderes Ziel auf Kollisionskurs ist.
 
 Diese Funktion kann sehr hilfreich sein, um zum Beispiel Fähren im Blick zu behalten, die in den gleichen Hafen einlaufen werden und eigene Manöver dann beeinflussen können.
 
+Mit {{DB("AisNearest")}} schaltet man wieder zurück auf den normalen Modus bei dem das nächste AIS-Ziel (oder das wichtigste Ziel mit einer Annäherungswarnung) in den Widgets angezeigt wird.
+
+Weitere Hinweise zur Nutzung findet man in den [Details](../special/ais.md#aisinfo).
+
+Mit {{DB("AisItems")}} wechselt man zur Liste der AIS-Ziele.
+
+![AIS-Targets](../../img/aislist.png)
+
+Mit der Liste der *AIS targets* bekommt man unabhängig von der Kartendarstellung eine Übersicht, welche Schiffe in der Umgebunug sind, die AIS-Signale ausstrahlen. 
+
+
 ## AIS-Menü
 
 Die AIS-Funktionen lassen sich nicht nur über die Kartendarstellung, sondern auch über das Menü und dort über den Menüpunkt *AIS* erreichen.
 
-![AIS-Targets](../../img/ais-menue.png)
+{{MM("MMaiscfgpage")}}
 
 
 ## Details
