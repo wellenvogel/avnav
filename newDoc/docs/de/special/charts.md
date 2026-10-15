@@ -7,14 +7,14 @@
 In diesem Dokument werden einige Details beschrieben, die erklären, wie AvNav mit Karten umgeht, welche Kartentypen es gibt, wie man neue Karten anlegen kann und wie man das Karten-Handling erweitern kann. Der erste Teil richtet sich an alle Nutzer und beschreibt ein wenig genauer, welche Karten genutzt werden können und wie man sie in AvNav installieren bzw. importieren oder konvertieren kann. Im [zweiten Teil](#definitions) werden die Möglichkeiten beschrieben, wie man eigene Kartenquellen erzeugen kann und wie man das Kartenhandling in AvNav erweitern kann. Dieser Teil richtet sich an fortgeschrittene Nutzer.
 
 ## Grundaufbau
-Die Karten in AvNav sind entweder auf dem AvNav Server gespeichert oder können (je nach Typ) auch während der Nutzung direkt aus dem Internet geladen werden. Mit dem [mapproxy-plugin](https://github.com/wellenvogel/avnav-mapproxy-plugin) gibt es eine Mischform, die Karten aus dem Internet lädt, anzeigt und gleichzeitig auf dem AvNav Server speichert. Unter Andorid ist der AvNav Server direkt in der App integriert.
+Die Karten in AvNav sind entweder auf dem AvNav Server gespeichert oder können je nach Typ auch während der Nutzung direkt aus dem Internet geladen werden. Mit dem [mapproxy-plugin](https://github.com/wellenvogel/avnav-mapproxy-plugin) gibt es eine Mischform, die Karten aus dem Internet lädt, anzeigt und gleichzeitig auf dem AvNav Server speichert. Unter Android ist der AvNav Server direkt in der App integriert.
 
-Die Anzeige der Karten erfolgt immer in einem Browser - so wie die gesamte Bedienoberfläche von AvNav. Wie im [Technischen Hintergrund](#background) beschrieben, werden dazu entsprechende JavaScript Bibliotheken genutzt.
+Die Anzeige der Karten erfolgt immer in einem Browser - so wie die gesamte Bedienoberfläche von AvNav. Wie im [Technischen Hintergrund](#background) beschrieben, werden dazu entsprechende JavaScript-Bibliotheken genutzt.
 
 ## Karten und Overlays {: #overlays }
-Typischerweise benötigt man für die Navigation nicht nur eine Karte sondern auf dieser Karte auch noch verschiedene Zusatz-Informationen. Neben den Informationen, die AvNav selbst bereitstellt - wie die Bootsposition, Kurslinien, die aktuelle Route oder AIS Ziele (siehe [Navigationsseite](../base/navpage.md)) kann man auch sogenannte "Overlays" über die Karte legen.
+Typischerweise benötigt man für die Navigation nicht nur eine Karte, sondern auf dieser Karte auch noch verschiedene Zusatzinformationen. Neben den Informationen, die AvNav selbst bereitstellt - wie die Bootsposition, Kurslinien, die aktuelle Route oder AIS-Ziele (siehe [Navigationsseite](../base/navpage.md)), kann man auch sogenannte "Overlays" über die Karte legen.
 
-Eine grundlegende Beschreibung findet sich in der [Einführung](../base/overlays.md). Unter [Overlay Details](overlays.md) findet man noch detaillierte Informationen dazu.
+Eine grundlegende Beschreibung findet sich in der [Einführung](../base/overlays.md). Unter [Overlay Details](overlays.md) findet man noch detailliertere Informationen dazu.
 
 
 
@@ -25,14 +25,15 @@ AvNav kann einige Kartentypen direkt selbst verarbeiten. Man muss dazu nur eine 
 {{MM("MMchartspage")}}->"Charts"->{{SB("Upload")}}
 
 zu AvNav hochladen.
+
 AvNav unterstützt die folgenden Kartentypen
 
 | Typ | Datei-Endung | Beschreibung |
 | --- | --- | --- |
 | [GEMF](http://www.cgtk.co.uk/gemf) | .gemf | Ein für das Lesen optimiertes Kartenformat, das intern ein Verzeichnis der vorhandenen Kacheln enthält. Dieses Format wird auch vom [AvNav Importer](#importer) aus verschiedenen anderen Formaten erzeugt. Dieses Format kann intern mehrere Layer mit unterschiedlichen Auflösungen enthalten. |
-| [mbtiles](https://wiki.openstreetmap.org/wiki/MBTiles) | .mbtiles | Eine [sqlite](https://sqlite.org/) Datenbank, die neben den Kartenkacheln auch noch Metadaten enthält. Leider gibt es hier verschiedene Kodierungen der y Koordinate - die aber nicht immer korrekt bezeichnet werden. Daher kann man diese per [Hand umstellen](#scheme). |
-| [PMTiles](https://docs.protomaps.com/pmtiles/) | .pmtiles | Ein modernes binäres Dateiformat, das insbesondere für die Nutzung über einfache Webserver optimiert ist. Wenn man .pmtiles Dateien hochlädt, unterstützt AvNav zunächst nur Rasterkarten in diesem Format.Dazu wird die Information im Header der PMTiles Datei ausgewertet. Dort ist der Typ der Kartenkacheln vermerkt. AvNav erlaubt die Typen `Unknown(0), Png(2), Webp(4),Jpeg(3)` als Rastertypen. Auch Vektorkarten im PMTiles Format können verarbeitet werden. Das erfordert jedoch eine spezielle [Kartendefinition](#vectorlayer) mit dem entsprechenden Style-Dokument. |
-| XML | .xml | Wie [unten](#exampledef) beschrieben kann man mit xml Dateien direkt eine Kartendefinition erstellen. Die XML Datei enthält dabei noch nicht die eigentlichen Kartendaten sonder nur einen Verweis auf diese - und Informationen zur Nutzung |
+| [mbtiles](https://wiki.openstreetmap.org/wiki/MBTiles) | .mbtiles | Eine [sqlite](https://sqlite.org/) Datenbank, die neben den Kartenkacheln auch noch Metadaten enthält. Leider gibt es hier verschiedene Kodierungen der y-Koordinate - die aber nicht immer korrekt bezeichnet werden. Daher kann man diese per [Hand umstellen](#scheme). |
+| [PMTiles](https://docs.protomaps.com/pmtiles/) | .pmtiles | Ein modernes, binäres Dateiformat, das insbesondere für die Nutzung über einfache Webserver optimiert ist. Wenn man *.PMTiles* Dateien hochlädt, unterstützt AvNav zunächst nur Rasterkarten in diesem Format. Dazu wird die Information im Header der *PMTiles* Datei ausgewertet. Dort ist der Typ der Kartenkacheln vermerkt. AvNav erlaubt die Typen `Unknown(0), Png(2), Webp(4),Jpeg(3)` als Rastertypen. Auch Vektorkarten im *PMTiles* Format können verarbeitet werden. Das erfordert jedoch eine spezielle [Kartendefinition](#vectorlayer) mit dem entsprechenden Style-Dokument. |
+| XML | .xml | Wie [unten](#exampledef) beschrieben kann man mit XML-Dateien direkt eine Kartendefinition erstellen. Die XML-Datei enthält dabei noch nicht die eigentlichen Kartendaten sonder nur einen Verweis auf diese - und Informationen zur Nutzung |
 
 ## Plugin Kartentypen
 
@@ -40,9 +41,9 @@ Plugins können im Prinzip beliebige weitere Kartentypen zu AvNav hinzufügen. D
 
 | Plugin | Kartentyp | Beschreibung |
 | --- | --- | --- |
-| [ochartsng](ochartsng.md) | Vektor Karten | Das ochartsng Plugin dient zur Anzeige von [o-charts](https://o-charts.org/?lng=de) **Vektorkarten**. Diese müssen im o-charts Shop gekauft werden und wie im Plugin beschrieben hochgeladen werde. **Hinweis**: Das Hochladen kann nicht auf der "Charts" Seite in AvNav erfolgen. Daneben können auch noch unverschlüsselte ENC (S57) nach einer [Konvertierung](#converter) angezeigt werden. _Nur Linux und Android._|
-| [ocharts]({{OLDLINK("hints/ocharts.html")}}) | Verktor- und Raster Karten | Das ocharts (legacy) Plugin dient eben falls zur Anzeige von Karten aus dem [o-charts](https://o-charts.org/?lng=de). Es kann auch Rasterkarten aus dem Shop nutzen. Auf neueren Systemen steht es nicht mehr zur Verfügung. _Nur Linux_ |
-| [mapproxy](https://github.com/wellenvogel/avnav-mapproxy-plugin) | Online Karten | Das mapproxy Plugin erlaubt über eigene Definitionen den Zugriff auf online Kartendienste. Die Karten werden im AvNav Server zwischengespeichert und stehen damit auch ohne Internet zur Verfügung. _Nur für Linux_ |
+| [ochartsng](ochartsng.md) | Vektor Karten | Das ochartsng Plugin dient zur Anzeige von [o-charts](https://o-charts.org/?lng=de) **Vektorkarten**. Diese müssen im o-charts Shop gekauft werden und wie im Plugin beschrieben hochgeladen werde. **Hinweis**: Das Hochladen kann nicht auf der "Charts"-Seite in AvNav erfolgen. Daneben können auch noch unverschlüsselte ENC (S57) nach einer [Konvertierung](#converter) angezeigt werden. _Nur Linux und Android._|
+| [ocharts]({{OLDLINK("hints/ocharts.html")}}) | Vektor- und Raster Karten | Das ocharts (legacy) Plugin dient ebenfalls zur Anzeige von Karten aus dem [o-charts](https://o-charts.org/?lng=de). Es kann auch Rasterkarten aus dem Shop nutzen. Auf neueren Systemen steht es nicht mehr zur Verfügung. _Nur Linux_ |
+| [mapproxy](https://github.com/wellenvogel/avnav-mapproxy-plugin) | Online Karten | Das mapproxy Plugin erlaubt über eigene Definitionen den Zugriff auf Online-Kartendienste. Die Karten werden im AvNav Server zwischengespeichert und stehen damit auch ohne Internet zur Verfügung. _Nur für Linux_ |
 
 Daneben gibt es u.U. noch weitere Plugins für andere Kartentypen. Siehe dazu auch die [Liste der Plugins](plugin-list.md).
 
@@ -57,7 +58,7 @@ Die Verwaltung von Karten ist in der [Einführung](../base/charts.md) bereits be
 Karten Verwaltung 
 ///
 
-Im "Charts" Tab sind alle vorhandenen Karten aufgelistet und es können neue Karten hochgeladen werden (in den Formaten, die AvNav [direkt versteht](#owntypes)). Bei Klick auf eine Karte erhält man einen Dialog, mit dem man die [Overlays](overlays.md) bearbeiten kann, Karten ggf. herunterladen, Löschen oder direkt öffnen Kann. Plugin-Karten werden hier angezeigt, diese können hier jedoch normalerweise nicht gelöscht oder heruntergeladen werden.
+Im "Charts" Tab sind alle vorhandenen Karten aufgelistet und es können neue Karten hochgeladen werden, und zwar in den Formaten, die AvNav [direkt versteht](#owntypes). Bei Klick auf eine Karte erhält man einen Dialog, mit dem man die [Overlays](overlays.md) bearbeiten kann, Karten ggf. herunterladen, löschen oder direkt öffnen kann. Plugin-Karten werden hier angezeigt, diese können hier jedoch normalerweise nicht gelöscht oder heruntergeladen werden.
 
 Für MBTiles karten kann man hier das Schema der Karte umstellen. Dieses beschreibt, wie die y-Koordinate zählt. 
 {: #scheme }
