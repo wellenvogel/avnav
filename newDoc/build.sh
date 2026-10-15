@@ -16,7 +16,8 @@ buttonUsage=0
 noversion=""
 version=""
 checkVersion=""
-while getopts "dhp:a:bncv:" arg; do
+rgCmd=""
+while getopts "dhp:a:bncv:r" arg; do
   case "$arg" in
     b)
       buttonUsage=1
@@ -46,6 +47,9 @@ while getopts "dhp:a:bncv:" arg; do
     c)
       checkVersion="-c"
       ;;
+    r)
+      rgCmd="-r"
+      ;;      
   esac
 done
 shift $((OPTIND-1))
@@ -76,11 +80,11 @@ if [ $buttonUsage = 1 ] ; then
     fi
     outfile="$gendir/buttons.md"
     icondir="$pdir/docs/images/icons-new"
-    $script -f buttonoverview -i "$icondir" -o "$outfile" || err "unable to create $outfile"
+    $script $rgCmd   -f buttonoverview -i "$icondir" -o "$outfile" || err "unable to create $outfile"
     outfile="$gendir/buttons.json"
-    $script -f buttonjson -i "$icondir" -o "$outfile" || err "unable to create $outfile"
+    $script $rgCmd -f buttonjson -i "$icondir" -o "$outfile" || err "unable to create $outfile"
     outfile="$gendir/icons.json"
-    $script -f iconjson -i "$icondir" -o "$outfile" || err "unable to create $outfile"
+    $script $rgCmd -f iconjson -i "$icondir" -o "$outfile" || err "unable to create $outfile"
 fi
 
 if [ "$command" = none ] ; then
