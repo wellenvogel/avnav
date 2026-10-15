@@ -29,6 +29,7 @@ conda create --name avnav-doc python=3.12
 conda activate avnav-doc
 cd <path to avnav repo>\newDoc
 pip install -r docker\requirements.txt
+conda install -c conda-forge ripgrep
 ```
 
 ### Usage
@@ -36,6 +37,7 @@ Open AnacondaPrompt
 ```
 conda activate avnav-doc
 cd <path to avnav repo>\newDoc
+buttonUsage.cmd
 mkdocs serve
 ```
 

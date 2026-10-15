@@ -20,6 +20,7 @@ PV_OLD="avnav_olddoc"
 PV_OLDBASE="avnav_oldbase"
 PV_LANG="i18nlang"
 PV_BASE="base_url"
+PV_REL="relative_url"
 PV_VERSIONS="avnav_versions"
 VK_LINK='link'
 VK_EMBED='embed'
@@ -343,6 +344,7 @@ def on_pre_page_macros(env):
     base_url=''
     for i in range(0,num):
         base_url+="../"
+    pageVariables[PV_REL]=re.sub(r'/[^/]*$', '', env.page.file.src_uri)
     pageVariables[PV_BASE]=base_url
     pageVariables[PV_LANG]=lang
     pageVariables[PV_OLDBASE]=get_hp_base(env,'old_doc_rel')+"/"+env.variables.old_doc_start+"?lang="+lang

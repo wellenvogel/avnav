@@ -539,6 +539,20 @@ public class RouteHandler extends DirectoryRequestHandler  {
     }
 
     @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        RouteInfo info=null;
+        synchronized (this){
+            info=routeInfos.get(name);
+        }
+        if (info == null) {
+            throw new Exception("route "+name+" not found");
+        }
+        JSONObject ji=info.toJson();
+        ji.put("url",getUrlFromName(info.name+".gpx"));
+        return ji;
+    }
+
+    @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         JSONArray rt=new JSONArray();
         for (RouteInfo i:getRouteInfo().values()){

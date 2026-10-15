@@ -1,0 +1,187 @@
+WEBVTT
+Kind: captions
+Language: en
+
+00:00:05.240 --> 00:00:11.600
+This video is about adding extra information to maps in AvNav.
+
+00:00:11.600 --> 00:00:17.320
+The technique for this is called "overlays." This means that additional data and
+
+00:00:17.320 --> 00:00:23.280
+visualizations are overlaid on maps to display extra information
+
+00:00:23.280 --> 00:00:29.560
+or to meaningfully expand the current map. Imagine you've
+
+00:00:29.560 --> 00:00:33.880
+loaded a map of Germany, but you're sailing your boat
+
+00:00:33.880 --> 00:00:39.720
+in the Flensburg Fjord, near the border between Germany and Denmark. This would force you
+
+00:00:39.720 --> 00:00:46.240
+to constantly switch back and forth between a Danish and a German map, depending on your course and position.
+
+00:00:46.240 --> 00:00:53.000
+To avoid this, you can add another map as an overlay in AvNav.
+
+00:00:53.000 --> 00:01:00.040
+This makes both maps visible in the navigation view, creating a seamless transition.
+
+00:01:00.040 --> 00:01:05.960
+You can also download information from other sources to
+
+00:01:05.960 --> 00:01:11.760
+display a waypoint directory on the map, or, for example, a directory of Danish mooring buoys, and much more.
+
+00:01:12.280 --> 00:01:16.280
+It's also possible to import routes and tracks onto the map
+
+00:01:16.280 --> 00:01:22.320
+to compare them or use them as a template for creating a new route.
+
+00:01:22.320 --> 00:01:26.600
+Satellite images can also be overlaid on AvNav maps,
+
+00:01:26.600 --> 00:01:32.240
+but this requires a satellite image source and some preparation.
+
+00:01:32.240 --> 00:01:36.640
+You can find this procedure in the documentation.
+
+00:01:36.640 --> 00:01:40.360
+How are overlays assigned to specific maps?
+
+00:01:40.920 --> 00:01:45.720
+To place two maps already in the system side by side, you can
+
+00:01:45.720 --> 00:01:53.440
+use a very quick method: directly from the navigation page via the Charts button.
+
+00:01:53.440 --> 00:01:58.760
+For one of the maps you want to place side by side, click the Overlay
+
+00:01:58.760 --> 00:02:06.120
+button on the right. This opens the Edit Overlay dialog. There, click the Insert
+
+00:02:06.120 --> 00:02:10.920
+after button at the bottom to add another map to the base map.
+
+00:02:10.920 --> 00:02:15.800
+Another dialog will then open; select the "chart" option and
+
+00:02:15.800 --> 00:02:23.040
+click on the "name" field. Now you can choose from one of the installed maps.
+
+00:02:23.040 --> 00:02:27.760
+After clicking OK, you will return to the initial "Edit Overlay" dialog and
+
+00:02:27.760 --> 00:02:34.800
+confirm your new overlay with "Save." That's it! In the map list,
+
+00:02:34.800 --> 00:02:40.840
+you can now identify the overlay by the blacked-out icon to the right of the map name.
+
+00:02:40.840 --> 00:02:47.240
+To insert a route, waypoint list, or buoy directory as an overlay,
+
+00:02:47.240 --> 00:02:51.680
+you first need to download the corresponding files and
+
+00:02:51.680 --> 00:03:00.800
+import them into AvNav. AvNav accepts files in GPX, KML, KMZ, and GEOJSON formats.
+
+00:03:01.400 --> 00:03:06.840
+After saving the source files to your computer, go to the
+
+00:03:06.840 --> 00:03:14.560
+Charts/Overlays section in AvNav. In the Overlays column, you can then upload your files.
+
+00:03:14.560 --> 00:03:19.600
+As an example, we'll use the waypoint list from NV-Verlag, which
+
+00:03:19.600 --> 00:03:24.600
+is available for free download. Click Upload, select the file
+
+00:03:24.600 --> 00:03:29.040
+, and check if it appears in the Overlay list.
+
+00:03:29.560 --> 00:03:35.880
+You could now follow the same steps described earlier for maps.
+
+00:03:35.880 --> 00:03:40.160
+However, since you're already in the Charts/Overlays section, you can directly assign a file to a map from the
+
+00:03:40.160 --> 00:03:46.880
+Overlay list—essentially the reverse process.
+
+00:03:46.880 --> 00:03:52.720
+To do this, click on the pencil icon next to the selected file, then click on Overlays and
+
+00:03:52.720 --> 00:04:00.280
+use the drop-down dialog to select the map to which you want to assign the overlay. They should,
+
+00:04:00.280 --> 00:04:05.960
+of course, be compatible. The buoys of the Danish Sailing Association will
+
+00:04:05.960 --> 00:04:13.080
+hardly be visible on a German or Dutch map… Once the overlay and map assignment is complete,
+
+00:04:13.080 --> 00:04:19.760
+confirm with Save in the Edit Overlay dialog. In the map list on the navigation page,
+
+00:04:19.760 --> 00:04:25.680
+you will now find the active overlay icon next to the map you just assigned.
+
+00:04:26.920 --> 00:04:33.280
+Incidentally, if you click on the pencil icon of an overlay in the Edit Overlay dialog, you can
+
+00:04:33.280 --> 00:04:39.760
+adjust further settings for that overlay. Opacity can be
+
+00:04:39.760 --> 00:04:43.960
+set in decimal increments from 0 to 1. It's best to enter the values ​​manually, e.g., 0.5
+
+00:04:43.960 --> 00:04:49.040
+for slightly translucent. Take your time to try out the different options
+
+00:04:49.040 --> 00:04:53.840
+until you've developed a display that meets your needs.
+
+00:04:54.760 --> 00:04:58.480
+A little tip: The waypoint list only appears on the map
+
+00:04:58.480 --> 00:05:05.600
+when the text view is selected. Now both methods, such as maps and overlays, are available.
+
+00:05:05.600 --> 00:05:10.120
+We've demonstrated how overlays can be combined and edited.
+
+00:05:10.120 --> 00:05:14.960
+A quick note at the end about working with overlays, for example, during a
+
+00:05:14.960 --> 00:05:20.560
+sailing trip. It can happen that the information superimposed by overlays
+
+00:05:20.560 --> 00:05:27.200
+can interfere with the chart display. To quickly disable overlays, you can
+
+00:05:27.200 --> 00:05:33.440
+do so directly on the navigation page via the Charts button and the displayed chart list
+
+00:05:33.440 --> 00:05:39.600
+by clicking on "Hide Overlays." Clicking "Show Overlays" will then
+
+00:05:39.600 --> 00:05:44.240
+quickly reactivate the overlays for your selected chart. To avoid confusion
+
+00:05:44.240 --> 00:05:51.000
+, only the currently selected option is active at any given time; the other is grayed out.
+
+00:05:51.000 --> 00:05:56.760
+Now, have fun assigning overlays; the ability to combine adjacent
+
+00:05:56.760 --> 00:06:00.720
+charts is a great feature of AvNav! Thanks for watching!
+

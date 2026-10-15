@@ -35,12 +35,33 @@ class BtDef:
     def add(self,file,line):
         self.usages.append(Usage(file,line))
 
-def grep(dir:str,args:list=None):
-    cmd=["grep","-rHn","--exclude-dir=build","--exclude-dir=.gradle", "--exclude-dir=.idea"]
+EXCLUDE_DIRS=["build",".gradle",".idea"]
+#default: ripgrep on windows, system grep otherwise
+USE_RG=sys.platform.startswith('win')
+
+def buildSearchCmd(pattern:str,dir:str,excludeFiles:list=None,args:list=None):
+    excludeFiles=excludeFiles or []
+    if USE_RG:
+        #rg skips hidden and ignored files by default - search like grep does
+        cmd=["rg","-Hn","--no-heading","--color","never","--no-ignore","--hidden"]
+        for e in EXCLUDE_DIRS+excludeFiles+[".git"]:
+            cmd+=["-g","!"+e]
+        #rg uses rust regex syntax - "[" must be escaped inside a class
+        pattern=pattern.replace('[^[]',r'[^\[]')
+    else:
+        cmd=["grep","-rHn"]
+        cmd+=["--exclude-dir="+e for e in EXCLUDE_DIRS]
+        cmd+=["--exclude="+e for e in excludeFiles]
     if args is not None:
         cmd=cmd+args
-    cmd.append(r'[^[]ButtonDefs\.')
+    if USE_RG:
+        cmd.append("-e")
+    cmd.append(pattern)
     cmd.append(dir)
+    return cmd
+
+def grep(dir:str,args:list=None):
+    cmd=buildSearchCmd(r'[^[]ButtonDefs\.',dir,args=args)
     logger.info(" ".join(cmd))
     proc = subprocess.Popen(cmd,stdout=subprocess.PIPE,encoding="utf-8")
     s1='ButtonDefs'
@@ -58,12 +79,8 @@ def grep(dir:str,args:list=None):
     return buttonDefs
 
 def grepIcons(dir:str,args:list=None):
-    cmd=["grep","-rHn","--exclude-dir=build","--exclude-dir=.gradle",
-         "--exclude-dir=.idea","--exclude=ButtonDefs.ts","--exclude=icons.less"]
-    if args is not None:
-        cmd=cmd+args
-    cmd.append(r'[^[]iconClasses\.')
-    cmd.append(dir)
+    cmd=buildSearchCmd(r'[^[]iconClasses\.',dir,
+                       excludeFiles=["ButtonDefs.ts","icons.less"],args=args)
     logger.info(" ".join(cmd))
     proc = subprocess.Popen(cmd,stdout=subprocess.PIPE,encoding="utf-8")
     re1=re.compile(r'iconClasses\.(\w+)')
@@ -287,7 +304,7 @@ def iconPath(icon):
     return os.path.join(base,icon)
 
 def usage():
-    print("usage: python buttonUsage.py [-f format] [-o outfile] [-i iconpath]",file=sys.stderr)
+    print("usage: python buttonUsage.py [-f format] [-o outfile] [-i iconpath] [-r|-g]\n  -r use ripgrep (default on windows), -g use system grep (default otherwise)",file=sys.stderr)
 def err(msg):
     print(msg,file=sys.stderr)
     sys.exit(1)
@@ -348,9 +365,13 @@ format=ALL_FORMATS[0]
 
 FILEPRFX='../viewer/'
 outfile=None
-optlist,args =getopt.getopt(sys.argv[1:],'f:o:i:')
+optlist,args =getopt.getopt(sys.argv[1:],'f:o:i:rg')
 for o, a in optlist:
-    if o == '-f':
+    if o == '-r':
+        USE_RG=True
+    elif o == '-g':
+        USE_RG=False
+    elif o == '-f':
         if not a in ALL_FORMATS:
             raise RuntimeError(f'invalid format {a}, allowed formats are {",".join(ALL_FORMATS)}')
         format=a

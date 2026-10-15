@@ -76,6 +76,13 @@ charts:
   youtube: "as62-dDtmQ4"
   intern: charts.mp4
 
+overlays:
+  title:
+    de: AvNav Overlays
+    en: AvNav Overlays
+  youtube: "nozFKNhqUQU"
+  intern: overlays.mp4
+
 dataflow:
   title:
     de: AvNav Datenfluss
