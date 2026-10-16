@@ -949,10 +949,12 @@ if __name__ == '__main__':
     navdata = MyNavData()
     parser=NMEAParser(navdata)
     with open(infile,'r') if infile != "-" else sys.stdin as f:
+        lnr=1
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            print(line)
+            print(f"{lnr}:{line}")
             parser.parseData(line,source='test')
+            lnr+=1
     navdata.print_stats()
