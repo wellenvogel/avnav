@@ -62,6 +62,7 @@ import keyhandler from "../util/keyhandler.ts";
 import propertyhandler from "../util/propertyhandler";
 
 
+const AV_SOURCEIDX='sourceIndex'; //avitem being set at each layer
 
 const EVENTLOG=false;
 
@@ -980,6 +981,7 @@ class MapHolder extends DrawingPositionConverter {
         for (let i = 0; i < this.sources.length; i++) {
             let sourceLayers = this.sources[i].getLayers();
             sourceLayers.forEach((layer) => {
+                setav(layer,{[AV_SOURCEIDX]: i});
                 if (this.sources[i].isBaseChart()) {
                     const avminz=avitem(layer,'minZoom',1);
                     const avmaxz=avitem(layer,'maxZoom',26);
@@ -1773,6 +1775,10 @@ class MapHolder extends DrawingPositionConverter {
         evt.stopPropagation();
         this.featureAction(evt.pixel);
     }
+    sourceKey(source,index){
+        const rt=source?.getChartKey()||'';
+        return rt+":"+index;
+    }
     featureAction(pixel,opt_fromButton){
         const clickPoint = this.fromMapToPoint(this.pixelToCoord(pixel));
         let wp = this.routinglayer.findTarget(pixel);
@@ -1819,8 +1825,10 @@ class MapHolder extends DrawingPositionConverter {
         const detectedFeatures = {};
         this.olmap.forEachFeatureAtPixel(pixel, (feature, layer) => {
                 const chartSource=getav(layer).chartSource;
+                const sourceIndex=getav(layer)[AV_SOURCEIDX];
                 if (!chartSource) return;
-                const key=chartSource.getChartKey();
+                if (chartSource.isHidden()) return;
+                const key= this.sourceKey(chartSource, sourceIndex);
                 if (! detectedFeatures[key]){
                     detectedFeatures[key] = [];
                 }
@@ -1831,7 +1839,8 @@ class MapHolder extends DrawingPositionConverter {
             });
         //sort the detected features by the order of our sources
         for (let i = this.sources.length - 1; i >= 0; i--) {
-            const sourceFeatures=detectedFeatures[this.sources[i].getChartKey()];
+            const sourceKey=this.sourceKey(this.sources[i],i);
+            const sourceFeatures=detectedFeatures[sourceKey];
             if (!sourceFeatures) continue;
             let fi=this.sources[i].featureListToInfo(sourceFeatures,pixel);
             if (fi){
@@ -1842,7 +1851,9 @@ class MapHolder extends DrawingPositionConverter {
         let promises = [];
         //just get chart features on top of the currently detected feature
         for (let i = this.sources.length - 1; i >= 0; i--) {
-            if (detectedFeatures[this.sources[i].getChartKey()])continue;
+            const sourceKey=this.sourceKey(this.sources[i],i);
+            if (detectedFeatures[sourceKey])continue;
+            if (this.sources[i].isHidden()) continue;
             if (this.sources[i].hasFeatureInfo()) {
                 promises.push(this.sources[i].getChartFeaturesAtPixel(pixel));
             }
@@ -1860,6 +1871,12 @@ class MapHolder extends DrawingPositionConverter {
         }
         const callResults=()=>{
             this._callGuards('click'); //do this again as some time could have passed
+            //as we could have multiple features with the same key in the list we overwrite the getKey
+            if (featureInfos){
+                for (let i=0;i<featureInfos.length;i++){
+                    featureInfos[i].userIndex=i;
+                }
+            }
             return this._callHandlers({type: EventTypes.FEATURE, feature: featureInfos,fromButton:opt_fromButton})
         }
         if (promises.length < 1) {
