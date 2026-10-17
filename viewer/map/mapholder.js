@@ -1517,6 +1517,7 @@ class MapHolder extends DrawingPositionConverter {
     }
 
     checkAutoZoom(opt_force) {
+        if (this.isInUserActionGuard() && ! opt_force) return;
         let enabled = globalStore.getData(keys.properties.autoZoom) || opt_force;
         if (this.forceZoom) enabled = false;
         if (!this.olmap) return;
@@ -1531,39 +1532,52 @@ class MapHolder extends DrawingPositionConverter {
             }
             return;
         }
-        //check if we have tiles available for this zoom
-        //otherwise change zoom but leave required as it is
-        let centerCoord = this.olmap.getView().getCenter();
+        //we only do some checks if the base chart has any zoom info
+        let layers = this.olmap.getLayers().getArray();
+        let baseHasZoomInfo=false;
+        for (let i = 0; i < layers.length && !baseHasZoomInfo; i++) {
+            const layer = layers[i];
+            let boundings = getav(layer).zoomLayerBoundings;
+            if (! boundings) continue;
+            const avnavsource=getav(layer).chartSource;
+            if (! avnavsource) continue;
+            if (! avnavsource.isBaseChart()) continue;
+            baseHasZoomInfo=true;
+        }
         let hasZoomInfo = false;
         let zoomOk = false;
         let tzoom = 2;
-        for (tzoom = Math.floor(this.requiredZoom); tzoom >= this.mapMinZoom; tzoom--) {
-            zoomOk = false;
-            let layers = this.olmap.getLayers().getArray();
-            for (let i = 0; i < layers.length && !zoomOk; i++) {
-                let layer = layers[i];
-                let boundings = getav(layer).zoomLayerBoundings;
-                if (! boundings) continue;
-                let source = layer.get('source');
-                if (!source || !(source instanceof olXYZSource)) continue;
-                hasZoomInfo = true;
-                let centerTile = source.getTileGrid().getTileCoordForCoordAndZ(centerCoord, tzoom);
-                if (checkZoomBounds(centerTile, boundings)) {
-                    zoomOk = true;
-                    break;
-                }
-            }
-            if (zoomOk) {
-                if (tzoom != Math.floor(this.olmap.getView().getZoom())) {
-                    base.log("autozoom change to " + tzoom);
-                    if (opt_force) this.requiredZoom = tzoom;
-                    this.setMapZoom(tzoom); //should set our zoom in the post render
-                } else {
-                    if (opt_force && (tzoom != this.requiredZoom)) {
-                        this.requiredZoom = tzoom;
+        if (baseHasZoomInfo) {
+            //check if we have tiles available for this zoom
+            //otherwise change zoom but leave required as it is
+            let centerCoord = this.olmap.getView().getCenter();
+            for (tzoom = Math.floor(this.requiredZoom); tzoom >= this.mapMinZoom; tzoom--) {
+                zoomOk = false;
+                for (let i = 0; i < layers.length && !zoomOk; i++) {
+                    let layer = layers[i];
+                    let boundings = getav(layer).zoomLayerBoundings;
+                    if (!boundings) continue;
+                    let source = layer.get('source');
+                    if (!source || !(source instanceof olXYZSource)) continue;
+                    hasZoomInfo = true;
+                    let centerTile = source.getTileGrid().getTileCoordForCoordAndZ(centerCoord, tzoom);
+                    if (checkZoomBounds(centerTile, boundings)) {
+                        zoomOk = true;
+                        break;
                     }
                 }
-                break;
+                if (zoomOk) {
+                    if (tzoom != Math.floor(this.olmap.getView().getZoom())) {
+                        base.log("autozoom change to " + tzoom);
+                        if (opt_force) this.requiredZoom = tzoom;
+                        this.setMapZoom(tzoom); //should set our zoom in the post render
+                    } else {
+                        if (opt_force && (tzoom != this.requiredZoom)) {
+                            this.requiredZoom = tzoom;
+                        }
+                    }
+                    break;
+                }
             }
         }
         if (!zoomOk && hasZoomInfo && (this.minzoom == this.mapMinZoom)) {
