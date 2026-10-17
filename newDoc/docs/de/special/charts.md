@@ -9,7 +9,7 @@ In diesem Dokument werden einige Details beschrieben, die erklären, wie AvNav m
 ## Grundaufbau
 Die Karten in AvNav sind entweder auf dem AvNav Server gespeichert oder können je nach Typ auch während der Nutzung direkt aus dem Internet geladen werden. Mit dem [mapproxy-plugin](https://github.com/wellenvogel/avnav-mapproxy-plugin) gibt es eine Mischform, die Karten aus dem Internet lädt, anzeigt und gleichzeitig auf dem AvNav Server speichert. Unter Android ist der AvNav Server direkt in der App integriert.
 
-Die Anzeige der Karten erfolgt immer in einem Browser - so wie die gesamte Bedienoberfläche von AvNav. Wie im [Technischen Hintergrund](#background) beschrieben, werden dazu entsprechende JavaScript-Bibliotheken genutzt.
+Die Anzeige der Karten erfolgt immer in einem Browser - so wie die gesamte Bedienoberfläche von AvNav. Wie im [Technischen Hintergrund](#background) beschrieben werden dazu entsprechende JavaScript-Bibliotheken genutzt.
 
 ## Karten und Overlays {: #overlays }
 Typischerweise benötigt man für die Navigation nicht nur eine Karte, sondern auf dieser Karte auch noch verschiedene Zusatzinformationen. Neben den Informationen, die AvNav selbst bereitstellt - wie die Bootsposition, Kurslinien, die aktuelle Route oder AIS-Ziele (siehe [Navigationsseite](../base/navpage.md)), kann man auch sogenannte "Overlays" über die Karte legen.
@@ -33,17 +33,17 @@ AvNav unterstützt die folgenden Kartentypen
 | [GEMF](http://www.cgtk.co.uk/gemf) | .gemf | Ein für das Lesen optimiertes Kartenformat, das intern ein Verzeichnis der vorhandenen Kacheln enthält. Dieses Format wird auch vom [AvNav Importer](#importer) aus verschiedenen anderen Formaten erzeugt. Dieses Format kann intern mehrere Layer mit unterschiedlichen Auflösungen enthalten. |
 | [mbtiles](https://wiki.openstreetmap.org/wiki/MBTiles) | .mbtiles | Eine [sqlite](https://sqlite.org/) Datenbank, die neben den Kartenkacheln auch noch Metadaten enthält. Leider gibt es hier verschiedene Kodierungen der y-Koordinate - die aber nicht immer korrekt bezeichnet werden. Daher kann man diese per [Hand umstellen](#scheme). |
 | [PMTiles](https://docs.protomaps.com/pmtiles/) | .pmtiles | Ein modernes, binäres Dateiformat, das insbesondere für die Nutzung über einfache Webserver optimiert ist. Wenn man *.PMTiles* Dateien hochlädt, unterstützt AvNav zunächst nur Rasterkarten in diesem Format. Dazu wird die Information im Header der *PMTiles* Datei ausgewertet. Dort ist der Typ der Kartenkacheln vermerkt. AvNav erlaubt die Typen `Unknown(0), Png(2), Webp(4),Jpeg(3)` als Rastertypen. Auch Vektorkarten im *PMTiles* Format können verarbeitet werden. Das erfordert jedoch eine spezielle [Kartendefinition](#vectorlayer) mit dem entsprechenden Style-Dokument. |
-| XML | .xml | Wie [unten](#exampledef) beschrieben kann man mit XML-Dateien direkt eine Kartendefinition erstellen. Die XML-Datei enthält dabei noch nicht die eigentlichen Kartendaten sonder nur einen Verweis auf diese - und Informationen zur Nutzung |
+| XML | .xml | Wie [unten](#exampledef) beschrieben kann man mit XML-Dateien direkt eine Kartendefinition erstellen. Die XML-Datei enthält dabei noch nicht die eigentlichen Kartendaten, sondern nur einen Verweis auf diese - und Informationen zur Nutzung |
 
 ## Plugin Kartentypen
 
-Plugins können im Prinzip beliebige weitere Kartentypen zu AvNav hinzufügen. Die folgenden Karten-Plugins sind für AvNav standardmäßig vorhanden.
+Plugins können im Prinzip beliebige weitere Kartentypen zu AvNav hinzufügen. Die folgenden Karten-Plugins sind für AvNav standardmäßig vorhanden:
 
 | Plugin | Kartentyp | Beschreibung |
 | --- | --- | --- |
-| [ochartsng](ochartsng.md) | Vektor Karten | Das ochartsng Plugin dient zur Anzeige von [o-charts](https://o-charts.org/?lng=de) **Vektorkarten**. Diese müssen im o-charts Shop gekauft werden und wie im Plugin beschrieben hochgeladen werde. **Hinweis**: Das Hochladen kann nicht auf der "Charts"-Seite in AvNav erfolgen. Daneben können auch noch unverschlüsselte ENC (S57) nach einer [Konvertierung](#converter) angezeigt werden. _Nur Linux und Android._|
-| [ocharts]({{OLDLINK("hints/ocharts.html")}}) | Vektor- und Raster Karten | Das ocharts (legacy) Plugin dient ebenfalls zur Anzeige von Karten aus dem [o-charts](https://o-charts.org/?lng=de). Es kann auch Rasterkarten aus dem Shop nutzen. Auf neueren Systemen steht es nicht mehr zur Verfügung. _Nur Linux_ |
-| [mapproxy](https://github.com/wellenvogel/avnav-mapproxy-plugin) | Online Karten | Das mapproxy Plugin erlaubt über eigene Definitionen den Zugriff auf Online-Kartendienste. Die Karten werden im AvNav Server zwischengespeichert und stehen damit auch ohne Internet zur Verfügung. _Nur für Linux_ |
+| [ochartsng](ochartsng.md) | Vektorkarten | Das ochartsng Plugin dient zur Anzeige von [o-charts](https://o-charts.org/?lng=de) **Vektorkarten**. Diese müssen im o-charts Shop gekauft und wie im Plugin beschrieben hochgeladen werden. **Hinweis**: Das Hochladen kann nicht auf der "Charts"-Seite in AvNav erfolgen. Daneben können auch noch unverschlüsselte ENC (S57) nach einer [Konvertierung](#converter) angezeigt werden. _Nur Linux und Android._|
+| [ocharts]({{OLDLINK("hints/ocharts.html")}}) | Vektor- und Rasterkarten | Das ocharts (legacy) Plugin dient ebenfalls zur Anzeige von Karten aus dem [o-charts Shop](https://o-charts.org/?lng=de). Es kann auch Rasterkarten aus dem Shop nutzen. Auf neueren Systemen steht es nicht mehr zur Verfügung. _Nur Linux_ |
+| [mapproxy](https://github.com/wellenvogel/avnav-mapproxy-plugin) | Online-Karten | Das mapproxy Plugin erlaubt über eigene Definitionen den Zugriff auf Online-Kartendienste. Die Karten werden im AvNav Server zwischengespeichert und stehen damit auch ohne Internet zur Verfügung. _Nur für Linux_ |
 
 Daneben gibt es u.U. noch weitere Plugins für andere Kartentypen. Siehe dazu auch die [Liste der Plugins](plugin-list.md).
 
@@ -58,9 +58,9 @@ Die Verwaltung von Karten ist in der [Einführung](../base/charts.md) bereits be
 Karten Verwaltung 
 ///
 
-Im "Charts" Tab sind alle vorhandenen Karten aufgelistet und es können neue Karten hochgeladen werden, und zwar in den Formaten, die AvNav [direkt versteht](#owntypes). Bei Klick auf eine Karte erhält man einen Dialog, mit dem man die [Overlays](overlays.md) bearbeiten kann, Karten ggf. herunterladen, löschen oder direkt öffnen kann. Plugin-Karten werden hier angezeigt, diese können hier jedoch normalerweise nicht gelöscht oder heruntergeladen werden.
+Im "Charts" Tab sind alle vorhandenen Karten aufgelistet und es können neue Karten hochgeladen werden, und zwar in den Formaten, die AvNav [direkt versteht](#owntypes). Bei Klick auf eine Karte erhält man einen Dialog, mit dem man die [Overlays](overlays.md) bearbeiten, Karten ggf. herunterladen, löschen oder direkt öffnen kann. Plugin-Karten werden hier angezeigt, diese können hier jedoch normalerweise nicht gelöscht oder heruntergeladen werden.
 
-Für MBTiles karten kann man hier das Schema der Karte umstellen. Dieses beschreibt, wie die y-Koordinate zählt. 
+Für MBTiles-Karten kann man hier das Schema der Karte umstellen. Dieses beschreibt, wie die y-Koordinate zählt. 
 {: #scheme }
 
 Es gibt zwei Optionen
@@ -70,7 +70,7 @@ Es gibt zwei Optionen
 | tms | y-Koordinate 0 ist Süden |
 | zxy | y-Koordinate 0 ist Norden |
 
-Der Default ist `tms`. Leider gibt es oft MBTiles Dateien, die `zxy` nutzen aber das nicht in der Datei vermerken. Im Zweifel muss man daher probieren und das Schema ggf. umstellen, wenn die Karte falsch dargestellt wird. AvNav schreibt eine eigene Information in die MBTiles Datei, wenn man es im Dialog umstellt. Damit kann diese Datei dann auch auf anderen AvNav Systemen sofort korrekt genutzt werden.
+Der Defaultwert ist `tms`. Leider gibt es oft MBTiles-Dateien, die `zxy` nutzen, aber das nicht in der Datei vermerken. Im Zweifel muss man daher probieren und das Schema ggf. umstellen, wenn die Karte falsch dargestellt wird. AvNav schreibt eine eigene Information in die MBTiles-Datei, wenn man es im Dialog umstellt. Damit kann diese Datei dann auch auf anderen AvNav-Systemen sofort korrekt genutzt werden.
 
 Der mittlere Tab "Imports" zeigt Informationen über Karten, die in den [Konverter](#converter) von AvNav geladen wurden. Auf Android ist der Konverter nicht vorhanden.
 {: #importer}
@@ -81,33 +81,31 @@ Es gibt ganz links noch einen Tab "Server" - der zeigt den Zustand der Server-Fu
 
 
 
-
-
 ## Karten Konvertierung {: #converter }
 
-Einige Karten können in AvNav erst nach einer Konvertierung angezeigt werden. Dabei werden diese Karten meist in .gemf Dateien umgewandelt, so das sie anschliessend effizient genutzt werden können.
+Einige Karten können in AvNav erst nach einer Konvertierung angezeigt werden. Dabei werden diese Karten meist in .gemf Dateien umgewandelt, sodass sie anschließend effizient genutzt werden können.
 Plugins können zusätzliche Konverter installieren.
 Der Konverter ist nur für Linux und Windows verfügbar, nicht unter Android.
 Es können die folgenden Kartentypen umgewandelt werden:
 
 | Kartentyp | Datei-Endung | Beschreibung |
 | --- | --- | --- |
-| [BSB](https://www.gisbox.com/en/articles/v1/25k7r9xewlwy/) | .kap | Rasterkarten. Typischerweise viele einzelne Dateien. Bei Hochladen zum Konverter kann man ein Verzeichnis angeben, das wird dann zum Namen der erzeugten Karte. Bei vielen Karten ist der Prozeß langwierig - insbesondere auf einem RaspberryPi |
-| [BSB](https://www.gisbox.com/en/articles/v1/25k7r9xewlwy/) | .zip | Ein zip Archiv mit BSB Karten, die zu einer gemeinsamen Karte umgewandelt werden |
-| [S57 ENC](https://de.wikipedia.org/wiki/IHO-S-57) | .zip | Mit plugin [ochartsng](ochartsng.md). Die S57 ENC werden in ein OpenCPN spezifisches Binärformat (senc) umgewandelt und direkt dem ochartsng Plugin übergeben. _Auf Linux und Windows_. Ochartsng selbst läuft nicht auf Windows, aber der Konverter ist verfügbar und kann installiert werden. Damit können z.B. S57 Karten für Android dort konvertiert werden (unter Android ist der Konverter nicht vorhanden) |
+| [BSB](https://www.gisbox.com/en/articles/v1/25k7r9xewlwy/) | .kap | Rasterkarten. Typischerweise viele einzelne Dateien. Beim Hochladen zum Konverter kann man ein Verzeichnis angeben, das wird dann zum Namen der erzeugten Karte. Bei vielen Karten ist der Prozess langwierig - insbesondere auf einem RaspberryPi |
+| [BSB](https://www.gisbox.com/en/articles/v1/25k7r9xewlwy/) | .zip | Ein Zip-Archiv mit BSB Karten, die zu einer gemeinsamen Karte umgewandelt werden |
+| [S57 ENC](https://de.wikipedia.org/wiki/IHO-S-57) | .zip | Mit Plugin [ochartsng](ochartsng.md). Die S57 ENC werden in ein OpenCPN spezifisches Binärformat (senc) umgewandelt und direkt dem ochartsng Plugin übergeben. _Auf Linux und Windows_. Ochartsng selbst läuft nicht auf Windows, aber der Konverter ist verfügbar und kann installiert werden. Damit können z.B. S57 Karten für Android dort konvertiert werden (unter Android ist der Konverter nicht vorhanden) |
 
-Um Karten zum Konverter hochzuladen nutzt man
+Um Karten zum Konverter hochzuladen, nutzt man
 
 {{MM("MMchartspage")}}->"Imports"->{{SB("Upload")}}
 
-Der Konverter wird nach gewisser Zeit die hochgeladenen Dateien erkennen (bei Einzeldateien wird noch etwas gewartet um weitere Uploads zu ermöglichen), danch startet die Konvertierung.
+Der Konverter wird nach gewisser Zeit die hochgeladenen Dateien erkennen (bei Einzeldateien wird noch etwas gewartet, um weitere Uploads zu ermöglichen), danach startet die Konvertierung.
 
 ![Konverter](../../img/charts-import.png){.small}
 ///caption
 Konverter
 ///
 
-Wenn man das rot markierte {{ICON("Edit")}} Icon klickt, öffnet sich ein Dialog um das Log einzusehen, den Import zu löschen, zu restarten oder auch die konvertierten Karten noch einmal herunterzuladen.
+Wenn man das rot markierte {{ICON("Edit")}} Icon klickt, öffnet sich ein Dialog, um das Log einzusehen, den Import zu löschen, zu restarten oder auch die konvertierten Karten noch einmal herunterzuladen.
 
 ## Kartenquellen
 
@@ -126,7 +124,7 @@ Wenn man das rot markierte {{ICON("Edit")}} Icon klickt, öffnet sich ein Dialog
 * Inland ENC vom [WSV (Elwis)](https://www.elwis.de/DE/dynamisch/IENC/) - Konvertierung/Nutzung mit dem [ochartsng](ochartsng.md#chartconversions)
   plugin
 
-**Hinweis**: ENC werden oft als viele einzelne ZIP Dateien bereitgestellt. Wenn man möchte, das diese in AvNav als eine gemeinsame Karte konvertiert und angezeigt werden, sollte man die ZIP-Archive vor dem Hochladen zu AvNav in ein gemeinsames Archiv zusammenpacken. 
+**Hinweis**: ENC werden oft als viele einzelne ZIP Dateien bereitgestellt. Wenn man möchte, dass diese in AvNav als eine gemeinsame Karte konvertiert und angezeigt werden, sollte man die einzelnen ZIP-Archive vor dem Hochladen zu AvNav in ein gemeinsames Archiv zusammenpacken. 
 
 Daneben finden sich im Internet noch viele weitere Kartenquellen, die ggf. in AvNav nutzbare Karten bereitstellen.
 
@@ -138,7 +136,7 @@ Um eine Karte zu nutzen, benötigt AvNav eine sogenannte Kartendefinition. Für 
 
 Eine solche Definition beschreibt, aus welchen Schichten (Layern) diese Karte besteht, welchen Typ diese Layer haben und wo die Daten dafür herkommen. Siehe auch [Technischer Hintergrund](#background).
 
-Der einfachste Fall einer solchen Definition in Form einer XML Datei für den online Zugriff auf [OpenStreetMap Karten](https://www.openstreetmap.de/) kann z.B. so aussehen:
+Der einfachste Fall einer solchen Definition in Form einer XML-Datei für den Online-Zugriff auf [OpenStreetMap Karten](https://www.openstreetmap.de/) kann z.B. so aussehen:
 {: #exampledef }
 
 ``` xml
@@ -155,13 +153,13 @@ Man kann diese Definition in eine XMLDatei (z.B. `SimpleOSM.xml`) schreiben, sie
 
 {{MM("MMchartspage")}}->"Charts"->{{SB("Upload")}}
 
-in AvNav hochladen und die OpenStreetMaps Karte steht unter dem Name SimpleOSM.xml zur Anzeige bereit.
+in AvNav hochladen. Die OpenStreetMaps Karte steht dann unter dem Name SimpleOSM.xml zur Anzeige bereit.
 
 Dieses Beispiel enthält genau einen Kartenlayer, die Kartenkacheln kommen vom Server unter `http://a.tile.openstreetmap.org` - und sie haben die Default-Größe von 256x256 Pixeln. 
 
 Über "profile" wird der Typ des Layers ausgewählt - dieser bestimmt, wie aus der angegebenen URL die URLs für die einzelnen Kartenkacheln gebildet werden - und wie diese dargestellt werden.
 
-Die Beschreibung einer Kartendefinition ist entweder eine XML Darstellung wie im Beispiel oder ein JavaScript/JSON Objekt. Das obige Beispiel als JSON Objekt:
+Die Beschreibung einer Kartendefinition ist entweder eine XML-Darstellung wie im Beispiel oder ein JavaScript/JSON Objekt. Das obige Beispiel als JSON Objekt:
 ``` json
 [
     {
@@ -178,16 +176,16 @@ Die Beschreibung einer Kartendefinition ist entweder eine XML Darstellung wie im
     }
 ]
 ```
-Bei den Parametern ist die Groß-/Kleinschreibung irrelevant.
+Bei den Parametern ist die Groß- und Kleinschreibung irrelevant.
 
 ### Einbringen von Kartendefinitionen {: #insertingdefs }
 
-Kartendefinitionen können auf verschiedene Art in AvNav eingebracht werden.
+Kartendefinitionen können auf verschiedene Arten in AvNav eingebracht werden.
 
 **XML Datei**
 {: #xmldef }
 
-Wie im [Beispiel](#exampledef) beschrieben können Kartendefinitionen als XML Datei zu AvNav hochgeladen werden.
+Wie im [Beispiel](#exampledef) beschrieben können Kartendefinitionen als XML-Datei zu AvNav hochgeladen werden.
 
 **plugin.json**
 {: #pluginjsondef }
@@ -212,7 +210,7 @@ Wie im [Beispiel](#exampledef) beschrieben können Kartendefinitionen als XML Da
   ]
 }
 ```
-Relative Angaben bei url oder icon beziehen sich auf den Speicherort der plugin.json Datei.
+Relative Angaben bei *url* oder *icon* beziehen sich auf den Speicherort der plugin.json Datei.
 
 **Plugin Python Code**
 {: #insertingpython }
@@ -226,11 +224,11 @@ Der dort übergebene Callback wird gerufen, wenn AvNav die Liste seiner Karten e
     
     Für die Definitionen per _plugin.json_ oder _python_ kann die Kartendefinition auch in zwei Schritten erzeugt werden.
 
-    Das kann insbesondere Sinn machen, wenn die Karten durch einen separaten Server ausserhalb von AvNav bereitgestellt werden.
+    Das kann insbesondere Sinn machen, wenn die Karten durch einen separaten Server außerhalb von AvNav bereitgestellt werden.
 
-    Wenn die Kartendefinition noch keine "layers" enthält, versucht AvNav beim Öffnen der Karte die finale Kartendefinition zu laden. Diese Definition muss wieder eine Kartendefinition im [XML Format](#xmldef) sein. AvNav erwartet in der Definition eine URL, von der dieses XML Dokument geladen werden kann.
+    Wenn die Kartendefinition noch keine "layers" enthält, versucht AvNav beim Öffnen der Karte die finale Kartendefinition zu laden. Diese Definition muss wieder eine Kartendefinition im [XML Format](#xmldef) sein. AvNav erwartet in der Definition eine URL, von der dieses XML-Dokument geladen werden kann.
     
-    Wenn die Kartendefinition einen Parameter `overviewUrl` enthält wird diese genutzt, sonst wird der Parameter `url` genutzt und `/avnav.xml` angefügt.
+    Wenn die Kartendefinition einen Parameter `overviewUrl` enthält, wird diese genutzt, sonst wird der Parameter `url` genutzt und `/avnav.xml` angefügt.
     Eine solche zweistufige Kartendefinition kann z.B. so aussehen:
 
     ```
@@ -245,14 +243,14 @@ Der dort übergebene Callback wird gerufen, wenn AvNav die Liste seiner Karten e
     }    
     ```
     
-    In diesem Beispiel wird angenommen, das ein Server für die Karten auf dem gleichen Computer wie AvNav läuft und unter Port 8082 seine Daten bereitstellt. Die Kartendefinition für die Karte "test-chart" wird dann über die URL
-    `http://nn.nn.nn.nn:8082/charts/testchart/avnav.xml` abgerufen. Die Kartenlayer im XML Dokument müssen dann nicht mehr unbedingt eine URL enthalten - es wird dann die Basis-URL `http://nn.nn.nn.nn:8082/charts/testchart` genutzt.
+    In diesem Beispiel wird angenommen, dass ein Server für die Karten auf dem gleichen Computer wie AvNav läuft und unter Port 8082 seine Daten bereitstellt. Die Kartendefinition für die Karte "test-chart" wird dann über die URL
+    `http://nn.nn.nn.nn:8082/charts/testchart/avnav.xml` abgerufen. Die Kartenlayer im XML-Dokument müssen dann nicht mehr unbedingt eine URL enthalten - es wird dann die Basis-URL `http://nn.nn.nn.nn:8082/charts/testchart` genutzt.
 
 
 ### Layer Typen {: #layertypes }
 
-AvNav hat eine Reihe von eingebauten Karten-Layer Typen. Diese erwarten die Kartendaten jeweils in einem bestimmten Format und laden sie über bestimmte URLs. [Plugins](plugins-extensions.md) oder [Nutzer-JavaScript](userjs.md) können weitere Layer Typen ergänzen.
-Diese Layer erzeugen intern jeweils ein Kartenlayer für [openlayers](http://www.openlayers.org/) oder [MapLibre](https://maplibre.org/).
+AvNav hat eine Reihe von eingebauten Kartenlayer-Typen. Diese erwarten die Kartendaten jeweils in einem bestimmten Format und laden sie über bestimmte URLs. [Plugins](plugins-extensions.md) oder [Nutzer-JavaScript](userjs.md) können weitere Layer-Typen ergänzen.
+Diese Layer erzeugen intern jeweils einen Kartenlayer für [openlayers](http://www.openlayers.org/) oder [MapLibre](https://maplibre.org/).
 Die Implementierung der Kartenlayer findet man in [chartlayers.js](https://github.com/wellenvogel/avnav/blob/master/viewer/map/chartlayers.js)
 
 **Parameter**
@@ -304,12 +302,12 @@ Paremeter, die von mehreren Layern verstanden werden:
     ]
     ```
     
-    Die `boundingbox` Einträge bei jedem zoom Level können auch ein Array von Objekten sein, falls es mehrere nicht zusammenhängende Bereiche gibt.
-    Dieser Parameter wird meist nur bei Karten erzeugt, die AvNav selbst kennt. Der Vorteil der Angabe ist, das nicht versucht wird, Kacheln zu laden, die es nicht gibt. 
+    Die `boundingbox` Einträge bei jedem zoom Level können auch ein Array von Objekten sein, falls es mehrere, nicht zusammenhängende Bereiche gibt.
+    Dieser Parameter wird meist nur bei Karten erzeugt, die AvNav selbst kennt. Der Vorteil der Angabe ist, dass nicht versucht wird, Kacheln zu laden, die es nicht gibt. 
 
   * upzoom 
 
-    wenn keine Kacheln für einen Zoom Level verfügbar sind, versuche Kacheln von kleineren Zoom Leveln zu nehmen - maximal bis herunter zu `zoom - upzoom`
+    wenn keine Kacheln für einen Zoom Level verfügbar sind, wird versucht, Kacheln von kleineren Zoom Leveln zu nehmen - maximal bis herunter zu `zoom - upzoom`
 
 
 **Layer xzy**
@@ -352,10 +350,10 @@ Parameter
 | upzoom | ja | |
 | layerzoomboundings | ja | |
 | projection | ja | Die Projektion, die der Service nutzt. Default `EPSG:4326` |
-| wmsparameter | ja | Ein Array von Objekten name, value `[{"name":"TRANSPARENT","value":"TRUE"}]`. Diese werden als [Parameter](#wmsparameters) an die URL angefügt. |
-| layermapping | ja | Ein Array von Objekten zooms,layers, das es erlaubt je nach Zoom unterschiedliche WMS Layer abzufragen. Zooms und Layers können jeweils durch , getrennte Werte enthalten. Beispiel: `[{"zooms":"1,2,3,4,5","layers":"Overview,Special"},{"zooms":"6,7,8","layers":"Details"}]` |
+| wmsparameter | ja | Ein Array von Objekten: name, value `[{"name":"TRANSPARENT","value":"TRUE"}]`. Diese werden als [Parameter](#wmsparameters) an die URL angefügt. |
+| layermapping | ja | Ein Array von Objekten: zooms,layers, das es erlaubt je nach Zoom unterschiedliche WMS Layer abzufragen. Zooms und Layers können jeweils durch "," getrennte Werte enthalten. Beispiel: `[{"zooms":"1,2,3,4,5","layers":"Overview,Special"},{"zooms":"6,7,8","layers":"Details"}]` |
 
-Die finale URL für die Abfrage des WMS wird dann durch die bei "url"angegebene URL sowie eine Liste von Parametern gebildet.
+Die finale URL für die Abfrage des WMS wird dann durch die bei "url" angegebene URL sowie eine Liste von Parametern gebildet.
 { #wmsparameters }
 
 | Parameter | Quelle |
@@ -376,18 +374,18 @@ Dieser Layer ist ein Speziallayer für das [ochartsng](ochartsng.md) und das och
 
 **Layer PMTiles**
 
-Dieser Layer kann für [PMTiles](https://docs.protomaps.com/pmtiles/) Raster Quellen genutzt werden.
+Dieser Layer kann für [PMTiles](https://docs.protomaps.com/pmtiles/) Rasterquellen genutzt werden.
 
 Parameter
 
 | Name | Optional | Beschreibung |
 | --- | --- | --- |
 | profile | nein | `PMTiles` |
-| url | siehe oben | Die Basisurl für die Kartendaten|
+| url | siehe oben | Die Basis-Url für die Kartendaten|
 | minzoom | ja | |
 | maxzoom | ja | |
 
-Eine Beispiel für die Nutzung von PM Raster Quellen:
+Eine Beispiel für die Nutzung von PM-Rasterquellen:
 ```
 <?xml version="1.0" encoding="UTF-8" ?>
  <TileMap 
@@ -422,7 +420,7 @@ Parameter
 | profile | nein | `maplibreVector` oder `maplibre``|
 | style | nein | siehe [unten](#styleparameter) |
 | maplibre | ja | ein Objekt, das direkt als Eigenschaften an die [MapLibre Map](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/) übergeben wird |
-| useProxy | ja | Wenn Vektordaten von einem Server geladen werden erfordert das korrekte [CORS](https://developer.mozilla.org/de/docs/Web/HTTP/Guides/CORS) Einstellungen auf diesem Server. Sonst verweigert der Browser das Laden der Daten. Da man diese Server nicht immer unter Kontrolle hat, gibt es die Möglichkeiten, die Anfragen über den AvNav Server zu leiten. Da die AvNav Webseite ja auch von diesem Server kam, tritt dabei das CORS Problem nicht auf. Das funktioniert natürlich nur, wenn der AvNav Server den Kartenserver auch direkt erreichen kann |
+| useProxy | ja | Wenn Vektordaten von einem Server geladen werden, erfordert das korrekte [CORS](https://developer.mozilla.org/de/docs/Web/HTTP/Guides/CORS) Einstellungen auf diesem Server. Sonst verweigert der Browser das Laden der Daten. Da man diese Server nicht immer unter Kontrolle hat, gibt es die Möglichkeiten, die Anfragen über den AvNav Server zu leiten. Da die AvNav-Webseite ja auch von diesem Server kam, tritt dabei das CORS Problem nicht auf. Das funktioniert natürlich nur, wenn der AvNav Server den Kartenserver auch direkt erreichen kann |
 
 Der **style** Parameter kann auf verschiedene Arten angegeben werden:
 {: #styleparameter }
@@ -452,7 +450,7 @@ Die Funktion hat die folgenden Parameter:
 | Name | Typ | Beschreibung |
 | --- | --- | --- |
 | baseName | String | Der Kartenlayer, der erweitert werden soll. Einer der Profilnamen wie unter [Layer Typen](#layertypes) angegeben. |
-| name | String | Der Profilname für den neuen Layer. Wenn die Funktion in [user.mjs](userjs.md) aufgerufen wird, wird intern dem Namen noch `user_` vorangestellt, wenn sie in einem Plugin gerufen wird, wird `plugin_` vorangestellt. In einer Kartendefinition muss man also `"profile":"user-myprofile"` schreiben. |
+| name | String | Der Profilname für den neuen Layer. Wenn die Funktion in [user.mjs](userjs.md) aufgerufen wird, wird intern dem Namen noch `user_` vorangestellt. Wenn sie in einem Plugin gerufen wird, wird `plugin_` vorangestellt. In einer Kartendefinition muss man also `"profile":"user-myprofile"` schreiben. |
 | callback | Funktion | Eine Funktion, die aufgerufen wird, sobald ein Kartenlayer mit diesem Profil angelegt werden soll. Für die Beschreibung siehe [unten](#usermaplayercallback) |
 
 ### Callback {: #usermaplayercallback }
@@ -461,28 +459,28 @@ Im [API](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed
 
 Der `context` Parameter erlaubt die Speicherung von Werten, die spezifisch für diesen Aufruf sind. Er wird auch in allen weiteren Callbacks übergeben.
 
-Die Funktion darf async sein oder auch eine Promise zurückgeben.
+Die Funktion darf *async* sein oder auch eine *Promise* zurückgeben.
 
 Der Rückgabewert der Funktion unterscheidet sich, je nachdem ob man einen [Vektorlayer](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L425) oder einen [Rasterlayer](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L397) erweitert.
 
 Das Resultat kann in beiden Fällen modifizierte Parameter (`options`) zurückgeben - diese ersetzen dann die in der Kartenkonfiguration angegebenen.
-Ausserdem können verschiedene Callback-Funktionen angegeben werden.
+Außerdem können verschiedene Callback-Funktionen angegeben werden.
 
 | Callback | Typ | Beschreibung |
 | --- | --- | --- |
 | finalizeFunction | alle | wird gerufen, bevor die Karte geschlossen wird |
-| sequenceFunction | alle | wird in regelmässigen Abständen gerufen um zu prüfen, ob sich die Karte geändert hat und neu geladen werden muss. Sobald sich der zurückgegebene String verändert, wird die Karte neu geladen |
-| loadCallback | Vektor | wird nach dem Laden der MapLibre Map gerufen und erlaub den direkten Zugriff auf das Map-Objekt |
-| **featureListFormatter** | Vektor | Wird gerufen, wenn der Nutzer auf die Karte klickt. Als Parameter wird eine Liste der Vektor-Objekte im Klick-Bereich übergeben. Siehe [unten](#featurelistformatter) |
-| createTileUrlFunction | Raster | Die Rasterlayer erzeugen die URL zum Laden einer Kachel mit einer [URLFunction](https://openlayers.org/en/latest/apidoc/module-ol_Tile.html#~UrlFunction). Dieser callback kann genutzt werden, um eine eigene URLFunction zurückzugeben. Damit können z.B. weitere Parameter eingefügt werden, die der Server benötigt |
+| sequenceFunction | alle | wird in regelmäßigen Abständen gerufen, um zu prüfen, ob sich die Karte geändert hat und neu geladen werden muss. Sobald sich der zurückgegebene String verändert, wird die Karte neu geladen |
+| loadCallback | Vektor | wird nach dem Laden der MapLibre Map gerufen und erlaubt den direkten Zugriff auf das Map-Objekt |
+| **featureListFormatter** | Vektor | wird gerufen, wenn der Nutzer auf die Karte klickt. Als Parameter wird eine Liste der Vektor-Objekte im Klick-Bereich übergeben. Siehe [unten](#featurelistformatter) |
+| createTileUrlFunction | Raster | Die Rasterlayer erzeugen die URL zum Laden einer Kachel mit einer [URLFunction](https://openlayers.org/en/latest/apidoc/module-ol_Tile.html#~UrlFunction). Dieser Callback kann genutzt werden, um eine eigene URL Function zurückzugeben. Damit können z.B. weitere Parameter eingefügt werden, die der Server benötigt |
 | tileLoadFunction | Raster | Diese Funktion ermöglicht es, das Laden der Serverdaten in ein JavaScript Image zu beeinflussen. |
 
 
 Eine besonders interessante Möglichkeit ist die Aufbereitung von Vektor-Kartendaten für den Nutzer mit der `featureListFormatter` Funktion.
 {: #featurelistformatter }
 
-Die übergebene Liste enhält Objekte die alle Properties des jeweiligen [Open Layer Features](https://openlayers.org/en/latest/apidoc/module-ol_Feature-Feature.html)("get" Methode) enthalten.
-Auuserdem sind die folgenden Eigenschaften vorhanden:
+Die übergebene Liste enhält Objekte, die alle Properties des jeweiligen [Open Layer Features](https://openlayers.org/en/latest/apidoc/module-ol_Feature-Feature.html)("get" Methode) enthalten.
+Außerdem sind die folgenden Eigenschaften vorhanden:
 
 | Name | Beschreibung |
 | --- | --- |
@@ -492,7 +490,7 @@ Auuserdem sind die folgenden Eigenschaften vorhanden:
 | `vectorTileFeature` |  das originale MapLibre Feature | 
 
 
-Diese Objekte sind durch parsen der GeoJSON Darstellung von [MapLibre](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapGeoJSONFeature/) entstanden - und damit ähnlich den Features, die in einem [GeoJSON Overlay](overlays.md) entstehen. 
+Diese Objekte sind durch Parsen der GeoJSON Darstellung von [MapLibre](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapGeoJSONFeature/) entstanden - und damit ähnlich den Features, die in einem [GeoJSON Overlay](overlays.md) entstehen. 
 
 Die Rückgabe des Formatters muss ein Array mit Objekten vom Typ [FeatureInfoType](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L68) sein.
 
@@ -509,17 +507,15 @@ Ein Bespiel findet sich im [Plugin für freenauticalcharts](https://github.com/w
 
 Damit Karten in AvNav im Browser angezeigt werden können, müssen sie in einem
 „Kachelformat“ vorliegen. Das ist das Format, das durch Dienste wie
-OpenStreetMaps oder GoogleMaps benutzt wird. Eine Kartenkachel ist meist 256x256 Pixel gross. Die Welt wird dabei auf eine ebene Fläche projiziert (das
+OpenStreetMaps oder GoogleMaps benutzt wird. Eine Kartenkachel ist meist 256x256 Pixel gross. Die Welt wird dabei auf eine ebene Fläche projiziert. Das
 kann man sich wie einen Papierzylinder vorstellen, der senkrecht steht und
-am Äquator um die Erde gewickelt wird). Jeder Punkt mit seinen Koordinaten
+am Äquator um die Erde gewickelt wird. Jeder Punkt mit seinen Koordinaten
 (Länge/Breite) wird dann auf diesen Zylinder projiziert. Wie man das
 macht, welche Einheiten in der Projektion verwendet werden und ob die
 Erde als Kugel oder Ellipsoid mit verschiedenen Parametern modelliert
 wird, beschreiben die verschiedenen Projektionen. Die WebApp benutzt die
-sogenannte Google-Mercator-Projektion (die Erde wird dabei als Kugel
-betrachtet) - mit dem EPSG Code 900913. Die Einheiten auf dem Papier sind
-dabei Meter (die man natürlich in die entsprechenden Koordinaten umrechnen
-kann). Karten in einem anderen Format (z.B. WGS84 – Erde als Ellipsoid,
+sogenannte Google-Mercator-Projektion mit dem EPSG Code 900913. Die Erde wird dabei als Kugel
+betrachtet. Die Einheiten auf dem Papier sind dabei Meter, die man natürlich in die entsprechenden Koordinaten umrechnen kann. Karten in einem anderen Format (z.B. WGS84 – Erde als Ellipsoid,
 immer in Grad) müssen daher ggf. reprojiziert werden.
 
 Die gesamte Projektionsfläche wird bei der Google-Projektion in Kacheln
@@ -527,7 +523,7 @@ unterteilt. Der Zoom Level gibt an, in wieviele Kacheln die Fläche
 unterteilt wird. Zoom Level 0 bedeutet: die gesamte Erde (von -85° bis
 +85° Breite – darüber ist die Projektion nicht definiert) auf einer Kachel
 von 256x256 Pixel. Mit jedem weiteren Zoom Level wird feiner unterteilt:
-Zoom Level 1: 2x2 Kacheln, 2: 4x4 Kacheln usw. Für uns reichen die
+Zoom Level 1: 2x2 Kacheln, 2: 4x4 Kacheln usw. Für die Arbeit mit AvNav reichen die
 interessanten Zoom Level von ca. 7 bis 18..19. Das bedeutet (Level 19)
 2^19x2^19 Kacheln.
 
@@ -535,11 +531,11 @@ Zur Darstellung wird die Library [openlayers](http://www.openlayers.org/)
 verwendet. Diese lädt die entsprechenden Kartenkacheln je nach Zoom Level
 vom Server und zeigt sie an. OpenStreetMaps verwendet typischerweise
 diese Library.
-Es ist dabei möglich innerhalb einer Karte mehrere sogenannte Layer (Schichten) übereinander zu legen - auf diesem können z.B. unterschiedliche Auflösungen verwendet werden - oder auch in einem Layer die Basis-Karten und in einem anderen Layer die Seezeichen.
-Zusätzlich können auch Kartenlayer mit [MapLibre](https://maplibre.org/) genutzt werden. Damit lassen sich z.B. Verktorkarten darstellen. Das erfordert jedoch typischerweise zusätzliche Daten und erfordert damit spezielle [Kartendefinitionen](#definitions) oder [Plugins](plugins.md).
+Es ist dabei möglich, innerhalb einer Karte mehrere sogenannte Layer (Schichten) übereinander zu legen - auf diesem können z.B. unterschiedliche Auflösungen verwendet werden - oder auch in einem Layer die Basis-Karten und in einem anderen Layer die Seezeichen.
+Zusätzlich können auch Kartenlayer mit [MapLibre](https://maplibre.org/) genutzt werden. Damit lassen sich z.B. Verktorkarten darstellen. Das erfordert jedoch typischerweise zusätzliche Daten und damit spezielle [Kartendefinitionen](#definitions) oder [Plugins](plugins.md).
 
 Man kann sich leicht vorstellen, dass bei hohen Zoom Levels schnell große
-Datenmengen zusammenkommen. Daher müssen wir für unsere Kartenkacheln
+Datenmengen zusammenkommen. Daher muss man für Kartenkacheln
 ähnlich vorgehen, wie es auch bei den Papierkarten ist: für Übersichten
 ein kleinerer Zoom Level, Detailkarten größer und z.B. Hafenpläne dann mit
 Level 18 oder 19 (60cm/pixel bzw. 30cm/pixel). Um damit arbeiten zu
