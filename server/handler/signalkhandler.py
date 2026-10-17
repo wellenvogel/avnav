@@ -300,7 +300,6 @@ class Config(object):
     self.notifyWrite=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY.fromDict(param)
     self.sendWp=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_SENDWP.fromDict(param)
     self.legPaths=AVNSignalKHandler.P_LEGPATHS.fromDict(param)
-    self.courseProvider=AVNSignalKHandler.P_COURSEPROVIDER.fromDict(param)
     self.skSource='avnav-'+AVNSignalKHandler.P_UUID.fromDict(param)
     self.isLocal= (self.skHost == 'localhost' or self.skHost == '127.0.0.1')
     self.ignoreTs=AVNSignalKHandler.P_IGNORE_TS.fromDict(param)
@@ -783,14 +782,6 @@ class AVNSignalKHandler(AVNWorker):
                              'both: send both',
                              rangeOrList=['v1','v2','both'],
                              condition={P_SENDWP.name:True})
-  P_COURSEPROVIDER=WorkerParameter('courseProvider',type=WorkerParameter.T_SELECT,default='auto',
-                                   description='interworking with the SignalK course-provider plugin that fills navigation.course.calcValues.\n'+
-                                   'never: do not check for the plugin, always send the calcValues\n'+
-                                   'auto: send calcValues only if the plugin is not found or disabled. '+
-                                   'The plugin must use the same calculation method (GreatCircle/Rhumbline) as AvNav\n'+
-                                   'force: like auto but additionally try to set the calculation method of the plugin to ours (needs write permissions)',
-                                   rangeOrList=['never','auto','force'],
-                                   condition={P_SENDWP.name:True})
   P_NOTIFY=WorkerParameter('sendNotifications',type=WorkerParameter.T_BOOLEAN,default=True,
                            description='send notifications',
                            condition={P_WRITE.name:True})
@@ -840,7 +831,7 @@ class AVNSignalKHandler(AVNWorker):
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE, cls.P_MIGRATED,
             cls.P_UUID,cls.P_IGNORE_TS]
     if hasWebsockets:
-      rt+=[cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_LEGPATHS,cls.P_COURSEPROVIDER,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_WHITE,cls.P_NOTIFY_BLACK,cls.P_NOTIFY_IGNMSG, cls.P_WEBSOCKETRETRY]
+      rt+=[cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_LEGPATHS,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_WHITE,cls.P_NOTIFY_BLACK,cls.P_NOTIFY_IGNMSG, cls.P_WEBSOCKETRETRY]
     return rt
 
   @classmethod
@@ -1699,23 +1690,13 @@ class AVNSignalKHandler(AVNWorker):
   PROVIDER_ID='course-provider'
   def checkCourseProvider(self,router,baseUrl,tokenProvider):
     """
-    check for the SignalK course-provider plugin and set our provider state
-    green(NMEA): no provider or disabled - we send calcValues
-    grey(INACTIVE): provider active - we do not send calcValues
-    red(ERROR): force mode but unable to set the calculation method
+    check for a running SignalK course-provider plugin
+    if it is running we do not send calcValues and show an error
+    (the plugin has to be disabled if AvNav sends the waypoint data)
     """
-    mode=self.config.courseProvider
-    if mode == 'never':
-      self.providerActive=False
-      self.setInfo(self.I_PROVIDER,'provider check disabled, sending calcValues',WorkerStatus.NMEA)
-      return
     rootUrl=baseUrl[:-len('/signalk')] if baseUrl.endswith('/signalk') else baseUrl
-    pluginUrl=rootUrl+'/skServer/plugins/'+self.PROVIDER_ID+'/config'
-    def request(url,data=None,useToken=True):
-      req=urllib.request.Request(url,method='POST' if data is not None else 'GET',
-                                 data=json.dumps(data).encode('utf-8') if data is not None else None)
-      if data is not None:
-        req.add_header('Content-Type','application/json')
+    def request(url,useToken=True):
+      req=urllib.request.Request(url)
       if useToken:
         token=self.token or tokenProvider()
         if token is not None:
@@ -1724,7 +1705,7 @@ class AVNSignalKHandler(AVNWorker):
         return json.loads(response.read())
     try:
       try:
-        cfg=request(pluginUrl)
+        cfg=request(rootUrl+'/skServer/plugins/'+self.PROVIDER_ID+'/config')
       except urllib.error.HTTPError as e:
         if e.code == 404:
           cfg=None
@@ -1735,43 +1716,15 @@ class AVNSignalKHandler(AVNWorker):
           raise
     except Exception as e:
       #keep the last known provider state
-      self.setInfo(self.I_PROVIDER,'unable to check course provider: %s'%str(e),
-                   WorkerStatus.ERROR if mode == 'force' else WorkerStatus.INACTIVE)
+      self.setInfo(self.I_PROVIDER,'unable to check course provider: %s'%str(e),WorkerStatus.INACTIVE)
       return
     if cfg is None or not cfg.get('enabled',False):
       self.providerActive=False
       self.setInfo(self.I_PROVIDER,'no active course provider, sending calcValues',WorkerStatus.NMEA)
       return
     self.providerActive=True
-    provMethod=((cfg.get('configuration') or {}).get('calculations') or {}).get('method','GreatCircle') \
-      if 'configuration' in cfg else None
-    wpData=router.getWpData() if router is not None else None
-    ownMethod='Rhumbline' if (wpData is not None and wpData.useRhumbLine) else 'GreatCircle'
-    if provMethod is None:
-      #config not readable (probe only)
-      self.setInfo(self.I_PROVIDER,'course provider active, not sending calcValues',WorkerStatus.INACTIVE)
-      return
-    if provMethod == ownMethod:
-      self.setInfo(self.I_PROVIDER,'course provider active (%s), not sending calcValues'%provMethod,WorkerStatus.INACTIVE)
-      return
-    if mode != 'force':
-      self.setInfo(self.I_PROVIDER,'course provider active, calculation method %s differs from ours (%s), not sending calcValues'%
-                   (provMethod,ownMethod),WorkerStatus.INACTIVE)
-      return
-    try:
-      newCfg=dict(cfg)
-      conf=dict(newCfg.get('configuration') or {})
-      calc=dict(conf.get('calculations') or {})
-      calc['method']=ownMethod
-      conf['calculations']=calc
-      newCfg['configuration']=conf
-      request(pluginUrl,data=newCfg)
-      AVNLog.info("set course provider calculation method to %s",ownMethod)
-      self.setInfo(self.I_PROVIDER,'course provider active, calculation method set to %s, not sending calcValues'%ownMethod,
-                   WorkerStatus.INACTIVE)
-    except Exception as e:
-      self.setInfo(self.I_PROVIDER,'unable to set course provider calculation method to %s (insufficient permissions?): %s'%
-                   (ownMethod,str(e)),WorkerStatus.ERROR)
+    self.setInfo(self.I_PROVIDER,'SignalK course-provider plugin is active - please disable it, not sending calcValues',
+                 WorkerStatus.ERROR)
 
   def _probeProvider(self,rootUrl,request):
     """
