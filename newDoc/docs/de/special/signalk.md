@@ -259,11 +259,13 @@ Daten wie folgt gemappt:
 | currentLeg.approachDistance | navigation.courseGreatCircle.nextPoint.arrivalCircle |
 | currentLeg.bearing | navigation.courseGreatCircle.bearingTrackTrue  und  navigation.courseGreatCircle.bearingOriginToDestinationTru |
 
-Mit legPaths *v2* oder *both* werden zusätzlich die Pfade der SignalK Course API gesendet:
-navigation.course.nextPoint und navigation.course.previousPoint (jeweils mit position und type=Location),
-navigation.course.nextPoint.arrivalCircle sowie - wenn kein aktiver course-provider gefunden wurde -
+Mit legPaths *v2* oder *both* werden zusätzlich die Pfade der SignalK 2.x Course-Datenstruktur als Deltas gesendet (nur bei SignalK Server ab Version 2.0):
+navigation.course.nextPoint und navigation.course.previousPoint (jeweils mit position und type=Location, previousPoint ist der Startpunkt des AvNav-Legs),
+navigation.course.arrivalCircle sowie - wenn kein aktiver course-provider gefunden wurde -
 navigation.course.calcValues.(calcMethod, distance, bearingTrue, bearingTrackTrue, crossTrackError, velocityMadeGood).
-Ein aktiver course-provider berechnet die calcValues aus nextPoint/previousPoint.
+Ein aktiver course-provider berechnet die calcValues aus nextPoint/previousPoint/arrivalCircle.
+Diese Werte werden z.B. von signalk-to-nmea2000 und signalk-to-nmea0183 für Autopiloten verwendet.
+Ist in SignalK ein Kurs gesetzt, der nicht von AvNav stammt, während in AvNav ein Leg aktiv ist, wird dieser vor dem Senden per REST (DELETE auf `/signalk/v2/api/vessels/self/navigation/course`) zurückgesetzt - der aktive Leg in AvNav hat Vorrang (dafür sind Schreibrechte nötig). Die Abfrage der SignalK Course API (`/signalk/v2/api/vessels/self/navigation/course`) liefert die gesendeten Werte nicht - AvNav setzt dort kein Ziel.
 
 Wenn der AvNav Routing Mode Rhumbline ist, wird  "courseGreatCircle"
 durch "courseRhumbline" ersetzt. Das mehrfache Senden einiger Werte mit
