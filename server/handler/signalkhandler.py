@@ -97,6 +97,7 @@ import sys
 import threading
 import time
 import traceback
+import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
@@ -298,6 +299,8 @@ class Config(object):
     self.notifyReceive=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY_RECEIVE.fromDict(param)
     self.notifyWrite=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY.fromDict(param)
     self.sendWp=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_SENDWP.fromDict(param)
+    self.legPaths=AVNSignalKHandler.P_LEGPATHS.fromDict(param)
+    self.courseProvider=AVNSignalKHandler.P_COURSEPROVIDER.fromDict(param)
     self.skSource='avnav-'+AVNSignalKHandler.P_UUID.fromDict(param)
     self.isLocal= (self.skHost == 'localhost' or self.skHost == '127.0.0.1')
     self.ignoreTs=AVNSignalKHandler.P_IGNORE_TS.fromDict(param)
@@ -773,6 +776,21 @@ class AVNSignalKHandler(AVNWorker):
   P_SENDWP=WorkerParameter('sendWp',type=WorkerParameter.T_BOOLEAN,default=True,
                            description='send current waypoint routing data',
                            condition={P_WRITE.name:True})
+  P_LEGPATHS=WorkerParameter('legPaths',type=WorkerParameter.T_SELECT,default='both',
+                             description='SignalK paths for the waypoint data: \n'+
+                             'v1: navigation.courseGreatCircle/courseRhumbline\n'+
+                             'v2: navigation.course (SignalK 2.x course API)\n'+
+                             'both: send both',
+                             rangeOrList=['v1','v2','both'],
+                             condition={P_SENDWP.name:True})
+  P_COURSEPROVIDER=WorkerParameter('courseProvider',type=WorkerParameter.T_SELECT,default='auto',
+                                   description='interworking with the SignalK course-provider plugin that fills navigation.course.calcValues.\n'+
+                                   'never: do not check for the plugin, always send the calcValues\n'+
+                                   'auto: send calcValues only if the plugin is not found or disabled. '+
+                                   'The plugin must use the same calculation method (GreatCircle/Rhumbline) as AvNav\n'+
+                                   'force: like auto but additionally try to set the calculation method of the plugin to ours (needs write permissions)',
+                                   rangeOrList=['never','auto','force'],
+                                   condition={P_SENDWP.name:True})
   P_NOTIFY=WorkerParameter('sendNotifications',type=WorkerParameter.T_BOOLEAN,default=True,
                            description='send notifications',
                            condition={P_WRITE.name:True})
@@ -812,6 +830,7 @@ class AVNSignalKHandler(AVNWorker):
   I_SOURCE='source'
   I_ALARM='alarms'
   I_TIME='timeoffset'
+  I_PROVIDER='courseProvider'
 
   ICON="images/signalk.svg"
 
@@ -821,7 +840,7 @@ class AVNSignalKHandler(AVNWorker):
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE, cls.P_MIGRATED,
             cls.P_UUID,cls.P_IGNORE_TS]
     if hasWebsockets:
-      rt+=[cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_WHITE,cls.P_NOTIFY_BLACK,cls.P_NOTIFY_IGNMSG, cls.P_WEBSOCKETRETRY]
+      rt+=[cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_LEGPATHS,cls.P_COURSEPROVIDER,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_WHITE,cls.P_NOTIFY_BLACK,cls.P_NOTIFY_IGNMSG, cls.P_WEBSOCKETRETRY]
     return rt
 
   @classmethod
@@ -877,6 +896,7 @@ class AVNSignalKHandler(AVNWorker):
     self.ownMMSI=None
     self.notificationV2Handler=None # type NotificationV2Handler
     self.token=None
+    self.providerActive=False #set if a course provider handles the calcValues
 
 
 
@@ -1141,6 +1161,7 @@ class AVNSignalKHandler(AVNWorker):
     self.notificationV2Handler=None
     self.firstResponse=True
     self.config=Config(self.param)
+    self.providerActive=False
     self.createMappings()
     if self.config.aisFetchPeriod == 0:
       self.setInfo(self.I_AIS,'disabled',WorkerStatus.INACTIVE)
@@ -1317,6 +1338,10 @@ class AVNSignalKHandler(AVNWorker):
                 self.setInfo(self.I_WRITE, "websockets disabled", WorkerStatus.INACTIVE)
             else:
                 timers.append(TimerHelper(self.config.wsRetry,retryWriteSocket,'retryWriteSocket'))
+        if self.config.sendWp and self.config.legPaths != 'v1':
+            timers.append(TimerHelper(10,lambda: self.checkCourseProvider(router,baseUrl,tokenProvider),'checkCourseProvider'))
+        elif self.config.sendWp:
+            self.setInfo(self.I_PROVIDER,'v2 paths disabled',WorkerStatus.INACTIVE)
         timers.append(TimerHelper(self.config.aisFetchPeriod,queryAis,'queryAis'))
         timers.append(TimerHelper(self.config.chartQueryPeriod,queryCharts,'queryCharts'))
         timers.append(TimerHelper(self.config.wsRetry,checkVersion,'checkVersion'))
@@ -1542,7 +1567,7 @@ class AVNSignalKHandler(AVNWorker):
     }
     return rt
 
-  def getLegData(self,wpData: WpData):
+  def getLegDataV1(self,wpData: WpData):
     PRFX='navigation.courseGreatCircle'
     if wpData.useRhumbLine:
       PRFX='navigation.courseRhumbline'
@@ -1571,6 +1596,144 @@ class AVNSignalKHandler(AVNWorker):
       PRFX+'.bearingOriginToDestinationTrue':AVNUtil.deg2rad(wpData.bearing if not wpData.useRhumbLine else wpData.bearingRhumbLine) #ton2k plugin
     }
     return rt
+
+  def getLegDataV2(self,wpData: WpData,withCalcValues=True):
+    """
+    data for the SignalK v2 course paths
+    nextPoint/previousPoint are the input for a course provider
+    the calcValues are only sent if no course provider cares for them
+    """
+    PRFX='navigation.course'
+    rl=wpData.useRhumbLine
+    rt={
+      PRFX+'.nextPoint':{
+        'position':{
+          'latitude':wpData.lat,
+          'longitude':wpData.lon,
+        },
+        'type':'Location'
+      } if wpData.validData else None,
+      PRFX+'.previousPoint':{
+        'position':{
+          'latitude':wpData.fromLat,
+          'longitude':wpData.fromLon,
+        },
+        'type':'Location'
+      } if (wpData.validData and wpData.fromLat is not None and wpData.fromLon is not None) else None,
+      PRFX+'.nextPoint.arrivalCircle':wpData.approachDistance
+    }
+    if withCalcValues:
+      CPRFX=PRFX+'.calcValues'
+      rt.update({
+        CPRFX+'.calcMethod':('Rhumbline' if rl else 'GreatCircle') if wpData.validData else None,
+        CPRFX+'.distance':wpData.distance if not rl else wpData.distanceRhumbLine,
+        CPRFX+'.bearingTrue':AVNUtil.deg2rad(wpData.dstBearing if not rl else wpData.dstBearingRhumbLine),
+        CPRFX+'.bearingTrackTrue':AVNUtil.deg2rad(wpData.bearing if not rl else wpData.bearingRhumbLine),
+        CPRFX+'.crossTrackError':wpData.xte,
+        CPRFX+'.velocityMadeGood':wpData.vmg if not rl else wpData.vmgRhumbLine
+      })
+    return rt
+
+  def getLegData(self,wpData: WpData,v1=True,v2=True):
+    rt={}
+    if v1 and self.config.legPaths != 'v2':
+      rt.update(self.getLegDataV1(wpData))
+    if v2 and self.config.legPaths != 'v1':
+      rt.update(self.getLegDataV2(wpData,withCalcValues=not self.providerActive))
+    return rt
+
+  PROVIDER_ID='course-provider'
+  def checkCourseProvider(self,router,baseUrl,tokenProvider):
+    """
+    check for the SignalK course-provider plugin and set our provider state
+    green(NMEA): no provider or disabled - we send calcValues
+    grey(INACTIVE): provider active - we do not send calcValues
+    red(ERROR): force mode but unable to set the calculation method
+    """
+    mode=self.config.courseProvider
+    if mode == 'never':
+      self.providerActive=False
+      self.setInfo(self.I_PROVIDER,'provider check disabled, sending calcValues',WorkerStatus.NMEA)
+      return
+    rootUrl=baseUrl[:-len('/signalk')] if baseUrl.endswith('/signalk') else baseUrl
+    pluginUrl=rootUrl+'/skServer/plugins/'+self.PROVIDER_ID+'/config'
+    def request(url,data=None,useToken=True):
+      req=urllib.request.Request(url,method='POST' if data is not None else 'GET',
+                                 data=json.dumps(data).encode('utf-8') if data is not None else None)
+      if data is not None:
+        req.add_header('Content-Type','application/json')
+      if useToken:
+        token=self.token or tokenProvider()
+        if token is not None:
+          req.add_header('Authorization','Bearer '+token)
+      with urllib.request.urlopen(req,timeout=5) as response:
+        return json.loads(response.read())
+    try:
+      try:
+        cfg=request(pluginUrl)
+      except urllib.error.HTTPError as e:
+        if e.code == 404:
+          cfg=None
+        elif e.code in (401,403):
+          #no permissions to read the plugin config - fall back to the calcValues endpoint
+          cfg=self._probeProvider(rootUrl,request)
+        else:
+          raise
+    except Exception as e:
+      #keep the last known provider state
+      self.setInfo(self.I_PROVIDER,'unable to check course provider: %s'%str(e),
+                   WorkerStatus.ERROR if mode == 'force' else WorkerStatus.INACTIVE)
+      return
+    if cfg is None or not cfg.get('enabled',False):
+      self.providerActive=False
+      self.setInfo(self.I_PROVIDER,'no active course provider, sending calcValues',WorkerStatus.NMEA)
+      return
+    self.providerActive=True
+    provMethod=((cfg.get('configuration') or {}).get('calculations') or {}).get('method','GreatCircle') \
+      if 'configuration' in cfg else None
+    wpData=router.getWpData() if router is not None else None
+    ownMethod='Rhumbline' if (wpData is not None and wpData.useRhumbLine) else 'GreatCircle'
+    if provMethod is None:
+      #config not readable (probe only)
+      self.setInfo(self.I_PROVIDER,'course provider active, not sending calcValues',WorkerStatus.INACTIVE)
+      return
+    if provMethod == ownMethod:
+      self.setInfo(self.I_PROVIDER,'course provider active (%s), not sending calcValues'%provMethod,WorkerStatus.INACTIVE)
+      return
+    if mode != 'force':
+      self.setInfo(self.I_PROVIDER,'course provider active, calculation method %s differs from ours (%s), not sending calcValues'%
+                   (provMethod,ownMethod),WorkerStatus.INACTIVE)
+      return
+    try:
+      newCfg=dict(cfg)
+      conf=dict(newCfg.get('configuration') or {})
+      calc=dict(conf.get('calculations') or {})
+      calc['method']=ownMethod
+      conf['calculations']=calc
+      newCfg['configuration']=conf
+      request(pluginUrl,data=newCfg)
+      AVNLog.info("set course provider calculation method to %s",ownMethod)
+      self.setInfo(self.I_PROVIDER,'course provider active, calculation method set to %s, not sending calcValues'%ownMethod,
+                   WorkerStatus.INACTIVE)
+    except Exception as e:
+      self.setInfo(self.I_PROVIDER,'unable to set course provider calculation method to %s (insufficient permissions?): %s'%
+                   (ownMethod,str(e)),WorkerStatus.ERROR)
+
+  def _probeProvider(self,rootUrl,request):
+    """
+    without permissions to read the plugin config we can only probe the calcValues endpoint
+    the provider answers 200 or 400 (no destination) if it is running
+    """
+    try:
+      request(rootUrl+'/signalk/v2/api/vessels/self/navigation/course/calcValues',useToken=False)
+      return {'enabled':True}
+    except urllib.error.HTTPError as e:
+      if e.code == 400:
+        return {'enabled':True}
+      if e.code == 404:
+        return None
+      raise
+
   def sendCurrentLeg(self,router : AVNRouter):
     try:
       if router is None:
@@ -1582,14 +1745,14 @@ class AVNSignalKHandler(AVNWorker):
       #send an off request for the routing mode not being used any more
       if useRhumbline and not self.ownWpOffSent:
         try:
-          update=self.buildUpdateRequest(self.getLegData(WpData(useRhumLine=False)))
+          update=self.buildUpdateRequest(self.getLegData(WpData(useRhumLine=False),v2=False))
           self.writeSocket.send(json.dumps(update))
           self.ownWpOffSent=True
         except Exception as e:
           AVNLog.debug("error sending great circle leg off %",str(e))
       if not useRhumbline and not self.ownWpOffSentRl:
         try:
-          update=self.buildUpdateRequest(self.getLegData(WpData(useRhumLine=True)))
+          update=self.buildUpdateRequest(self.getLegData(WpData(useRhumLine=True),v2=False))
           self.writeSocket.send(json.dumps(update))
           self.ownWpOffSentRl=True
         except Exception as e:

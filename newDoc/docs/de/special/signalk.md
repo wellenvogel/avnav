@@ -164,6 +164,8 @@ Der AVNSignalK Handler hat die folgenden Konfigurationen.
 | userName | Der Name eines SignalK-Nutzers mit Schreibrechten auf dem SignalK Server. Dieser Nutzer muss vorher mit den entsprechenden Rechten bei SignalK angelegt worden sein.  Leider hat SignalK kein Interface, um direkt prüfen zu können, ob ein bestimmter Nutzer die gewünschten Pfade schreiben kann, nur für "localhost" wird geprüft, ob Schreibrechte vorliegen. | admin |
 | password | Das Passwort für den konfigurierten Nutzer. Dieses Passwort ist im Normalfall für eine SignalK-Installation auf dem gleichen Server nicht erforderlich (sofern die Konfiguration auf dem Standardpfad $HOME/.signalk/security.json liegt).  Wenn in der Status-Anzeige unter "authentication" ein Fehler auftritt, kann u.U. auch lokal das Setzen des Passwortes das Problem lösen.  Achtung: Das Passwort wird im Klartext in der avnav\_server.xml gespeichert. | <leer> |
 | sendWp | Sende Wegepunkt-Daten zu SignalK. Siehe auch [Mapping](#mapping). | ein |
+| legPaths | Pfade für die Wegepunkt-Daten (nur mit sendWp). *v1*: navigation.courseGreatCircle/courseRhumbline, *v2*: navigation.course (SignalK 2.x Course API), *both*: beides. | both |
+| courseProvider | Zusammenspiel mit dem SignalK Plugin "course-provider", das navigation.course.calcValues füllt (nur mit sendWp und legPaths v2/both). *never*: Plugin nicht prüfen, calcValues immer senden. *auto*: calcValues nur senden, wenn das Plugin nicht vorhanden oder nicht aktiv ist. *force*: wie auto, zusätzlich wird versucht, die Berechnungsmethode (GreatCircle/Rhumbline) des Plugins auf die von AvNav verwendete zu setzen (benötigt Schreibrechte). In den Status-Anzeigen zeigt "courseProvider": grün - kein Plugin oder deaktiviert, AvNav sendet calcValues; grau - Plugin aktiv, AvNav sendet keine calcValues; rot - Berechnungsmethode konnte nicht gesetzt werden (fehlende Rechte). **Achtung:** Bei *auto* muss im Plugin dieselbe Berechnungsmethode eingestellt sein wie in AvNav (Rhumbline bzw. GreatCircle), sonst weichen die Werte ab. | auto |
 | sendNotifications | Sende AvNav-Alarme als Notifications zu SignalK - siehe [Mapping](#mapping). | ein |
 | receiveNotifications | Empfange Notifications von SignalK als Alarme. | aus |
 | notifyWhiteList | Eine Komma-separierte Liste von SignalK notifications, die emfangen werden sollen. Anzugeben sind jeweils die Pfade ohne "notification." - als z.B. navigation.arrivalCircleEntered,mob,fire,sinking.  Wenn die Liste leer ist, werden alle Notifications empfangen - aber es wird noch die notificationBlacklist betrachtet, | <leer> |
@@ -256,6 +258,12 @@ Daten wie folgt gemappt:
 | currentLeg.xte | navigation.courseGreatCircle.crossTrackError |
 | currentLeg.approachDistance | navigation.courseGreatCircle.nextPoint.arrivalCircle |
 | currentLeg.bearing | navigation.courseGreatCircle.bearingTrackTrue  und  navigation.courseGreatCircle.bearingOriginToDestinationTru |
+
+Mit legPaths *v2* oder *both* werden zusätzlich die Pfade der SignalK Course API gesendet:
+navigation.course.nextPoint und navigation.course.previousPoint (jeweils mit position und type=Location),
+navigation.course.nextPoint.arrivalCircle sowie - wenn kein aktiver course-provider gefunden wurde -
+navigation.course.calcValues.(calcMethod, distance, bearingTrue, bearingTrackTrue, crossTrackError, velocityMadeGood).
+Ein aktiver course-provider berechnet die calcValues aus nextPoint/previousPoint.
 
 Wenn der AvNav Routing Mode Rhumbline ist, wird  "courseGreatCircle"
 durch "courseRhumbline" ersetzt. Das mehrfache Senden einiger Werte mit
