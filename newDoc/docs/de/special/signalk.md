@@ -262,7 +262,10 @@ Mit legPaths *v2* oder *both* werden zusätzlich die Pfade der SignalK 2.x Cours
 navigation.course.nextPoint und navigation.course.previousPoint (jeweils mit position und type=Location, previousPoint ist der Startpunkt des AvNav-Legs),
 navigation.course.arrivalCircle sowie - wenn kein aktiver course-provider gefunden wurde -
 navigation.course.calcValues.(calcMethod, distance, bearingTrue, bearingTrackTrue, crossTrackError, velocityMadeGood).
-**Achtung:** Wenn AvNav den Wegpunkt sendet (sendWp), muss das SignalK Plugin "course-provider" deaktiviert werden, da es die calcValues sonst selbst berechnet und überschreibt (und die von AvNav gesendeten Werte nicht übernimmt).
+**Achtung:** Wenn AvNav den Wegpunkt sendet (sendWp), sollte das SignalK Plugin "course-provider" deaktiviert werden, da es die calcValues sonst selbst berechnet.
+
+Das funktioniert allerdings nur, wenn in SignalK auch die aktuelle Position vorhanden ist. Potentiell würde ein Neustart des Routings die XTE Berechnung durch das Plugin nicht korrekt zurücksetzen.
+
 AvNav prüft regelmäßig, ob das Plugin läuft. In diesem Fall sendet AvNav keine calcValues und die Status-Anzeige "courseProvider" wird rot; ist das Plugin nicht vorhanden oder deaktiviert, ist sie grün.
 Diese Werte werden z.B. von signalk-to-nmea2000 und signalk-to-nmea0183 für Autopiloten verwendet.
 Ist in SignalK ein Kurs gesetzt, der nicht von AvNav stammt, während in AvNav ein Leg aktiv ist, wird dieser vor dem Senden per REST (DELETE auf `/signalk/v2/api/vessels/self/navigation/course`) zurückgesetzt - der aktive Leg in AvNav hat Vorrang (dafür sind Schreibrechte nötig). Die Abfrage der SignalK Course API (`/signalk/v2/api/vessels/self/navigation/course`) liefert die gesendeten Werte nicht - AvNav setzt dort kein Ziel.
