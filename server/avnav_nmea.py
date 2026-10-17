@@ -897,17 +897,33 @@ def to360(a):
 
 if __name__ == '__main__':
     def usage():
-        print(f"usage: {sys.argv[0]} infile",file=sys.stderr)
+        print(f"usage: {sys.argv[0]} [-s] [-f mmsi,mmsi,...] infile\n"
+              "  -s  suppress lines and values, only print statistics\n"
+              "  -f  only output AIS messages with these mmsi",file=sys.stderr)
         sys.exit(1)
-    if len(sys.argv) < 2:
+    import getopt
+    try:
+        opts,args=getopt.getopt(sys.argv[1:],'sf:')
+    except getopt.GetoptError as e:
+        print(e,file=sys.stderr)
         usage()
-    infile=sys.argv[1]
+    if len(args) != 1:
+        usage()
+    silent=False
+    mmsiFilter=None
+    for o,a in opts:
+        if o == '-s':
+            silent=True
+        elif o == '-f':
+            mmsiFilter=set(x.strip() for x in a.split(',') if x.strip())
+    infile=args[0]
     if infile != "-" and not os.path.isfile(infile):
         print(f"no such file: {infile}",file=sys.stderr)
         sys.exit(1)
     logfile=os.path.join('/tmp',f"parsertest{os.getpid()}.log")
     print(f"logging to {logfile}",file=sys.stderr)
     AVNLog.initLoggingSecond(logging.DEBUG,logfile,consoleOff=False,debugToFile=False)
+    pendingLine=[]
     class MyNavData:
         def __init__(self):
             self.aisstat={}
@@ -916,7 +932,12 @@ if __name__ == '__main__':
             return 3000
         def setAisValue(self,mmsi, data, source='test', priority=1, timestamp=None):
             type = data.get('type')
-            print(f"AIS mmsi={mmsi} type={type} data={data} priority={priority} timestamp={timestamp}")
+            if mmsiFilter is not None and str(mmsi) not in mmsiFilter:
+                return
+            if not silent:
+                if pendingLine:
+                    print(pendingLine.pop())
+                print(f"AIS mmsi={mmsi} type={type} data={data} priority={priority} timestamp={timestamp}")
             if mmsi is None:
                 mmsi='---'
             current=self.aisstat.get(mmsi)
@@ -945,6 +966,8 @@ if __name__ == '__main__':
                 print(f"{k}: {v}")
 
         def setValue(self,key, data, source='test', priority=1, record=None, timestamp=None):
+            if silent or mmsiFilter is not None:
+                return
             print(f"NMEA key={key} data={data} priority={priority} record={record} timestamp={timestamp}")
     navdata = MyNavData()
     parser=NMEAParser(navdata)
@@ -954,7 +977,11 @@ if __name__ == '__main__':
             line = line.strip()
             if not line:
                 continue
-            print(f"{lnr}:{line}")
+            pendingLine.clear()
+            if mmsiFilter is not None:
+                pendingLine.append(f"{lnr}:{line}")
+            elif not silent:
+                print(f"{lnr}:{line}")
             parser.parseData(line,source='test')
             lnr+=1
     navdata.print_stats()
