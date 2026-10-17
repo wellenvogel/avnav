@@ -108,6 +108,7 @@ export class FeatureInfo{
     urlOrKey:string;
     userInfo:Record<string, string>;
     overlaySource:any;
+    userIndex?:any; //can be set for distinguishing same keys in multiple sources
     icon?:HTMLImageElement;
 
     /**
@@ -162,7 +163,11 @@ export class FeatureInfo{
      * key for lists
      */
     getKey(){
-        return this.typeString()+this.urlOrKey;
+        const rt=this.typeString()+this.urlOrKey;
+        if (this.userIndex !== undefined){
+            return rt+this.userIndex;
+        }
+        return rt;
     }
 
     /**

@@ -97,6 +97,7 @@ import sys
 import threading
 import time
 import traceback
+import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
@@ -298,6 +299,7 @@ class Config(object):
     self.notifyReceive=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY_RECEIVE.fromDict(param)
     self.notifyWrite=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY.fromDict(param)
     self.sendWp=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_SENDWP.fromDict(param)
+    self.legPaths=AVNSignalKHandler.P_LEGPATHS.fromDict(param)
     self.skSource='avnav-'+AVNSignalKHandler.P_UUID.fromDict(param)
     self.isLocal= (self.skHost == 'localhost' or self.skHost == '127.0.0.1')
     self.ignoreTs=AVNSignalKHandler.P_IGNORE_TS.fromDict(param)
@@ -773,6 +775,13 @@ class AVNSignalKHandler(AVNWorker):
   P_SENDWP=WorkerParameter('sendWp',type=WorkerParameter.T_BOOLEAN,default=True,
                            description='send current waypoint routing data',
                            condition={P_WRITE.name:True})
+  P_LEGPATHS=WorkerParameter('legPaths',type=WorkerParameter.T_SELECT,default='both',
+                             description='SignalK paths for the waypoint data: \n'+
+                             'v1: navigation.courseGreatCircle/courseRhumbline\n'+
+                             'v2: navigation.course incl. calcValues (SignalK 2.x only)\n'+
+                             'both: send both',
+                             rangeOrList=['v1','v2','both'],
+                             condition={P_SENDWP.name:True})
   P_NOTIFY=WorkerParameter('sendNotifications',type=WorkerParameter.T_BOOLEAN,default=True,
                            description='send notifications',
                            condition={P_WRITE.name:True})
@@ -812,6 +821,7 @@ class AVNSignalKHandler(AVNWorker):
   I_SOURCE='source'
   I_ALARM='alarms'
   I_TIME='timeoffset'
+  I_PROVIDER='courseProvider'
 
   ICON="images/signalk.svg"
 
@@ -821,7 +831,7 @@ class AVNSignalKHandler(AVNWorker):
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE, cls.P_MIGRATED,
             cls.P_UUID,cls.P_IGNORE_TS]
     if hasWebsockets:
-      rt+=[cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_WHITE,cls.P_NOTIFY_BLACK,cls.P_NOTIFY_IGNMSG, cls.P_WEBSOCKETRETRY]
+      rt+=[cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_LEGPATHS,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_WHITE,cls.P_NOTIFY_BLACK,cls.P_NOTIFY_IGNMSG, cls.P_WEBSOCKETRETRY]
     return rt
 
   @classmethod
@@ -877,6 +887,7 @@ class AVNSignalKHandler(AVNWorker):
     self.ownMMSI=None
     self.notificationV2Handler=None # type NotificationV2Handler
     self.token=None
+    self.resetCourseState()
 
 
 
@@ -1135,12 +1146,21 @@ class AVNSignalKHandler(AVNWorker):
               version = ep.get("version")
       return [apiUrl,websocketUrl,version]
 
+  def resetCourseState(self):
+    self.providerActive=False
+    self.skVersionOk=False
+    self.courseApi=None #NotificationV2Handler - used as client for the course API
+    self.courseV1Url=None
+    self.courseNextReset=0
+
   def _runI(self):
     sequence=self.configSequence
     self.token=None
     self.notificationV2Handler=None
     self.firstResponse=True
     self.config=Config(self.param)
+    self.resetCourseState()
+    self.skVersionOk=False
     self.createMappings()
     if self.config.aisFetchPeriod == 0:
       self.setInfo(self.I_AIS,'disabled',WorkerStatus.INACTIVE)
@@ -1317,6 +1337,14 @@ class AVNSignalKHandler(AVNWorker):
                 self.setInfo(self.I_WRITE, "websockets disabled", WorkerStatus.INACTIVE)
             else:
                 timers.append(TimerHelper(self.config.wsRetry,retryWriteSocket,'retryWriteSocket'))
+        if self.config.write and self.config.sendWp:
+            if self.config.legPaths != 'v1':
+                self.skVersionOk=hasNotifications
+                self.courseApi=NotificationV2Handler(baseUrl+"/v2/api/vessels/self/navigation/course",tokenProvider)
+                self.courseV1Url=baseUrl+"/v1/api/vessels/self/navigation/course/nextPoint"
+                timers.append(TimerHelper(10,lambda: self.checkCourse(router,baseUrl,tokenProvider),'checkCourse'))
+            else:
+                self.setInfo(self.I_PROVIDER,'disabled',WorkerStatus.INACTIVE)
         timers.append(TimerHelper(self.config.aisFetchPeriod,queryAis,'queryAis'))
         timers.append(TimerHelper(self.config.chartQueryPeriod,queryCharts,'queryCharts'))
         timers.append(TimerHelper(self.config.wsRetry,checkVersion,'checkVersion'))
@@ -1542,7 +1570,7 @@ class AVNSignalKHandler(AVNWorker):
     }
     return rt
 
-  def getLegData(self,wpData: WpData):
+  def getLegDataV1(self,wpData: WpData):
     PRFX='navigation.courseGreatCircle'
     if wpData.useRhumbLine:
       PRFX='navigation.courseRhumbline'
@@ -1571,6 +1599,153 @@ class AVNSignalKHandler(AVNWorker):
       PRFX+'.bearingOriginToDestinationTrue':AVNUtil.deg2rad(wpData.bearing if not wpData.useRhumbLine else wpData.bearingRhumbLine) #ton2k plugin
     }
     return rt
+
+  def getLegDataV2(self,wpData: WpData):
+    """
+    data for the SignalK v2 course paths
+    nextPoint/previousPoint/arrivalCircle are the input for a course provider
+    the calcValues are only sent if no course provider cares for them
+    """
+    PRFX='navigation.course'
+    rl=wpData.useRhumbLine
+    rt={
+      PRFX+'.nextPoint':{
+        'position':{
+          'latitude':wpData.lat,
+          'longitude':wpData.lon,
+        },
+        'type':'Location'
+      } if wpData.validData else None,
+      PRFX+'.previousPoint':{
+        'position':{
+          'latitude':wpData.fromLat,
+          'longitude':wpData.fromLon,
+        },
+        'type':'Location'
+      } if (wpData.validData and wpData.fromLat is not None and wpData.fromLon is not None) else None,
+      PRFX+'.arrivalCircle':wpData.approachDistance
+    }
+    if not self.providerActive:
+      CPRFX=PRFX+'.calcValues'
+      rt.update({
+        CPRFX+'.calcMethod':('Rhumbline' if rl else 'GreatCircle') if wpData.validData else None,
+        CPRFX+'.distance':wpData.distance if not rl else wpData.distanceRhumbLine,
+        CPRFX+'.bearingTrue':AVNUtil.deg2rad(wpData.dstBearing if not rl else wpData.dstBearingRhumbLine),
+        CPRFX+'.bearingTrackTrue':AVNUtil.deg2rad(wpData.bearing if not rl else wpData.bearingRhumbLine),
+        CPRFX+'.crossTrackError':wpData.xte,
+        CPRFX+'.velocityMadeGood':wpData.vmg if not rl else wpData.vmgRhumbLine
+      })
+    return rt
+
+  def getLegData(self,wpData: WpData,v1=True,v2=True):
+    rt={}
+    if v1 and self.config.legPaths != 'v2':
+      rt.update(self.getLegDataV1(wpData))
+    if v2 and self.useCourseV2():
+      rt.update(self.getLegDataV2(wpData))
+    return rt
+
+  def useCourseV2(self):
+    return self.config.legPaths != 'v1' and self.skVersionOk
+
+  def checkCourse(self,router,baseUrl,tokenProvider):
+    """
+    periodic check of the course provider
+    the v2 paths are only used if the SignalK server is >= 2.0
+    """
+    if not self.skVersionOk:
+      self.providerActive=False
+      self.setInfo(self.I_PROVIDER,'v2 course paths need SignalK server >= 2.0',WorkerStatus.INACTIVE)
+      return
+    self.checkCourseProvider(router,baseUrl,tokenProvider)
+
+  def _foreignCourse(self):
+    """
+    check whether the SignalK server holds a course that does not come from us
+    """
+    with urllib.request.urlopen(self.courseV1Url,timeout=5) as response:
+      data=json.loads(response.read())
+    if not isinstance(data,dict) or data.get('value') is None:
+      return False
+    return not self.isOwnSource(data.get('$source'))
+
+  def resetForeignCourse(self):
+    """
+    if an active leg in AvNav is sent (sendWp) it must win:
+    reset a course set by someone else before we send our deltas
+    """
+    if self.courseApi is None or self.courseV1Url is None:
+      return
+    now=time.monotonic()
+    if now < self.courseNextReset:
+      return
+    self.courseNextReset=now+10
+    try:
+      if self._foreignCourse():
+        AVNLog.info("resetting foreign course in SignalK")
+        self.courseApi.executeRequest(method='DELETE')
+    except Exception as e:
+      AVNLog.error("unable to reset the SignalK course: %s",str(e))
+
+  PROVIDER_ID='course-provider'
+  def checkCourseProvider(self,router,baseUrl,tokenProvider):
+    """
+    check for a running SignalK course-provider plugin
+    if it is running we do not send calcValues and show an error
+    (the plugin has to be disabled if AvNav sends the waypoint data)
+    """
+    rootUrl=baseUrl[:-len('/signalk')] if baseUrl.endswith('/signalk') else baseUrl
+    def request(url,useToken=True):
+      req=urllib.request.Request(url)
+      if useToken:
+        token=self.token or tokenProvider()
+        if token is not None:
+          req.add_header('Authorization','Bearer '+token)
+      with urllib.request.urlopen(req,timeout=5) as response:
+        return json.loads(response.read())
+    try:
+      try:
+        cfg=request(rootUrl+'/skServer/plugins/'+self.PROVIDER_ID+'/config')
+      except urllib.error.HTTPError as e:
+        if e.code == 404:
+          cfg=None
+        elif e.code in (401,403):
+          #no permissions to read the plugin config - fall back to the calcValues endpoint
+          cfg=self._probeProvider(rootUrl,request)
+        else:
+          raise
+    except Exception as e:
+      #keep the last known provider state
+      self.setInfo(self.I_PROVIDER,'unable to check course provider: %s'%str(e),WorkerStatus.INACTIVE)
+      return
+    if cfg is None or not cfg.get('enabled',False):
+      self.providerActive=False
+      self.setInfo(self.I_PROVIDER,'no active course provider, sending calcValues',WorkerStatus.NMEA)
+      return
+    self.providerActive=True
+    self.setInfo(self.I_PROVIDER,'SignalK course-provider plugin is active - please disable it, not sending calcValues',
+                 WorkerStatus.ERROR)
+
+  def _probeProvider(self,rootUrl,request):
+    """
+    without permissions to read the plugin config we can only probe the calcValues endpoint
+    the provider answers 200 or 400 (no destination) if it is running
+    """
+    try:
+      request(rootUrl+'/signalk/v2/api/vessels/self/navigation/course/calcValues',useToken=False)
+      return {'enabled':True}
+    except urllib.error.HTTPError as e:
+      if e.code == 400:
+        return {'enabled':True}
+      if e.code == 404:
+        return None
+      raise
+
+  def sendLegValues(self,values):
+    if not values:
+      return
+    self.writeSocket.send(json.dumps(self.buildUpdateRequest(values)))
+
   def sendCurrentLeg(self,router : AVNRouter):
     try:
       if router is None:
@@ -1582,15 +1757,13 @@ class AVNSignalKHandler(AVNWorker):
       #send an off request for the routing mode not being used any more
       if useRhumbline and not self.ownWpOffSent:
         try:
-          update=self.buildUpdateRequest(self.getLegData(WpData(useRhumLine=False)))
-          self.writeSocket.send(json.dumps(update))
+          self.sendLegValues(self.getLegData(WpData(useRhumLine=False),v2=False))
           self.ownWpOffSent=True
         except Exception as e:
           AVNLog.debug("error sending great circle leg off %",str(e))
       if not useRhumbline and not self.ownWpOffSentRl:
         try:
-          update=self.buildUpdateRequest(self.getLegData(WpData(useRhumLine=True)))
-          self.writeSocket.send(json.dumps(update))
+          self.sendLegValues(self.getLegData(WpData(useRhumLine=True),v2=False))
           self.ownWpOffSentRl=True
         except Exception as e:
           AVNLog.debug("error sending rhumb line leg off %",str(e))
@@ -1603,8 +1776,9 @@ class AVNSignalKHandler(AVNWorker):
         self.ownWpOffSentRl=False
       else:
         self.ownWpOffSent=False
-      update=self.buildUpdateRequest(self.getLegData(wpData))
-      self.writeSocket.send(json.dumps(update))
+      if wpData.validData and self.useCourseV2():
+        self.resetForeignCourse()
+      self.sendLegValues(self.getLegData(wpData))
       #hopefully we will have an error if we are unable to send our WP off
       if not wpData.validData:
         if useRhumbline:

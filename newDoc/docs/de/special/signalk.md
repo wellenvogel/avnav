@@ -164,6 +164,7 @@ Der AVNSignalK Handler hat die folgenden Konfigurationen.
 | userName | Der Name eines SignalK-Nutzers mit Schreibrechten auf dem SignalK Server. Dieser Nutzer muss vorher mit den entsprechenden Rechten bei SignalK angelegt worden sein.  Leider hat SignalK kein Interface, um direkt prüfen zu können, ob ein bestimmter Nutzer die gewünschten Pfade schreiben kann, nur für "localhost" wird geprüft, ob Schreibrechte vorliegen. | admin |
 | password | Das Passwort für den konfigurierten Nutzer. Dieses Passwort ist im Normalfall für eine SignalK-Installation auf dem gleichen Server nicht erforderlich (sofern die Konfiguration auf dem Standardpfad $HOME/.signalk/security.json liegt).  Wenn in der Status-Anzeige unter "authentication" ein Fehler auftritt, kann u.U. auch lokal das Setzen des Passwortes das Problem lösen.  Achtung: Das Passwort wird im Klartext in der avnav\_server.xml gespeichert. | <leer> |
 | sendWp | Sende Wegepunkt-Daten zu SignalK. Siehe auch [Mapping](#mapping). | ein |
+| legPaths | Pfade für die Wegepunkt-Daten (nur mit sendWp). *v1*: navigation.courseGreatCircle/courseRhumbline, *v2*: navigation.course (SignalK 2.x Course API), *both*: beides. | both |
 | sendNotifications | Sende AvNav-Alarme als Notifications zu SignalK - siehe [Mapping](#mapping). | ein |
 | receiveNotifications | Empfange Notifications von SignalK als Alarme. | aus |
 | notifyWhiteList | Eine Komma-separierte Liste von SignalK notifications, die emfangen werden sollen. Anzugeben sind jeweils die Pfade ohne "notification." - als z.B. navigation.arrivalCircleEntered,mob,fire,sinking.  Wenn die Liste leer ist, werden alle Notifications empfangen - aber es wird noch die notificationBlacklist betrachtet, | <leer> |
@@ -256,6 +257,18 @@ Daten wie folgt gemappt:
 | currentLeg.xte | navigation.courseGreatCircle.crossTrackError |
 | currentLeg.approachDistance | navigation.courseGreatCircle.nextPoint.arrivalCircle |
 | currentLeg.bearing | navigation.courseGreatCircle.bearingTrackTrue  und  navigation.courseGreatCircle.bearingOriginToDestinationTru |
+
+Mit legPaths *v2* oder *both* werden zusätzlich die Pfade der SignalK 2.x Course-Datenstruktur als Deltas gesendet (nur bei SignalK Server ab Version 2.0):
+navigation.course.nextPoint und navigation.course.previousPoint (jeweils mit position und type=Location, previousPoint ist der Startpunkt des AvNav-Legs),
+navigation.course.arrivalCircle sowie - wenn kein aktiver course-provider gefunden wurde -
+navigation.course.calcValues.(calcMethod, distance, bearingTrue, bearingTrackTrue, crossTrackError, velocityMadeGood).
+**Achtung:** Wenn AvNav den Wegpunkt sendet (sendWp), sollte das SignalK Plugin "course-provider" deaktiviert werden, da es die calcValues sonst selbst berechnet.
+
+Das funktioniert allerdings nur, wenn in SignalK auch die aktuelle Position vorhanden ist. Potentiell würde ein Neustart des Routings die XTE Berechnung durch das Plugin nicht korrekt zurücksetzen.
+
+AvNav prüft regelmäßig, ob das Plugin läuft. In diesem Fall sendet AvNav keine calcValues und die Status-Anzeige "courseProvider" wird rot; ist das Plugin nicht vorhanden oder deaktiviert, ist sie grün.
+Diese Werte werden z.B. von signalk-to-nmea2000 und signalk-to-nmea0183 für Autopiloten verwendet.
+Ist in SignalK ein Kurs gesetzt, der nicht von AvNav stammt, während in AvNav ein Leg aktiv ist, wird dieser vor dem Senden per REST (DELETE auf `/signalk/v2/api/vessels/self/navigation/course`) zurückgesetzt - der aktive Leg in AvNav hat Vorrang (dafür sind Schreibrechte nötig). Die Abfrage der SignalK Course API (`/signalk/v2/api/vessels/self/navigation/course`) liefert die gesendeten Werte nicht - AvNav setzt dort kein Ziel.
 
 Wenn der AvNav Routing Mode Rhumbline ist, wird  "courseGreatCircle"
 durch "courseRhumbline" ersetzt. Das mehrfache Senden einiger Werte mit
