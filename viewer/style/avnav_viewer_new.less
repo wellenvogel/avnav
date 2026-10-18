@@ -1579,9 +1579,10 @@ span.valuePrefix{
       input,.input,.inputFrame{
         border-bottom: none;
         flex-grow: 1;
-        max-width: ~"calc(min(30em, calc(100% - 11em)))"; // - input width -2 buttons
+        max-width: ~"calc(min(30em, calc(100% - 10em)))"; // - input width -2 buttons
         overflow: clip;
         line-break: anywhere;
+        min-width: 13em;
       }
       .error input,.error .input,.error .inputFrame{
         border-bottom: @borderAttention;
