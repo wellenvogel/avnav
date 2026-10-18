@@ -6,20 +6,15 @@ import ColorPicker from '../components/ColorPicker.jsx';
 import DB from './DialogButton.tsx';
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
 import ButtonDefs from "./ButtonDefs";
-import tinycolor  from "tinycolor2";
 import Helper from "../util/helper";
 
 const validColor=(color, allowEmpty)=>{
     if (allowEmpty && !color) return true;
-    try {
-        return tinycolor(color).isValid();
-    }catch (e){
-        return false;
-    }
+    return CSS.supports('color',color);
 }
 
 const ColorDialog =(props)=>{
-        const [value,setValue]=useState(props.value||"#ffffff");
+        const [value,setValue]=useState(props.value||(props.allowEmpty?"":"#ffffff"));
     const ok=props.resolveFunction||props.okCallback;
         let style={
             backgroundColor:value,

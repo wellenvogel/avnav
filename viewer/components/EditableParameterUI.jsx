@@ -472,16 +472,20 @@ export class EditableKeyParameterUI extends EditableKeyParameter {
 class EditableColorParameterUI extends EditableColorParameter{
     constructor(props) {
         super(props,true);
+        this.mandatory=(props.default != null)
         cHelper(this);
     }
 
     render({currentValues, initialValues,className, onChange,children}) {
         return <ColorSelector
             {...getCommonParam({ep:this, currentValues,initialValues, className,onChange:this.canEdit()?onChange:undefined,children})}
+            default={this.default}
             readOnly={!this.canEdit()}
             onChange={(nv) => {
+                if (! nv) nv=undefined;
                 onChange(this.setValue(undefined, nv))
             }}
+            allowEmpty={this.mandatory !== true}
         />
     }
 }
