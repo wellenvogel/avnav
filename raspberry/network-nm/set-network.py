@@ -122,11 +122,13 @@ def check_psk(v):
         if not re.match('^[\u0020-\u007e]*$',v):
             return "invalid character"     
 
+K_INTF="WIFI_INTF"
+OLD_INTF_DEFAULT="wlan0"
 SETTINGS={
     'SSID':ConfigEntry('ssid','avnav',check=check_ssid),
     'PSK':ConfigEntry('psk','avnav-secret',check=check_psk),
     'WIFI_COUNTRY':ConfigEntry('','DE',type=ChangeType.REBOOT,action=wifi_country_action),
-    'WIFI_INTF':ConfigEntry('interface-name','wlan-internal'),
+    K_INTF:ConfigEntry('interface-name','wlan-internal'),
     'WIFI_BAND':ConfigEntry('band','bg',check=check_band),
     'WIFI_CHANNEL':ConfigEntry('channel','7'),
     'WIFI_ADDRESS':ConfigEntry('address1','192.168.30.10/24',check=check_addr),
@@ -134,6 +136,22 @@ SETTINGS={
     '__ETHIF': ConfigEntry('','eth0')
 }
 
+SYS_PATH="/sys/class/net"
+def check_fallback_wifi(device):
+    if device != OLD_INTF_DEFAULT:
+        return device
+    log(f"check_fallback_wifi {device}")
+    dp=os.path.join(SYS_PATH, device)
+    if os.path.exists(dp):
+        log(f"check_fallback_wifi found {device}")
+        return device
+    alt=SETTINGS[K_INTF].defv
+    dp=os.path.join(SYS_PATH, alt)
+    if os.path.exists(dp):
+        log(f"check_fallback_wifi found fallback {alt}")
+        return alt
+    return device
+    
 def get_settings_defaults(values:bool=True):
     rt={}
     for k,v in SETTINGS.items():
@@ -179,6 +197,9 @@ try:
     if current is None:
         log(f"{CFG} not found, using defaults")
         current=get_settings_defaults()
+    cintf=current.get(PREFIX+K_INTF)
+    if cintf:
+        cintf.value=check_fallback_wifi(cintf.value)
     changes={}
     for k,cv in current.items():
         cfg=cv.cfg
