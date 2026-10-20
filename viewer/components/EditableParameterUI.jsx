@@ -381,6 +381,7 @@ export class EditableSelectParameterUI extends EditableSelectParameter{
         }
         let displayList=[];
         const current=this.getValue(currentValues);
+        let currentLabel=current;
         let theList=dynamicList;
         if (theList === undefined){
             theList=this.getList();
@@ -398,10 +399,15 @@ export class EditableSelectParameterUI extends EditableSelectParameter{
                 label=label+"";
             }
             const value=EditableSelectParameter.getValueFromListEntry(item);
-            displayList.push({label:label,value:value,selected:value === current});
+            const selected=(value == current);
+            if (selected){
+                currentLabel=label;
+            }
+            displayList.push({label:label,value:value,selected:selected});
         })
         return <InputSelect
             {...getCommonParam({ep:this,currentValues,initialValues,className,onChange,children})}
+            value={{label:currentLabel,value:current}}
             list={displayList}
             onChange={(nv)=>{
                 onChange(this.setValue(undefined,nv.value))
@@ -466,16 +472,20 @@ export class EditableKeyParameterUI extends EditableKeyParameter {
 class EditableColorParameterUI extends EditableColorParameter{
     constructor(props) {
         super(props,true);
+        this.mandatory=(props.default != null)
         cHelper(this);
     }
 
     render({currentValues, initialValues,className, onChange,children}) {
         return <ColorSelector
             {...getCommonParam({ep:this, currentValues,initialValues, className,onChange:this.canEdit()?onChange:undefined,children})}
+            default={this.default}
             readOnly={!this.canEdit()}
             onChange={(nv) => {
+                if (! nv) nv=undefined;
                 onChange(this.setValue(undefined, nv))
             }}
+            allowEmpty={this.mandatory !== true}
         />
     }
 }

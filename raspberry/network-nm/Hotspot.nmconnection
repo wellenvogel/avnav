@@ -2,7 +2,7 @@
 id=Hotspot
 uuid=67c4d23d-dd98-411e-91ac-1a7539ec04d0
 type=wifi
-interface-name=wlan0
+interface-name=wlan-internal
 timestamp=1769942358
 zone=trusted
 autoconnect-priority=999

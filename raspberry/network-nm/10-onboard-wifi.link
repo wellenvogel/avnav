@@ -1,0 +1,11 @@
+[Match]
+# 1. Targets the specific wireless driver used by all internal Pi chips
+Driver=brcmfmac
+# Wifi only
+Type=wlan
+WLANInterfaceType=station
+Path=!*usb*
+
+[Link]
+Name=wlan-internal
+

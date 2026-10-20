@@ -13,6 +13,7 @@ import splitsupport from "./splitsupport";
 import {StoreDataType} from "./store";
 import Helper, {createOrUpdateStyleSheet, CSSPRIORITIES, numericEnumValues} from "./helper";
 import localStorageManager from "./localStorageManager";
+import tinycolor from 'tinycolor2';
 
 export interface SavedSettingsData{
     settingsVersion:number|string;
@@ -23,15 +24,6 @@ export interface VerifySettingsResult{
     data?:SavedSettingsData
 }
 
-const hex2rgba= (hex:string, opacity:string|number)=> {
-    const patt = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
-    const matches = patt.exec(hex);
-    const r = parseInt(matches[1], 16);
-    const g = parseInt(matches[2], 16);
-    const b = parseInt(matches[3], 16);
-    const rgba = "rgba(" + r + "," + g + "," + b + "," + opacity + ")";
-    return rgba;
-};
 type UserData=Record<string,any>;
 
 /**
@@ -217,7 +209,15 @@ class PropertyHandler {
         if (rt === undefined) return rt;
         if (Helper.unsetorTrue(addNightFade) && globalStore.getData(keys.properties.nightMode)) {
             const nf = globalStore.getData(keys.properties.nightColorDim);
-            return hex2rgba(rt, nf / 100);
+            try {
+                const tc=tinycolor(rt);
+                let alpha=tc.getAlpha();
+                if (isNaN(alpha)) alpha=1;
+                tc.setAlpha(alpha*nf/100);
+                return tc.toRgbString()
+            }catch (e){
+                base.error("unable to handle color",rt,e);
+            }
         }
         return rt;
     }

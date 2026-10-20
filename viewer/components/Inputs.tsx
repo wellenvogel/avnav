@@ -225,6 +225,7 @@ export interface ColorSelectorProps extends DEFAULT_TYPES{
         style?: Record<string, any>; //if set use this style for the color display
         readOnly?: boolean;
         default?:string;
+        allowEmpty?:boolean;
 }
 export const ColorSelector=(props:ColorSelectorProps)=>{
     const dialogContext=useDialogContext();
@@ -242,6 +243,7 @@ export const ColorSelector=(props:ColorSelectorProps)=>{
                     value={props.value}
                     okCallback={colorChange}
                     default={props.default}
+                    allowEmpty={props.allowEmpty}
                     />
             })
         }

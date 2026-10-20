@@ -6,9 +6,15 @@ import ColorPicker from '../components/ColorPicker.jsx';
 import DB from './DialogButton.tsx';
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
 import ButtonDefs from "./ButtonDefs";
+import Helper from "../util/helper";
+
+const validColor=(color, allowEmpty)=>{
+    if (allowEmpty && !color) return true;
+    return CSS.supports('color',color);
+}
 
 const ColorDialog =(props)=>{
-        const [value,setValue]=useState(props.value||"#ffffff");
+        const [value,setValue]=useState(props.value||(props.allowEmpty?"":"#ffffff"));
     const ok=props.resolveFunction||props.okCallback;
         let style={
             backgroundColor:value,
@@ -34,10 +40,11 @@ const ColorDialog =(props)=>{
             pickerProperties.saturationWidth = v < pickerProperties.saturationWidth + margin ? v - margin : pickerProperties.saturationWidth;
         }
         if (pickerProperties.saturationWidth < 50 ) pickerProperties.saturationWidth=50;
+        const valid=validColor(value, props.allowEmpty);
         return (
             <DialogFrame className="settingsDialog colorDialog" title={props.title}>
                 <ColorPicker value={value} onChange={(v)=>setValue(v)} {...pickerProperties}/>
-                <div className="colorFrame">
+                <div className={Helper.concatsp(valid?undefined:"error","colorFrame")}>
                     <div style={style} className="colorValue"></div>
                     <input className="colorName"
                            onChange={(ev)=>setValue(ev.target.value)}
@@ -49,7 +56,9 @@ const ColorDialog =(props)=>{
                         :
                         null}
                     <DB {...ButtonDefs.DBCancel}/>
-                    <DB {...ButtonDefs.DBOk} onClick={()=>ok(value)}/>
+                    <DB {...ButtonDefs.DBOk}
+                        disabled= {!valid}
+                        onClick={()=>ok(value)}/>
                 </DialogButtons>
             </DialogFrame>
         );
@@ -59,7 +68,8 @@ ColorDialog.propTypes={
     okCallback: PropTypes.func,
     value: PropTypes.string.isRequired,
     default: PropTypes.string,
-    title: PropTypes.string
+    title: PropTypes.string,
+    allowEmpty: PropTypes.bool,
 };
 
 export default  ColorDialog;
