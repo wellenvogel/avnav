@@ -1,0 +1,10 @@
+[Match]
+# 1. Targets the specific wireless driver used by all internal Pi chips
+Driver=brcmfmac
+
+# 2. Ensures it only matches the internal SoC mmc/sdio paths, avoiding USB dongles
+Path=platform-*.mmc
+
+[Link]
+Name=wlan-internal
+

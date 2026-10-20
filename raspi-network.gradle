@@ -35,6 +35,7 @@ def TARGET='/usr/lib/avnav/raspberry'
 def PLUGINTARGET='/usr/lib/avnav/server/plugins'
 def SYSNW='/etc/systemd/network'
 def ETH0CFG='10-first-eth.link'
+def WLANINTERNALCFG='10-onboard-wifi.link'
 task build_raspi_network(type:Deb) {
     assert project.hasProperty('avnavVersion'),"please provide the package version via -PavnavVersion=xxx"
     version=project.avnavVersion
@@ -102,6 +103,7 @@ task build_raspi_network(type:Deb) {
     into(SYSNW){
         from(BASENW){
             include ETH0CFG
+            include WLANINTERNALCFG
         }
     }
     into("$PLUGINTARGET/networkmanager"){
