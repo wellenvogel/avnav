@@ -6,8 +6,8 @@
 
 # Linux
 
-AvNav kann auf vielen Linux Systemen installiert werden, da es auf Python basiert und die dafür notwendigen Pakete für die meisten Distributionen vorhanden sind.
-Schwerpunktmässig erfolgt die Entwicklung und der Test auf Debian/Ubuntu, andere Distributionen sind aber auch möglich.
+AvNav kann auf vielen Linux-Systemen installiert werden, da es auf Python basiert und die dafür notwendigen Pakete für die meisten Distributionen vorhanden sind.
+Schwerpunktmäßig erfolgen Entwicklung und Test auf Debian/Ubuntu, andere Distributionen sind aber auch möglich.
 
 ## Paketinstallion { #packages}
 
@@ -16,7 +16,7 @@ Dank [Oleg](https://www.free-x.de) gibt es  fertige Paket-Repositories, die man
 Debian-Linux einbinden kann. Das geht auf dem Raspberry Pi - aber auch auf
 jeder anderen Debian-Variante (z.B. Ubuntu).   
 
-Die Paketquellen bindet man wie folgt ein. 
+Die Paketquellen bindet man wie folgt ein: 
 
 Debian Buster (amd64,armhf,arm64)
 
@@ -62,16 +62,16 @@ wget -O - https://www.free-x.de/ubuntu/oss.boating.gpg.key | gpg --dearmor | sud
 echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/ubuntu noble main" | sudo tee -a /etc/apt/sources.list.d/boating.list
 ```
 
-Für die Installation auf einem Linux System muss man nach Einbindung der
+Für die Installation auf einem Linux-System muss man nach Einbindung der
 Paketquellen die folgenden Schritte ausführen:
 
 ```
 sudo apt update
 sudo apt install avnav
 ```
-### Pakete Herunterladen
+### Pakete herunterladen
 
-Alternativ kann man auch die Debian/RPM -Pakete/ direkt von der Download-Seite
+Alternativ kann man auch die Debian/RPM -Pakete direkt von der Download-Seite
 herunterladen:  
 
 * [Releases]({{DLLINK("release")}})
@@ -91,7 +91,7 @@ Danach kann man als beliebiger Nutzer mit dem Kommando
 ```
 avnav
 ```
-den Server starten.  Er läuft dann direkt unter der jeweiligen Nutzerkennung und legt seine Daten im Home-Verzeichnis unter avnav ab.
+den Server starten.  Er läuft dann direkt unter der jeweiligen Nutzerkennung und legt seine Daten im Home-Verzeichnis unter */avnav ab.
 
 Mit   
 ```
@@ -104,8 +104,9 @@ aktivieren. Die Daten werden dann unter /var/lib/avnav abgelegt.
 
 ### User Service {: #userservice}
 
-Ab 20240520 kann man AvNav als ein [user
+Ab 20240520 kann man AvNav als einen [user
 systemd service](https://wiki.archlinux.org/title/Systemd/User) für den eigenen Nutzer automatisch starten lassen.
+
 Um diesen Service zu aktivieren, ruft man
 
 ```
@@ -114,7 +115,7 @@ avnavservice enable [port]
 
 auf. Der Service startet automatisch, wenn sich der Nutzer einloggt, und
 stoppt, wenn er sich abmeldet. Um den Service bereits beim Systemstart zu
-aktivieren, muss man den "linger" mode für den Nutzer setzen:
+aktivieren, muss man den "linger mode" für den Nutzer setzen:
 
 ```
 loginctl enable-linger
@@ -139,15 +140,12 @@ avnavservice disable
 
 ### Anderer Nutzer
 
-Wenn man AvNav mit einem
-anderen Nutzer als "avnav" - also z.B. dem Nutzer pi starten möchte, 
-sollte man wie beschrieben den Start als systemd user Service nutzen.
+Wenn man AvNav mit einem anderen Nutzer als "avnav" - also z.B. dem Nutzer "pi" - starten möchte, 
+sollte man wie beschrieben den Start als *systemd user* Service nutzen.
 
-Man kann dann als Nutzer "pi" AvNav einfach von der Kommandozeile starten
-lassen.  
+Man kann dann als Nutzer "pi" AvNav einfach von der Kommandozeile starten lassen.  
 
-Wenn man AvNav als systemweiten Service mit einem anderen Nutzer laufen
-lassen möchte, kann man auch folgende Schritte abarbeiten:
+Wenn man AvNav als systemweiten Service mit einem anderen Nutzer laufen lassen möchte, kann man auch folgende Schritte abarbeiten:
 
 ```
 /usr/lib/systemd/system/avnav.service.d
