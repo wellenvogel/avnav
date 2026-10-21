@@ -47,7 +47,7 @@ Hier nun einige Funktionen in Kurzform, falls man das Video nicht komplett ansch
 
 Noch einmal zur Erinnerung: Es geht nun nur darum, die Widgets rund um die Kartendarstellung auf der Navigationspage oder die Widgets auf den Dashboard-Seiten anzupassen.
 
-Wenn man direkt auf ein Widget klickt, kann man Änderungen vornehmen. Am wichtigsten dürfte die Zeile „New Widget sein“, denn hier kann man eine anderes Widget auswählen.
+Wenn man direkt auf ein Widget klickt, kann man Änderungen vornehmen. Am wichtigsten dürfte die Zeile „New Widget sein“, denn hier kann man ein anderes Widget auswählen.
 
 Ein Klick auf den aktuellen Namen öffnet eine Auswahlliste aller verfügbaren Widgets. 
 
@@ -72,12 +72,12 @@ je nach Seiten (Navigationsseite/Dashboard Seiten) gibt es verschiedene Bereiche
 
 ![Layout Config](../../img/layouteditor-config-nav.png)
 ///caption
-Layout Konfiguration Navigationsseite
+Layoutkonfiguration Navigationsseite
 ///
 
 Hier kann man genau festlegen, welche Bereiche rund um die Karte überhaupt Widgets aufnehmen sollen. 
 
-Außerdem können verschiedene Konditionen für die Darstellung festgelegt werden. Je nachdem, welche Kondition gerade zutrifft, kann man verschiedene Widgets plazieren. Das ist z.B. sinnvoll, wenn die Ankerwache läuft - dann kann man statt der Wegepunkt-Informationen die Daten der Ankerwache anzeigen (wird in den System-Layouts genutzt).
+Außerdem können verschiedene Konditionen für die Darstellung festgelegt werden. Je nachdem, welche Kondition gerade zutrifft, kann man verschiedene Widgets platzieren. Das ist z.B. sinnvoll, wenn die Ankerwache läuft - dann kann man statt der Wegepunkt-Informationen die Daten der Ankerwache anzeigen (wird in den System-Layouts genutzt).
 
 Für die Navigationsseite sind zwei Konditionen verfügbar:
 
@@ -105,7 +105,7 @@ Im Beispielbild bedeutet das:
 
 Wenn die Konfiguration abgeschlossen ist, kann man den Dialog mit {{DB("DBOk")}} verlassen. 
 
-**Hinweis:** Je nach gewählten Konditionen bearbeitet man jetzt die Panels für diese Koditionen!
+**Hinweis:** Je nach gewählten Konditionen bearbeitet man jetzt die Panels für diese Konditionen!
 
 ### Widgets verschieben
 

@@ -29,11 +29,11 @@ Dieser ist auf der Karte rot und in der WP-Liste des RTE Widgets fett hervorgeho
 
 
 - ### Wegepunke bearbeiten
-Um einen Wegepunkt zu verschieben, muss er zunächst direkt markiert werden. Das geht etwa in der Karte durch Klick oder durch Auswahl seines Listeneintrags im RTE Widget. Anschließend die gewünschte Position unter das Fadenkreuz setzen und den Wegepunkt mit {{BT("NavToCenter")}} verlegen. 
+Um einen Wegepunkt zu verschieben, muss er zunächst direkt markiert werden. Das geht einmal in der Karte durch Klick und dann durch Auswahl seines Listeneintrags im RTE Widget. Anschließend die gewünschte Position unter das Fadenkreuz setzen und den Wegepunkt mit {{BT("NavToCenter")}} verlegen. 
 
 Analog kann man den Wegepunkt löschen - dafür nutzt man den Button {{BT("NavDelete")}}.<br>
 
-Die Arbeit mit dem Fadenkreuz mag im ersten Augenblick etwas umständlich wirken im Vergleich zu direkten Klicks auf den Touchscreen. In Situationen mit einem sich stark bewegenden Schiff, auf einem kleineren Bildschirm, und mit klammen Fingern wird man diese Art der Bedienung aber zu schätzen lernen.
+Die Arbeit mit dem Fadenkreuz mag im ersten Augenblick etwas umständlich wirken im Vergleich zu direkten Klicks auf den Touchscreen. In Situationen mit einem sich stark bewegenden Schiff, auf einem kleineren Bildschirm und mit klammen Fingern wird man diese Art der Bedienung aber zu schätzen lernen.
 
 ## Routen speichern und laden {: #management}
 Änderungen an Routen werden in der Regel sofort im AvNav Server gespeichert. Ist dieses Systemverhalten unerwünscht, weil man beispielsweise die gerade aktive Route bearbeitet, bietet sich der sogenannte *disconnected* Mode an: dabei bleiben Änderungen lokal im Browser und werden bis auf Weiteres nicht zum Server synchronisiert. 
@@ -97,7 +97,7 @@ Hier wird eine Route so berechnet, dass man den kürzesten Weg zwischen Start
 und Ziel hat. Der Nachteil daran ist, dass sich der Kurs im Verlauf der Route
 permanent ändert. Eine solche Route ist in der Kartendarstellung keine
 Strecke, sondern eine Kurve.  
-In älteren Versionen hat AvNav immer great circle Routen berechnet, diese
+In älteren Versionen hat AvNav immer *great circle* Routen berechnet, diese
 aber (fälschlich) als Strecken dargestellt.  
 Für kürzere Distanzen (< 100nm) spielt das aber praktisch keine Rolle.
 
@@ -154,7 +154,7 @@ Lokale Route
 
 Man kann eine solche lokale Route ganz normal starten - und es stehen alle Routen-Funktionen zur Verfügung. Es gibt allerdings die folgenden Einschränkungen:
 
-  * keine Ausgabe von RMB und APB Datensätzen, keine Übertragung der Route zu SignalK
+  * keine Ausgabe von RMB- und APB-Datensätzen, keine Übertragung der Route zu SignalK
   * kein Wegepunkt-Alarm
 
 #### Synchronisierung von Routen {: #sync}
@@ -174,13 +174,13 @@ Routen Synchronisierung
 
 Für jede lokale Route werden die möglichen Optionen angeboten:
 
-  * **delete**: Lösche die lokale Route
-  * **upload**: Lade die Route zum Server
-  * **keep local**: Behalte die lokale Route
+  * **delete**: Löscht die lokale Route
+  * **upload**: Lädt die Route zum Server
+  * **keep local**: Behält die lokale Route
 
 `upload` wird dabei nur angeboten, wenn die Route auf dem Server ncht vorhanden ist - oder `overwrite on server` aktiviert wurde.
 
-Mit dem Button {{BT("SyncRoutes")}} kann man jederzeit diese Synchroniserung erneut anstossen.
+Mit dem Button {{BT("SyncRoutes")}} kann man jederzeit diese Synchronisierung erneut anstoßen.
 
 
 ### Routen kombinieren
@@ -189,7 +189,7 @@ Wenn man Teile einer Route zu einer anderen Route hinzufügen möchte, geht das,
 
 ![Route Overlay](../../img/route-edit-overlay1.png)
 
-Danach wechselt man in den [Routen Editor](#editor) , aktiviert den Punkt der Route (1), hinter dem man die andere Route einfügen möchte und klickt auf den Punkt der Overlay-Route (2), ab dem man einfügen möchte.
+Danach wechselt man in den [Routen Editor](#editor) , aktiviert den Punkt der Route (1), hinter dem man die andere Route einfügen möchte, und klickt auf den Punkt der Overlay-Route (2), ab dem man einfügen möchte.
 
 ![Route Overlay 2](../../img/route-edit-overlay2.png)
 

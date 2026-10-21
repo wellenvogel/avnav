@@ -8,7 +8,7 @@
 
 # Datenflüsse 
 
-{{VIDEO("Hier","dataflow")}} geht es zum Einführungsvideo zum Thema Datenflüsse.
+{{VIDEO("Hier","dataflow")}} geht es zum Einführungsvideo zum Thema "Datenflüsse".
 
 Damit eine Navigationssoftware wie AvNav arbeiten kann, braucht sie notwendigerweise Daten.
 
@@ -58,7 +58,7 @@ Auf Android Systemen ist die Einrichtung über ein internes GPS noch einfacher -
 
 ### NMEA0183 per seriellem Wandler
 
-Bei einem Echolot, das NMEA0183-Daten liefert, oder einem Seefunkgerät, das AIS-Daten sendet, sieht es etwas anders aus, weil man bei diesen Geräten meistens nur offene Kabelenden finden wird. Diese Geräte bedienen in der Regel die RS485-oder die RS 232-Schnittstelle. Die sind wie USB ebenfalls serielle Schnittstellen. 
+Bei einem Echolot, das NMEA0183-Daten liefert, oder einem Seefunkgerät, das AIS-Daten sendet, sieht es etwas anders aus, weil man bei diesen Geräten meistens nur offene Kabelenden finden wird. Diese Geräte bedienen in der Regel die RS485-oder die RS 232-Schnittstelle. Sie sind wie USB ebenfalls serielle Schnittstellen. 
 
 Als Hardware gibt es sie als Aufsatzplatine oder HAT für einen Raspberrry oder als  USB-Adapter. Hier wird es also etwas komplizierter, weil Hardware eingebaut werden muss. Wie das geht, kann man in den Dokumenten des jeweilgen Geräts nachlesen.
 
@@ -92,7 +92,7 @@ Dann können Wandler verschiedener anderer Hersteller mit unterschiedlichen Funk
 
 Einen kleinen Überblick liefert die Webseite vom [Open Boat Project](https://open-boat-projects.org/de/nmea2k-wlan-bridge-eine-marktuebersicht/).
 
-Es können auch CAN-Adapter eingebunden werden, wie sie auf HAT-Platinen für Raspberrys oder USB-Devices zB von Actisense zu finden sind, die nicht selbst nach NMEA0183 konvertieren. Über eine Zusatzsoftware auf den Headless-AvNav-Images, das sogenannte [*CanBoat*](../special/nmea2000.md), wird dann die Konvertierung nach NMEA0183 und zurück durchgeführt.
+Es können auch CAN-Adapter eingebunden werden, wie sie auf HAT-Platinen für Raspberrys oder USB-Devices z.B. von Actisense zu finden sind, die nicht selbst nach NMEA0183 konvertieren. Über eine Zusatzsoftware auf den Headless-AvNav-Images, das sogenannte [*CanBoat*](../special/nmea2000.md), wird dann die Konvertierung nach NMEA0183 und zurück durchgeführt.
 
 Je nach Datenformat und verwendeter Hardware können bestimmte Daten AvNav auch wieder verlassen: Über die NMEA2000-Wandler und -Adapter, über serielle Schnittstellen oder LAN und WLAN stellt AvNav NMEA0183-Daten vor allem für die Versorgung eines Autopiloten zur Verfügung. 
 
@@ -136,6 +136,6 @@ Ebenso können Apps wie NodeRED oder KIP, die über den SignalK-Server installie
 
 Bei solchen Mischsystemen ist es äußerst wichtig, den erzeugten Datenfluss so aufzubauen, dass man keinen Kreisverkehr erzeugt - sprich, dass die gleichen Daten zwischen SignalK und AvNav immer wieder hin- und her gesendet werden. Das würde das Gesamtsystem ordentlich ausbremsen.
 
-Wenn man also so etwas vorhast, kann man mit Filtern arbeiten. Mit kann  das Senden oder Empfangen von Daten beeinflusst werden. Das geht sowohl im SignalK-Server, als auch in AvNav. Du solltest also genau wissen, was du tust. 
+Wenn man also so etwas vorhast, kann man mit Filtern arbeiten. Mit Filtern kann  das Senden oder Empfangen von Daten beeinflusst werden. Das geht sowohl im SignalK-Server, als auch in AvNav. Man sollte also genau wissen, was man tut. 
 
 In den [Details](../special/connections.md) findet man dazu weitere Hinweise zur Konfiguration der Verbindungen von AvNav von und zu Bord-Netzwerken.

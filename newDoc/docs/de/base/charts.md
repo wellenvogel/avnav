@@ -4,7 +4,7 @@
 ---
 # Karten
 
-{{VIDEO("Hier","charts")}} geht es zu einem Einführungsvideo zum Thema Karten in AvNav.
+{{VIDEO("Hier","charts")}} geht es zu einem Einführungsvideo zum Thema "Karten" in AvNav.
 
 ## Formate {: #formats}
 
@@ -15,7 +15,7 @@ AvNav unterstützt verschiedene Kartenformate, beispielsweise:
   
   Frei verfügbare Rasterkarten gibt 
   es unter anderem von OpenSeaMap und FreeNauticalChart. 
-  Rasterkarten aus verschiedenen Quellen können auch selbst hergestellt und in AvNav hochgeladen oder mit der Mapproxy-App erzeugt werden. Näheres dazu findet man in der [Dokumentation](../special/charts.md).
+  Rasterkarten aus verschiedenen Quellen können auch selbst hergestellt und in AvNav hochgeladen oder mit der Mapproxy-App erzeugt werden. Näheres dazu findet man in den [Details](../special/charts.md).
   Mit dem Tool [Mobile Atlas Creator](https://mobac.sourceforge.io/) können Karten verschiedener Online-Quellen heruntergeladen und danach in AvNav installiert werden. Hinweise dazu findet man unter [Mobile Atlas Creator](../special/mapsources.md).
   Man findet im Internet auch weitere Tools, die das Herunterladen von Karten ermöglichen.
 
@@ -32,7 +32,7 @@ AvNav nutzt vor allem Vektorkarten von *O-Charts* mit dem passenden [PlugIn](../
 
 ### Plugins
   Mit entsprechenden Plugins lassen sich weitere Kartenformate, zum Beispiel 
-  Vektorkacheln, verwenden. Das braucht allerdings einiges an Vorarbeit. In der [Dokumentation](../special/charts.md#insertingdefs) findet man dazu weitere Unterstützung.
+  Vektorkacheln, verwenden. Das braucht allerdings einiges an Vorarbeit. In den [Details](../special/charts.md#insertingdefs) findet man dazu weitere Unterstützung.
 
 ## Verwaltung {: #management}
 
@@ -51,19 +51,19 @@ Karten-Seite
 
 Auch hier sieht man in der "Charts"-Spalte die bereits installierten Karten. 
 
-Über "Upload File" {{SB("Upload")}} in dieser Spalte kann man Karten in den unterstützten Formaten zum AvNav-Server hochladen.
+Über "Upload File" {{SB("Upload")}} in dieser Spalte kann man Karten in den unterstützten Formaten zum AvNav Server hochladen.
 
-Die Spalte "Import" ist für Karten vorgesehen, die vorab gewandelt werden müssen. Wie das im Einzelnen abläuft, kann man in der detaillierten [Dokumentation](../special/charts.md#converter) nachlesen. 
+Die Spalte "Import" ist für Karten vorgesehen, die vorab gewandelt werden müssen. Wie das im Einzelnen abläuft, kann man in den [Details](../special/charts.md#converter) nachlesen. 
 
 Und die rechte Spalte “Overlays” ist in einem separaten [Kapitel](overlays.md) beschrieben.
 
 In der Buttonleiste sieht man unten die Schaltfläche OC-NG 
 ![](../../img/icon-ochartsng.svg){: .inline-image }.
 
-Sie ist für die Installation von O-Charts-Karten zuständig. Im {{VIDEO("Video","charts")}} wird die Installation von o-charts Karten gezeigt, zum Nachlesen kann man die [detaillierte Dokumentation](../special/ochartsng.md) benutzen.
+Sie ist für die Installation von O-Charts-Karten zuständig. Im {{VIDEO("Video","charts")}} wird die Installation von O-Charts Karten gezeigt, zum Nachlesen kann man die [detaillierte Dokumentation](../special/ochartsng.md) benutzen.
 
 
 
 ## Links
-* [Details zu den Karten und Kartentypeb](../special/charts.md)
+* [Details zu Karten und Kartentypen](../special/charts.md)
 * [Mobile Atlas Creator Sources](../special/mapsources.md)

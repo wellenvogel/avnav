@@ -28,7 +28,7 @@ In der rechten Seitenleiste liegt die Buttonleiste, die die wichtigsten Funktio
 | {{BT("ChartsView")}} |Durch Klick auf den Charts-Button können zuvor hochgeladene Karten aktiviert werden. Näheres dazu im Abschnitt [Karten und Overlays](charts.md) Neben der Kartenauswahl bietet AvNav die Möglichkeit, unterschiedliche Overlays hinzuzufügen. Mit Overlays können neben der reinen Karte weitere Elemente in die Kartenansicht eingeblendet werden. Das können Satellitenbilder sein, bereits gefahrene Tracks, weitere Karten oder Dateien mit Tonnenpositionen. Das ist besonders hilfreich, wenn man z.B. im Grenzbereich zweier Karten navigieren und die Karten nicht immer wechseln will.|
 | {{BT("ZoomIn")}} {{BT("ZoomOut")}} | Hiermit wird der Kartenausschnitt vergrößert und verkleinert. Dabei bleibt (anders etwa als bei Nutzung des Mausrads) das eigene Boot zentriert.|
 | {{BT("LockPos")}} | Mit dem Follow-Button erreicht man, dass die Karte immer auf die Bootsposition fixiert bleibt und ihr folgt. Der Button erhält einen grünen Rand, wenn er aktiv ist. Die Bootsposition kann zentral (am Fadenkreuz) oder an einer beliebigen Stelle des Bildschirms fixiert werden. Die eigene Präferenz stellt man in den [Settings/Map](settings.md) ein.|
-| {{BT("WpGoto")}} |Klickt man auf Start, wird ein Wegepunkt auf die Position des Fadenkreuzes gesetzt,und im Widget tauchen sofort Informationen auf, wie weit es zu diesem Punkt ist, mit welchem Kurs er erreichbar ist, und wie lange das in etwa dauern wird. Diese Funktion lässt sich also nutzen, um schnell und effektiv zu einem bestimmten Punkt, eine Ansteuerung, einer bestimmten Tonne zu navigieren oder sich einfach über den Weg dorthin zu informieren. Das ersetzt aber nicht die Routenfunktion. Das bedeutet, es gibt zwar einen Annäherungsalarm, aber kein automatisches Deaktivieren des Punktes, wenn er erreicht ist. Das geht nur über die Routenfunktion, dazu mehr im Abschnitt [Routen](routes.md).|
+| {{BT("WpGoto")}} |Klickt man auf Start, wird ein Wegepunkt auf die Position des Fadenkreuzes gesetzt. Im Widget tauchen sofort Informationen auf, wie weit es zu diesem Punkt ist, mit welchem Kurs er erreichbar ist, und wie lange das in etwa dauern wird. Diese Funktion lässt sich also nutzen, um schnell und effektiv zu einem bestimmten Punkt, einer Ansteuerung, einer bestimmten Tonne zu navigieren oder sich einfach über den Weg dorthin zu informieren. Das ersetzt aber nicht die Routenfunktion. Das bedeutet, es gibt zwar einen Annäherungsalarm, aber kein automatisches Deaktivieren des Punktes, wenn er erreicht ist. Das geht nur über die Routenfunktion, dazu mehr im Abschnitt [Routen](routes.md).|
 | {{BT("CourseUp")}} | Dieser Button dient dazu, die Ausrichtung der Karte entweder auf den aktuellen Kurs des eigenen Bootes oder nach Nord auszurichten. Dabei führt das Klicken zur kursbezogenen Ausrichtung. Standardeinstellung ist die Ausrichtung nach Nord.|
 | {{BT("ShowRoutePanel",False)}} |Eines der wichtigsten Tools in AvNav ist die Routenverwaltung, die man mit diesem Button erreichen kann. Mit ihr lassen sich komplexe Routen planen, Wegepunkte setzen und verändern, Routen speichern und starten. Zu diesem Themenbereich mehr im nächsten Kapitel [Routen](routes.md)|
 |{{BT("NavActions",False)}} |Eine weitere Neuerung in AvNav 2026 ist der Tools-Button. Er blendet über einen Dialog zusätzliche Werkzeuge ein, die nicht ständig gebraucht werden. |
@@ -43,7 +43,7 @@ In der rechten Seitenleiste liegt die Buttonleiste, die die wichtigsten Funktio
 | Button | Funktion |
 | ------ | -------- |
 | {{BT("Night",True)}} | Es wird ein sehr dunkles, vornehmlich auf Rottönen basierendes Farbschema aktiviert bzw. deaktiviert, welches für Nachtfahrt geeignet ist.  |
-| {{BT("RemoteChannel",True)}} | Erlaubt den Fernsteuerungskanal und -modus zu wechseln. Das bietet die Möglichkeit, die Anzeige eines Displays durch ein anderes Gerät oder vom Server aus fernzusteuern. Dieses fortgeschrittene Thema wird [hier](../special/remotecontrol.md) erklärt.|
+| {{BT("RemoteChannel",True)}} | Erlaubt den Fernsteuerungskanal und -modus zu wechseln. Das bietet die Möglichkeit, die Anzeige eines Displays durch ein anderes Gerät oder vom Server aus fernzusteuern. Dieses *Specials*-Thema wird [hier](../special/remotecontrol.md) erklärt.|
 | {{BT("FullScreen",True)}} | Falls vom Browser unterstützt, schaltet dieser Butten den Fullscreen-Modus ein oder aus.|
 | {{BT("Split",True)}} | Hier kann der Split Mode ein- und ausgeschaltet werden. Einfach gesagt laufen in dieser Betriebsart zwei AvNav-Instanzen auf dem Display nebeneinander. Dazu gibt es spezielle Hinweise und Anleitungen [hier](../special/splitmode.md). |
 | {{BT("ReloadUI",True)}} | Neuerliches Laden des Browserfensters mit den Daten vom AvNav Server|
@@ -58,7 +58,7 @@ In der rechten Seitenleiste liegt die Buttonleiste, die die wichtigsten Funktio
 | {{BT("AnchorWatch",True)}} | Mit Anchorwatch startet man die AvNav-interne [Ankerwache](../special/anchorwatch.md). |
 | {{BT("ABShowWpButtons",True)}} |*Show wp buttons* startet eine kleine zusätzliche Buttonleiste, die direkt rechts unten in die Karteneinsicht eingeblendet wird und bezogen auf aktive Waypoints zusätzliche Tools anbietet.|
 | {{BT("CenterAction", True)}} |Mit *Info at Crosshair*  lassen sich verschiedene Informationen zur angewählten Kartenposition anzeigen. 
-| {{BT("GpsCenter",True)}} |Center Chart GPS zentriert die Karte, visualisiert durch das Fadenkreuz, auf die aktuelle GPS-Position, wenn sie denn vorhanden ist.|
+| {{BT("GpsCenter",True)}} |*Center Chart GPS* zentriert die Karte, visualisiert durch das Fadenkreuz, auf die aktuelle GPS-Position, wenn sie denn vorhanden ist.|
 | {{BT("ABShowMeasure",True)}} |Mit *Show Measure Buttons* kann man sich eine Toolbox mit Instrumenten zum Messen von Entfernungen anzeigen lassen. Dieser Button ist nur aktiv, wenn der Follow-Button (siehe oben) nicht aktiv ist.|
 
 ## Darstellungen auf der Karte {: #vectors}
@@ -71,8 +71,8 @@ angezeigt, sobald ein GPS Signal verfügbar ist (das Icon kann [angepasst](../sp
 Darüber hinaus gibt es eine Reihe von Linien: sie bezeichnen Abstände, Richtungen und Vektoren. Hier die wichtigsten:
 
 * die roten Kreise sind Abstandskreise, per default in 300 und in 1000 Meter  
-* die rote Linie vor der Spitze des Pfeils ist der Kursvektor zu COG. Seine Länge zeigt an, wie weit wir uns bei der aktuellen Geschwindigkeit innerhalb 10 Minuten bewegen  
-* die lila Linie ist der Track - der Weg, den wir zurückgelegt haben  
+* die rote Linie vor der Spitze des Pfeils ist der Kursvektor zu COG. Seine Länge zeigt an, wie weit man sich bei der aktuellen Geschwindigkeit innerhalb 10 Minuten bewegen wird  
+* die lila Linie ist der Track - der Weg, den man zurückgelegt hat  
 * die schwarz gestrichelte Line kennzeichnet die Richtung zum Wegepunkt, die beim Aktivieren der Routenberechnung oder beim Start zu einem einzelnen Wegepunkt berechnet wurde  
 * die ockerfarbene Linie ist die Richtung zum aktiven Wegepunkt
 * die dunkelgrüne Linie stellt die gespeicherte Route dar  
@@ -93,13 +93,13 @@ Die angezeigte Liste enthält alle Objekte an dieser Stelle, zu denen AvNav nach
 
 {{MM("MMgpspage")}}
 
-oder über den Klick auf die Widgets (ausser in der linken unteren Leiste) gelangt man auf die Dashboard-Seiten.
+oder über den Klick auf die Widgets (außer in der linken unteren Leiste) gelangt man auf die Dashboard-Seiten.
 
 ![Dashboard](../../img/dashboard.png)
 ///caption
 Dashboard
 ///
 
-Die Anzeigen auf den Dashboards lassen sich über den [Layout-Editor](layout.md) flexibel konfigurieren. Im Bild das Layout "system.modern".
+Die Anzeigen auf den Dashboards lassen sich über den [Layout-Editor](layout.md) flexibel konfigurieren. Das Bild zeigt das Layout "system.modern".
 
 Auf den Dashboard Seiten kann man die [Ankerwache](../special/anchorwatch.md) direkt über den Button {{BT("AnchorWatch")}} aktivieren.
