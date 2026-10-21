@@ -973,6 +973,13 @@ task uploadNewDocPluginRelease(type: UploadTask){
     dependsOn buildNewDocPlugin
     baseDir="daily/${project.avnavVersion}"
 }
+task uploadNewDocPlugin(type: UploadTask){
+    group=UPLOAD_GROUP
+    inputFile=buildNewDocPlugin.outputs.files.singleFile
+    deleteTargetDir=false
+    dependsOn buildNewDocPlugin
+    baseDir="daily/${project.avnavVersion}"
+}
 
 task newDocBrokenLinks(type: DefaultTask){
     group NDGROUP
