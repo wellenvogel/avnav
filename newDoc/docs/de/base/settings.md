@@ -8,7 +8,7 @@
 
 ## Display Settings vs. Layout
 
-Die Display Settings umfassen alle Einstellungen, die eine Anpassung der Benutzeroberfläche bzw. des Erscheinungsbilds von AvNav ermöglichen. Das beginnt bei der Größe der Schaltflächen und der Schriftgröße auf Buttons oder in anderen Bereichen des Programms. Es setzt sich fort bei den Farben von Routen oder Tracks, Abständen, der Länge des Kursvektors und vielem mehr. 
+Die Display Settings umfassen alle Einstellungen, die eine Anpassung der Benutzeroberfläche bzw. des Erscheinungsbilds von AvNav ermöglicht. Das beginnt bei der Größe der Schaltflächen und der Schriftgröße auf Buttons oder in anderen Bereichen des Programms. Es setzt sich fort bei den Farben von Routen oder Tracks, Abständen, der Länge des Kursvektors und vielem mehr. 
 
 [Layouts](layout.md) hingegen fassen zusammen, wie die [Widgets](navpage.md#widgets) auf der Navigationsseite, der Routenseite und im Dashboard angeordnet werden sollen. Im Layout lässt sich festlegen, welche Widgets wo angezeigt werden und wie diese konfiguriert sind. 
 
@@ -35,11 +35,11 @@ Die *Settings Groups* gliedern die Kategorien, innerhalb derer Anpassungen vorge
 | AIS | definiert, ob und wie AIS-Objekte dargestellt werden, Distanzen, Abstände für Warnungen nach CPA und TPA. Manche dieser Einstellungen werden im Kapitel [AIS](../special/ais.md) näher erläutert |
 | Track | definiert, wie Tracks dargestellt werden |
 | Route | definiert, wie Routen dargestellt werden |
-| Remote | definiert, wie die AvNav-Fernsteuerung eingerichtet ist. Diese Einstellungen werden im Detals-Kapitel [Fernsteuerung](../special/remotecontrol.md) erläutert |
+| Remote | definiert, wie die AvNav-Fernsteuerung eingerichtet ist. Diese Einstellungen werden im Detail-Kapitel [Fernsteuerung](../special/remotecontrol.md) erläutert |
 
 ## Settings speichern
 
-Sobald eine Einstellung geändert ist, wird die Gruppe fett markiert und es erscheint oben rechts ein kleines rotes Settings-Symbol – sozusagen als ständige Erinnerung daran, dass Änderungen zu speichern sind. Nach dem Klick darauf kann direkt ein Name für das neue Setting eingegeben oder der vorgeschlagene Name belassen und anschließend zum Speichern auf {{DB('DBOk')}} geklickt werden:
+Sobald eine Einstellung geändert ist, wird die Gruppe fett markiert und es erscheint oben rechts ein kleines, rotes Settings-Symbol – sozusagen als ständige Erinnerung daran, dass Änderungen zu speichern sind. Nach dem Klick darauf kann direkt ein Name für das neue Setting eingegeben oder der vorgeschlagene Name belassen und anschließend zum Speichern auf {{DB('DBOk')}} geklickt werden:
 
 ![](../../img/settings-save.png)
 

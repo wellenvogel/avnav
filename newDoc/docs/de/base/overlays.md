@@ -21,14 +21,14 @@ Ebenso kann man Informationen aus anderen Quellen herunterladen, um ein Wegepunk
 
 Auch ist es möglich, Routen und Tracks in die Karte zu holen, um sie zu vergleichen oder als Vorlage für eine neu zu erstellende Route zu verwenden.
 
-Auch Satellitenbilder lassen sich in AvNav-Karten überlagern, dazu ist allerdings eine Quelle für Satellitenkarten notwendig und eine gewisse Vorbereitung. Dieses Verfahren kannst du in der Doku nachlesen.
+Auch Satellitenbilder lassen sich in AvNav-Karten überlagern, dazu ist allerdings eine Quelle für Satellitenkarten notwendig und eine gewisse Vorbereitung.
 
 ## Zuordnung {: #assign}
 
 Wie werden Overlays bestimmten Karten zugeordnet?
 Um zwei im System vorhandene Karten nebeneinander zu legen, kann man einen sehr schnellen Weg wählen, nämlich direkt aus der  Navigationsseite heraus über den Button {{BT("NavSelectChart")}}.
 
-Bei einer der Karten, die man nebeneinander legen möchte, klickt man rechts auf den Overlay Button. Dann öffnet sich der Edit-Overlay Dialog.
+Bei einer der Karten, die man nebeneinander legen möchte, klickt man rechts auf den *Overlay* Button. Dann öffnet sich der *Edit Overlays* Dialog.
 
 ![Overlay Dialog](../../img/overlays-dialog1.png)
 ///caption
@@ -44,9 +44,9 @@ Es öffnet sich dann ein weiterer Dialog, dort wählt man die Option „chart“
 Karte als Overlay
 ///
 
-Nach Klick auf {{DB("DBOk")}} landet man wieder im Ausgangsdialog „Edit Overlay“ und bestätigt das neue Overlay nun mit {{DB("DBSave")}}.
+Nach Klick auf {{DB("DBOk")}} landet man wieder im Ausgangsdialog *Edit Overlay* und bestätigt das neue Overlay nun mit {{DB("DBSave")}}.
 
-In der Kartenliste erkennt man das Overlay nun am geschwärzten Icon rechts neben dem Kartennamen.
+In der Kartenliste erkennt man das Overlay am geschwärzten Icon rechts neben dem Kartennamen.
 
 Um eine Route, eine Wegepunktliste oder ein Bojenverzeichnis als Overlay einzufügen, muss man die entsprechenden Dateien zuvor irgendwo herunter laden und in AvNav einfügen. AvNav akzeptiert solche Dateien mit den Formaten GPX, KML, KMZ, GEOJSON.
 
@@ -60,7 +60,7 @@ Als Beispiel wird hier die Wegepunktliste des NV-Verlags genutzt, die kostenlos 
 Man klickt auf {{BT("Upload")}}, wählt die Datei aus und überprüft, ob sie in der Liste unter *Overlay* sichtbar wird. Nun kann man den gleichen Weg gehen, der eben für die Karten bereits beschrieben wurde.
 
 Da man aber sowieso schon im Bereich Charts/ Overlays ist, kann man direkt aus der Overlay-Liste eine Datei einer Karte zuordnen, also quasi der umgekehrte Weg zu eben. 
-Dazu klickt man auf das Stiftsymbol neben der gewählten Datei, klickt dann auf Overlays und sucht über den aufklappenden Dialog die Karte aus, der man das Overlay zuordnen will.
+Dazu klickt man auf das Stiftsymbol neben der gewählten Datei, klickt dann auf *Overlays* und sucht über den aufklappenden Dialog die Karte aus, der man das Overlay zuordnen will.
 
 ![Overlays von Datei](../../img/overlays-dialog3.png)
 ///caption
@@ -69,15 +69,15 @@ Wegepunkte als Overlay
 
 Die sollten natürlich zusammen passen. Die Bojen des dänischen Tursejlerverbands werden auf einer deutschen oder niederländischen Karte kaum zu finden sein…
 
-Nach der Zuordnung erhält man einen Dialog, der es ermöglicht, verschiedene Einstellungen für das Overlay vorzunehmen. Für einige Hinweise dazu siehe weiter [unten](#parameters).
+Nach der Zuordnung erhält man einen Dialog, der es ermöglicht, verschiedene Einstellungen für das Overlay vorzunehmen. Einige Hinweise dazu siehe weiter [unten](#parameters).
 
-Ist die Zuordnung Overlay zu Karte erzeugt, bestätigt man im Edit Overlay-Dialog mit {{DB("DBSave")}}. 
+Ist die Zuordnung Overlay zu Karte erzeugt, bestätigt man im *Edit Overlay* Dialog mit {{DB("DBSave")}}. 
 
 In der Kartenliste auf der Navigationspage findet man nun das aktive Overlaysymbol neben der eben zugeordneten Karte.  
 
-Die Einstellungen eines Overlays kann man jederzeit anpassen, wenn man im Edit-Overlay-Dialog auf das {{SB("Edit")}} Symbol eines Overlays klickt. 
+Die Einstellungen eines Overlays kann man jederzeit anpassen, wenn man im *Edit Overlay* Dialog auf das {{SB("Edit")}} Symbol eines Overlays klickt. 
 
-Nun sind beide Wege, wie Karten und Overlays zusammengefügt und editiert werden können, gezeigt worden.
+Dami sind beide Wege, wie Karten und Overlays zusammengefügt und editiert werden können, gezeigt worden.
 
 ## Ein- und Ausblenden
 
@@ -106,9 +106,9 @@ Die `opacity` ist in Dezimalschritten von 0-1 einstellbar.
 
 Die (eingerahmten) Werte `min zoom` und `max zoom` steuern den Auflösungsbereich, in dem das Overlay sichtbar wird. 
 
-`min scale` und `max scale` steuern die Größe von icons. Bei Auflösungen kleiner als `min scale` werden die icons verkleinert, bei Auflösungen größer `max scale` vergrößert.
+`min scale` und `max scale` steuern die Größe von Icons. Bei Auflösungen kleiner als `min scale` werden die Icons verkleinert, bei Auflösungen größer `max scale` vergrößert.
 `show text` (1) steuert, ob die Beschriftungen in der Karte sichtbar werden.
 
-Mit `default icon` (2) kann ein Icon ausgewählt werden, das für Punkte genutzt werden soll, die in der Overlay-Datei kein eigenes Icon definiert haben (oder wenn das definierte Icon nicht in AvNav verfügbar ist). Man kann auch mit `icon file`eine (ZIP-) Datei wählen, die Symbole für ein Overlay enthält. Diese muss vorher zu den Overlay-Dateien in AvNav hochgeladen werden.
+Mit `default icon` (2) kann ein Icon ausgewählt werden, das für Punkte genutzt werden soll, die in der Overlay-Datei kein eigenes Icon definiert haben oder wenn das definierte Icon nicht in AvNav verfügbar ist. Man kann auch mit `icon file` eine (ZIP-) Datei wählen, die Symbole für ein Overlay enthält. Diese muss vorher zu den Overlay-Dateien in AvNav hochgeladen werden.
 
-Für weitere Informationen (auch zur Beschreibung von `feature formatter`(3)) siehe die [Detail-Beschreibungen](../special/overlays.md).
+Für weitere Informationen auch zur Beschreibung von `feature formatter`(3) siehe die [Detail-Beschreibungen](../special/overlays.md).
