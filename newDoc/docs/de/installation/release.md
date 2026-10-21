@@ -19,7 +19,8 @@ Die Installation hängt vom verwendeten System ab und ist in den Installationsan
 * [Android](android.md)
 * [Windows](windows.md)
 
-!!! Hinweis
+**Hinweis:**
+
     Auf dieser Seite sind nur Releases ab 202608xx aufgeführt.
     Ältere Releases findet man [hier]({{OLDLINK('release.html')}})  
 
