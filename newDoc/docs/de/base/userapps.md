@@ -8,13 +8,13 @@ Ein Teil der Inhalte dieses Abschnittes wird auch im **{{VIDEO("Video hier","use
 
 AvNav lässt sich vielseitig anpassen und erweitern - zu den Erweiterungen zählen die sogenannten User Apps. Das sind eigenständige Anwendungen, deren Benutzeroberfläche über einen Webbrowser aufrufbar ist. Beispiele hierfür sind der Datenserver SignalK oder der AIS-Catcher. Damit ein ständiger Wechsel zwischen verschiedenen Browser-Tabs vermieden wird, lassen sich diese Anwendungen nahtlos als Schaltflächen direkt in die Bedienoberfläche von AvNav integrieren. 
 
-Zur Einordnung: neben den User Apps gibt es in AvNav auch Plugins.  Diese sind Programme, die eigenständig direkt mit den internen AvNav-Daten arbeiten (wie etwa das History-, das O-Charts- oder das Update-Plugin). Viele dieser Plugins bringen ebenfalls eine eigene Weboberfläche zur Bedienung mit. Wenn das der Fall ist, verhalten sie sich aus Sicht der Benutzeroberfläche wie User Apps und können auch so eingerichtet sein. (Mehr zu Plugins und auch, wie sie programmiert werden können, in einem separaten, tieferführenden  [Kapitel](../special/plugins-extensions.md)).
+Zur Einordnung: neben den User Apps gibt es in AvNav auch Plugins.  Diese sind Programme, die eigenständig direkt mit den internen AvNav-Daten arbeiten wie etwa das History-, das O-Charts- oder das Update-Plugin. Viele dieser Plugins bringen ebenfalls eine eigene Weboberfläche zur Bedienung mit. Wenn das der Fall ist, verhalten sie sich aus Sicht der Benutzeroberfläche wie User Apps und können auch so eingerichtet sein. Mehr zu Plugins und auch, wie sie programmiert werden können, kann in einem separaten, tieferführenden  [Kapitel](../special/plugins-extensions.md) nachgelesen werden.
 
 Im Folgenden wird am Beispiel SignalK beschrieben, wie sich eine solche User App in AvNav definieren und in die Oberfläche integrieren lässt.
 
 ## Icon vorbereiten und hochladen
 
-Damit die neue App in der AvNav-Oberfläche zu erkennen ist, muss man ihr ein eigenes, aussagekräftiges Symbol (Icon) zuweisen. Dafür wird zunächst ein passendes Bild (idealerweise im SVG- oder PNG-Format 50x50 px) benötigt. Über {{MB("MMaddonconfigpage")}} betritt man die Seite "CSS, JS, User Apps".
+Damit die neue App in der AvNav-Oberfläche zu erkennen ist, muss man ihr ein eigenes, aussagekräftiges Symbol (Icon) zuweisen. Dafür wird zunächst ein passendes Bild idealerweise im SVG- oder PNG-Format 50x50 px benötigt. Über {{MB("MMaddonconfigpage")}} betritt man die Seite "CSS, JS, User Apps".
 
 ![Load Image](../../img/userapp-addimage.png)
 

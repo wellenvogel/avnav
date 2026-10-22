@@ -89,7 +89,7 @@ NavCompute.computeCoursePoints=function (start,destination,percentStep,opt_min){
             rt.push(lldst);
             return rt;
         }
-        if (opt_min === undefined) {
+        if (opt_min == null) {
             opt_min = 10 * NavCompute.NM;
         }
         let dst = llsrc.distanceTo(lldst);

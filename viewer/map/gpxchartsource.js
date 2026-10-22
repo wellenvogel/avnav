@@ -43,7 +43,7 @@ import {OverlayFeatureInfo, RouteFeatureInfo, TrackFeatureInfo} from "./featureI
 import {getRouteStyles} from "./routelayer";
 import {fetchItem} from "../util/itemFunctions";
 import base from "../base";
-import {getav, setav} from "../util/helper";
+
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -200,6 +200,11 @@ class GpxChartSource extends ChartSourceBase{
                         color: this.styleParameters[editableOverlayParameters.fillColor],
                     }),
                     radius: this.styleParameters[editableOverlayParameters.circleWidth] / 2,
+                    stroke: new olStroke({
+                        color: (this.styleParameters[editableOverlayParameters.strokeWidth]>0)?
+                            this.styleParameters[editableOverlayParameters.strokeColor]:this.COLOR_INVISIBLE,
+                        width: this.styleParameters[editableOverlayParameters.strokeWidth],
+                    })
                 }),
                 text: this.styleParameters[editableOverlayParameters.showText]?textStyle:undefined
             })
@@ -300,7 +305,8 @@ class GpxChartSource extends ChartSourceBase{
             image: new olCircle({
                 fill: base.getImage().getFill(),
                 radius: base.getImage().getRadius(),
-                scale: this.getScale()
+                scale: this.getScale(),
+                stroke: base.getImage().getStroke()
             }),
             text: (base.getText())?base.getText().clone():undefined
         });

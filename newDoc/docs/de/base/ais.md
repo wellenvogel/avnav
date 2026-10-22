@@ -11,7 +11,7 @@ Neben der Darstellung auf der Karte erfolgt auch eine Berechnung der voraussicht
 
 ## Anzeige von Objekten
 
-In der Kartendarstellung werden andere Schiffe oder AIS-Objekte als farbige Dreiecke dargestellt (die Farben können in den [Einstellungen](#settings) angepasst werden. Als Standard sind die normalen Ziele gelb, das nächste Ziel grün und ein verfolgtes Ziel orange).
+In der Kartendarstellung werden andere Schiffe oder AIS-Objekte als farbige Dreiecke dargestellt. Die Farben können in den [Einstellungen](#settings) angepasst werden. Als Standard sind die normalen Ziele gelb, das jeweils nächstgelegene Ziel grün und ein verfolgtes Ziel orange.
 
 ![AIS-Targets](../../img/aisvectors-tmv.png)
 
@@ -30,7 +30,7 @@ und dort in den *SettingsGroups* im Bereich *AIS* vorgenommen werden.
 
 ![AIS-Targets](../../img/ais-settings1.png)
 
-Äußerst wichtig bei der Navigation ist es, zu bedenken, dass nicht alle Schiffe in der Umgebung ein AIS-Signal aussenden. Ein regelmäßiger Ausguck ist totz der AIS-Darstellung in der digitalen Karte daher unerlässlich.
+**Äußerst wichtig** bei der Navigation ist es, zu bedenken, dass nicht alle Schiffe in der Umgebung ein AIS-Signal aussenden. Ein **regelmäßiger Ausguck** ist totz der AIS-Darstellung in der digitalen Karte daher unerlässlich.
 
 
 ## Widget-Funktionen
@@ -66,7 +66,7 @@ Dort wird nun das "located"-AIS-Ziel statt des nächstliegenden Ziels im Widget 
 
 Diese Funktion kann sehr hilfreich sein, um zum Beispiel Fähren im Blick zu behalten, die in den gleichen Hafen einlaufen werden und eigene Manöver dann beeinflussen können.
 
-Mit {{DB("AisNearest")}} schaltet man wieder zurück auf den normalen Modus bei dem das nächste AIS-Ziel (oder das wichtigste Ziel mit einer Annäherungswarnung) in den Widgets angezeigt wird.
+Mit {{DB("AisNearest")}} schaltet man wieder zurück auf den normalen Modus, bei dem das nächste AIS-Ziel (oder das wichtigste Ziel mit einer Annäherungswarnung) in den Widgets angezeigt wird.
 
 Weitere Hinweise zur Nutzung findet man in den [Details](../special/ais.md#aisinfo).
 
@@ -74,7 +74,7 @@ Mit {{DB("AisItems")}} wechselt man zur Liste der AIS-Ziele.
 
 ![AIS-Targets](../../img/aislist.png)
 
-Mit der Liste der *AIS targets* bekommt man unabhängig von der Kartendarstellung eine Übersicht, welche Schiffe in der Umgebunug sind, die AIS-Signale ausstrahlen. 
+Mit der Liste der *AIS targets* bekommt man unabhängig von der Kartendarstellung eine Übersicht, welche Schiffe in der Umgebung sind, die AIS-Signale ausstrahlen. 
 
 
 ## AIS-Menü
@@ -85,4 +85,4 @@ Die AIS-Funktionen lassen sich nicht nur über die Kartendarstellung, sondern au
 
 
 ## Details
-Für Darstellungs- und Berechnungsdetails rund um AIS siehe die [ausführliche Informationen](../special/ais.md) im Bereich *Details*.
+Für Darstellungs- und Berechnungsdetails rund um AIS siehe die [ausführlichen Informationen](../special/ais.md) im Bereich *Details*.

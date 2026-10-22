@@ -89,7 +89,7 @@ class StyleEntry {
     }
 
     load(ghostFactor?:number) {
-        if (this.src === undefined) return;
+        if (this.src == null) return;
         const color=globalStore.getData(KeyHelper.keyNodeToString(keys.properties.style)+"."+this.colorStyle);
         if (! color) return;
         this.sequence++;
@@ -103,12 +103,12 @@ class StyleEntry {
             this.ghostImage=undefined;
         }
         if (this.image) {
-            if (this.replaceColor !== undefined && this.color !== color) {
+            if (this.replaceColor != null && this.color !== color) {
                 this.image = undefined;
             }
         }
         if (this.image){
-            if (ghostFactor === undefined){
+            if (ghostFactor == null){
                 this.ghostFactor=undefined;
                 this.ghostImage=undefined;
                 return;
@@ -127,7 +127,7 @@ class StyleEntry {
         this.ghostFactor=ghostFactor;
         if (! this.image){
             this.image = new Image();
-            if (ghostFactor !== undefined ) {
+            if (ghostFactor != null ) {
                 this.ghostImage = new Image();
                 this.ghostImage.onload = () => {
                     if (sequence !== this.sequence) return;
@@ -147,7 +147,7 @@ class StyleEntry {
                     this.loaded = true;
                 }
             }
-            if (this.replaceColor !== undefined) {
+            if (this.replaceColor != null) {
                 adaptIconColor(this.src, this.replaceColor, color)
                     .then((adaptedSrc) => {
                         if (sequence !== this.sequence) return;
@@ -181,7 +181,7 @@ const mergeStyles=function(...args:StyleEntry[]){
     for (let i=0;i< args.length;i++) {
         const other = args[i];
         if (!other) continue;
-        if (other.src !== undefined) {
+        if (other.src != null) {
             //we skip all styles that have a source attribute
             //but there was no chance to load it
             if (! other.loaded) continue;
@@ -510,7 +510,7 @@ class AisLayer{
         let statusSuffix;
         if (cl === AIS_CLASSES.A || cl === AIS_CLASSES.B) {
             typeSuffix = "-" + AisFormatter.format('shiptype', item);
-            statusSuffix = (item.status !== undefined) ? "-status" + Number(item.status) : undefined;
+            statusSuffix = (item.status != null) ? "-status" + Number(item.status) : undefined;
         }
         if (cl === AIS_CLASSES.Aton) {
             typeSuffix = "-type" + item.aid_type;
@@ -519,17 +519,17 @@ class AisLayer{
         const styleMap = (cl === AIS_CLASSES.Aton) ? this.atonStyles : this.symbolStyles;
         const symbol = mergeStyles(styleMap["internal" + base],
             styleMap[base],
-            (typeSuffix !== undefined) ? styleMap[base + typeSuffix] : undefined,
-            (statusSuffix !== undefined) ? styleMap[base + statusSuffix] : undefined,
-            (typeSuffix !== undefined) ? styleMap[base+typeSuffix+WILDCARD_STATUS]:undefined,
-            (statusSuffix !== undefined && typeSuffix !== undefined) ? styleMap[base + typeSuffix + statusSuffix] : undefined,
+            (typeSuffix != null) ? styleMap[base + typeSuffix] : undefined,
+            (statusSuffix != null) ? styleMap[base + statusSuffix] : undefined,
+            (typeSuffix != null) ? styleMap[base+typeSuffix+WILDCARD_STATUS]:undefined,
+            (statusSuffix != null && typeSuffix != null) ? styleMap[base + typeSuffix + statusSuffix] : undefined,
         );
         const style = cloneDeep(symbol.style);
         if (!symbol.image || !style.size) {
             //even the internal style has not been loaded yet...
             return [undefined, undefined, 1];
         }
-        if (style.alpha !== undefined) {
+        if (style.alpha != null) {
             style.alpha = parseFloat(style.alpha);
             if (isNaN(style.alpha)) {
                 style.alpha = undefined;
@@ -550,11 +550,11 @@ class AisLayer{
             amul(style.size, scale);
             amul(style.anchor, scale);
         }
-        if (style.rotate !== undefined && !style.rotate) {
+        if (style.rotate != null && !style.rotate) {
             style.rotation = 0;
             style.rotateWithView = false;
         } else {
-            const target_hdg = (this.displayOptions.useHeading && item.heading !== undefined ? item.heading : item.course) || 0;
+            const target_hdg = (this.displayOptions.useHeading && item.heading != null ? item.heading : item.course) || 0;
             style.rotation = Helper.radians(target_hdg);
             style.rotateWithView = true;
         }
@@ -571,7 +571,7 @@ class AisLayer{
     drawTargetSymbol(drawing:Drawing, target:AisProxyItem) {
         if (!target.shouldHandle) return;
         const useCourseVector = !!target.courseVector;
-        const target_hdg = (this.displayOptions.useHeading && target.heading !== undefined ? target.heading : target.course) || 0;
+        const target_hdg = (this.displayOptions.useHeading && target.heading !=null ? target.heading : target.course) || 0;
         const [style, symbol, scale] = this.getStyleEntry(target);
         if (! style || ! symbol) return;
         if (!target.hidden) {
@@ -660,7 +660,7 @@ class AisLayer{
     }
 
     computeTextOffsets(drawing:Drawing, targetRot:number, textIndex:number, numLabels:number, opt_baseOffset?:boolean | [number,number], opt_iconScale?:number) {
-        const scale = (opt_iconScale === undefined) ? 1 : opt_iconScale;
+        const scale = (opt_iconScale == null) ? 1 : opt_iconScale;
         const rt = [(typeof opt_baseOffset === 'object' ? opt_baseOffset[0] : 10), (typeof opt_baseOffset === 'object' ? opt_baseOffset[1] : 0)];
         amul(rt, scale);
         amul(rt, drawing.getDevPixelRatio()); //images are always scaled

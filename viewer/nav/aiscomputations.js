@@ -161,8 +161,8 @@ export class AISItem {
 const aisSort=(a,b)=>{
     try {
          if (a.distance === b.distance) return 0;
-         if (a.distance === undefined) return 1;
-         if (b.distance === undefined) return -1;
+         if (a.distance == null) return 1;
+         if (b.distance == null) return -1;
          if (a.distance < b.distance) return -1;
          return 1;
         } catch (err) {
@@ -222,10 +222,10 @@ const computeApproach = (courseToTarget, curdistance, srcCourse, srcSpeed, dstCo
     } catch (e) {
         //TODO: exception handling
     }
-    if (rt.td !== undefined && rt.ts !== undefined) {
+    if (rt.td != null && rt.ts != null) {
         rt.ds = srcSpeed * rt.ts; //in m
         rt.dd = dstSpeed * rt.td; //in m
-        if (maxDistance !== undefined) {
+        if (maxDistance != null) {
             if (Math.abs(rt.ds) > maxDistance || Math.abs(rt.dd) > maxDistance) {
                 rt.td = undefined;
                 rt.ts = undefined;
@@ -279,10 +279,10 @@ const computeCpa = (src, dst, options) => {
         let appr;
         const srcCourse = correctedCourse(src.course, src.speed, options.minAISspeed);
         const targetCourse = correctedCourse(dst.course, dst.speed, options.minAISspeed);
-        if (srcCourse !== undefined && src.speed !== undefined && targetCourse !== undefined && dst.speed !== undefined) {
+        if (srcCourse != null && src.speed != null && targetCourse != null && dst.speed != null) {
             appr = computeApproach(courseToTarget, curdistance, srcCourse, src.speed, targetCourse, dst.speed, options.minAISspeed, maxDistance);
         }
-        if (appr && appr.dd !== undefined && appr.ds !== undefined) {
+        if (appr && appr.dd != null && appr.ds != null) {
             let xpoint = options.useRhumbLine ?
                 llsrc.rhumbDestinationPoint(appr.dd, srcCourse) :
                 llsrc.destinationPoint(appr.dd, srcCourse);
@@ -313,7 +313,7 @@ const computeCpa = (src, dst, options) => {
             cpasrc.rhumbBearingTo(cpadst) :
             cpasrc.initialBearingTo(cpadst);
         rt.passFront = Cpa.PASS_BACK;
-        if (appr.td !== undefined && appr.ts !== undefined) {
+        if (appr.td != null && appr.ts != null) {
             if (appr.ts >= 0 && appr.ts < appr.td) rt.passFront = Cpa.PASS_FRONT; // we will cross track of target in front of target
             else if (appr.ts >= 0 && appr.ts > appr.td) rt.passFront = Cpa.PASS_PASS; // we will cross track of target astern of target
             else rt.passFront = Cpa.PASS_BACK; // we have crossed the track of the target already
@@ -340,6 +340,7 @@ const computeCourseVectors=(aisItem,boatPos,boatCog, boatSog, options)=>{
     if (! options.useCourseVector) return;
     let target_sog=aisItem.received.speed||0;
     if (target_sog <=0) return;
+    if (boatCog == null || aisItem.received.course == null) return;
     let target_cog=correctedCourse(aisItem.received.course,target_sog,options.minAISspeed);
     let target_rot=Math.abs(aisItem.received.turn||0); // °/min
     const curved = options.curved && isFinite(target_rot) && target_rot>0.5;
@@ -367,7 +368,7 @@ const computeCourseVectors=(aisItem,boatPos,boatCog, boatSog, options)=>{
         aisItem.courseVector.startAngle=target_cog-target_rot_sgn*90;
         aisItem.courseVector.arc=target_rot_sgn*turn_angle;
     }
-    if (options.rmvRange > 0 && aisItem.distance !== undefined && boatSog !== undefined
+    if (options.rmvRange > 0 && aisItem.distance != null && boatSog != null
         && aisItem.distance < options.rmvRange &&
         target_sog > options.minAISspeed &&
         boatSog > options.minAISspeed){
@@ -395,7 +396,7 @@ const computeCourseVectors=(aisItem,boatPos,boatCog, boatSog, options)=>{
  * @returns {number|*}
  */
 const correctedCourse=(course,speed,minSpeed)=>{
-    if (course !== undefined) return course;
+    if (course != null) return course;
     if (speed <= minSpeed) return 0;
     return course;
 }
@@ -409,7 +410,7 @@ const correctedCourse=(course,speed,minSpeed)=>{
  */
 export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
     let now=(new Date()).getTime();
-    if (aisData === undefined) return;
+    if (aisData == null) return;
     if (! (aisData instanceof Array)) throw new Error("invalid ais data");
     let aisWarningAis=undefined; //the most important warning
     aisData.forEach((aisItem)=>{
@@ -419,7 +420,7 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
             return;
         }
         let ais=aisItem.received;
-        if (ais.lat === undefined || ais.lon === undefined) return;
+        if (ais.lat == null || ais.lon == null) return;
         let aisSpeed = parseFloat(ais.speed || 0);
         aisItem.shouldHandle=!options.onlyShowMoving || aisSpeed >= options.minAISspeed;
         if (aisItem.shouldHandle){
@@ -435,16 +436,16 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
             }
         }
         aisItem.age=parseFloat(ais.age || 0);
-        if (ais.receiveTime !== undefined) aisItem.age+= (now - ais.receiveTime)/1000;
+        if (ais.receiveTime != null) aisItem.age+= (now - ais.receiveTime)/1000;
         if (aisItem.age > options.lostTime) aisItem.lost=true;
         aisItem.receivedPos = new navobjects.Point(parseFloat(ais.lon || 0), parseFloat(ais.lat || 0));
-        let aisCourse = parseFloat(ais.course || 0);
-        if (aisSpeed >= options.minAISspeed) {
+        let aisCourse = (ais.course != null)?parseFloat(ais.course || 0):undefined;
+        if (aisSpeed >= options.minAISspeed && aisCourse != null) {
             aisItem.estimated = NavCompute.computeTarget(aisItem.receivedPos, aisCourse, aisItem.age * aisSpeed, options.useRhumbLine);
         }
         aisItem.fromEstimated=(options.cpaEstimated && aisItem.estimated);
         let targetPos=(aisItem.fromEstimated)?aisItem.estimated:aisItem.receivedPos;
-        if (boatPos.lat !== undefined && boatPos.lon !== undefined && targetPos.lat !== undefined && targetPos.lon !== undefined) {
+        if (boatPos.lat != null && boatPos.lon != null && targetPos.lat != null && targetPos.lon != null) {
             let dst = NavCompute.computeDistance(boatPos, targetPos, options.useRhumbLine);
             aisItem.distance = dst.dts;
             aisItem.headingTo = dst.course;
@@ -463,7 +464,7 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
                 options
             );
         }
-        if (aisItem.cpadata  && aisItem.cpadata.cpa !== undefined){
+        if (aisItem.cpadata  && aisItem.cpadata.cpa != null){
             if (aisItem.cpadata.cpa <= options.warningDist && aisItem.cpadata.tcpa <= options.warningTime && 0 <= aisItem.cpadata.tcpa) {
                 aisItem.warning = true;
                 if (aisWarningAis) {
@@ -492,11 +493,11 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
         }
         computeCourseVectors(aisItem, boatPos, boatCog, boatSpeed, options);
     })
-    if (aisWarningAis !== undefined){
+    if (aisWarningAis != null){
         aisWarningAis.nextWarning=true;
     }
     aisData.sort(aisSort);
-    if (aisData.length && aisData[0].distance !== undefined) aisData[0].nearest=true;
+    if (aisData.length && aisData[0].distance != null) aisData[0].nearest=true;
 }
 /**
  *
