@@ -25,7 +25,7 @@ interface AisItemDisplayProps{
 
 }
 const Name=(props:{name:string})=>{
-    return <div className="widgetData">
+    return <div className="widgetData aisName">
         <span className="aisData">{props.name}</span>
     </div>
 }
