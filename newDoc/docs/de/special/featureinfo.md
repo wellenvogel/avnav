@@ -19,7 +19,7 @@ In dieser Liste findet man alle Anzeige-Layer, die an der angeklickten Position 
 
 ## Feature Info
 
-Der Inhalt der Detail-Information ist vom Anzeige-Layer (also z.B. vom [Overlay](overlays.md#featureInfo)) abhängig.
+Der Inhalt der Detail-Information ist vom Anzeige-Layer, also z.B. vom [Overlay](overlays.md#featureInfo) abhängig.
 
 ![Feature Info Route](../../img/feature-info-route.png)
 ///caption
@@ -32,17 +32,17 @@ Hier wurde auf die Route "test0906", die als Overlay auf der Karte eingerichtet 
 
 Button an, der eine sofortige Wegepunkt-Navigation zum ausgewählten Objekt startet.
 
-Falls man auf eine [o-charts](ochartsng.md) Vektor-Karte klickt, bekommt man direkt weitere Informationen zu den Karten-Objekten.
+Falls man auf eine [O-Charts](ochartsng.md) Vektor-Karte klickt, bekommt man direkt weitere Informationen zu den Karten-Objekten.
 
-![Feature Info Ocharts](../../img/feature-info-ocharts.png)
+![Feature Info O-Charts](../../img/feature-info-ocharts.png)
 ///caption
 Feature Info Vektorkarte
 ///
 
-Über {{DB("DBInfo")}} erhält man hier noch komplette Informationen über die Kartenobjekte. Siehe auch die [Ocharts Beschreibung](ochartsng.md#featureinfo).
+Über {{DB("DBInfo")}} erhält man hier noch komplette Informationen über die Kartenobjekte. Siehe auch die [O-Charts Beschreibung](ochartsng.md#featureinfo).
 
 ## Anpassungen
 
 Die in einer Feature-Info angezeigten Informationen können sowohl durch [Nutzer-JavaScript](userjs.md#featureFormatter) als auch durch [Plugins](plugins.md) angepasst werden. 
 
-Auch [Zusätzliche Kartentypen](charts.md#owntypes) können die Anzeige in der Feature-Info beeinflussen. Über die {{DB("DBInfo")}} Funktion lassen sich auch Webseiten oder externe Links hinterlegen.
+Auch [zusätzliche Kartentypen](charts.md#owntypes) können die Anzeige in der Feature-Info beeinflussen. Über die {{DB("DBInfo")}} Funktion lassen sich auch Webseiten oder externe Links hinterlegen.
