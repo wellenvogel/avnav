@@ -486,7 +486,7 @@ Einige Beispiele zur Nutzung kann man in einem [AvNav eigenen Plugin](https://gi
 
 ## AvNav Navigationsdaten (Store) {: #store }
 
-Um Anzeigen dynamisch an geänderte Werte anzupassen, verfolgt AvNav ein "Store" Konzept. In diesem Store werden Daten mit einem strukturierten Key und ihrem Wert gespeichert. Ein solcher Key ist z.B. `nav.gps.lat` für die aktuelle Länge der GPS Position. Die innerhalb von AvNav verwendeten Keys finden sich in [keys.ts](https://github.com/wellenvogel/avnav/blob/4ba19d53196a35ac46c0c38daebd1f59112981a9/viewer/util/keys.ts#L161).
+Um Anzeigen dynamisch an geänderte Werte anzupassen, verfolgt AvNav ein "Store" Konzept. In diesem Store werden Daten mit einem strukturierten Key und ihrem Wert gespeichert. Ein solcher Key ist z.B. `nav.gps.lat` für die aktuelle Breite der GPS Position. Die innerhalb von AvNav verwendeten Keys finden sich in [keys.ts](https://github.com/wellenvogel/avnav/blob/4ba19d53196a35ac46c0c38daebd1f59112981a9/viewer/util/keys.ts#L161).
 
 Der AvNav store kann auf verschiedene Arten genutzt werden:
   
