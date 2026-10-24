@@ -10,50 +10,50 @@
 
 # Avnav Ocharts(NG)
 
-AvNav ochartsng ist eine neue Implementierung als Ersatz für das legacy AvNav
-ocharts plugin.  
-Diese hat eine Reihe von neuen Funktionen:
+*AvNav O-ChartsNG* ist eine neue Implementierung als Ersatz für das legacy *AvNav
+O-Charts* Plugin.  
+Das Plugin hat eine Reihe von neuen Funktionen:
 
-* Sie läuft jetzt auch unter [Android](#android)
+* Es läuft jetzt auch unter [Android](#android)
 * Es gibt eine direkte Onlineverbindung zum O-Charts Shop
-* Es können jetzt auch unverschlüsselte S57 Karten verwendet werden
+* Es können jetzt auch unverschlüsselte S57-Karten verwendet werden
   (nach einer einmaligen [Konvertierung](#chartconversions))
-* Die Anzeige kann noch stärker angepasst werden
+* Die Anzeige kann noch differenzierter angepasst werden
 * Es werden keine großen Disk-Caches mehr angelegt. Das verringert die
-  Schreiblast auf der SD Karte und die CPU Last.
+  Schreiblast auf der SD-Karte und die CPU-Last.
 * Es braucht keinen Restart mehr, wenn neue Karten hinzugefügt werden.
-* Es können mehr Prozessorkerne genutzt werden und es sollte auf den
+* Es können mehr Prozessorkerne genutzt werden, daher sollte es auf den
   meisten Systemen schneller laufen.
-* Es werden wesentlich weniger externe Pakete benötigt. Insbesondere
-  auch keine lauffähige X11 Umgebung.
+* Es werden wesentlich weniger externe Pakete benötigt, insbesondere
+  auch keine lauffähige X11-Umgebung.
 * Es wird weniger Speicher benötigt.
 
-Gegenüber dem alten ocharts plugin gibt es die
+Gegenüber dem alten O-Charts Plugin gibt es die
 folgenden Einschränkungen:
 
-* **Es können keine oeRNC Karten (Rasterkarten
-  von o-charts) gelesen werden**
+* **Es können keine oeRNC-Karten (Rasterkarten
+  von O-Charts) gelesen werden**
 * Karten von OpenCPN können nicht direkt genutzt werden. Da OpenCPN
-  keine definierte Struktur der Konfiguration bietet, müssen die Karten
-  noch einmal parallel im plugin installiert werden. Ausser auf Android
+  keine definierte Struktur seiner Konfiguration bietet, müssen die Karten
+  noch einmal parallel im Plugin installiert werden. Außer auf Android
   wird allerdings der gleiche Key genutzt.
 
 ## Übersicht
 
-AvNav kann direkt Karten in verschiedenen Raster-Formaten verarbeiten. Für offizielle Seekarten (im Vektor-Format) gibt es die Firma [o-charts](https://o-charts.org/),
+AvNav kann direkt Karten in verschiedenen Rasterformaten verarbeiten. Für offizielle Seekarten im Vektor-Format gibt es die Firma [O-Charts](https://o-charts.org/),
 die Karten für viele Gebiete der Erde für OpenCPN bereitstellt.
 
-Nach einigen Absprachen mit der Firma können diese Karten nun auch für
-AvNav mit diesem Plugin genutzt werden.
+Nach einigen Absprachen mit der Firma können diese Karten mit diesem Plugin nun auch für
+AvNav genutzt werden.
 
-Es können die oesenc Vektor-Karten genutzt werden.   
-Ausserdem kann das Plugin freie S57 Karten nutzen (nach [Konvertierung](#chartconversions)).
+Es können die oeSENC Vektor-Karten genutzt werden.   
+Außerdem kann das Plugin nach einer [Konvertierung](#chartconversions) freie S57-Karten nutzen .
 
 Die Umwandlung in die für AvNav notwendigen Raster-Karten erfolgt dabei
 im laufenden Betrieb immer dann, wenn die Karten dargestellt werden
 sollen. Ein gewisser Teil der Kartenkacheln wird im Server im Speicher
-aufbewahrt, so das diese sehr schnell erneut bereitgestellt werden können.
-Das beschleunigt die Anzeige, wenn man zwischen verschiedenen Zoom Stufen
+aufbewahrt, sodass diese sehr schnell erneut bereitgestellt werden können.
+Das beschleunigt die Anzeige, wenn man zwischen verschiedenen Zoomstufen
 wechselt oder mehrere Displays angeschlossen sind.
 
 Das Handling der Karten erfolgt dabei vollständig durch das Plugin - das
@@ -72,86 +72,71 @@ OchartsNG Oberfläche
 
 ## Einführung
 
-In der Einführung zur [Navigationsseite](../base/navpage.md) und auch im dortigen Video werden wichtige Grundfunktionen bereits einmal erklärt. In diesem Kapitel werden diese Informationen ergänzt und detailliert.
+In der Einführung zur [Navigationsseite](../base/navpage.md) und auch im dortigen Video werden wichtige Grundfunktionen bereits einmal erklärt. In diesem Kapitel werden diese Informationen ergänzt und detailliert erklärt.
   
 
 ## Karten Typen
 
-AvNav ochartsng kann die o-chart Vektorkarten darstellen (oeusenc) - so
+AvNav O-ChartsNG kann die O-Chart Vektorkarten darstellen (oeSENC) - so
 wie in diesem Dokument beschrieben.  
-Ausserdem können unverschlüsselte Vektorkarten (S57) benutzt werden. Diese
+Außerdem können unverschlüsselte Vektorkarten (S57) benutzt werden. Diese
 sind für verschiedene Regionen frei zum Download verfügbar.  
-Um solche S57 Karten nutzen zu können, müssen sie zunächst in das genutzte
-OpenCPN SENC Format umgewandelt werden.  
-Für eine Anleitung zur Konvertierung siehe [Karten
-Konvertierungen](#chartconversions).
+Um solche S57-Karten nutzen zu können, müssen sie zunächst in das genutzte
+OpenCPN SENC-Format umgewandelt werden.  
+Für eine Anleitung zur Konvertierung siehe [Kartenkonvertierungen](#chartconversions).
 
 ## Erwerb und Installation der Karten {: #Charts}
 
-Wichtiger Hinweis: Wenn man keinen Dongle
-von o-charts hat, sind die Karten an das System gebunden. Wenn es daher
-beim Einbringen oder bei der Nutzung der Karten Probleme gibt, bitte **nicht**
-das System neu aufsetzen - sondern eine Reparatur versuchen. Wenn man
+**Wichtiger Hinweis**: Wenn man keinen Dongle von O-Charts hat, sind die Karten an das System gebunden. Wenn es daher beim Einbringen oder bei der Nutzung der Karten Probleme gibt, bitte **nicht** das System neu aufsetzen - sondern eine Reparatur versuchen. Wenn man
 das System neu aufsetzt, werden u.U. die Lizenzen ungültig. Ich helfe
 gerne bei Problemen - Kontakt z.B. per [email](mailto:andreas@wellenvogel.net).
 
-Nur bei Nutzung der AvNav Images ist auch ein update der Images möglich.
+Nur bei Nutzung der AvNav Images ist auch ein Update der Images möglich.
 Bitte im Zweifel vorher testen.
 
-Um bei ocharts Karten kaufen zu können, muss [dort](https://o-charts.org/shop/de/autenticacion?back=my-account)
-zunächst ein Konto angelegt werden.  
-Anschliessend muss man seine Systeme, auf denen man die Karten nutzen möchte
-[auf der Seite von o-charts](https://o-charts.org/shop/en/8-oesenc)
-registrieren.
+Um im O-Charts-Shop Karten kaufen zu können, muss [dort](https://o-charts.org/shop/de/autenticacion?back=my-account) zunächst ein Konto angelegt werden.  
+Anschließend muss man seine Systeme, auf denen man die Karten nutzen möchte,
+[auf der Seite von o-charts](https://o-charts.org/shop/en/8-oesenc) registrieren.
 
-Für den gesamten Prozeß gibt es zwei Wege - den "[Online
-Proceß](https://o-charts.org/manuals/?lng=en) " und den ["Offline
-Prozeß"](https://o-charts.org/manuals/offline.php?lng=en) .   
-Der online Prozeß erfordert, das das System (auf dem der AvNav Server
-läuft - das muss nicht das System sein, auf dem der Browser läuft) mit dem
-Internet verbunden ist.  
-Für Android ist die Registrierung eines neuen Systems nur über den online
-Prozeß möglich.
+Für den gesamten Prozess gibt es zwei Wege - den "[Online-Prozess](https://o-charts.org/manuals/?lng=en) " und den ["Offline-Prozess"](https://o-charts.org/manuals/offline.php?lng=en) .   
+Der Online-Prozess erfordert, dass das System, auf dem der AvNav Server
+läuft , mit dem Internet verbunden ist. Das muss nicht das System sein, auf dem der Browser läuft.
+Für Android ist die Registrierung eines neuen Systems nur über den Online-Prozess möglich.
 
-### Der Offline Prozeß {: #offlineprocess}
+### Der Offline-Prozess {: #offlineprocess}
 
-**Nicht für Android - dort bitte den [Online Prozeß](#onlineprocess) nutzen**
+**Nicht für Android - dort bitte den [Online-Prozess](#onlineprocess) nutzen**
 
 Dieser besteht aus den folgenden Schritten:
 
 1. Erzeugung eines "Fingerprints" für das System, auf dem die Karten
    genutzt werden sollen. Dieser kann in AvNav über die Bedienoberfläche
    des Plugins erzeugt und heruntergeladen werden.
-2. Hochladen dieses Fingerprints zu o-charts und Anlegen eines Systems
+2. Hochladen dieses Fingerprints zu O-Charts und Anlegen eines Systems
    (im Wesentlichen Vergabe eines Namens)
 3. Kaufen von Karten
 4. Zuordnen zu dem angelegten System
-5. Nach kurzer Zeit gibt es eine Mail von o-charts mit einem
+5. Nach kurzer Zeit gibt es eine Mail von O-Charts mit einem
    Download-Link für die Karten (Zip-File)
-6. Hochladen der Karten in AvNav (wieder über die Bedienoberfläche des
-   Plugins).
+6. Hochladen der Karten in AvNav wieder über die Bedienoberfläche des
+   Plugins.
 
 Für Updates werden die Schritte 4,5 und 6 wiederholt (bei 4 nur
 Anforderung des Updates).
 
-Für weitere Kartensätze Schritte 3-6.
+Für weitere Kartensätze reichen die Schritte 3-6.
 
 Für die Schritte 2,3,4 und 5 wird natürlich ein System mit
 Internet-Verbindung benötigt. Das kann z.B. ein Laptop oder auch ein Android
 Tablet sein.  
 
 
-Wichtiger Hinweis für Android: Die
-Registrierung eines Systems (Schritte 1 und 2) können nur im [Online
-Prozeß](#onlineprocess) erledigt werden.
+**Wichtiger Hinweis für Android**: Die Registrierung eines Systems (Schritte 1 und 2) können nur im [Online-Prozess](#onlineprocess) erledigt werden.
 
-Für den Ablauf des Offline-Prozesses habe ich ein [Video](https://www.youtube.com/watch?v=q24VRAtbbEE)
-gemacht, um ihn zu verdeutlichen. Hier noch einmal eine kurze Beschreibung
+Für den Ablauf des Offline-Prozesses habe ich ein [Video](https://www.youtube.com/watch?v=q24VRAtbbEE) gemacht, um ihn zu verdeutlichen. Hier noch einmal eine kurze Beschreibung
 dazu.
 
-**Hinweis**: Wenn die Karten auf dem gleichen System bereits für
-OpenCPN registriert sind, dann kann man direkt mit Schritt 6 starten (aber
-nicht für Android - dort kann für OpenCPN und AvNav nicht die gleiche Lizenz genutzt werden).
+**Hinweis**: Wenn die Karten auf dem gleichen System bereits für OpenCPN registriert sind, dann kann man direkt mit Schritt 6 starten Das gilt nicht für Android - dort kann für OpenCPN und AvNav nicht die gleiche Lizenz genutzt werden.
 
 #### Erzeugung des Fingerprints
 
@@ -163,73 +148,69 @@ auf die Oberfläche des Plugins gehen, dort den Tab "Charts" auswählen.
 
 ![](../../img/ochartsng-gui-charts1.png)
 
-Mit "Get Fingerprint" die Erzeugung des Fingerprints anstossen. Falls man
-einen Dongle von o-charts benutzt, den Fingerprint über "Get
-Fingerprint(Dongle)" erzeugen. Dieser wird nur sichtbar, wenn ein dongle
-erkannt wurde (Dongle Zeile grün).
+Mit "Get Fingerprint" die Erzeugung des Fingerprints anstoßen. Falls man
+einen Dongle von O-Charts benutzt, den Fingerprint über "Get
+Fingerprint(Dongle)" erzeugen. Dieser wird nur sichtbar, wenn ein Dongle
+erkannt wurde (Dongle-Zeile grün).
 
 ![](../../img/ochartsng-gui-charts2.png)
 
-Im Dialog die erzeugte Datei auf meinem Gerät speichern.
+Im Dialog die erzeugte Datei auf dem eigenen Gerät speichern.
 
-#### Hochladen des Fingerprints zu o-charts
+#### Hochladen des Fingerprints zu O-Charts
 
-Auf die [o-charts Seit](https://o-charts.org/shop/en/8-oesenc)e
+Auf die [O-Charts-Seite](https://o-charts.org/shop/en/8-oesenc)
 gehen und den Fingerprint hochladen.
 
 ![](../../img/ocharts-buying.png)
 
-Mit Choose File die unter 2. gespeicherte Datei wählen. Dazu einen
+Mit "Choose File" die unter 2. gespeicherte Datei wählen. Dazu einen
 sinnvollen Namen vergeben (dieser findet sich später in den Mails mit den
 Download Links).
 
 #### Kaufen von Karten
 
-Bei o-charts aus den verfügbaren [oeSENC
-Karten](https://o-charts.org/shop/de/8-oesenc) die gewünschten kaufen.
+Bei O-Charts aus den verfügbaren [oeSENC Karten](https://o-charts.org/shop/de/8-oesenc) die gewünschten kaufen.
 
 #### Zuordnen zum angelegten System
 
 ![](../../img/ocharts-assign.png)
 
-Bei 1 kann die Zuordnung zu einem angelegten System erfolgen (hier nicht
+Bei 1 kann die Zuordnung zu einem bereits angelegten System erfolgen (hier nicht
 mehr möglich, weil die Karten bereits zu den 2 maximal verfügbaren
 Systemen zugeordnet sind). Bei 2 wird dann die Mail mit dem Download-Link
-angefordert (das erfolgt auch bei Updates - hier im Bild zu sehen: Die
-letzte abgerufene Version ist 21, verfügbar ist 23).
+angefordert. Das erfolgt auch bei Updates - hier im Bild zu sehen: Die
+letzte abgerufene Version ist 21, verfügbar ist 23.
 
 #### Herunterladen der Karten
 
 ![](../../img/ocharts-download.png)
 
-Nach kurzer Zeit erhält man von o-charts eine Mail mit dem Download-Link.
+Nach kurzer Zeit erhält man von O-Charts eine Mail mit dem Download-Link für die gekauftre Karte.
 Diese Datei (zip) herunterladen.
 
 #### Hochladen der Zip-Datei zu AvNav
 
 ![](../../img/ochartsng-upload1.png)
 
-In der GUI des o-chart plugins über "Upload Zip" die im Schritt 5.
+In der Oberfläche des O-Chart Plugins über "Upload Zip" die im Schritt 5.
 heruntergeladene Datei zu AvNav hochladen.   
 Während des Uploads wird ein Fortschritt angezeigt.
 
 ![](../../img/ochartsng-upload2.png)
 
-Am Ende des Uploads wird auf dem AvNav Server die Datei ausgepackt, und
-es werden einige Prüfungen durchgeführt (das kann einige Sekunden dauern).
+Am Ende des Uploads wird auf dem AvNav Server die Datei ausgepackt und
+es werden einige Prüfungen durchgeführt. Das kann einige Sekunden dauern.
 
-Die Karten werden (falls nicht anders konfiguriert) in das Verzeichnis
-/home/pi/avnav/data/ocharts/charts hochgeladen.
+Die Karten werden, falls nicht anders konfiguriert, in das Verzeichnis
+*/home/pi/avnav/data/ocharts/charts* hochgeladen.
 
 Wenn die neu hochgeladenen Karten ein Update für einen bereits
 existierenden Kartensatz enthalten, wird der existierende Satz
-deaktiviert. Das kann man später mit Enable/Disable/Auto ändern.
+deaktiviert. Das kann man später mit *Enable/Disable/Auto* ändern.
 Kartensätze, die nicht mehr benötigt werden, können gelöscht werden.
 
-Wichtiger Hinweis: Die Karten stehen auf
-der o-charts Seite nur während ihres Gültigkeitszeiraumes (1 Jahr) zum
-Download bereit. Daher sollte die zip Datei noch einmal sicher aufbewahrt
-werden. Man kann diese auch zu AvNav hochladen und nutzen, wenn dieser
+Wichtiger Hinweis: Die Karten stehen im eigenen Account auf der O-Charts Seite nur während ihres Gültigkeitszeiraumes (1 Jahr) zum Download bereit. Daher sollte die Zip-Datei noch einmal sicher aufbewahrt werden. Man kann diese auch zu AvNav hochladen und nutzen, wenn der
 Gültigkeitszeitraum abgelaufen ist. Man hat dann natürlich keine Updates
 mehr.
 
@@ -238,99 +219,93 @@ grün ändern (READY).
 
 ![](../../img/ochartsng-upload4.png)
 
-Falls der Status zu "ERROR" (rot) wird, wurde u.U. ein Zip-File hochgeladen,
-was für ein anderes System zugeordnet war. Details kann man im Log File
-(/home/pi/avnav/data/ocharts/provider.log) sehen.   
-Nun sind die Karten verfügbar und erscheinen auf der Navigationsseite in der Kartenauswahl-Liste.
+Falls der Status auf "ERROR" (rot) wechselt, wurde u.U. ein Zip-File hochgeladen,
+was einem anderen System zugeordnet war. Details kann man im Log File
+(/home/pi/avnav/data/ocharts/provider.log) sehen.
+
+Nach erfolgreichem Einlesen sind die Karten verfügbar und erscheinen auf der Navigationsseite in der Kartenauswahl-Liste.
 
 {{MM("MMnavpage")}}->{{BT("NavSelectChart")}}
 
-### Der Online Prozeß {: #onlineprocess}
+### Der Online-Prozess {: #onlineprocess}
 
 **Für Android muss vorher die AvOcharts App installiert werden - siehe die [Hinweise für Android](#android)**
 
+Damit man den Online-Prozess nutzen kann, muss das System, auf dem AvNav
+läuft (der Server, nicht nur ein Client im Browser!) mit dem Internet verbunden sein.
 
-Damit man den Online Prozeß nutzen kann, muss das System, auf dem AvNav
-läuft(der Server, nicht der Browser!) mit dem Internet verbunden sein.
-
-Der Prozeß erlaubt es, ein System zu registrieren, zu prüfen, ob das
-aktuelle System im Shop bekannt ist und sich die Karten, die diesem System
-zugeordnet wurden anzeigen zu lassen. Man kann diese dann direkt
+Der Prozess erlaubt es, ein System zu registrieren, zu prüfen, ob das
+aktuelle System im Shop bekannt ist, und sich die Karten, die diesem System
+zugeordnet wurden, anzeigen zu lassen. Man kann diese dann direkt
 herunterladen und installieren.  
 Das eigentliche Kaufen der Karten und die Zuordnung zum System muss über
-die o-charts Webseite vorgenommen werden. In der ochartsng Weboberfläche
-ist ein Link-Button vorhanden, der einen direkt dort hin bringt.  
-AvNav ochartsng speichert keine Login-Daten für den Shop. Da aber die
-Applikation im Browser läuft, können die Login Daten dort gespeichert
-werden (wie für jede andere Webseite).
+die Webseite des O-Charts Shop vorgenommen werden. In der O-ChartsNG-Weboberfläche
+ist ein Link-Button vorhanden, der direkt zum Shop verbindet.  
+AvNav O-ChartsNG speichert keine Login-Daten für den Shop. Da aber die
+Applikation im Browser läuft, können die Login-Daten dort gespeichert
+werden wie auch für jede andere Webseite.
 
-Sicherheitshinweis: Die Kommunikation
-zwischen AvNav ochartsng und dem o-charts Shop ist verschlüsselt. Die
-Kommunikation zwischen dem Browser und dem AvNav Server aber nicht. Daher
-darf der Online Prozeß nur verwendet werden, wenn man sich in einem
-sicheren WLAN befindet (z.B. hinter einem LTE Router oder einem mobilen
-Hotspot) - niemals aber direkt in einem öffentlichen WLAN wenn der Browser
+**Sicherheitshinweis**: Die Kommunikation zwischen AvNav O-ChartsNG und dem O-Charts Shop ist verschlüsselt. Die Kommunikation zwischen dem Browser und dem AvNav Server aber nicht. Daher
+darf der Online-Prozess nur verwendet werden, wenn man sich in einem
+sicheren WLAN befindet, z.B. hinter einem LTE Router oder einem mobilen
+Hotspot - niemals aber direkt in einem öffentlichen WLAN, wenn der Browser
 und der Server nicht auf dem gleichen Rechner laufen.
 
 ![](../../img/ochartsng-shop1.png)
 
-Wenn man den "Shop" Reiter öffnet ist man zunächst nicht im Shop
-eingelogged. Man kann sehen, ob momentan ein Dongle aktiv ist oder nicht.
-Über den "ShopPage" Button gelangt man direkt zur o-charts Webseite (aber
-es macht mehr Sinn, sich zunächst einzuloggen).
+Wenn man den "Shop"-Reiter öffnet ist man zunächst nicht im Shop
+eingeloggt. Man kann sehen, ob momentan ein Dongle aktiv ist oder nicht.
+Über den "ShopPage" Button gelangt man direkt zur O-Charts Webseite, aber
+es macht mehr Sinn, sich zunächst einzuloggen.
 
-Mit einem Klick auf "Login" und eingabe von Nutzername und Passwort
-logged man sich im o-charts Shop ein.
+Mit einem Klick auf "Login" und Eingabe von Nutzername und Passwort
+loggt man sich im O-Charts Shop ein.
 
 ![](../../img/ochartsng-shoploggedin.png)
 
-Wenn das System bereits im Shop registriert wurde, wird der "Shop name"
-(d.h. der dort genutzte Name für das System) angezeigt und die Liste der
-Karten/Updates die dem System zugeordnet wurden(siehe [Offline
-Prozeß](#offlineprocess)) wird angezeigt.  
-Wenn eine Version einer Karte im Shop neuer ist als die lokale (oder eine
-Karten lokal noch nicht vorhanden ist) kann man sie direkt installieren.
+Wenn das System bereits im Shop registriert wurde, wird der "Shop name", d.h. der dort genutzte Name für das System, angezeigt. Ebenso wird die Liste der Karten/Updates, die dem System zugeordnet wurden, angezeigt(siehe [Offline-Prozess](#offlineprocess)).  
+Wenn die Version einer Karte im Shop neuer ist als die lokale oder eine
+Karte lokal noch nicht vorhanden ist, kann man sie direkt installieren.
 
 ![](../../img/ochartsng-shopupdate.png)
 
 ![](../../img/ochartsng-shopdownload.png)
 
-Nach dem Herunterladen wird die Karten entpackt und kann sofort genutzt
-werden. Wenn es ein update für eine existierende Karte ist, wird die neue
-Version aktiv und die alte wird "disabled" (gleiches Verhalten wie beim
-Hochladen einer Karte). Auf dem "Charts" Reiter kann man später die alte
+Nach dem Herunterladen wird die Karte entpackt und kann sofort genutzt
+werden. Wenn es ein Update für eine existierende Karte ist, wird die neue
+Version aktiv und die alte wird "disabled". Das entspricht dem Verhalten wie beim
+Hochladen einer Karte. Auf dem "Charts"-Reiter kann man später die alte
 Version löschen, wenn man sie nicht mehr benötigt.
 
-Wichtiger Hinweis:  
+**Wichtiger Hinweis**:  
 Die Karten im Shop bleiben nur während ihrer Gültigkeitsdauer (1 Jahr)
 verfügbar. Bitte daher die Karten noch einmal lokal sicher aufbewahren.
-Das kann man entweder durch Anforderung auf der Shop-Webseite tun (wie im
-Offline Prozeß) oder man kann die ZIP Datei direkt vom "Charts" Reiter
+Das kann man entweder durch Anforderung auf der Shop-Webseite tun wie im
+Offline-Prozess) oder man kann die ZIP-Datei direkt vom "Charts"-Reiter
 herunterladen.
 
-Wenn das System im Shop noch nicht bekannt ist, kann man es hier
-registrieren.
+Wenn das System im Shop noch nicht bekannt ist, kann man es hier registrieren:
 
 ![](../../img/ochartsng-shopunknown.png)
 
-Auf einem Linux System wird man nach einem Namen für das System gefragt,
+Auf einem Linux-System wird man nach einem Namen für das System gefragt,
 unter Android ist der Name voreingestellt und kann nicht geändert werden.  
 
 Wenn man das System registriert hat, kann man über "ShopPage" direkt zur
-Shop Webseite gehen und Karten kaufen bzw. zuordnen. Wenn man von dort
-zurückkehrt muss man über "Refresh" die Liste der zugeordneten Karten
+Shop-Webseite gehen und Karten kaufen bzw. zuordnen. Wenn man von dort
+zurückkehrt, muss man über "Refresh" die Liste der zugeordneten Karten
 aktualisieren.
 
 ## Anpassung des Aussehens {: #MainSettings}
 
-Da die O-charts Karten als Vektorkarten vorhanden sind, kann in weiten
+Da die O-Charts-Karten als Vektorkarten vorhanden sind, kann in weiten
 Bereichen das Aussehen der Karten angepasst werden. Dabei sind allerdings
 einige Einschränkungen zu beachten:
 
 1. Die Anpassung erfolgt auf der Server-Seite und ist damit für alle
    verbundenen Displays gleichartig wirksam
 2. Wenn das Aussehen geändert wird, werden die im internen Cache
-   gespeicherten Kartenkacheln gelöscht, so das es auf langsamen Systemen
+   gespeicherten Kartenkacheln gelöscht, sodass es auf langsamen Systemen
    danach leichte Verzögerungen geben kann.
 
 Die Veränderung der Parameter erfolgt über die Oberfläche des Plugins
@@ -339,24 +314,23 @@ Die Veränderung der Parameter erfolgt über die Oberfläche des Plugins
 
 Reiter "Main Settings".
 
-![](../../img/ochartsng-settings1.png)Wenn eine Einstellung
-geändert wird (1) wird der Parameter fett dargestellt. Die Änderungen werden
-erst wirksam, wenn "Update Settings"(2) angeklickt wird.
+![](../../img/ochartsng-settings1.png)
+Wenn eine Einstellung geändert wird (1), wird der Parameter fett dargestellt. Die Änderungen werden
+erst wirksam, wenn "Update Settings"(2) angeklickt wurde.
 
-Mit Cancel können die Änderungen zurückgenommen werden, Defaults setzt
+Mit *Cancel* können die Änderungen zurückgenommen werden, der Button *Defaults* setzt
 die Einstellungen auf Default-Werte. Die Parameter entsprechen weitgehend
-den bei [OpenCPN
-vorhandenen Settings](https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:opencpn_user_manual:options_setting).
+den bei [OpenCPN vorhandenen Settings](https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:opencpn_user_manual:options_setting).
 
 Die folgende Tabelle listet die Einstellungen.
 
 | Name | Bedeutung | Default |
 | --- | --- | --- |
 | Show Text | Zeige Texte zu den Objekten auf der Karte | an |
-| Important Text Only | Verberge weniger wichtige Texte | aus |
+| Important Text Only | Verbirg weniger wichtige Texte | aus |
 | Light Descriptions | Beschreibungen für Feuer | an |
-| Show Depths | Zeige Tiefen Werte | an |
-| Show Quality | Zeige extra Objekte für die Karten-Qualität | aus |
+| Show Depths | Zeige Tiefenwerte | an |
+| Show Quality | Zeige Extra-Objekte für die Karten-Qualität | aus |
 | Chart Information Objects | spezielle Objekte auf der Karte | an |
 | Buoy/Light Labels | Bezeichnungen für Feuer/Tonnen | an |
 | National text on chart | Nationale Texte | an |
@@ -368,18 +342,18 @@ Die folgende Tabelle listet die Einstellungen.
 | De-Cluttered Text | Bessere Anordnung der Texte | an |
 | Display Category | Art der Darstellung (Base, Standard, All, User Standard) | Standard |
 | Graphics Style | Grafische Darstellung (Paper Chart, Simplified) | Paper Chart |
-| Boundaries | Art der Begrenzungen(Plain, Symbolized) | Plain |
+| Boundaries | Art der Begrenzungen (Plain, Symbolized) | Plain |
 | Colors | 4Color, 2 Color | 4 Color |
 | Text Font Size | Skalierung für die Text-Grösse | 1 (ca. 12px) |
-| Soundings Font Size | Skalierung für die Tiefen-Angaben | 1 (ca. 12px) |
-| Scale | Basis Skalierung. Höhere Werte sorgen für mehr Details auf kleineren Zoom-Stufen | 1 |
-| UnderZoom | Anzahl der Zoom Stufen, die eine höher aufgelöste Karte verkleinert wird, wenn auf dem gewünschten Level keine Karte vorhanden ist | 4 |
-| AreaUnder | Wenn im Bereich "UnderZoom" immer noch keine Karte für den Bereich gefunden wurde, benutzte weitere (höhere) zoom level. Für diese Karten werden dann nur If with in the under zoom range still no charts have been found, just try some lower zoom layers - but only display the areas (land, depth) - no other information.  Be careful when increasing this as this could impact the performance a lot. | 2 |
-| OverZoom | Anzahl der Zoom Stufen, die eine niedriger aufgelöste Karte vergrößert wird,wenn es keine besser aufgelöste Karte gibt.  **Hinweis**: UnderZoom,AreaUnder und OverZoom bestimmen massgeblich, wie aufwendig der Render-Vorgang ist, d.h. wieviele Karten an der Erzeugung einer Kachel beteiligt werden müssen. Kleinere Werte führen zu weniger Karten (schneller) können aber in bestimmten Bereichen zu weissen Flächen zwischen Karten-Teilen führen. Die Defaults sollten ein guter Kompromiss sein. | 4 |
-| Scale Tolerance | Wenn die Symbole in unterschiedlichen Größen benötigt werden oder die Karte skaliert wird, müssen jeweils neue Symbole intern berechnet werden. MIt einer Toleranz kann man die Anzahl dieser Neuberechnungen etwas verringern. | 0.1 |
+| Soundings Font Size | Skalierung für die Tiefenangaben | 1 (ca. 12px) |
+| Scale | Basisskalierung. Höhere Werte sorgen für mehr Details auf kleineren Zoom-Stufen | 1 |
+| UnderZoom | Anzahl der Zoomstufen, die eine höher aufgelöste Karte verkleinert wird, wenn auf dem gewünschten Level keine Karte vorhanden ist | 4 |
+| AreaUnder | Wenn im Bereich "UnderZoom" immer noch keine Karte für den Bereich gefunden wurde, benutze weitere (höhere) Zoom Level. Für diese Karten werden dann nur Umgebungsumrisse (Land, Tiefe) angezeigt - keine weiteren Informationen.  Vorsicht beim Umgang mit dieser Einstellung, sie kann die Darstellungsleistung stätrker beeinflussen. | 2 |
+| OverZoom | Anzahl der Zoomstufen, die eine niedriger aufgelöste Karte vergrößert wird,wenn es keine besser aufgelöste Karte gibt.  **Hinweis**: UnderZoom,AreaUnder und OverZoom bestimmen maßgeblich, wie aufwändig der Render-Vorgang ist, d.h. wieviele Karten an der Erzeugung einer Kachel beteiligt werden müssen. Kleinere Werte führen zu weniger Karten (schneller) können aber in bestimmten Bereichen zu weißen Flächen zwischen Karten-Teilen führen. Die Defaults sollten ein guter Kompromiss sein. | 4 |
+| Scale Tolerance | Wenn die Symbole in unterschiedlichen Größen benötigt werden oder die Karte skaliert wird, müssen jeweils neue Symbole intern berechnet werden. Mit einer Toleranz kann man die Anzahl dieser Neuberechnungen etwas verringern. | 0.1 |
 | Rotation Tolerance | Auf der Karte werden viele Objekte (insbesondere auch Linien) in verschiedenen Rotations-Winkeln benötigt. Um die Zahl der zu erzeugenden Objekte zu verringern, macht eine gewisse Toleranz für den Winkel Sinn. | 2 |
 | SymbolScale | Skalierung der Symbolgrößen. Da einige Symbole auf Raster-Bildern basieren, ist eine Skalierung > 2 meist nicht sinnvoll. | 1 |
-| Depth | Einheit für die Tiefen-Angaben (Meters, Feet, Fathoms) | Meters |
+| Depth | Einheit für die Tiefenangaben (Meters, Feet, Fathoms) | Meters |
 | Shallow Depth | Tiefe für Flachwasser | 2 |
 | Safety Depth | Tiefe für Sicherheits-Kontur | 3 |
 | Deep Depth | Tiefe für Tiefwasser | 5 |
@@ -388,9 +362,9 @@ Unter dem Tab "Detail Settings" können gezielt einzelne Karten-Features
 an- oder abgeschaltet werden. Diese Einstellungen werden nur im
 Anzeige-Modus "User Standard" wirksam.
 
-## Feature Info (Object Abfrage) {: #featureinfo}
+## Feature Info (Objektabfrage) {: #featureinfo}
 
-Wenn man auf die Karte klickt, bekommt man die [Feature Info](featureinfo.md) von AvNav. Wenn man eine o-charts Karte nutzt und in der Liste das Kartensymbol anklickt, bekommt man die aktuell wichtigste Information in der Nähe des Klick-Punktes (Tonne, Feuer).
+Wenn man auf die Karte klickt, bekommt man die [Feature Info](featureinfo.md) von AvNav. Wenn man eine O-Charts Karte nutzt und in der Liste das Kartensymbol anklickt, bekommt man die aktuell wichtigste Information in der Nähe des Klick-Punktes (Tonne, Feuer).
 
 ![](../../img/ochartsng-featureinfo1.png)
 
@@ -406,14 +380,14 @@ Informationen zur Karte.
 Mit dem Button "Charts" kann man sich eine Liste der an dieser Stelle
 genutzten Karten anzeigen lassen.  
 Mit dem Schalter "RenderedOnly" werden nur die Objekte aus den Karten in der
-Liste angezeigt, die auch momentan im Bild dargestellt wurden (sonst werden
-alle Objekte in der Nähe des Klicks angezeigt).  
+Liste angezeigt, die auch momentan im Bild dargestellt wurden. Sonst werden
+alle Objekte in der Nähe des Klicks angezeigt.  
 
 ## Installation {: #Installation}
 
 ### Linux/Raspberry
 
-Das Plugin ist als debian Paket vorhanden.  
+Das Plugin ist als Debian-Paket vorhanden.  
 Es ist in den normalen Repositories(Verzeichnissen) vorhanden.
 
 Für die [AvNav Images](../installation/raspberry.md) ist das Paket
@@ -431,10 +405,10 @@ sudo apt-get update
 sudo apt-get install avnav-ochartsng  
 sudo systemctl restart avnav
 ```
-Zu allgemeinen Hinweisen für die Installation von AvNav Paketen siehe die [Installationsbeschreibung](../installation/linux.md).
+Zu allgemeinen Hinweisen für die Installation von AvNav-Paketen siehe die [Installationsbeschreibung](../installation/linux.md).
 
-Alternativ kann man die Pakete auch aus dem [daily
-builds Verzeichnis]({{DLLINK("daily-ochartsng")}}) bzw. [Release
+Alternativ kann man die Pakete auch aus dem [Daily
+Builds Verzeichnis]({{DLLINK("daily-ochartsng")}}) bzw. [Release
 Verzeichnis]({{DLLINK("release-ochartsng")}}) herunterladen und installieren.
 
 Das kann man z.B. mit den folgenden Kommandos tun (die Version durch die
@@ -453,8 +427,8 @@ dort installieren.
 
 #### AvNav-ocharts und AvNav-ochartsng zusammen
 
-Wenn man das ochartsng Plugin installiert, benutzt es initial einen
-anderen Port (8083)  als das alte Plugin (ocharts), so das es keine Konflikte
+Wenn man das O-ChartsNG Plugin installiert, benutzt es initial einen
+anderen Port (8083)  als das alte Plugin (ocharts), sodass es keine Konflikte
 gibt.
 Falls man ein Update auf einem älteren System vornimmt, auf dem noch das ocharts-Plugin installiert ist, sollte man es unter
 
@@ -463,59 +437,59 @@ Falls man ein Update auf einem älteren System vornimmt, auf dem noch das ochart
 disablen.
 
 Im neuen Plugin kann man den Schalter "useLegacy" aktivieren (in der [Plugin
-Konfiguration](#PluginConfig)). Mit diesem Schalter aktiviert benutzt das neue
+Konfiguration](#PluginConfig)). Ist dieser Schalter aktiviert, benutzt das neue
 Plugin auch alle Karten, die vorher mit dem alten installiert wurden.
-Alternativ kann man die Karten auch erneut zum neuen Plugin hochladen
-(oder direkt aus dem Shop, wenn sie noch gültig sind).
+Alternativ kann man die Karten auch erneut zum neuen Plugin hochladen oder direkt aus dem Shop, wenn sie noch gültig sind.
 
 Wenn man beide Plugins parallel nutzen möchte, sollte das System über ausreichend RAM verfügen (2GB).
 
 ### Android 
 
-Für Android git es eine eigene App (avocharts) die ochartsng enthält.
+Für Android git es eine eigene App (avocharts) die O-ChartsNG enthält.
 Diese muss separat installiert werden.
 
 Siehe [AndroidApp](#android) weiter unten..
 
 ## Releases {: #Releases}
 
-Alle Releases und alle Beta-Versionen (Entwickler Versionen oder daily
-builds) findet man unter:
+Alle Releases und alle Beta-Versionen (Entwicklerversionen oder Daily
+Builds) findet man unter:
 
 * [Releases]({{DLLINK("release-ochartsng")}})
 * [Daily Builds]({{DLLINK("daily-ochartsng")}})
 
 
 
-### Release Versionen
+### Release-Versionen
 
 20260703 [link]({{DLLINK("release-ochartsng/20260703")}})
 
-Vorbereitung für neue AvNav Versionen
+Vorbereitung für neue AvNav-Versionen
 
 Die Hinweise zu älteren Versionen findet man in der [alten Dokumentation]({{OLDLINK("hints/ochartsng.html#Releases")}}).
 
 
-## Lizenz Hinweise {: #License}
+## Lizenzhinweise {: #License}
 
-Die Nutzung der Karten für AvNav mit dem oesenc-pi Plugin ist so mit
-o-charts diskutiert und abgestimmt worden und ist damit legal im Sinne der
+Die Nutzung der Karten für AvNav mit dem oeSENC-pi Plugin ist so mit
+O-Charts diskutiert und abgestimmt worden und damit legal im Sinne der
 Lizenzen.  
 Die [Lizenzbedingungen](https://o-charts.org/manuals/docs/EN_rrc_eula_ChartSetsForOpenCPN.md)
-von [o-charts](https://o-charts.org/shop/en/content/3-our-conditions)
+von [O-Charts](https://o-charts.org/shop/en/content/3-our-conditions)
 sind dabei unbedingt zu beachten. Es ist insbesondere nicht gestattet, die
 Karten zu kopieren oder auf anderen als den lizensierten Systemen
 einzusetzen.
 
 Der Zugriff auf die Karten innerhalb von AvNav ist nur aus dem lokalen
-Netz möglich, maximal können 5 Geräte (Clients) gleichzeitig die o-charts
+Netz möglich, maximal können 5 Geräte (Clients) gleichzeitig die O-Charts
 von einem AvNav Server nutzen.
 
 Für die Software-Lizenzen siehe die [Readme.](https://github.com/wellenvogel/ochartsng/blob/master/Readme.md)
 
-## Plugin Konfiguration {: #PluginConfig}
+## Plugin-Konfiguration {: #PluginConfig}
 
-Nur unter Linux. Für Android siehe [Android/Settings](#androidsettings).  
+**Nur unter Linux.**
+ Für Android siehe [Android/Settings](#androidsettings).  
 Einige Einstellungen für das Plugin können unter
 
 {{MM("MMpluginspage")}}
@@ -530,11 +504,11 @@ angepasst werden.
 
 | Name | Bedeutung | Default |
 | --- | --- | --- |
-| port | Http port | 8083 |
+| port | Http Port | 8083 |
 | debug | Level für das Logging, 0-ERROR,1-INFO,2-DEBUG | 1 |
-| memPercent | Der prozentuale Anteil des Systemspeichers, den der Provider maximal nutzen soll. Wenn man diesen nicht setzt (oder zu klein) berechnet der Provider intern einen Minimalwert und nutzt diesen.  Der kann u.U. insbesondere bei der Nutzung von Rasterkarten sehr klein sein und ihn damit zwingen ständig Karten-Dateien zu öffnen und zu schliessen - was die Geschwindigkeit stark reduzieren kann. Wenn man ausreichend Speicher hat (z.B. > 2GB), wird das Arbeiten beschleunigt, wenn man  den Speicher auf 1GB setzt. | 50 |
+| memPercent | Der prozentuale Anteil des Systemspeichers, den der Provider maximal nutzen soll. Wenn man diesen nicht oder zu klein setzt, berechnet der Provider intern einen Minimalwert und nutzt diesen. Der kann u.U. insbesondere bei der Nutzung von Rasterkarten sehr klein sein und den Rechner damit zwingen, ständig Karten-Dateien zu öffnen und zu schließen - was die Geschwindigkeit stark reduzieren kann. Wenn man ausreichend Speicher hat (z.B. > 2GB), wird das Arbeiten beschleunigt, wenn man  den Speicher auf 1GB setzt. | 50 |
 | tileCachekb | Speicher in KB für die Speicherung von bereits erzeugten Karten-Kacheln (mit  0 erfolgt keine interne Speicherung) | 40960 |
-| useLegacy | Nutze auch die Karten, die mit dem alten avnav-ocharts-plugin installiert wurden. | aus |
+| useLegacy | Nutze auch die Karten, die mit dem alten avnav-ocharts-Plugin installiert wurden. | aus |
 
 ## Android App {: #android}
 
@@ -545,8 +519,8 @@ Man muss dazu die separate Android App  ["avocharts"](https://play.google.com/s
 
 ![](../../img/ochartsng-android-main.png)
 
-Wenn man die App startet kann man zunächst einige Einstellungen anpassen.  
-Wenn man diese Bild sieht (Status rot) läuft der eigentliche Karten-Server
+Wenn man die App startet, kann man zunächst einige Einstellungen anpassen.  
+Wenn man dieses Bild sieht (Status rot), läuft der eigentliche Karten-Server
 noch nicht. Dieser wird erst durch Klick auf "Start" gestartet.
 
 Später wird es normalerweise nicht mehr
@@ -555,16 +529,16 @@ erfolgen, sobald AvNav startet. Aber mit einem direkten Start kann man
 unter Umständen Fehler erkennen, indem man die Ausgabe ("OUT") oder die
 Logdatei ("LOG") anschaut.  
 **Bitte beachten**: Der automatische Start funktioniert nur bei Apps
-vom gleichen Typ - d.h. eine AvNav release App kann nur eine avocharts
-release App starten, eine AvNav beta app eine avocharts beta.  
-Wenn man also die avocharts beta installiert und mit AvNav (release - aus
+vom gleichen Typ - d.h. eine AvNav Release App kann nur eine avocharts
+Release App starten, eine AvNav Beta App eine avocharts Beta App.  
+Wenn man also die avocharts Beta App installiert und mit AvNav (release - aus
 dem Store) nutzen möchte, muss man avocharts per Hand starten und auch
 noch einmal auf "START" klicken.
 {: #androidstartup}
 
 ### Einstellungen {: #androidsettings}
 
-Um Einstellungen anzupassen kann man auf die angezeigten Einstellungen
+Um Einstellungen anzupassen, kann man auf die angezeigten Einstellungen
 oder auf das Einstellungssymbol (oben rechts) klicken.
 
 ![](../../img/ochartsng-android-settings.png)
@@ -572,22 +546,22 @@ oder auf das Einstellungssymbol (oben rechts) klicken.
   
 | Name | Bedeutung | Default |
 | --- | --- | --- |
-| Port | Der HTTP Port, den der Karten-Server nutzen wird. Wenn man bei Start Fehlermeldungen bekommt und unter "OUT" so etwas wie "address already in use" sieht, muss man diesen Port ändern. | 8083 |
+| Port | Der HTTP Port, den der Karten-Server nutzen wird. Wenn man beim Start Fehlermeldungen bekommt und unter "OUT" so etwas wie "address already in use" sieht, muss man diesen Port ändern. | 8083 |
 | LogLevel | 0 - errors, 1- info, 2- debug | 1 |
 | Workdir | Das [Arbeitsverzeichnis](#workingdirectory) für Karten, Logs und Einstellungen | internal |
-| Shutdown | Teit (in Sekunden) die der Karten-Server auf ein Signal von AvNav (Heartbeat) warten, bevor er automatisch stoppt(das ist nur aktive, wenn avocharts automatisch durch AvNav gestartet wurde) | 30 |
-| Memory | Erlaubte Speichernutzung (%) vom System Speicher (RAM) | 50 |
+| Shutdown | Zeit (in s), die der Karten-Server auf ein Signal von AvNav (Heartbeat) wartet, bevor er automatisch stoppt (das ist nur aktiv, wenn avocharts automatisch durch AvNav gestartet wurde) | 30 |
+| Memory | Erlaubte Speichernutzung (in %) vom Systemspeicher (RAM) | 50 |
 | Testmode | für interne Tests | aus |
-| Use alt key | Siehe unten [Hinweise](#androidbetarelease) über Release/Beta Versionen |  |
-| Disk symbol (upper right) | Key specihern (Siehe unten [Hinweise](#androidbetarelease) über Release/Beta Versionen) |  |
+| Use alt key | Siehe unten [Hinweise](#androidbetarelease) über Release/Beta-Versionen |  |
+| Disk symbol (upper right) | Key speichern (Siehe unten [Hinweise](#androidbetarelease) über Release/Beta-Versionen) |  |
 
 Wenn man die Einstellungen fertig angepasst hat, geht man mit dem Pfeil
 zurück wieder auf die Hauptseite.
 
 ### Arbeitsverzeichnis {: #workingdirectory}
 
-AvOcharts speichert Karten, Logs und die Einstellungen von Main Settings
-und Detailled Settings unter einem Verzeichnis auf dem Gerät. (Working
+AvOcharts speichert Karten, Logs und die Einstellungen von *Main Settings*
+und *Detailled Settings* unter einem Verzeichnis auf dem Gerät. (Working
 Directory). Dieses Verzeichnis ist unabhängig vom [AvNav Arbeitsverzeichnis](../installation/android.md#android-main-einstellungen).
 
 Man hat die folgende Auswahl:
@@ -601,85 +575,80 @@ Auswahl:
 
 | Name | Bedeutung |
 | --- | --- |
-| Internal Storage | Dies ist ein Speicherort im internen Flash-Speicher Ihres Geräts. Er ist vollständig privat und (sofern Ihr Gerät nicht gerootet ist) nicht für andere Apps wie z. B. einen Dateimanager zugänglich.  Dies ist die Standardeinstellung.  The "\*" in front of the entry shows that this directory was already used as working directory and contains data. |
-| External Storage | Dieser Speicher befindet sich weiterhin im internen Flash-Speicher, wird jedoch vom Android-System anders behandelt (und daher als "extern - emuliert" bezeichnet). Andere Apps können auf diesen Speicherort zugreifen.Der Pfad für einen Dateimanager lautet typischerweise [interner Speicher]/Android/data/de.wellenvogel.ochartsprovider.main/files (oder [interner Speicher]/Android/data/de.wellenvogel.ochartsprovider.main.beta/files für eine Beta-Version). |
+| Internal Storage | Dies ist ein Speicherort im internen Flash-Speicher Ihres Geräts. Er ist vollständig privat und (sofern Ihr Gerät nicht gerootet ist) nicht für andere Apps wie z. B. einen Dateimanager zugänglich. Dies ist die Standardeinstellung.  Die Zeichenfolge "\*" vor dem Eintrag zeigt, das das Verzeicnis bereits als Arbeitsverzeichnis genutzt wird und Daten enthält. |
+| External Storage | Dieser Speicher befindet sich weiterhin im internen Flash-Speicher, wird jedoch vom Android-System anders behandelt und daher als "extern - emuliert" bezeichnet. Andere Apps können auf diesen Speicherort zugreifen.Der Pfad für einen Dateimanager lautet typischerweise [interner Speicher]/Android/data/de.wellenvogel.ochartsprovider.main/files (oder [interner Speicher]/Android/data/de.wellenvogel.ochartsprovider.main.beta/files für eine Beta-Version). |
 | External Storage-1 | Dieser Pfad ist nur sichtbar, wenn Ihr Gerät eine SD-Karte installiert hat. Als Erklärung wird auch „removable [SD-Karte]“ angezeigt.  Falls verfügbar, befindet sich dieses Verzeichnis tatsächlich auf einer externen SD-Karte. Wenn Sie es verwenden möchten, muss die SD-Karte immer installiert ist, wenn avocharts (oder AvNav) läuft. Falls die SD Karten entfernt wird, während avocharts läuft, kann es zum Absturz kommen.  Andere Apps wie ein Dateimanager können auf die Daten zugreifen.  Der Speicherort ist [SD card]/Android/data/de.wellenvogel.ochartsprovider/files (or [SD card]/Android/data/de.wellenvogel.ochartsprovider.beta/files). |
 
-Wenn man das Arbeitsverzeichnis ändert, werden alle Ihre Daten im alten
-Arbeitsverzeichnis für avocharts unsichtbar (sie bleiben jedoch verfügbar
-und man kann jederzeit zum alten Verzeichnis zurückkehren).
+Wenn man das Arbeitsverzeichnis ändert, werden alle Daten im alten
+Arbeitsverzeichnis für avocharts unsichtbar. Sie bleiben jedoch verfügbar
+und man kann jederzeit zum alten Verzeichnis zurückkehren.
 
 Beim Start von avocharts wird geprüft, ob das ausgewählte
-Arbeitsverzeichnis noch verfügbar ist (und man wird aufgefordert, ein
-anderes auszuwählen, falls nicht).  
+Arbeitsverzeichnis noch verfügbar ist. Man wird aufgefordert, ein
+anderes Verzeichnis auszuwählen, falls nicht.  
 Wenn avocharts durch Autostart von AvNav gestartet wird, versucht es einen
 Fallback auf das interne Arbeitsverzeichnis, falls das gewählte nicht
-verfügbar ist (z.B. SD Karte entfernt).
+verfügbar ist, weil z.B. die SD Karte entfernt wurde.
 
 Für externe Verzeichnisse kann man grundsätzlich einen Dateimanager
-verwenden, um Daten dorthin und von dort zu kopieren. avocharts erkennt
-diese Daten jedoch potentiell nicht, wenn es gerade läuft. Daher empfiehlt
+verwenden, um Daten dorthin und von dort zu kopieren. Avocharts erkennt
+diese Daten jedoch potenziell nicht, wenn es gerade läuft. Daher empfiehlt
 es sich, die Daten direkt in der App hochzuladen. Man kann aber z.B. eine
 Zip-Datei mit diesen Daten als Backup erstellen. Und man kann sehr einfach
-die Log Dateien von avocharts sehen.
+die Log-Dateien von avocharts sehen.
 
-Alle (potentiellen) Abrbeitsverzeichnisse werden gelöscht, wenn man
-avocharts deinstalliert (oder seine Daten löscht).
+Alle (potenziellen) Abrbeitsverzeichnisse werden gelöscht, wenn man
+avocharts deinstalliert oder seine Daten löscht.
 
 Hinweis: Einstellungen (aus der Tabelle hier darüber) werden nicht im
 Arbeitsverzeichnis abgelegt.
 
 ### Erster Start
 
-Man kann nun den Karten-Server mit "START" loslaufen lassen.
+Man kann den Karten-Server mit "START" loslaufen lassen.
 
 ![](../../img/ochartsng-android-running.png)
 
 Wenn der Server läuft, wird das in der Benachrichtigungszeile angezeigt.
-Wenn der Start nicht erfolgreich ist (Status wird wieder rot) kann man in
+Wenn der Start nicht erfolgreich ist (Status wird wieder rot), kann man in
 die Ausgabe ("OUT") und in das Log ("LOG") schauen.
 
-Ein Klick auf "APP" öffnet ein Browser-Fenster mit der ochartsng Seite -
+Ein Klick auf "APP" öffnet ein Browser-Fenster mit der O-ChartsNG-Seite -
 die gleiche Ansicht, die man auch aus AvNav heraus bekommt. Das ist aber nur dafür gedacht, zu prüfen, ob alles korrekt läuft. Die eigentliche Nutzung sollte aus AvNav heraus erfolgen.
 
 
 ### Beta and Release Versionen {: #androidbetarelease}
 
-Bedingt durch die Arbeitsweise des o-charts Lizenz-Servers kann man
+Bedingt durch die Arbeitsweise des O-Charts Lizenz-Servers kann man
 Karten, die man z.B. in der Beta-Version gekauft hat, nicht in der Release
-Version verwenden (und umgekehrt).  
+Version verwenden und umgekehrt.  
 Um das zu vermeiden, kann man die benötigte Lizenz-Information (Key) aus
-der App exportieren und in der anderen Version wieder imprtieren. Hinweis:
-Man kann die Lizenz trotzdem nur auf dem jeweiligen Gerät nutzen!  
-Um den Key zu exportieren, klickt man auf der Einstellungsseite oben
-rechts auf das Disketten-Symbol und speichert ihn (bitte auch an ein
-backup denken, ohne diesen Key kann man später in der anderen App-Version
-die Karten nicht mehr nutzen). Wenn man später die andere Version der App
-nutzt, dann aktiviert man dort "use alternate key", klickt auf den
-alternate key und findet dort einen "Import" Button.  
-Man kann leicht prüfen, ob man die korrekte Lizenz hat, indem man sich im
-Shop anmeldet und prüft, ob das System korrekt erkannt wird - siehe [Online
-Prozeß](#onlineprocess).
+der App exportieren und in der anderen Version wieder imprtieren. 
 
-Bitte auch die Hinweise zum [automatischen
-Start](#androidstartup) beachten.
+Hinweis: Man kann die Lizenz trotzdem nur auf dem jeweiligen Gerät nutzen!  
+Um den Key zu exportieren, klickt man auf der Einstellungsseite oben
+rechts auf das Disketten-Symbol und speichert ihn. Bitte auch an ein
+Backup denken, ohne diesen Key kann man später in der anderen App-Version
+die Karten nicht mehr nutzen. 
+
+Wenn man später die andere Version der App nutzt, dann aktiviert man dort "use alternate key", klickt auf den *alternate key* und findet dort einen "Import" Button.  
+Man kann leicht prüfen, ob man die korrekte Lizenz hat, indem man sich im
+Shop anmeldet und prüft, ob das System korrekt erkannt wird - siehe [Online-Prozess](#onlineprocess).
+
+Bitte auch die Hinweise zum [automatischen Start](#androidstartup) beachten.
 
 ## Technische Details
 
 Die Karten werden durch einen Server (eigenes Programm) bereitgestellt.  
-Die Kommunikation mit AvNav wird durch ein AvNav [Plugin](plugins.md)
-unter Linux realisiert und durch die avocharts App auf Android.
+Die Kommunikation mit AvNav wird unter Linux durch ein AvNav [Plugin](plugins.md)
+realisiert, auf Android durch die avocharts App .
 
 Die Web-Oberfläche ist eine Reactjs App und wird auch durch den Server
-bereitgestellt. In AvNav ist sie als UserApp integriert.
+bereitgestellt. In AvNav ist sie als User App integriert.
 
 Der komplette Code findet sich auf [GitHub](https://github.com/wellenvogel/ochartsng).
 
-Die Installation erfolgt (unter Linux) in
-/usr/lib/avnav/plugins/ochartsng. Das Daten-Verzeichnis ist
-/home/pi/avnav/data/ochartsng. Man kann einige weitere Parameter für das
-plugin direkt in der [avnav_server.xml](configfile.md)
-setzen. Das sollte im Normalfall aber nicht nötig sein.
+Die Installation erfolgt (unter Linux) in /usr/lib/avnav/plugins/ochartsng. Das Daten-Verzeichnis ist /home/pi/avnav/data/ochartsng. Man kann einige weitere Parameter für das Plugin direkt in der [avnav_server.xml](configfile.md) setzen. Das sollte im Normalfall aber nicht nötig sein.
 
 Man kann z.B. das Daten-Verzeichnis setzen.
 
@@ -689,39 +658,38 @@ Man kann z.B. das Daten-Verzeichnis setzen.
 <system-ochartsng dataDir="$DATADIR/ochartsng"/>  
 </AVNPluginHandler>
 ```
-  
 
-### Karten Konvertierungen {: #chartconversions}
 
-Unverschlüsselte Vektor Karten wie S57 müssen vor der Benutzung in das
-verwendete interne "SENC" Format konvertiert werden.  
+### Kartenkonvertierungen {: #chartconversions}
+
+Unverschlüsselte Vektorkarten wie S57 müssen vor der Benutzung in das verwendete interne "SENC" Format konvertiert werden.  
 Dafür gibt es 2 Optionen:
 
 #### Konvertierung mit AvNav
 
-Das avnav-ochartsng-plugin fügt einen Konverter zu AvNav's [Importer](charts.md#converter) hinzu. Dieser Konverter enthält ein Python Script um S57 in ein zip Archiv umzuwandeln, was hochgeladen werden kann.  
-Um die S57 Karten zu nutzen, kann man einfach ein zip mit den S57 Karten
-zu AvNav's [Importer](charts.md#converter) hochladen, nachdem ochartsng installiert wurde.  
-Wenn man AvNav und ochartsng unter Linux nutzt, werden die Karten
-automatisch in ochartsng verfügbar, wenn die Konvertierung abgeschlossen
+Das Avnav O-ChartsNG Plugin fügt einen Konverter zum [Importer von AvNav](charts.md#converter) hinzu. Dieser Konverter enthält ein Python Script, um S57 in ein Zip-Archiv umzuwandeln, was hochgeladen werden kann.  
+Um die S57-Karten zu nutzen, kann man einfach ein Zip mit den S57-Karten
+zum [Importer von AvNav](charts.md#converter) hochladen, nachdem O-ChartsNG installiert wurde.  
+Wenn man AvNav und O-CchartsNG unter Linux nutzt, werden die Karten
+automatisch in O-ChartsNG verfügbar, wenn die Konvertierung abgeschlossen
 wurde.
 
-Wenn man ochartsng auf einem anderen System nutzen möchte (z.B. Android)
-brauchtman zusätzlich eine Installation von AvNav unter Linux
+Wenn man O-ChartsNG auf einem anderen System nutzen möchte (z.B. Android),
+braucht man zusätzlich eine Installation von AvNav unter Linux
 oder unter [Windows](../installation/windows.md).
 
-Ochartsng selbst ist nicht unter Windows lauffähig, aber der Konverter
+O-ChartsNG selbst ist nicht unter Windows lauffähig, aber der Konverter
 steht auch für Windows zur Verfügung. Nachdem man AvNav für Windows
-installiert hat muss man dort den "Update" Dialog aktivieren und die URL
-für den ochartsng-s57 Konverter für Windows angeben:
+installiert hat, muss man dort den "Update"-Dialog aktivieren und die URL
+für den O-ChartsNG S57-Konverter für Windows angeben:
 
-- release: <https://www.wellenvogel.de/software/avnav/downloads/release-ochartsng/latest/ochartsng-latest.zip>
-- daily: <https://www.wellenvogel.de/software/avnav/downloads/daily-ochartsng/latest/ochartsng-latest.zip>
+- Release: <https://www.wellenvogel.de/software/avnav/downloads/release-ochartsng/latest/ochartsng-latest.zip>
+- Daily: <https://www.wellenvogel.de/software/avnav/downloads/daily-ochartsng/latest/ochartsng-latest.zip>
 
-Danach lädt man die S57 Karten zum Konverter hoch und nachdem die
-Konvertierung abgeschlossen wurde lädt man die zip Datei mit den
-konvertieren Karten herunter. Diese .zip Datei kann dann direkt in
-ochartsng installiert werden (Linux und Android).
+Danach lädt man die S57-Karten zum Konverter hoch und nachdem die
+Konvertierung abgeschlossen wurde, lädt man die Zip-Datei mit den
+konvertieren Karten herunter. Diese Zip-Datei kann dann direkt in
+O-ChartsNG installiert werden (Linux und Android).
 
 #### Konvertierung mit OpenCPN
 
@@ -733,17 +701,12 @@ Charts".
 
 ![](../../img/ochartsng-convert-opencpn.png)
 
-Das erzeugt eine Reihe von Dateien mit der Endung .s57 im OpenCPN
-Verzeichznis (unter Linux: ~/.opencpn/SENC). Aus diesem Verzeichnis
-kopiert man alle Dateien mit den gleichen Namen wie die S57 Dateien in ein
-neues, leeres Verzeichnis. Dieses sollte einen "sprechenden" Namen haben -
-der wird später angezeigt. Anschliessend erzeugt man eine Textdatei
-"Chartinfo.txt" in diesem Verzeichnis mit genau einer Zeile Text:
+Das erzeugt eine Reihe von Dateien mit der Endung **.s57* im OpenCPN-Verzeichnis (unter Linux: ~/.opencpn/SENC). Aus diesem Verzeichnis kopiert man alle Dateien mit den gleichen Namen wie die S57-Dateien in ein neues, leeres Verzeichnis. Dieses sollte einen "sprechenden" Namen haben -
+der wird später angezeigt. Anschließend erzeugt man eine Textdatei "Chartinfo.txt" in diesem Verzeichnis mit genau einer Zeile Text:
 
 ChartInfo: -hier der name der Karte-
 
-Dann erzeugt man ein zip Archive in dem das Kartenverzeichnis als
+Dann erzeugt man ein Zip-Archiv, in dem das Kartenverzeichnis als
 Unterverzeichnis enthalten ist. Dieses Archive kann man dann zu AvNav
-ochartsng hochladen.  
-Für Linux gibt es ein [script](https://github.com/wellenvogel/ochartsng/blob/master/tools/collectS57.sh)
-um das Einsammeln der Karten zu automatisieren.
+O-ChartsNG hochladen.  
+Für Linux gibt es ein [script](https://github.com/wellenvogel/ochartsng/blob/master/tools/collectS57.sh), um das Einsammeln der Karten zu automatisieren.
