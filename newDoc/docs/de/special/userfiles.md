@@ -5,7 +5,7 @@
    - User Apps
 ---
 
-# Nutzer Dateien (user files)
+# Nutzerdateien (user files)
 
 AvNav kann Dateien für den Nutzer speichern, die man direkt über die Web-Oberfläche erzeugen, 
 hochladen, bearbeiten, ansehen und herunterladen kann.
@@ -70,7 +70,7 @@ Besonders nützlich können HTML-Dateien sein. Da alle Dateien aus diesem Verzei
 ```
 von einem Webbrowser aus erreichbar sind, kann man damit sehr einfach zusätzliche Seiten schaffen, die innerhalb und auch außerhalb von AvNav angezeigt werden können. Dazu steht auf der gleichen Seite unter {{BT("AddonConfigAddOns")}} die Möglichkeit zur Verfügung, die Dateien als sogenannte "[User App](../base/userapps.md)" bzw. AddOn einzurichten.
 
-## Beispiel für eine HTML Datei { #userappexample }
+## Beispiel für eine HTML-Datei { #userappexample }
 
 Mit einer HTML-Datei und weiteren hochgeladenen Dateien kann man sich z.B. eine ganz einfache Dokumentenliste bauen, die man dann per Klick in AvNav nutzen kann.
 Angenommen man hat zwei Dokumente `Boot.pdf` und `Motor.pdf`. Diese werden als Nutzerdateien wie beschrieben über {{SB("Upload")}} hochgeladen.
@@ -115,4 +115,4 @@ Man füllt die markierten Werte aus, unter *icon* wählt man das hochgeladene Ic
 Im Tab {{BT("AddonConfigAddOns")}} wird man nun die neue User App mit dem gewählten Icon sehen können. Mit einem Klick auf das Icon kann man sich die neu gebaute Seite anzeigen lassen.
 
 Man findet den neu angelegten Button später unter 
-{{MM("MMaddonpage")}}
+{{MM("MMaddonpage")}}.

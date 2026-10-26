@@ -6,14 +6,14 @@
 
 # NMEA0183 Datensätze
 
-Wie im Kapitel [Datenfluss](../base/dataflow.md) beschrieben, verarbeitet AvNav eine Reihe von NMEA0183 Datensätzen. Diese unterscheiden sich minimal zwischen der Android Variante und der Linux/Windows Variante.
-Daneben erzeugt AvNav auch einige (wenige) Datensätze selbst und gibt sie aus.
+Wie im Kapitel [Datenfluss](../base/dataflow.md) beschrieben, verarbeitet AvNav eine Reihe von NMEA0183-Datensätzen. Diese unterscheiden sich minimal zwischen der Android-Variante und der Linux/Windows-Variante.
+Daneben erzeugt AvNav auch einige wenige Datensätze selbst und gibt sie aus.
 
-**Hinweis:** Der [AvNav Muliplexer](connections.md#structure) verarbeitet alle NMEA0183 Daten - uanbhängig davon, ob AvNav selbst sie versteht.
+**Hinweis:** Der [AvNav Muliplexer](connections.md#structure) verarbeitet alle NMEA0183-Daten - uanbhängig davon, ob AvNav selbst sie versteht.
 
 ## Linux/Windows
 
-### Empfang
+### Empfangen
 
 * !AIVDM (AIS Daten)
 * $xxGGA
@@ -51,7 +51,7 @@ auch NMEA-Daten erzeugen:
 * $AVMTA
 
 ## Android
-### Empfang
+### Empfangen
 
 * !AIVDM (AIS)
 * $xxGSV
@@ -81,9 +81,9 @@ auch NMEA-Daten erzeugen:
 
 * $GPRMB (wenn im Router aktiviert)
 * $GPAPB (wenn im Router aktiviert)
-* $xxGSV (wenn internalGPS aktiviert ist)
-* $xxGSA (wenn internalGPS aktiviert ist)
-* $xxGGA (wenn internalGPS aktiviert ist)
-* $xxRMC (wenn internalGPS aktiviert ist)
+* $xxGSV (wenn *internalGPS* aktiviert ist)
+* $xxGSA (wenn *internalGPS* aktiviert ist)
+* $xxGGA (wenn *internalGPS* aktiviert ist)
+* $xxRMC (wenn *internalGPS* aktiviert ist)
 
 

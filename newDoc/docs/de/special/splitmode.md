@@ -12,7 +12,7 @@ Mit
 
 {{MM("MM:actions")}}->{{BT("Split",True)}}
 
-kann man eine 2-Fenster-Ansicht einschalten.
+kann man den Bildschirm auf zwei AvNav-Fenster aufteilen.
 
 ![2 Fenster Karte](../../img/split-mode1.png)
 ///caption
@@ -24,7 +24,7 @@ kann man eine 2-Fenster-Ansicht einschalten.
 2 Fenster Dashboard
 ///
 
-Die beiden Fenster arbeiten weitgehend unabhängig voneinander. So kann man sich je nach Wunsch verschiedene Darstellungen nebeneinander legen. Im Beispiel entweder 2 mal eine Kartenansicht (mit unterschiedlichen Zoom-Stufen - oder auch mit verschiedenen Karten) - oder auch eine Kartenansciht und ein Dashboard.
+Die beiden Fenster arbeiten weitgehend unabhängig voneinander. So kann man sich je nach Wunsch verschiedene Darstellungen nebeneinander legen. Im Beispiel ist entweder zweimal eine Kartenansicht auch mit unterschiedlichen Zoom-Stufen - oder auch mit verschiedenen Karten zu sehen. Auch eine Aufteilung in eine Kartenansicht und ein Dashboard ist möglich.
 
 Über 
 
@@ -43,6 +43,7 @@ im 2-Fenster-Modus werden Alarme nur im rechten Fenster angezeigt.
 ### Einstellungen (Display Settings)
 
 Die meisten [Einstellungen](../base/settings.md) gelten im 2-Fenster-Modus für beide Fenster gemeinsam und werden dort auch sofort wirksam. Einige Einstellungen kann man jedoch pro Fenster separat vornehmen. Diese werden auf den Einstellungsseiten mit einem `*` gekennzeichnet. 
+
 Das sind insbesondere die Einstellungen für die [Fernsteuerung](remotecontrol.md).
 
 Das Laden und Speichern von Einstellungen erfolgt auch pro Fenster separat.
@@ -57,8 +58,8 @@ Mit der Einstellung
 
 {{MM("MMsettingspage")}}->General->"start with last split mode"
 
-kann man erreichen, das AvNav wieder im Split Mode startet, wenn er zuletzt aktiv war. Das ist insbesondere für Android hilfreich.
+kann man erreichen, dass AvNav wieder im Split Mode startet, wenn er zuvor aktiv war. Das ist insbesondere für Android hilfreich.
 
 ### Layouts
 
-Layouts kann man für jedes Fenster separat wählen. Damit kann man (wie im Beispiel) die Kartendarstellung unterschiedlich gestalten. Ein im Split-Mode geladenes Layout bleibt nicht aktiv, wenn der Split-Mode wieder verlassen wird.
+Layouts kann man für jedes Fenster separat wählen. Damit kann man wie im Beispiel die Kartendarstellung unterschiedlich gestalten. Ein im Split-Mode geladenes Layout bleibt nicht aktiv, wenn der Split-Mode wieder verlassen wird.

@@ -8,28 +8,28 @@
 Die Legacy Wifi-Konfigurationsseite
 ============================
 __Achtung:__
-Diese Seite beschreibt die AvNav Wifi Konfiguration auf [AvNav bookworm images](../installation/raspberry.md#images). Auf images für trixie (und neuer) gibt es eine [neue Konfiguration](serverpage.md#wifi).
+Diese Seite beschreibt die AvNav Wifi-Konfiguration auf [AvNav Bookworm Images](../installation/raspberry.md#images). Auf Images für Trixie (und neuer) gibt es eine [neue Konfiguration](serverpage.md#wifi).
 
 
-Von der [ServerSeite](serverpage.md) kommt man mit dem
+Von der [Server-Seite](serverpage.md) kommt man mit dem
 Button{{BT("StatusWpa")}} zu dieser Seite.
 
 ![](../../img/wpapage.png)
 
 Diese Seite wird nur angezeigt, wenn das Wifi Client Handling
-in der avnav\_server.xml  konfiguriert ist (als default an). Man kann
-nur Verbindungen konfigurieren, wenn ein WLAN-Adapter in der richtigen
-USB-Buchse eingesteckt wurde oder in der [avnav.conf](../installation/raspberry.md#preparation)
-InternalWifi as Client auf "yes" gesetzt wurde.
+in der *avnav\_server.xml*  konfiguriert ist (Der Defaulteintrag ist *an*). Man kann
+nur Verbindungen konfigurieren, wenn ein WLAN-Adapter in die richtige
+USB-Buchse eingesteckt wurde oder in der [*avnav.conf*](../installation/raspberry.md#preparation)
+*InternalWifi as Client* auf "yes" gesetzt wurde.
 
 ![](../img/raspi3-wlan.jpg)
 
-Im Bild gezeigt hier ein Raspberry Pi 3. Bei den neueren mit USB 3.0
-(blaue Buchsen) muss der Adapter in der blauen Buchse auf der Leiterplatten-Seite
+Das Bild zeigt ein Raspberry Pi 3. Bei den neueren Raspis mit USB 3.0
+(blaue Buchsen) muss der Adapter in der blauen USB-3-Buchse auf der Leiterplatten-Seite
 stecken.
 
 Auf Systemebene muss ein WLAN "wlan-av1" angezeigt werden. In der
-Konfiguration (avnav\_server.xml) muss eine Eintrag der Form
+Konfiguration in der Datei *avnav\_server.xml* muss ein Eintrag in der Form
 
 ```
 <AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan-av1">
@@ -38,11 +38,10 @@ Konfiguration (avnav\_server.xml) muss eine Eintrag der Form
 
 vorhanden sein.
 
-Auf der Seite werden alle in Reichweite befindlichen oder konfigurierten
+Auf der Wifi Client connection-Seite werden alle in Reichweite befindlichen oder konfigurierten
 WLANs angezeigt.
 
-Durch Klick auf ein angezeigtes WLAN kann die Verbindung hergestellt
-werden.
+Durch Klick auf ein angezeigtes WLAN kann eine Verbindung hergestellt werden.
 
 ![](../../img/wpa-connect.png)
 
@@ -52,11 +51,12 @@ Falls ein Zugriff von außen auf den Raspberry erfolgen soll, kann hier
 **Achtung: Das sollte nicht in öffentlichen WLANs aktiviert werden, da
 AvNav keinen besonderen Schutz bietet und sonst jeder im gleichen WLAN
 ungehindert zugreifen kann.**   
-Es kann aber z.B. genutzt werden, wenn man einen LTE Router nutzt und
-seine Geräte direkt mit diesem verbunden sein sollen.
+
+Es kann aber z.B. genutzt werden, wenn man einen LTE-Router nutzt und
+die eigenen Geräte direkt mit diesem verbunden sein sollen.
 
 Wenn die Verbindung hergestellt wurde, wird das entsprechend angezeigt,
-das verbundene Netzwerk ist grau hinterlegt.
+das verbundene Netzwerk ist dann grau hinterlegt.
 
 ![](.././img/wpapage-connected.png)
 
