@@ -17,15 +17,15 @@ Hauptmenü
 
 Die Haupteinträge lassen sich scrollen. Über die im Bild markierten Buttons kann man weitere Funktionen auslösen:
 
-  * (1) {{ICON("MNCollapsed")}}: Öffne für alle Einträge die erweiterte Ansicht. Diese zeigt die wichtigsten Buttons der jeweiligen Seite für einen schnellen Zugriff.
+  * (1) {{ICON("MNCollapsed")}}: Öffne für alle Einträge die erweiterte Ansicht. Sie zeigt die wichtigsten Buttons der jeweiligen Seite für einen schnellen Zugriff.
   * (2) {{ICON("MNExpanded")}}: Schließe alle erweiterten Ansichten.
   * (3) {{ICON("MNCollapsed")}}: Öffne die erweiterte Ansicht für diese Seite.
 
-Der Button {{ICON("Settings")}} ermöglicht die [Display Settings](../base/settings.md) für das Hauptmenü anzupassen.
+Der Button {{ICON("Settings")}} ermöglicht es, die [Display Settings](../base/settings.md) für das Hauptmenü anzupassen.
 
 ## Erweiterte Ansicht
 
-Nach dem Öffnen der erweiterten Ansicht erhält man die wichtigsten Buttons der Seite (mit einem längeren Beschreibungstext - so wie auch in einem ToolTip angezeigt).
+Nach dem Öffnen der erweiterten Ansicht erhält man die wichtigsten Buttons der Seite mit einem längeren Beschreibungstext - so wie auch in einem ToolTip angezeigt.
 
 ![Hauptmenü erweitert](../../img/mainmenu2.png)
 ///caption
@@ -45,12 +45,12 @@ Mit einem Klick auf den jeweiligen Button wird die entsprechende Seite in AvNav 
 | {{MB("MMchartspage")}} | Aufruf der [Kartenverwaltung](../base/charts.md#management) |
 | {{MB("MMroutepage")}} | Aufruf der [Routenverwaltung](../base/routes.md#management) |
 | {{MB("MMtrackspage")}} | Aufruf der [Verwaltung von Tracks und NMEA Logs](tracks.md) |
-| {{MB("MMaiscfgpage")}} | Aufruf der [AIS Konfiguration und Anzeige](ais.md) |
+| {{MB("MMaiscfgpage")}} | Aufruf der [AIS-Konfiguration und -Anzeige](ais.md) |
 | {{MB("MMsettingspage")}} | Aufruf der [Display Settings](../base/settings.md) |
 | {{MB("MMlayoutspage")}} | Aufruf der [Layoutverwaltung](../base/layout.md) (auch Start des Layout Editors) |
 | {{MB("MMpluginspage")}} | Aufruf der [Pluginverwaltung](plugins.md#installation) | 
-| {{MB("MMaddonconfigpage")}} | Aufruf der Seite für die Konfiguration von [UserApps](../base/userapps.md), für [Nutzer-CSS](usercss.md), für [Nutzer-JavaScript](userjs.md) und die Konfiguration von [Tastaturbefehlen](keyboard.md) oder [Icons](usericons.md) |
+| {{MB("MMaddonconfigpage")}} | Aufruf der Seite für die Konfiguration von [User Apps](../base/userapps.md), für [Nutzer-CSS](usercss.md), für [Nutzer-JavaScript](userjs.md) und die Konfiguration von [Tastaturbefehlen](keyboard.md) oder [Icons](usericons.md) |
 | {{MB("MMchannelspage")}}| Aufruf der [Verwaltung von (NMEA) Verbindungen](connections.md) |
 | {{MB("MMserverpage")}} | Aufruf der [Serververwaltung](serverpage.md) |
-| {{MB("MMremotepage")}} | Aufrufe der [Verwaltung für die Fernsteuerung](remotecontrol.md)|
+| {{MB("MMremotepage")}} | Aufruf der [Verwaltung für die Fernsteuerung](remotecontrol.md)|
 
