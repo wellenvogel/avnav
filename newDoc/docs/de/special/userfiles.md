@@ -9,7 +9,7 @@
 
 AvNav kann Dateien für den Nutzer speichern, die man direkt über die Web-Oberfläche erzeugen, 
 hochladen, bearbeiten, ansehen und herunterladen kann.
-Diese Dateien werden im AvNav-Datenverzeichnis unter ".../user/viewer" gespeichert. Das Datenverzeichnis ist normalerweise im Home-Verzeichnis des Nutzers unter avnav zu finden. Auf den [Raspberry Pi Images](../installation//raspberry.md#images) liegt es unter "/home/pi/avnav/data" und unter Android wird es in den Android-Einstellungen festgelegt.
+Diese Dateien werden im AvNav-Datenverzeichnis unter *.../user/viewer* gespeichert. Das Datenverzeichnis ist normalerweise im Home-Verzeichnis des Nutzers unter *avnav* zu finden. Auf den [Raspberry Pi Images](../installation//raspberry.md#images) liegt es unter */home/pi/avnav/data* und unter Android wird es in den Android Einstellungen festgelegt.
 
 ## Anzeige und Aktionen
 
@@ -27,7 +27,7 @@ Initial sind dort nur einige Template-Dateien vorhanden:
 
 * [user.css](usercss.md): Anpassung per CSS
 * [user.mjs](userjs.md): Nutzer-JavaScript
-* [keys.json](keyboard.md): Tastaturkürzel
+* [keys.json](keyboard.md): Tastatur Kürzel
 * [splitkeys.json](splitmode.md): Anpassungen für den Split Mode
 
 Nach Klick auf eine Datei erhält man einen Dialog mit einigen Zusatz-Informationen und mit verschiedenen möglichen Aktionen.
@@ -68,7 +68,7 @@ Besonders nützlich können HTML-Dateien sein. Da alle Dateien aus diesem Verzei
 ```
   http://nn.nn.nn.nn:8080/user/viewer/xxx
 ```
-von einem Webbrowser aus erreichbar sind, kann man damit sehr einfach zusätzliche Seiten schaffen, die innerhalb von AvNav (oder auch außerhalb) angezeigt werden können. Dazu steht auf der gleichen Seite unter {{BT("AddonConfigAddOns")}} die Möglichkeit zur Verfügung, die Dateien als sogenannte "[User App](../base/userapps.md)" bzw. AddOn einzurichten.
+von einem Webbrowser aus erreichbar sind, kann man damit sehr einfach zusätzliche Seiten schaffen, die innerhalb und auch außerhalb von AvNav angezeigt werden können. Dazu steht auf der gleichen Seite unter {{BT("AddonConfigAddOns")}} die Möglichkeit zur Verfügung, die Dateien als sogenannte "[User App](../base/userapps.md)" bzw. AddOn einzurichten.
 
 ## Beispiel für eine HTML-Datei { #userappexample }
 
@@ -94,7 +94,7 @@ Mit {{SB('CreateFile')}} erzeugt man eine HTML-Datei `dokumente.html` mit dem fo
 </html>
 ```
 
-Nun braucht man  nur noch eine Bild-Datei für den Button, mit dem diese Liste künftig aufgerufen werden soll. Icons findet man z.B. bei [Material Icons](https://fonts.google.com/icons?icon.query=document&icon.size=24).
+Nun braucht man  nur noch eine Bild-Datei für den Button, mit dem diese Liste künftig aufgerufen werden soll. Icons findet man z.B. bei [material icons](https://fonts.google.com/icons?icon.query=document&icon.size=24).
 Als Beispiel nimmt man ein Icon und speichert es unter dem Namen "dokumente.svg" bei den [Images](#images).
 
 Wenn man auf die Datei "dokumente.html" klickt, erhält man einen erweiterten Dialog.
