@@ -215,7 +215,7 @@ Die interne NMEA-Warteschlange . Kategorie 2 (einmal, optional).
 | Name | Online | Beschreibung | default/template |
 | --- | --- | --- | --- |
 | maxList | X | max. Anzahl von NMEA Records in der Warteschlange | 300 |
-| naxAge | X | max. Alter (in s) eies Eintrags in der Warteschlange. Ältere Einträge werden gelöscht. Das verhindert zu langsames Aussenden von Daten. | 3 |
+| maxAge | X | max. Alter (in s) eies Eintrags in der Warteschlange. Ältere Einträge werden gelöscht. Das verhindert zu langsames Aussenden von Daten. | 3 |
 
 ### AVNHttpServer
 
