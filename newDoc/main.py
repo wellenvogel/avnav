@@ -21,11 +21,11 @@ PV_OLDBASE="avnav_oldbase"
 PV_LANG="i18nlang"
 PV_BASE="base_url"
 PV_REL="relative_url"
-PV_VERSIONS="avnav_versions"
 VK_LINK='link'
 VK_EMBED='embed'
 C_START='start'
 C_TITLE='title'
+COPY_FILES=[os.path.join(os.path.dirname(__file__),'versions.txt')]
 CLREPL=re.compile("[^a-zA-Z0-9_-]")
 def toSeconds(v):
     if isinstance(v,str):
@@ -348,21 +348,15 @@ def on_pre_page_macros(env):
     pageVariables[PV_BASE]=base_url
     pageVariables[PV_LANG]=lang
     pageVariables[PV_OLDBASE]=get_hp_base(env,'old_doc_rel')+"/"+env.variables.old_doc_start+"?lang="+lang
-    def versionLink(version):
-        return base_url+'../'+str(version)+'/'+env.page.url
-    versionWithLinks=[]
-    current_version=str(env.conf.extra.get('version'))
-    for v in docVersions:
-        if v == current_version:
-            continue
-        versionWithLinks.append({
-            'version':v,
-            'url':versionLink(v)
-        })
-    pageVariables[PV_VERSIONS]=versionWithLinks
     for k,v in pageVariables.items():
         env.variables[k]=v
 
 def on_post_page_macros(env):
     for k,v in pageVariables.items():
         env.page.meta[k]=v
+
+def on_post_build(env):
+    "Post-build actions"
+    site_dir = env.conf['site_dir']
+    for f in COPY_FILES:
+        shutil.copy(f, site_dir)

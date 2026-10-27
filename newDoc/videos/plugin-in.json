@@ -3,7 +3,7 @@
   "description": "AvNav Documentation videos",
   "userApps": [
     {
-      "url": "/plugins/user-documentation/site/index.html?videobase=/plugins/user-docvideos&samepage=true",
+      "url": "/plugins/user-documentation/site/index.html?videobase=/plugins/user-docvideos&samepage=true&newwindow=true",
       "iconFile": "video-help.svg",
       "tile": "Documentation(Videos)",
       "shortText":"VDoc",

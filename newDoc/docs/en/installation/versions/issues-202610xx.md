@@ -48,4 +48,15 @@
 * [#603](https://github.com/wellenvogel/avnav/issues/603) 20260730 Feature request: dialog box Modify User App
 * [#606](https://github.com/wellenvogel/avnav/issues/606) 26060810 - Edit Overlay - opacity will not be saved
 * [#608](https://github.com/wellenvogel/avnav/issues/608) Correctly handle "no data" values in AIS data
+* [#610](https://github.com/wellenvogel/avnav/issues/610) Go back to use eth0 for the primary network interface on raspberry
 * [#613](https://github.com/wellenvogel/avnav/issues/613) 20260827 Android no approach in ActiveRoutWidget
+* [#615](https://github.com/wellenvogel/avnav/issues/615) SignalK notifications with state "normal" are treated as active alarms
+* [#623](https://github.com/wellenvogel/avnav/issues/623) SignalK handler: publish active leg to Signal K v2 course paths (`navigation.course.*`)
+* [#625](https://github.com/wellenvogel/avnav/issues/625) Adding route as overlay fails
+* [#628](https://github.com/wellenvogel/avnav/issues/628) Follow issue on Android
+* [#632](https://github.com/wellenvogel/avnav/issues/632) Multiple overlays with the same file create confusing displays
+* [#645](https://github.com/wellenvogel/avnav/issues/645) Sometimes an AvNav image will bring up wlan1 for the internal wifi instead of wlan0
+* [#646](https://github.com/wellenvogel/avnav/issues/646) AIS name is cut from left
+* [#649](https://github.com/wellenvogel/avnav/issues/649) Android route overlay params
+* [#650](https://github.com/wellenvogel/avnav/issues/650) Wrong text
+* [#652](https://github.com/wellenvogel/avnav/issues/652) Android AIS calcultion javascript errors

@@ -207,3 +207,24 @@ erreicht.
 | --- | --- | --- |
 | Sound for XXX alarm | Hier kann der Ton für die verschiedenen Alarme gewählt werden |  |
 | reset to defaults | Rücksetzen der Sound-Einstellungen auf Defaults |  |
+
+
+## Start im Hintergrund
+
+Die AvNav App bringt einen zusätzlichen ["ShortCut"](https://support.google.com/android/answer/9450271?hl=de) mit, der es ermöglicht, die AvNav App direkt im Hintergrund zu starten. Das kann hilfreich sein, wenn man z.B. AvNav nur als Multiplexer für eine andere App nutzen will - oder das Display auf einem anderen Gerät laufen soll und nur der Server-Teil aktiv sein soll.
+
+Bevor man den ShortCut nutzen kann, muss AvNav einmal normal gestartet worden sein, damit man die notwendigen Grundeinstellungen vornehmen kann und die Berechtigungen erteilt hat.
+
+Danach kann man durch ein langes Tippen auf das AvNav Icon ![AvNav](../../img/sailboat512r.png){: .inline-image} den ShortCut anzeigen und durch Klick auslösen. AvNav startet dann im Hintergrund (so als ob man über 
+
+{{MM("MM:actions")}})->{{BT("MainExit",True)}} 
+
+AvNav in den Hintergrund schicken würde).
+
+Über die Benachrichtigung in der Android-Kopfzeile kann man AvNav wieder in den Vordergrund bringen.
+
+Diese Funktion ist auch hilfreich, wenn man den Hintegrund-Start von AvNav durch spezielle Tools (z.B. [Samsung Modi und Routinen](https://www.samsung.com/de/support/mobile-devices/modi-und-routinen/)) oder Apps (wie [MacroDroid](https://wiki.macrodroid.com/wiki/index.php?title=MacroDroid_Wiki) oder [Tasker](https://tasker.joaoapps.com/))
+
+## AvNav und AndroidAuto
+
+Wie man AvNav unter [Android Auto](https://de.wikipedia.org/wiki/Android_Auto) nutzen kann, ist ein einem [separaten Artikel](../special/android-auto.md) beschrieben.

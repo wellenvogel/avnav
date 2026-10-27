@@ -9,20 +9,20 @@
     </button>
     {% if not config.extra.ext_build %}
     {% if page %}
+    {% set version_base = page.meta.base_url + "../@VERSION@/" + page.url %}
+    {% set version_list= page.meta.base_url + "../latest/versions.txt" %}
+    {% set alt_version_list= page.meta.base_url + "versions.txt" %}
     <div class="md-select__inner">
-      <ul class="md-select__list">
+      <ul class="md-select__list" id="avnav-version-selection"
+      data-current-version="{{ config.extra.version }}" 
+      data-version-base="{{ version_base }}"
+      data-version-list="{{ version_list }}"
+      data-alt-version-list="{{ alt_version_list }}">
         <li class="md-select__item">
           <a href="{{ page.meta.avnav_oldbase }}"  class="md-select__link">
               < 202608xx
             </a>
         </li>
-        {% for vl in page.meta.avnav_versions %}
-        <li class="md-select__item">
-          <a href="{{ vl.url }}"  class="md-select__link">
-              {{ vl.version }}
-            </a>
-        </li>
-        {% endfor %}
       </ul>    
     </div>
     {% endif %}  

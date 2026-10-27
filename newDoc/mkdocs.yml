@@ -14,6 +14,7 @@ nav:
     - concept/clientserver.md
     - concept/operatingsystems.md
   - Installation:
+    - installation/release.md
     - installation/intro.md
     - installation/raspberry.md
     - installation/linux.md

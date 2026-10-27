@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="start_background"
+        android:enabled="true"
+        android:icon="@drawable/sailboat_background"
+        android:shortcutShortLabel="@string/shortcutStartBackground"
+        android:shortcutLongLabel="@string/longStartBackground">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="@APPLICATION_ID@"
+            android:targetClass="de.wellenvogel.avnav.main.StartBackground" />
+    </shortcut>
+</shortcuts>

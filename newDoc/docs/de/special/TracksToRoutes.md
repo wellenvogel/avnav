@@ -8,12 +8,10 @@ Konvertierung von Tracks zu Routen
 ==================================
 
 AvNav zeichnet permanent [Tracks](tracks.md)
-auf. Für jeden Tag wird eine neue gpx Datei mit dem aktuellen Datum
+auf. Für jeden Tag wird eine neue gpx-Datei mit dem aktuellen Datum
 geschrieben.
 
-Diese Tracks (oder auch Tracks, die auf der [Tracks Seite](tracks.md)
-Seite hochgeladen wurden) können in Routen umgewandelt werden, um sie zur
-Navigation zu nutzen.
+Diese Tracks oder auch Tracks, die auf der [Tracks-Seite](tracks.md) hochgeladen wurden, können in Routen umgewandelt werden, um sie zur Navigation zu nutzen.
 
 Verfahren
 ---------
@@ -38,23 +36,21 @@ ggf. noch etwas nachbearbeiten.
 Ablauf
 ------
 
-Man kann den Dialog für die Konvertierung entweder von der [Tracks Seite](tracks.md)
-Seite nack Klick auf einen Track über {{BT("ToRoute")}}oder aus dem Info Dialog, falls man einen Track als [Overlay](../base/overlays.md)
-auf der Karte hat, und einen Punkt in diesem anklickt. Im Info Dialog
+Man kann den Dialog für die Konvertierung entweder von der [Tracks-Seite](tracks.md)
+Seite nack Klick auf einen Track über {{BT("ToRoute")}}oder aus dem Info-Dialog aufrufen, falls man einen Track als [Overlay](../base/overlays.md) auf der Karte hat und einen Punkt in diesem anklickt. Im Info-Dialog
 wieder den Button {{DB("ToRoute")}} nutzen - siehe Bild.
-
 ![](../../img/FeatureInfo-Track.png)
 
-Nach Klick auf den Convert Button erhält man nach eine Abfrage für den Namen der zu erzeugenden Route den Konverter-Dialog.
+Nach Klick auf den Convert Button erhält man nach einer Abfrage für den Namen der zu erzeugenden Route den Konverter-Dialog.
 
 ![](../../img/TracksToRoutes1.png)
 
 Wie im Bild zu sehen, wird man typischerweise eine Warnung bekommen, dass
 die Anzahl der Punkte über 50 liegt.
 
-Über max Xte stellt man die maximal zulässige Abweichung ein und kann mit
-"Compute" eine Konvertierung starten. Falls das Ergebnis (Zahl der Punkte)
-noch nicht passend ist, kann man mehrere Durchläufe machen, mit veränderter
+Über *max Xte* stellt man die maximal zulässige Abweichung ein und kann mit
+*Compute* eine Konvertierung starten. Falls das Ergebnis bzw. die Zahl der Punkte
+noch nicht passend ist, kann man mehrere Durchläufe machen mit jeweils veränderter
 Abweichung.
 
 ![](../../img/TracksToRoutes2.png)
@@ -62,9 +58,9 @@ Abweichung.
 Im Beispiel wurde mit einer Abweichung von 22m eine ausreichend kleine
 Route erstellt.
 
-Man kann im Dialog noch den Namen der enstehenden Route ändern (und ggf.
+Man kann im Dialog noch den Namen der enstehenden Route ändern und ggf.
 entscheiden, ob eine bestehende Route gleichen Namens überschrieben werden
-soll).
+soll.
 
 Nach dem Speichern kann man ggf. die enstandene Route direkt bearbeiten.
 

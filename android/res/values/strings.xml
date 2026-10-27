@@ -17,6 +17,10 @@
     <string name="action_about">about</string>
     <string name="notifyTitle">AvNav</string>
     <string name="notifyText">AvNav running</string>
+    <string name="startBackgroundErrorTitle">Background start failed</string>
+    <string name="startBackgroundErrorMessage">AvNav could not start the background service: %1$s</string>
+    <string name="shortcutStartBackground">AvNav Background</string>
+    <string name="longStartBackground">Start AvNav in Background</string>
     <string name="btShowInfo">Info/Licenses</string>
     <string name="btShowPrivacy">PrivacyInfo</string>
     <string name="selectApp">Select Application to handle</string>
@@ -138,4 +142,8 @@
     <string name="share">Share</string>
     <string name="wdChange">Changing the working directory will make all your current data invisible. But you can switch back any time later.</string>
     <string name="warning">Warning</string>
+    <string name="startBackgroundNotInitializedTitle">AvNav not initialized</string>
+    <string name="startBackgroundNotInitializedMessage">AvNav has not been initialized %1$s. Please start AvNav in normal mode first.</string>
+    <string name="startBackgroundNotificationPermission">(Notification permissions needed)</string>
+    <string name="startBackgroundWorkDirError">(unable to create working directory)</string>
 </resources>

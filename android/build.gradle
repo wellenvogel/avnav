@@ -270,9 +270,30 @@ task copySounds(type: CustomAssetCopyTask) {
 }
 
 
+abstract class GenerateShortcutsTask extends DefaultTask {
+    @InputFile
+    abstract RegularFileProperty getTemplate()
+    @Input
+    abstract Property<String> getAppId()
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+    @TaskAction
+    void generate() {
+        def dir = new File(outputDir.get().asFile, "xml")
+        dir.mkdirs()
+        new File(dir, "shortcuts.xml").text =
+                template.get().asFile.text.replace("@APPLICATION_ID@", appId.get())
+    }
+}
+
 androidComponents {
     def copySoundsP = tasks.named("copySounds")
     onVariants(selector().all()) { variant ->
+        def shortcutsP = tasks.register("generateShortcuts${variant.name.capitalize()}", GenerateShortcutsTask) {
+            it.template.set(layout.projectDirectory.file("shortcuts/shortcuts.xml"))
+            it.appId.set(variant.applicationId)
+        }
+        variant.sources.res.addGeneratedSourceDirectory(shortcutsP, GenerateShortcutsTask::getOutputDir)
         variant.sources.assets.addGeneratedSourceDirectory(
                 copySoundsP,
                 CustomAssetCopyTask::getOutputFolder
