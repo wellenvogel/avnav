@@ -694,7 +694,6 @@ der Kategorie und dem Plugin-Verzeichnis. Beispiel:
 
 ```
 <AVNPluginHandler>
-<builtin-signalk enabled="true"/>
 <builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
 </AVNPluginHandler>
 ```
