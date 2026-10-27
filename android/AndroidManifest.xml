@@ -49,12 +49,19 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
         <activity
             android:name=".Info"
             android:label="Info"
             android:theme="@style/AppTheme"/>
+        <activity
+            android:name=".StartBackground"
+            android:theme="@style/AppTheme"
+            android:exported="false"
+            android:excludeFromRecents="true"/>
         <activity android:name=".Dummy"
             android:exported="true">
             <intent-filter>
@@ -83,6 +90,12 @@
                 <data android:mimeType="*/*"
                     android:host="*"
                     android:pathPattern=".*\\.gpx"
+                    android:scheme="content"
+                    />
+                <data android:mimeType="*/*"
+                    android:host="*"
+                    android:pathPattern=".*\\.gpx"
+                    android:scheme="file"
                     />
 
             </intent-filter>

@@ -476,7 +476,7 @@ public class SettingsActivity extends PreferenceActivity {
         return true;
     }
 
-    private static boolean checkOrCreateWorkDir(Context ctx,SharedPreferences prefs) {
+    public static boolean checkOrCreateWorkDir(Context ctx,SharedPreferences prefs) {
         String cfg=prefs.getString(Constants.WORKDIR,"");
         if (cfg.isEmpty()) return false;
         AvnUtil.WorkDir parser=new AvnUtil.WorkDir(false);

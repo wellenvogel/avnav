@@ -301,7 +301,44 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
     }
 
-    private boolean doStartGpsService(int fgType){
+    public static Intent startService(Context ctx){
+        NeededPermissions perm = GpsService.getNeededPermissions(ctx);
+        int fgType=GpsService.computeRequiredRunningMode(perm.gps == NeededPermissions.Mode.NEEDED,ctx,true);
+        Intent intent = new Intent(ctx, GpsService.class);
+        intent.putExtra(Constants.SERVICE_TYPE, fgType);
+        if (Build.VERSION.SDK_INT >= 26) {
+            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService in foreground");
+            ctx.startForegroundService(intent);
+        } else {
+            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService");
+            ctx.startService(intent);
+        }
+        return intent;
+    }
+
+    public static void waitForeground(Context ctx, Handler handler, Runnable action){
+        if (Build.VERSION.SDK_INT >= 26) {
+            ActivityManager activityManager = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();
+            if (runningAppProcesses != null) {
+                int importance = runningAppProcesses.get(0).importance;
+                // higher importance has lower number (?)
+                if (importance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND){
+                    AvnLog.e("still in background while trying to start service");
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            waitForeground(ctx, handler, action);
+                        }
+                    },1000);
+                    return;
+                }
+            }
+        }
+        action.run();
+    }
+
+    private boolean doStartGpsService(){
         AvnLog.i(Constants.LOGPRFX, "MainActivity create GpsService");
         bindAction = new Runnable() {
             @Override
@@ -315,15 +352,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             }
         };
         try {
-            Intent intent = new Intent(this, GpsService.class);
-            intent.putExtra(Constants.SERVICE_TYPE, fgType);
-            if (Build.VERSION.SDK_INT >= 26) {
-                AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService in foreground");
-                startForegroundService(intent);
-            } else {
-                AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService");
-                startService(intent);
-            }
+            Intent intent = startService(this);
             bindService(intent, mConnection, 0);
             serviceNeedsRestart = false;
             return true;
@@ -333,29 +362,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         return false;
     }
 
-    private boolean startGpsService(){
-        if (Build.VERSION.SDK_INT >= 26) {
-            ActivityManager activityManager = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
-            List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();
-            if (runningAppProcesses != null) {
-                int importance = runningAppProcesses.get(0).importance;
-                // higher importance has lower number (?)
-                if (importance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND){
-                    AvnLog.e("still in background while trying to start service");
-                    retryHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            startGpsService();
-                        }
-                    },1000);
-                    return false;
-                }
-            }
-        }
-        NeededPermissions perm = GpsService.getNeededPermissions(activity);
-        int fgType=GpsService.computeRequiredRunningMode(perm.gps == NeededPermissions.Mode.NEEDED,this,true);
-        return doStartGpsService(fgType);
-
+    private void startGpsService(){
+        waitForeground(this,retryHandler, this::doStartGpsService);
     }
 
 
