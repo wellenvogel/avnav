@@ -85,7 +85,7 @@ geändert. Es kann aber sein, dass für neue Funktionen neue Einträge nötig
 werden. Dann wird in den [Release Notes](../installation/release.md)
 darauf hingewiesen.
 
-Mit jedem erfolgreichen Start schreibt AvNav eine Kopie dieser Datei mit der Endung **.ok*. Falls beim nächsten Start das Parsen der XML-Datei fehlschlägt, liest AvNav stattdessen die **.ok* Datei. Diese
+Mit jedem erfolgreichen Start schreibt AvNav eine Kopie dieser Datei mit der Endung * *.ok*. Falls beim nächsten Start das Parsen der XML-Datei fehlschlägt, liest AvNav stattdessen die * *.ok* Datei. Diese
 Funktion soll verhindern, dass nach einer Änderung, die AvNav in manchen
 Situation selbst vornimmt, der nächste Start u.U. scheitert.
 

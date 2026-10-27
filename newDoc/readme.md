@@ -181,4 +181,4 @@ The parameter can be empty.
 ```
 [Some Page]({{HPLINK("../bshviewer/index.html")}})
 ```
-HPLINK points to ethe ...software/avnav directory.
+HPLINK points to the ...software/avnav directory.
