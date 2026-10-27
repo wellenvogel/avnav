@@ -22,7 +22,10 @@ Diese Daten durchlaufen ganz normal den [Multiplexer](connections.md#structure) 
 Da AvNav alle NMEA-Daten auch an Schnittstellen (TCP, UDP, Seriell,...) bereitstellt, können auf diesem Weg auch Daten zu SignalK gesendet werden.
 
 ### Direkte SignalK-Daten
-AvNav kann in der Raspberry-, Linux- und Windowsversion auch direkt die Schnittstellen des SignalK Servers nutzen und von dort Daten empfangen und senden. In AvNav gibt es dazu einen SignalK Handler, der [konfiguriert](#configuration) werden kann. Er ist erreichbar über {{BT("MainNav")}} -> Connections/Devices. 
+AvNav kann in der Raspberry-, Linux- und Windowsversion auch direkt die Schnittstellen des SignalK Servers nutzen und von dort Daten empfangen und senden. In AvNav gibt es dazu einen SignalK Handler, der [konfiguriert](#configuration) werden kann. Er ist erreichbar über 
+
+{{MM("MMchannelspage")}} -> SignalKHandler
+
 Die empfangenen Daten können dabei auf verschiedene Weise genutzt werden - je nach der Konfiguration:
 
 1.  "decodeData" ausgeschaltet:
@@ -131,7 +134,7 @@ Verbindung zu vermeiden. Alle NMEA-Verbindungen haben per Default-Einstellung ei
 Priorität von "50", der AVNSignalKHandler 40 - damit "gewinnen" direkt
 empfangene NMEA-Daten immer gegenüber den von SignalK geholten Daten.
 
-### Konfiguration {: #configuration}
+## Konfiguration {: #configuration}
 
 Der AVNSignalK Handler hat die folgenden Konfigurationen.
 
@@ -168,7 +171,7 @@ Einige der Parameter werden erst sichtbar, wenn der jeweils
 
   
 
-### Mapping {: #mapping}
+## Mapping {: #mapping}
 
 Die SignalK-Pfade werden wie folgt auf AvNav-Datenpfade gemappt:
 
@@ -288,7 +291,7 @@ alarm -> alarm
 
 Im AVNAlarmHandler können auch weitere Alarme [konfiguriert ](configfile.md#avnalarmhandler) werden. Als Name muss dasn *sk:name* verwendet werden. Diese werden dann entsprechend ihrer konfiguration behandelt.
 
-### SignalK - Karten {: #SignalKCharts}
+## SignalK - Karten {: #SignalKCharts}
 
 Ab Version 202011xx ist auch der [SignalK
 Chart Provider](https://github.com/SignalK/charts-plugin) integriert. Karten, die von dort angeboten werden, können auf der Einstiegsseite ebenfalls ausgewählt werden. Dazu muss

@@ -98,7 +98,7 @@ By configuring on the page ({{BT('MainNav')}} -> Connections/Devices), you can s
 You only need to ensure that you do not create loops—e.g., sending data from AvNav via NMEA0183 to SignalK and then fetching it back again.  
 AvNav tries to avoid such problems with a "sourcePriority" on every connection. All NMEA connections have a default priority of "50", the AVNSignalKHandler 40—thus, directly received NMEA data always "wins" over data fetched from SignalK.
 
-### Configuration {: #configuration}
+## Configuration {: #configuration}
 
 The AVNSignalK handler has the following configurations.
 
@@ -134,7 +134,7 @@ Some of the parameters only become visible once the "parent" parameter has been 
 
   
 
-### Mapping {: #mapping}
+## Mapping {: #mapping}
 
 The SignalK paths are mapped to AvNav data paths as follows:
 
@@ -248,7 +248,7 @@ alarm -> alarm
 
 In the AVNAlarmHandler, further alarms can also be [configured](configfile.md#avnalarmhandler). The *sk:name* must be used as the name. These will then be handled according to their configuration.
 
-### SignalK - Charts {: #SignalKCharts}
+## SignalK - Charts {: #SignalKCharts}
 
 From version 202011xx onwards, the [SignalK Chart Provider](https://github.com/SignalK/charts-plugin) is also integrated. Charts offered from there can also be selected on the entry page. To do this, the corresponding plugin must of course be installed and activated within SignalK - and charts must be available there.
 
