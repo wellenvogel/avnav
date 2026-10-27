@@ -35,6 +35,7 @@ document$.subscribe(()=>{
     let iconSet;
     let videobase;
     let samePage=false;
+    let newWindow=false; //new window for external links
     try{
         iconset=localStorage.getItem(LSNAME)
         if (! iconset) iconset='iconset-default';
@@ -55,6 +56,9 @@ document$.subscribe(()=>{
             }
             if (key == 'samepage'){
                 samePage=true;
+            }
+            if (key == 'newwindow'){
+                newWindow=true;
             }
         }
     }
@@ -127,6 +131,9 @@ document$.subscribe(()=>{
                     limg.classList.remove('hidden');
                     limg.removeAttribute('id');
                     el.appendChild(limg);
+                }
+                if (newWindow){
+                    el.setAttribute('target','_blank');
                 }
             }
         }

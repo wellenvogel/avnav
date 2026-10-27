@@ -3,7 +3,7 @@
   "description": "AvNav Documentation",
   "userApps": [
     {
-      "url": "site/index.html",
+      "url": "site/index.html?newwindow=true",
       "shortText": "Doc",
       "longText": "Documentation",
       "name": "ui"
