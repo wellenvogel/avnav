@@ -10,8 +10,8 @@
     {% if not config.extra.ext_build %}
     {% if page %}
     {% set version_base = page.meta.base_url + "../@VERSION@/" + page.url %}
-    {% set version_list= page.meta.base_url + "latest/versions.txt" %}
-    {% set alt_version_list= page.meta.base_url + "/versions.txt" %}
+    {% set version_list= page.meta.base_url + "../latest/versions.txt" %}
+    {% set alt_version_list= page.meta.base_url + "versions.txt" %}
     <div class="md-select__inner">
       <ul class="md-select__list" id="avnav-version-selection"
       data-current-version="{{ config.extra.version }}" 
