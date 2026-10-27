@@ -83,7 +83,7 @@ Danach kann man das Mobilgerät mit dem Display verbinden (das sollte im Normalf
 
 Samsung Mobilgeräte bieten mit [Modi und Routinen](https://www.samsung.com/de/support/mobile-devices/modi-und-routinen/) eine sehr komfortable Möglichkeit beispielsweise eine App zu starten, wenn man sich mit einem AndroidAuto Display verbindet.
 
-Dazu muss man eine Routine erstellen, die als Bedingung "AndroidAuto verbinden" hat und als Aktion des Starten einer App-Aktion. AvNav bietet dazu die Aktion "AvNav Background" - diese kann man aus einer Liste auswählen. Das ist mit wenigen Klicks erledigt. Damit wird AvNav automatisch gestartet, wenn AndroidAuto verbunden wird. Natürlich kann man auch AvNav dabei direkt starten lassen - dann ist auf dem Mobilgerät der normale AvNav Bildschirm sichtbar.
+Dazu muss man eine Routine erstellen, die als Bedingung "AndroidAuto verbinden" hat und als Aktion das Starten einer App-Aktion. AvNav bietet dazu die Aktion "AvNav Background" - diese kann man aus einer Liste auswählen. Das ist mit wenigen Klicks erledigt. Damit wird AvNav automatisch im HIntergrund-Modus gestartet, wenn AndroidAuto verbunden wird. Natürlich kann man auch AvNav dabei direkt starten lassen - dann ist auf dem Mobilgerät der normale AvNav Bildschirm sichtbar.
 
 ### Andere Mobilgeräte
 
