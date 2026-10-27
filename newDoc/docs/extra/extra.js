@@ -131,4 +131,54 @@ document$.subscribe(()=>{
             }
         }
     }
+
+    const buildVersionList=(versionText,selector)=>{
+        const versions = versionText.split('\n').filter(v => v.trim() !== '');
+        const currentVersion = selector.getAttribute('data-current-version');
+        for (const version of versions){
+            if (version === currentVersion) continue;
+            const li=document.createElement('li');
+            li.classList.add('md-select__item');
+            const a=document.createElement('a');
+            a.classList.add('md-select__link');
+            a.setAttribute('href',selector.getAttribute('data-version-base').replace('@VERSION@',version));
+            a.textContent=version;
+            li.appendChild(a);
+            selector.appendChild(li);
+        }
+    }
+
+    const selector=document.getElementById('avnav-version-selection');
+    if (selector){
+        const versionList=selector.getAttribute('data-version-list');
+        const  furl=new URL(versionList,window.location.href);
+        fetch(furl)
+            .then(response => {
+                if (response.ok)
+                    return response.text();
+                throw new Error('unable to fetch versions:'+response.status);
+            })
+            .then(text => {
+                buildVersionList(text,selector);
+            })
+            .catch(error => {
+                console.error('Error fetching versions:', error)
+                const altVersionList=selector.getAttribute('data-alt-version-list');
+                if (altVersionList){
+                    const altFurl=new URL(altVersionList,window.location.href);
+                    fetch(altFurl)
+                        .then(response => {
+                            if (response.ok)
+                                return response.text();
+                            throw new Error('unable to fetch alt versions:'+response.status);
+                        })
+                        .then(text => {
+                            buildVersionList(text,selector);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching alt versions:', error)
+                        });
+                }
+            });
+    }
 })
