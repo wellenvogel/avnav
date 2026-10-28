@@ -4,12 +4,12 @@
     - Sentences
 ---
 
-# NMEA0183 Sentences
+# Nmea0183 sentences
 
-As described in the chapter [Data flow](../base/dataflow.md), AvNav processes a range of NMEA0183 sentences. These differ slightly between the Android version and the Linux/Windows version.
+As described in the [data flow](../base/dataflow.md) chapter, AvNav processes a series of NMEA0183 sentences. These differ slightly between the Android version and the Linux/Windows version.
 In addition, AvNav also generates and outputs a few sentences itself.
 
-**Note:** The [AvNav Multiplexer](connections.md#structure) processes all NMEA0183 data - regardless of whether AvNav understands them itself.
+**Note:** The [AvNav multiplexer](connections.md#structure) processes all NMEA0183 data - regardless of whether AvNav understands it itself.
 
 ## Linux/Windows
 
@@ -32,7 +32,7 @@ In addition, AvNav also generates and outputs a few sentences itself.
 * $xxHDG 
 * $xxHDT 
 * $xxHDM 
-* $xxVHW partially
+* $xxVHW partial
 * $xxVWR 
 * $xxMTW 
 * $xxZDA 
@@ -40,7 +40,8 @@ In addition, AvNav also generates and outputs a few sentences itself.
 
 ### Sending
 
-Depending on the [configuration](configfile.md), AvNav can also generate NMEA data:
+Depending on the [configuration](configfile.md), AvNav
+can also generate NMEA data:
 
 * $GPRMB
 * $GPAPB
@@ -69,7 +70,7 @@ Depending on the [configuration](configfile.md), AvNav can also generate NMEA da
 * $xxHDM 
 * $xxHDT
 * $xxVDR
-* $xxVHW partially
+* $xxVHW partial
 * $xxHDG
 * $xxVTG
 * $xxVWR 

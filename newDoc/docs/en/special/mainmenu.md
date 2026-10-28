@@ -1,55 +1,55 @@
 ---
   tags:
-    - Main Menu
+    - Main menu
     - Pages
 ---
 
-# Main Menu
+# Main menu
 
 On all pages in AvNav, you can access the main menu using the {{BT("MainNav")}} button.
 
-![Main Menu](../../img/mainmenu1.png)
+![Main menu](../../img/mainmenu1.png)
 ///caption
-Main Menu
+Main menu
 ///
 
 ## Buttons
 
-The main entries can be scrolled. You can trigger further functions via the buttons marked in the image:
+The main entries can be scrolled. You can trigger additional functions using the buttons marked in the image:
 
-  * (1) {{ICON("MNCollapsed")}}: Open the extended view for all entries. It displays the most important buttons for each page for quick access.
-  * (2) {{ICON("MNExpanded")}}: Close all extended views.
-  * (3) {{ICON("MNCollapsed")}}: Open the extended view for this page.
+  * (1) {{ICON("MNCollapsed")}}: Open the expanded view for all entries. It shows the most important buttons for the respective page for quick access.
+  * (2) {{ICON("MNExpanded")}}: Close all expanded views.
+  * (3) {{ICON("MNCollapsed")}}: Open the expanded view for this page.
 
-The {{ICON("Settings")}} button allows you to adjust the [Display Settings](../base/settings.md) for the main menu.
+The {{ICON("Settings")}} button allows you to adjust the [Display settings](../base/settings.md) for the main menu.
 
-## Extended View
+## Expanded view
 
-After opening the extended view, you get the most important buttons of the page along with a longer description text - just as shown in a tool tip.
+After opening the expanded view, you get the most important buttons of the page along with a longer description text - just like it is displayed in a tooltip.
 
-![Main menu extended](../../img/mainmenu2.png)
+![Main menu expanded](../../img/mainmenu2.png)
 ///caption
-Main menu extended view
+Main menu expanded view
 ///
 
-By clicking on the respective button, the corresponding page in AvNav is opened and the button function is executed.
+By clicking on the respective button, the corresponding page is opened in AvNav and the button function is executed.
 
 ## Entries
 
 | Entry | Description |
 | --- | --- |
-| {{MB("MM:actions")}} | Open the [Action Menu](../base//navpage.md#actions-buttons) |
-| {{MB("MMnavpage")}} | Open the [Navigation Page](../base/navpage.md) |
-| {{MB("MMgpspage")}} | Open the [Dashboard Pages](../base/navpage.md#dashboards) |
-| {{MB("MMaddonpage")}} | Open the [User App Page](../base/userapps.md) |
-| {{MB("MMchartspage")}} | Open the [Chart Management](../base/charts.md#management) |
-| {{MB("MMroutepage")}} | Open the [Route Management](../base/routes.md#management) |
-| {{MB("MMtrackspage")}} | Open the [Management of Tracks and NMEA Logs](tracks.md) |
-| {{MB("MMaiscfgpage")}} | Open the [AIS Configuration and Display](ais.md) |
-| {{MB("MMsettingspage")}} | Open the [Display Settings](../base/settings.md) |
-| {{MB("MMlayoutspage")}} | Open the [Layout Management](../base/layout.md) (also starts the Layout Editor) |
-| {{MB("MMpluginspage")}} | Open the [Plugin Management](plugins.md#installation) | 
-| {{MB("MMaddonconfigpage")}} | Open the configuration page for [User Apps](../base/userapps.md), for [User CSS](usercss.md), for [User JavaScript](userjs.md), and the configuration of [Keyboard Shortcuts](keyboard.md) or [Icons](usericons.md) |
-| {{MB("MMchannelspage")}}| Open the [Management of (NMEA) Connections](connections.md) |
-| {{MB("MMserverpage")}} | Open the [Server Management](serverpage.md) |
-| {{MB("MMremotepage")}} | Open the [Management for Remote Control](remotecontrol.md) |
+| {{MB("MM:actions")}} | Opens the [Action menu](../base//navpage.md#actions-buttons)
+| {{MB("MMnavpage")}} | Opens the [Navigation page](../base/navpage.md) |
+| {{MB("MMgpspage")}} | Opens the [Dashboard pages](../base/navpage.md#dashboards)|
+| {{MB("MMaddonpage")}} | Opens the [User app page](../base/userapps.md)|
+| {{MB("MMchartspage")}} | Opens the [Chart management](../base/charts.md#management) |
+| {{MB("MMroutepage")}} | Opens the [Route management](../base/routes.md#management) |
+| {{MB("MMtrackspage")}} | Opens the [Management of tracks and NMEA logs](tracks.md) |
+| {{MB("MMaiscfgpage")}} | Opens the [AIS configuration and display](ais.md) |
+| {{MB("MMsettingspage")}} | Opens the [Display settings](../base/settings.md) |
+| {{MB("MMlayoutspage")}} | Opens the [Layout management](../base/layout.md) (also starts the layout editor) |
+| {{MB("MMpluginspage")}} | Opens the [Plugin management](plugins.md#installation) | 
+| {{MB("MMaddonconfigpage")}} | Opens the page for configuring [User apps](../base/userapps.md), for [User CSS](usercss.md), for [User JavaScript](userjs.md) and the configuration of [Keyboard shortcuts](keyboard.md) or [Icons](usericons.md) |
+| {{MB("MMchannelspage")}}| Opens the [Management of (NMEA) connections](connections.md) |
+| {{MB("MMserverpage")}} | Opens the [Server management](serverpage.md) |
+| {{MB("MMremotepage")}} | Opens the [Management for remote control](remotecontrol.md)|

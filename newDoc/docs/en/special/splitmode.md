@@ -1,14 +1,14 @@
 ---
   tags:
-    - Split Mode
+    - Split mode
     - Tabs
 ---
 
-# 2-Window Mode (Split Mode)
+# 2-window mode (split mode)
 
 ## Usage
 
-With
+Using
 
 {{MM("MM:actions")}}->{{BT("Split",True)}}
 
@@ -24,42 +24,42 @@ you can split the screen into two AvNav windows.
 2 window dashboard
 ///
 
-The two windows operate largely independently of each other. This allows you to place different views side-by-side as desired. In the example, you can see either two map views—even with different zoom levels—or different maps. A split between a map view and a dashboard is also possible.
+The two windows operate largely independently of each other. This allows you to display different views side-by-side as desired. In the example, you can see either two map views—even with different zoom levels—or different maps. A combination of a map view and a dashboard is also possible.
 
-Via
+Using
 
 {{MM("MM:actions")}}->{{BT("Split",True)}}
 
-the 2-window mode can be exited again.
+you can exit the 2-window mode.
 
-The semi-transparent slider allows you to change the screen split between the windows.
+You can adjust the screen split between the windows using the semi-transparent slider.
 
-## Special Features
+## Special features
 
 ### Alarms
 
-In 2-window mode, alarms are only displayed in the right window.
+In 2-window mode, alarms are only displayed in the right-hand window.
 
-### Settings (Display Settings)
+### Display settings
 
-Most [settings](../base/settings.md) apply to both windows together in 2-window mode and take effect immediately. However, some settings can be configured separately for each window. These are marked with a `*` on the settings pages.
+Most [settings](../base/settings.md) apply to both windows simultaneously in 2-window mode and take effect immediately. However, some settings can be configured separately for each window. These are marked with an `*` on the settings pages.
 
-These are in particular the settings for [remote control](remotecontrol.md).
+These specifically include the settings for the [remote control](remotecontrol.md).
 
-Loading and saving settings is also performed separately for each window.
+Loading and saving settings is also handled separately for each window.
 
-If you would like to make further settings separately for each window, you can customize the `splitkeys.json` file in the user files. You can access this via
+If you would like to configure further settings separately per window, you can modify the `splitkeys.json` file in the user files. You can access this via
 
 {{MM("MMaddonconfigpage")}}
 
-and edit it there. After making changes, you must reload AvNav in the browser.
+where you can edit it. After making changes, you must reload AvNav in the browser.
 
 With the setting
 
 {{MM("MMsettingspage")}}->General->"start with last split mode"
 
-you can ensure that AvNav starts again in split mode if it was active previously. This is particularly helpful for Android.
+you can ensure that AvNav restarts in split mode if it was active previously. This is particularly helpful for Android.
 
 ### Layouts
 
-Layouts can be selected separately for each window. This allows you to design the map display differently, as shown in the example. A layout loaded in split mode does not remain active when the split mode is exited.
+Layouts can be selected separately for each window. This allows you to customize the map display differently, as shown in the example. A layout loaded in split mode will not remain active once you exit split mode.

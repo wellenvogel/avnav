@@ -11,4 +11,5 @@ Strictly follow these formatting rules:
 7. within a yaml header do translate the array values below the tags element
 8. do not change the url of any links even if not found
 9. preserve any macros between {{ and }}
+10. for headlines use "down style" - i.e. sentence case
 
