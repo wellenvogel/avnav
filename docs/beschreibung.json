@@ -3,6 +3,7 @@
     "headline": "Wellenvogel AvNav",
     "headlineLink":"beschreibung.html",
     "headerImage":"../../../images/ausschnitt1.jpg",
+    "headingInject":"olddoc.html",
     "menutitle": "AvNav",
     "navlist":[
         {"title":"Einführung","en_title":"Introduction","url":"beschreibung.html"},

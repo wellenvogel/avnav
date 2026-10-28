@@ -1,0 +1,17 @@
+<style>
+    .olddoc{
+        color: red;
+    }
+</style>
+<div class="olddoc">
+    <span>Das ist die alte AvNav Dokumentation bis 202608xx. Die aktuelle Dokumentation findet man <a href="" class="newdoc">hier</a>.</span>
+</div>
+<script type="text/javascript">
+    const b=new URL(__injectBase,window.location.href);
+    const target=new URL("../newDoc/latest/index.html",b);
+    const links=document.querySelectorAll('a.newdoc');
+    for (let i=0;i<links.length;i++){
+        const l=links[i];
+        l.setAttribute('href',target);
+    }
+</script>
