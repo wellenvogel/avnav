@@ -10,6 +10,7 @@ import getopt
 MODEL="gemini-3.1-flash-lite"
 TARGET='en'
 PROMPT_FILE=None #default: prompt.md next to this script
+SKIP_PATTERN=['issues-']
 from google import genai
 # Get the directory path of the current file
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -26,7 +27,8 @@ def list_models():
     client=get_api()
     for model in client.models.list():
         print(model)
-
+def get_prompt_file():
+    return PROMPT_FILE or os.path.join(dir_path, 'prompt.md')
 def translate_file(file_path, output_path):
     """
     Translates the content of a file using the Google Gemini API and writes the translated content to an output file.
@@ -37,7 +39,7 @@ def translate_file(file_path, output_path):
     """
     print(f"translating '{file_path}' to '{output_path}'")
     # Read the system instructions from promt.md
-    with open(PROMPT_FILE or os.path.join(dir_path, 'prompt.md'), 'r', encoding='utf-8') as file:
+    with open(get_prompt_file(), 'r', encoding='utf-8') as file:
         system_instructions = file.read()
     response = None
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -77,7 +79,7 @@ def translate_stdin():
     """
     Translates all of stdin with a single request and writes the result to stdout.
     """
-    with open(PROMPT_FILE or os.path.join(dir_path, 'prompt.md'), 'r', encoding='utf-8') as file:
+    with open(get_prompt_file(), 'r', encoding='utf-8') as file:
         system_instructions = file.read()
     content = sys.stdin.read()
     client = get_api()
@@ -93,7 +95,12 @@ def translate_stdin():
 def handleFile(infile, outfile, automode, force,dryRun):
     if not os.path.exists(infile):
         err(f"File not found: {infile}",prefix='')
+    for pattern in SKIP_PATTERN:
+        if pattern in infile:
+            print(f"Skipping file '{infile}' due to skip pattern '{pattern}'")
+            return
     if automode:
+        ptime=os.stat(get_prompt_file()).st_mtime
         outfile=None
         parts=infile.split(os.path.sep)
         found=False
@@ -107,12 +114,15 @@ def handleFile(infile, outfile, automode, force,dryRun):
                 outfile = part
         if not found:
             err("no directory 'de' in "+infile)
-        if not force and os.path.exists(outfile):
+        if not force:
             itime=os.stat(infile).st_mtime
-            otime=os.stat(outfile).st_mtime
-            if itime <= otime:
-                print(f"File '{outfile}' is newer than '{infile}', skipping")
-                return 0
+            if os.path.exists(outfile):
+                otime=os.stat(outfile).st_mtime
+                if itime <= otime and otime >= ptime:
+                    print(f"File '{outfile}' is newer than '{infile}', skipping")
+                    return 0
+                if otime < ptime:
+                    print(f"File '{outfile}' is older than the prompt file, must handle")
     else:
         outfile = outfile
     if dryRun:

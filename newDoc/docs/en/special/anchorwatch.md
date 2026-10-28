@@ -1,34 +1,34 @@
 ---
   tags:
     - Anchor
-    - AnchorWatch
+    - Anchor watch
     - Alarm
 ---
 
-# Anchor Watch
+# Anchor watch
 
-AvNav includes an anchor watch feature. The function runs entirely on the AvNav server, or on Android within the AvNav app. The anchor watch remains active even if no display device is connected or if AvNav is running in the background on Android.
+AvNav features an anchor watch. The function runs entirely on the AvNav server, or in the AvNav app on Android. Even if no display device is active or an Android AvNav is running in the background, the anchor watch remains active.
 
-An anchor alarm is triggered if the defined area is left.
+If the defined area is left, an anchor alarm is triggered.
 
 ![Anchor Alarm](../../img/anchorwatch-active.png)
 ///caption
 Anchor watch alarm
 ///
 
-## Android Alarm
+## Android alarm
 On Android, the alarm is displayed when a display device is connected or AvNav is running in the foreground.
 Additionally, an alarm sound is triggered ([configurable](../installation/android.md#android-sound-einstellungen)).
 The alarm can be acknowledged via the display or by opening the AvNav notification.
 
-## Linux/Raspberry/Windows Alarm
+## Linux/Raspberry/Windows alarm
 On a connected display device (browser), an acoustic alarm and an alarm widget are displayed. The alarm can also be acknowledged there.
 
-As with all alarms, the [command](configfile.md#avncommandhandler) called during an alarm can be customized on the server, e.g., to play a sound.
+As with all alarms, the [command called](configfile.md#avncommandhandler) upon an alarm can be customized on the server, for example, to play a sound.
 The AvNav [images](../installation/raspberry.md#images) are configured so that the sound is available at the computer's audio output. This allows, for example, a speaker to be connected there to output the alarms.
 
-Furthermore, a specific action (a command to be executed) can be defined in the [configuration of the AlarmHandler](configfile.md#avnalarmhandler). This can be used to control external hardware, for example. 
-On the AvNav [images](../installation/raspberry.md#images), there is also a plugin available to reset alarms using a GPIO pin.
+Furthermore, a specific action (a command to be executed) can be defined in the [AlarmHandler configuration](configfile.md#avnalarmhandler). This can be used, for example, to control external hardware.
+The AvNav [images](../installation/raspberry.md#images) also include a plugin to reset alarms using a GPIO pin.
 
 ## Activation
 
@@ -38,29 +38,29 @@ On the navigation page, the anchor watch can be activated via
 
 - on the dashboard pages by clicking the {{BT("AnchorWatch")}} button.
 
-![Anchor Watch](../../img/anchorwatch-start.png)
+![Anchor watch](../../img/anchorwatch-start.png)
 ///caption
 Start anchor watch
 ///
 
-In the dialog, you can choose whether the boat's position or the map center should be used as the anchor position. Additionally, the permissible distance to the anchor position (radius) and optionally an offset to the current position can be set. This allows you, for example, to take the length of the anchor chain and its direction into account.
+In the dialog, you can select whether to use the boat's position or the map center as the anchor position. Additionally, you can set the permitted distance to the anchor position (radius) and optionally an offset to the current position. This way, you can, for example, take the length of the anchor chain and the direction in which it lies into account.
 
-After activation, the {{BT("AnchorWatch")}} button gets a green border and monitoring starts. When the distance is exceeded, the alarm described above is triggered.
+After activation, the {{BT("AnchorWatch")}} button gets a green border and monitoring starts. If the distance is exceeded, the alarm described above is triggered.
 
-Furthermore, an alarm is also triggered if the GPS signal is lost while the anchor watch is active. 
+An alarm is also triggered if the GPS signal is lost while the anchor watch is active.
 
-With an active anchor watch, the [layout condition](../base/layout.md) "anchor" becomes active, and some displays change their content.
+With the anchor watch active, the [layout condition](../base/layout.md) "anchor" becomes active, and some displays change their content.
 
-![Anchor Watch Dashboard](../../img/anchorwatch-dash.png)
+![Anchor watch dashboard](../../img/anchorwatch-dash.png)
 ///caption
 Anchor watch widgets
 ///
 
-## Edit/Stop
+## Editing/Stopping
 
 When the anchor watch is active, a small red anchor icon is displayed on all pages. Clicking on it opens a dialog to edit or stop the anchor watch.
 
-![Anchor Watch Stop](../../img/anchorwatch-stop.png)
+![Anchor watch stop](../../img/anchorwatch-stop.png)
 ///caption
 Anchor watch stop dialog
 ///

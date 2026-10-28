@@ -1,9 +1,9 @@
-# Special Topics 
+# Special topics
 
 ## Tests
 
 * DialogButton {{DB('DBCancel')}}
-* Button {{BT('AnchorWatch')}} - simply in the description text
+* Button {{BT('AnchorWatch')}} - simple in the description text
 * Another Button {{BT("CenterAction")}}
 * Main Menu Button {{BT("CenterAction",True)}}
 * Icon {{ICON("MNCollapsed")}}

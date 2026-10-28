@@ -155,7 +155,7 @@ public class PluginManager extends DirectoryRequestHandler {
                                 String path = addon.getString(key);
                                 if (!path.toLowerCase().matches("^http[s]:") && ! path.startsWith("/")){
                                     //assume a local file
-                                    File f=new File(this.dir,path);
+                                    File f=new File(this.dir,path.replaceAll("[?#].*$",""));
                                     if (! f.isFile() || ! f.canRead()){
                                         throw new Exception("file "+f+" not found");
                                     }

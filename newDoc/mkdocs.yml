@@ -47,11 +47,10 @@ plugins:
         - build: true
           locale: en
           name: English
-          site_name: AvNav Documentation
+          site_name: AvNav documentation
           nav_translations:
             Einleitung: Introduction
-            Basisfunktionen: Base Functions
-            "Alte Doku": Old Docs
+            Basisfunktionen: Base functions
           extra:
             homepage: en/index.html
             
