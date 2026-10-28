@@ -60,6 +60,7 @@ import {Protocol} from "pmtiles";
 import {EventTypes} from "./maptypes";
 import keyhandler from "../util/keyhandler.ts";
 import propertyhandler from "../util/propertyhandler";
+import view from "ol/View";
 
 
 const AV_SOURCEIDX='sourceIndex'; //avitem being set at each layer
@@ -1329,7 +1330,18 @@ class MapHolder extends DrawingPositionConverter {
             }
         }
         curzoom += number;
+        if (!opt_noUserAction) {
+            if (this.boatOffset.x !== 50 || this.boatOffset.y !== 50) {
+                //if we are not strictly centered to the gps
+                //we unlock to keep the map center at the crosshair
+                //the mapuseraction will lock again after delay
+                this.mapUserAction();
+                this.referencePoint = this.pointFromMap(this.getView()?.getCenter());
+                this.setBoatOffset();
+            }
+        }
         this.setZoom(curzoom,opt_force);
+
     }
     setZoom(curzoom,opt_force){
         curzoom=this.clampZoom(curzoom);
@@ -1765,6 +1777,7 @@ class MapHolder extends DrawingPositionConverter {
         if (lock === this.gpsLocked && ! opt_force) return;
         if (lock === LOCK_MODES.off){
             //this.setBoatOffset();
+            //this.referencePoint=this.fromMapToPoint(this.getView()?.getCenter());
         } else {
             globalStore.storeData(keys.map.activeMeasure, undefined);
             if (lock === LOCK_MODES.current) {
