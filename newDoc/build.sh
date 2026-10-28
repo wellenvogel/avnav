@@ -65,7 +65,11 @@ err(){
 }
 [ "$checkVersion" != "" -a "$AVNAV_VERSION" = "" ] && err "-c also requires -v"
 if [ $useDocker = 1 ] ; then
-  docker run --rm -u`id -u` -v "`readlink -f $pdir/..`:/app" -p8000:$port "$IMAGE" /app/newDoc/build.sh $noversion $version $checkVersion -a 0.0.0.0 $command
+  pp=""
+  if [ "$command" = "serve" ] ; then
+    pp="-p8000:$port"
+  fi
+  docker run --rm -u`id -u` -v "`readlink -f $pdir/..`:/app" $pp "$IMAGE" /app/newDoc/build.sh $noversion $version $checkVersion -a 0.0.0.0 $command
   exit $?
 fi
 
