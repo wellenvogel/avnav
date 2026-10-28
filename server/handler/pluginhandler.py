@@ -375,10 +375,10 @@ class ApiImpl(AVNApi):
                 raise Exception("invalid url %s" % url)
             if not parsed.path.startswith("/"):
                 #local file relative to plugin base
-                fn=os.path.join(self.directory,url)
+                fn=os.path.join(self.directory,parsed.path)
                 if not os.path.exists(fn):
                     raise Exception("file %s not found" % fn)
-                url = f"{URL_PREFIX}/{self.prefix}/{urllib.parse.quote(url)}"
+                url = f"{URL_PREFIX}/{self.prefix}/{url}"
         regid=id if userApp.name is None else f"{self.prefix}-{userApp.name}"
         addonhandler.registerAddOn(regid, url, "%s/%s/%s" % (URL_PREFIX, self.prefix, urllib.parse.quote(iconFile) if iconFile else None),
                                    title=title, preventConnectionLost=preventConnectionLost,

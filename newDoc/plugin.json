@@ -1,9 +1,9 @@
 {
-  "version": "20261020",
+  "version": "20261028",
   "description": "AvNav Documentation",
   "userApps": [
     {
-      "url": "site/index.html",
+      "url": "site/index.html?newwindow=true",
       "shortText": "Doc",
       "longText": "Documentation",
       "name": "ui"
