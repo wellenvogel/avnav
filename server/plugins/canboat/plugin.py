@@ -40,6 +40,7 @@ import sys
 import threading
 import time
 import traceback
+from csv import excel
 
 from avnav_api import AVNApi
 from avnav_worker import WorkerParameter
@@ -95,23 +96,95 @@ def importance(status):
 class Status:
     def __init__(self):
         self._states={}
+        self._lock=threading.Lock()
 
     def reset(self):
-        self._states={}
+        with self._lock:
+            self._states={}
     def addState(self, state):
-        self._states[state.key] = state
+        with self._lock:
+            self._states[state.key] = state
     def toState(self, api):
-        state="STARTED"
-        info=""
-        for k,v in self._states.items():
-            v.update(api)
-            if importance(v.status) > importance(state):
-                state=v.status
-            if len(info) > 0:
-                info+=", "
-            info+=v.info
-
+        with self._lock:
+            state="STARTED"
+            info=""
+            for k,v in self._states.items():
+                v.update(api)
+                if importance(v.status) > importance(state):
+                    state=v.status
+                if len(info) > 0:
+                    info+=", "
+                info+=v.info
         api.setStatus(state, info or "started")
+
+class Connection:
+    def __init__(self, host, port,key,state,callback):
+        self._host=host
+        self._port=port
+        self._socket=None
+        self._key=key
+        self._state=state #Status
+        self._callback=callback
+        self._stop=False
+        self._thread=None
+    def connect(self):
+        self._state.addState(SubState(self._key,"STARTING",f"{self._key} con {self._host}:{self._port}"))
+        self._socket = socket.create_connection((self._host, self._port), timeout=20)
+        self._state.addState(SubState(self._key, "RUNNING", f"{self._key} {self._host}:{self._port}"))
+        self._socket.settimeout(1)
+    def close(self):
+        if self._socket is not None:
+            try:
+                self._socket.close()
+            except:
+                pass
+            self._socket=None
+    def start(self):
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+    def stop(self):
+        self._stop=True
+        self.close()
+        if self._thread is not None:
+            self._thread.join(5)
+            self._thread=None
+    def _run(self):
+        buffer=""
+        while not self._stop:
+            try:
+                if self._socket is None:
+                    self.connect()
+                data = self._socket.recv(1024)
+                if len(data) == 0:
+                    raise Exception("connection lost")
+                buffer = buffer + data.decode('ascii', 'ignore')
+            except socket.timeout:
+                pass
+            except Exception as e:
+                self._state.addState(SubState(self._key, "ERROR", f"{self._key} {self._host}:{self._port}: {str(e)}"))
+                self.close()
+                time.sleep(2)
+                continue
+            try:
+                lines = buffer.splitlines(True)
+                if len(lines) == 0:
+                    continue
+                if lines[-1][-1] == '\n':
+                    buffer = ""
+                else:
+                    if len(lines) > 0:
+                        buffer = lines.pop(-1)
+                    else:
+                        buffer = ""
+                for l in lines:
+                    try:
+                        self._callback(l)
+                    except Exception as e:
+                        self._state.addState(SubState(self._key, "ERROR", f"{self._key} {self._host}:{self._port}: unable to decode json {l}: {str(e)}"))
+            except Exception as e:
+                self._state.addState(SubState(self._key, "ERROR", f"{self._key} {str(e)}"))
+                self.close()
+                time.sleep(2)
 
 
 class Plugin(object):
@@ -197,10 +270,10 @@ class Plugin(object):
         self.api.registerRestart(self.stop)
         self.api.registerEditableParameters(self.CONFIGLIST, self.changeConfig)
         self.changeSequence = 0
-        self.socket = None
         self.lastRmc = time.monotonic()
         self.status = None
         self.process = None
+        self.connections={}
 
     def rmcWatcher(self, sequence, source):
         while sequence == self.changeSequence:
@@ -220,10 +293,14 @@ class Plugin(object):
                 self.process = None
             except Exception as e:
                 self.api.log("exception while stopping process %s: %s", self.process, repr(e))
-        try:
-            self.socket.close()
-        except:
-            pass
+        for con in self.connections.values():
+            if con is not None:
+                try:
+                    con.stop()
+                except Exception as e:
+                    self.api.log("exception while stopping connection %s: %s", con, repr(e))
+        self.connections.clear()
+
 
     def changeConfig(self, newValues):
         self.api.saveConfigValues(newValues)
@@ -285,6 +362,74 @@ class Plugin(object):
         start = time.monotonic()
         while sequence == self.changeSequence and not self.api.shouldStopMainThread() and (time.monotonic() - start) < timeout:
             time.sleep(0.1)
+    def _handleJson(self, line, handledPGNs, readPos, source, priority, autoSendRMC, timeInterval):
+        try:
+            msg = json.loads(line)
+            pgn = msg.get('pgn')
+            if pgn in handledPGNs:
+                now = time.monotonic()
+                if now >= (self.lastRmc + timeInterval) and timeInterval > 0:
+                    self.lastRmc = now
+                    cdate = self._getField(msg, 'Date', 'value')
+                    ctime = self._getField(msg, 'Time', 'value')
+                    dt = None
+                    if cdate is not None and ctime is not None:
+                        dt = datetime.datetime(year=1970, month=1, day=1)
+                        dt += datetime.timedelta(days=cdate, milliseconds=ctime / 10)
+                    if dt is not None:
+                        self.api.addData(NMEAParser.K_TIME.getKey(), self.formatTime(dt), source=source,
+                                         sourcePriority=priority)
+                    if autoSendRMC > 0:
+                        if self.lastRmc is None or self.lastRmc < (now - autoSendRMC):
+                            lat = self.api.getSingleValue("gps.lat")
+                            lon = self.api.getSingleValue("gps.lon")
+                            if lat is not None and lon is not None:
+                                speed = self.api.getSingleValue("gps.speed")
+                                cog = self.api.getSingleValue("gps.track")
+                                self.api.debug("generating RMC lat=%f,lon=%f,ts=%s", lat, lon,
+                                               dt.isoformat())
+                                fixutc = "%02d%02d%02d.%02d" % (dt.hour, dt.minute, dt.second,
+                                                                dt.microsecond / 1000)
+                                (latstr, NS) = self.nmeaFloatToPos(lat, True)
+                                (lonstr, EW) = self.nmeaFloatToPos(lon, False)
+                                speedstr = "" if speed is None else "%.2f" % (speed * 3600 / self.NM)
+                                year = "%04d" % dt.year
+                                datestr = "%02d%02d%s" % (dt.day, dt.month, year[-2:])
+                                cogstr = "" if cog is None else "%.2f" % cog
+                                record = "$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A" % (fixutc, latstr, NS,
+                                                                                   lonstr, EW, speedstr,
+                                                                                   cogstr, datestr)
+                                self.api.addNMEA(record, addCheckSum=True, source=source)
+                    if readPos:
+                        if pgn == 129025:  # pos
+                            clat = self.api.getSingleValue(NMEAParser.K_LAT.getKey(), includeInfo=True)
+                            clon = self.api.getSingleValue(NMEAParser.K_LON.getKey(), includeInfo=True)
+                            if clon is None or clon.source == source or clat is None or clat.source == source:
+                                lon = self._getField(msg, 'Longitude')
+                                lat = self._getField(msg, 'Latitude')
+                                if lon is not None and lat is not None:
+                                    self.api.addData(NMEAParser.K_LON.getKey(), lon, source=source,
+                                                     sourcePriority=priority)
+                                    self.api.addData(NMEAParser.K_LAT.getKey(), lat, source=source,
+                                                     sourcePriority=priority)
+                        if pgn == 129026:  # sog/cog
+                            csog = self.api.getSingleValue(NMEAParser.K_SOG.getKey(), includeInfo=True)
+                            ccog = self.api.getSingleValue(NMEAParser.K_COG.getKey(), includeInfo=True)
+                            if csog is None or csog.source == source or ccog is None or ccog.source == source:
+                                ref = self._getField(msg, "COG Reference")
+                                if ref is not None and ref.get('value') == 0:
+                                    cog = self._getField(msg, 'COG')
+                                    sog = self._getField(msg, 'SOG')
+                                    if sog is not None and cog is not None:
+                                        self.api.addData(NMEAParser.K_SOG.getKey(), sog, source=source,
+                                                         sourcePriority=priority)
+                                        self.api.addData(NMEAParser.K_COG.getKey(), cog, source=source,
+                                                         sourcePriority=priority)
+                    # add other decoders here
+
+        except:
+            self.api.log("unable to decode json %s:%s" % (line, traceback.format_exc()))
+
     def _runInternal(self):
         sequence = self.changeSequence
         self._stop()
@@ -333,128 +478,20 @@ class Plugin(object):
         rmcWatcher = threading.Thread(target=self.rmcWatcher, args=[sequence, source], daemon=True)
         rmcWatcher.start()
         priority = self._getConfig(self.P_PRIORITY)
-        errorReported = False
         self.api.setStatus("STARTED", "connecting to n2kd at %s:%d" % (host, port))
+        jCon=Connection(host=host, port=port,key=SubState.JSON,
+                                                   state=self.state,
+                                                   callback=lambda l: self._handleJson(l, handledPGNs, readPos, source, priority, autoSendRMC, timeInterval))
+        self.connections[SubState.JSON] = jCon
+        jCon.start()
         while sequence == self.changeSequence:
             if not self._checkProcess():
                 self._safeWait(sequence, 10)
-            try:
-                self.socket = socket.create_connection((host, port), timeout=20)
-                self.state.addState(SubState(SubState.JSON,"RUNNING",f"{host}:{port}"))
-                self.state.toState(self.api)
-                self.socket.settimeout(1)
-                buffer = ""
-                lastTimeSet = time.monotonic()
-                while sequence == self.changeSequence:
-                    if not self._checkProcess():
-                        return
-                    try:
-                        data = self.socket.recv(1024)
-                        if len(data) == 0:
-                            raise Exception("connection to n2kd lost")
-                        buffer = buffer + data.decode('ascii', 'ignore')
-                    except socket.timeout:
-                        pass
-                    lines = buffer.splitlines(True)
-                    if len(lines) == 0:
-                        self.state.toState(self.api)
-                        continue
-                    if lines[-1][-1] == '\n':
-                        buffer = ""
-                    else:
-                        if len(lines) > 0:
-                            buffer = lines.pop(-1)
-                        else:
-                            buffer = ""
-                    for l in lines:
-                        try:
-                            msg = json.loads(l)
-                            errorReported = False
-                            # {"timestamp":"2016-02-28-20:32:48.226","prio":3,"src":27,"dst":255,"pgn":126992,"description":"System Time","fields":{"SID":117,"Source":"GPS","Date":"2016.02.28", "Time": "19:57:46.05000"}}
-                            pgn = msg.get('pgn')
-                            if pgn in handledPGNs:
-                                # currently we can decode messages that have a Date and Time field set
-                                now = time.monotonic()
-                                if now >= (lastTimeSet + timeInterval) and timeInterval > 0:
-                                    lastTimeSet = now
-                                    cdate = self._getField(msg, 'Date', 'value')
-                                    ctime = self._getField(msg, 'Time', 'value')
-                                    dt = None
-                                    if cdate is not None and ctime is not None:
-                                        dt = datetime.datetime(year=1970, month=1, day=1)
-                                        dt += datetime.timedelta(days=cdate, milliseconds=ctime / 10)
-                                    if dt is not None:
-                                        self.api.addData(NMEAParser.K_TIME.getKey(), self.formatTime(dt), source=source,
-                                                         sourcePriority=priority)
-                                    if autoSendRMC > 0:
-                                        if self.lastRmc is None or self.lastRmc < (now - autoSendRMC):
-                                            lat = self.api.getSingleValue("gps.lat")
-                                            lon = self.api.getSingleValue("gps.lon")
-                                            if lat is not None and lon is not None:
-                                                speed = self.api.getSingleValue("gps.speed")
-                                                cog = self.api.getSingleValue("gps.track")
-                                                self.api.debug("generating RMC lat=%f,lon=%f,ts=%s", lat, lon,
-                                                               dt.isoformat())
-                                                # $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
-                                                fixutc = "%02d%02d%02d.%02d" % (dt.hour, dt.minute, dt.second,
-                                                                                dt.microsecond / 1000)
-                                                (latstr, NS) = self.nmeaFloatToPos(lat, True)
-                                                (lonstr, EW) = self.nmeaFloatToPos(lon, False)
-                                                speedstr = "" if speed is None else "%.2f" % (speed * 3600 / self.NM)
-                                                year = "%04d" % dt.year
-                                                datestr = "%02d%02d%s" % (dt.day, dt.month, year[-2:])
-                                                cogstr = "" if cog is None else "%.2f" % cog
-                                                record = "$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A" % (fixutc, latstr, NS,
-                                                                                                   lonstr, EW, speedstr,
-                                                                                                   cogstr, datestr)
-                                                self.api.addNMEA(record, addCheckSum=True, source=source)
-
-                            if readPos:
-                                if pgn == 129025:  # pos
-                                    clat = self.api.getSingleValue(NMEAParser.K_LAT.getKey(), includeInfo=True)
-                                    clon = self.api.getSingleValue(NMEAParser.K_LON.getKey(), includeInfo=True)
-                                    if clon is None or clon.source == source or clat is None or clat.source == source:
-                                        lon = self._getField(msg, 'Longitude')
-                                        lat = self._getField(msg, 'Latitude')
-                                        if lon is not None and lat is not None:
-                                            self.api.addData(NMEAParser.K_LON.getKey(), lon, source=source,
-                                                             sourcePriority=priority)
-                                            self.api.addData(NMEAParser.K_LAT.getKey(), lat, source=source,
-                                                             sourcePriority=priority)
-                                if pgn == 129026:  # sog/cog
-                                    csog = self.api.getSingleValue(NMEAParser.K_SOG.getKey(), includeInfo=True)
-                                    ccog = self.api.getSingleValue(NMEAParser.K_COG.getKey(), includeInfo=True)
-                                    if csog is None or csog.source == source or ccog is None or ccog.source == source:
-                                        ref = self._getField(msg, "COG Reference")
-                                        if ref is not None and ref.get('value') == 0:
-                                            cog = self._getField(msg, 'COG')
-                                            sog = self._getField(msg, 'SOG')
-                                            if sog is not None and cog is not None:
-                                                self.api.addData(NMEAParser.K_SOG.getKey(), sog, source=source,
-                                                                 sourcePriority=priority)
-                                                self.api.addData(NMEAParser.K_COG.getKey(), cog, source=source,
-                                                                 sourcePriority=priority)
-                            # add other decoders here
-                        except:
-                            self.api.log("unable to decode json %s:%s" % (l, traceback.format_exc()))
-                        self.state.toState(self.api)
-                    if len(buffer) > 4096:
-                        raise Exception("no line feed in long data, stopping")
-            except Exception as e:
-                if not errorReported:
-                    self.api.setStatus("ERROR", "connecting to n2kd %s:%d: %s" % (host, port, str(e)))
-                    errorReported = True
-                if sock is not None:
-                    try:
-                        sock.close()
-                    except:
-                        pass
-                    sock = None
-                self.state.addState(SubState(SubState.JSON,"STARTED", "try %s:%d" % (host, port)))
-                self.state.toState(self.api)
-                if sequence != self.changeSequence:
-                    return
-                time.sleep(2)
+                return
+            self.state.toState(self.api)
+            if sequence != self.changeSequence:
+                return
+            self._safeWait(sequence, 1)
 
     def formatTime(self, ts):
         t = ts.isoformat()
