@@ -30,8 +30,11 @@ Die neue Dokumentation von AvNav hat neben aktualisierten Inhalten auch eine neu
 
 * **Basisfunktionen:** Dieser Abschnitt dürfte für die meisten Anwender der zentrale Teil der Dokumentation sein, um sich mit den Funktionen von AvNav vertraut zu machen. Der Abschnitt stützt sich einmal auf Videos, die anfängergerecht die wesentlichen Bereiche von AvNav visualisieren. Dann enthält er erklärende Texte, die sich an die Anwender richten, die einen schnellen Einblick in die Arbeit mit AvNav gewinnen wollen.
 
-* **Details:** Dieser Teil der Dokumentation enthält eine große Menge an speziellen Themen und tiefgründigen Erklärungen. Er richtet sich an eher technikaffine Anwenderinnen und Anwender. Daher ist dieser Teil nicht als Fließtext, sondern als Glossar angelegt. So können nachgefragte Themen über Stichworte oder eine komfortable Suche schneller erreicht werden.  
+* **Details:** Dieser Teil der Dokumentation enthält eine große Menge an speziellen Themen und tiefgründigen Erklärungen. Er richtet sich an eher technikaffine Anwenderinnen und Anwender. Daher ist dieser Teil nicht als Fließtext, sondern als Glossar angelegt. So können nachgefragte Themen über Stichworte oder eine komfortable Suche schneller erreicht werden.
 
+## Aufruf aus AvNav
+
+Diese Dokumentation kann direkt in AvNav als Plugin installiert werden und ist dann aus dem Programm heraus zugreifbar. Das ist unter [Plugins](special/plugin-list.md#documentation) beschrieben.
 
 ## Hinweis
 
