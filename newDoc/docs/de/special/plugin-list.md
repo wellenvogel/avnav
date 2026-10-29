@@ -29,5 +29,25 @@ Die Spalte 'Image' gibt an, ob das Plugin standardmäßig in den [AvNav Images](
 | [Legacy Display II](https://github.com/wellenvogel/avnav-simpledashplugin) | Zip | nein | nein | Andere Variante für ein Display auf alten Browsern wie E-Book-Readern. Anpassung der Displays durch den Nutzer über das Editieren von HTML-Seiten - oder mit KI. _Alle Plattformen, auch Android_ |
 |[ocharts - legacy ]({{OLDLINK("hints/ocharts.html")}})| Paket | nein | nein | Karten von [O-Charts](https://o-charts.org/) |
 | [rudder-angle](https://gitlab.strukturpunkt.de/kfr/avnav-rudder-angel)| zip | nein | nein |Anzeige des Ruderwinkels (über SignalK, _nur Linux/Raspberry_) |
-| [AvNav Dokumentation]({{DLLINK("release")}})| zip | nein | nein | Diese AvNav-Dokumentation als Plugin. Bitte jeweils das aktuelle "documentation-xxxx.zip" installieren.|
+| [AvNav Dokumentation]({{DLLINK("release")}}) {: #docplugin}| zip | nein | nein | Diese AvNav-Dokumentation als Plugin. Bitte jeweils das aktuelle "documentation-xxxx.zip" installieren.|
 | [AvNav Dokumentation Videos]({{DLLINK("supplement/docvideos.zip")}})| zip | nein | nein | Die Videos zur AvNav-Dokumentation. Damit sind die Videos auch offline verfügbar, wenn die Dokumentation über dieses Plugin geöffnet wird.|
+
+## Dokumentation als Plugin {: #documentation}
+
+Diese Dokumentation kann in AvNav als [Plugin](#docplugin) installiert werden. Mit jeder [Release](../installation/release.md) wird eine Datei documentation-xxx.zip ausgeliefert. Zur Installation diese Datei aus dem entsprechenden [Release Verzeichnis]({{DLLINK("release")}}) herunterladen und auf der Plugin-Seite
+
+{{MM("MMpluginspage")}}
+
+über den {{BT("Upload")}} Button zu AvNav hochladen. Die Dokumentation erzeugt auf der User-App-Seite
+
+{{MM("MMaddonpage")}}
+
+einen Button ![Manual](../../img/manual.svg){.inline-image}. Mit diesem Button kann die Dokumentation geöffnet werden.
+
+Die Videos sind nicht direkt im Plugin eingebettet, sondern werden als externe Links bei YouTube aufgerufen.
+
+Wenn man die Videos auch offline verfügbar haben möchte, kann man zusätzlich das AvNav-Dokumentation-Videos plugin installieren. Es kann von einem [festen Link]({{DLLINK("supplement/docvideos.zip")}}) heruntergeladen werden, da es sich nur sehr selten ändert.
+
+Nach der Installation dieses Videos gibt es einen weiteren Button ![Video Dokumentation](../../img/video-help.svg){.inline-image} - wenn man die Dokumentation über diesen Button aufruft, sind die Videos eingebettet und können auch offline genutzt werden.
+
+

@@ -92,7 +92,7 @@ def translate_stdin():
     print(response.text.strip())
 
 
-def handleFile(infile, outfile, automode, force,dryRun):
+def handleFile(infile, outfile, automode, force=False,dryRun=False, ignorePrompt=False):
     if not os.path.exists(infile):
         err(f"File not found: {infile}",prefix='')
     for pattern in SKIP_PATTERN:
@@ -100,7 +100,10 @@ def handleFile(infile, outfile, automode, force,dryRun):
             print(f"Skipping file '{infile}' due to skip pattern '{pattern}'")
             return
     if automode:
-        ptime=os.stat(get_prompt_file()).st_mtime
+        if not ignorePrompt:
+            ptime=os.stat(get_prompt_file()).st_mtime
+        else:
+            ptime=None
         outfile=None
         parts=infile.split(os.path.sep)
         found=False
@@ -118,10 +121,10 @@ def handleFile(infile, outfile, automode, force,dryRun):
             itime=os.stat(infile).st_mtime
             if os.path.exists(outfile):
                 otime=os.stat(outfile).st_mtime
-                if itime <= otime and otime >= ptime:
+                if itime <= otime and ( ptime is None or otime >= ptime):
                     print(f"File '{outfile}' is newer than '{infile}', skipping")
                     return 0
-                if otime < ptime:
+                if ptime is not None and otime < ptime:
                     print(f"File '{outfile}' is older than the prompt file, must handle")
     else:
         outfile = outfile
@@ -139,14 +142,15 @@ def err(txt,prefix='ERROR: '):
     print(f"{prefix or ''} {txt}",file=sys.stderr)
     sys.exit(1)
 
-ARGS='lhm:afnrp:s'
-USAGE=f"Usage: {sys.argv[0]} [-l] [-m model] [-p promptfile] [-s] [-h] [-r] [-a] [-n] [-f] <input-file> [<output-file>]\n  -p: markdown file with the translation instructions (default prompt.md)\n  -s: translate stdin to stdout with one request"
+ARGS='lhm:afnrp:si'
+USAGE=f"Usage: {sys.argv[0]} [-l] [-m model] [-p promptfile] [-s] [-h] [-r] [-a] [-n] [-f] [-i] <input-file> [<output-file>]\n  -p: markdown file with the translation instructions (default prompt.md)\n  -s: translate stdin to stdout with one request"
 if __name__ == '__main__':
     automode=False
     force=False
     dryRun=False
     recurse=False
     stdinMode=False
+    ignorePrompt=False
     optlist, args = getopt.getopt(sys.argv[1:], ARGS)
     for o, a in optlist:
         if o == '-l':
@@ -170,6 +174,8 @@ if __name__ == '__main__':
             automode=True
         elif o == '-r':
             recurse=True
+        elif o == '-i':
+            ignorePrompt=True
         else:
             assert False, "unhandled option"
     if stdinMode:
@@ -189,8 +195,8 @@ if __name__ == '__main__':
                 fname=os.path.join(root, file)
                 if "de/" not in fname:
                     continue
-                handleFile(fname, None, automode, force, dryRun)
+                handleFile(fname, None, automode, force, dryRun, ignorePrompt=ignorePrompt)
     else:
         outfile=args[1] if len(args) > 1 else None
-        handleFile(infile, outfile, automode, force,dryRun)
+        handleFile(infile, outfile, automode, force,dryRun, ignorePrompt=ignorePrompt)
     

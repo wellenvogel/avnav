@@ -55,7 +55,9 @@ export const PluginsPage = (props:PageProps) => {
         }).then((json:Record<string, any>)=>{
             statusRef.current=json.data||[];
             timer.startTimer(seq);
-        },()=>{})
+        },()=>{
+            timer.startTimer(seq);
+        })
     },1000,true,true)
     const [uploadProps,uploadAction]=useUploadHelper("plugins");
     const buttonActions={
