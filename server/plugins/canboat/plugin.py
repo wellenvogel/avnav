@@ -45,6 +45,10 @@ from avnav_api import AVNApi
 from avnav_worker import WorkerParameter
 from avnav_nmea import Key, NMEAParser
 
+
+def hasCanboatRust():
+    return True
+
 class SubState:
     JSON = "JSON"
     NMEA="NMEA"
@@ -148,9 +152,10 @@ class Plugin(object):
         NMEAParser.K_LON,
         NMEAParser.K_LAT
     ]
-    CONFIG = [
+    CONFIG = ([] if not hasCanboatRust() else [
         P_CANBOATKIND,
-        P_CANBOATDEV,
+        P_CANBOATDEV
+        ])+ [
         P_PORT,
         P_HOST,
         P_SENDRMC,
@@ -259,6 +264,8 @@ class Plugin(object):
                 '--analyzer-port', str(jsonPort)]
 
     def _checkProcess(self):
+        if not hasCanboatRust():
+            return True
         if self.process is None:
             self.api.setStatus("ERROR", "canboat server not running")
             return False
@@ -285,10 +292,11 @@ class Plugin(object):
         self.state.addState(NmeaState(self._getConfig(self.P_SRC)))
         device=self._getConfig(self.P_CANBOATDEV)
         kind=self._getConfig(self.P_CANBOATKIND)
-        if device is None or device.strip() == "":
-            self._stopWithError(sequence, "no canboatDevice configured, stopping plugin")
-        if kind is None or kind.strip() == "":
-            self._stopWithError(sequence, "no canboatKind configured, stopping plugin")
+        if hasCanboatRust():
+            if device is None or device.strip() == "":
+                self._stopWithError(sequence, "no canboatDevice configured, stopping plugin")
+            if kind is None or kind.strip() == "":
+                self._stopWithError(sequence, "no canboatKind configured, stopping plugin")
         """
         the run method
         this will be called after successfully instantiating an instance
@@ -307,12 +315,12 @@ class Plugin(object):
         except:
             self.api.log("exception while reading config values %s", traceback.format_exc())
             raise
-        cmd=self._buildCmd(kind, device, port)
-        self.api.setStatus("RUNNING", f"starting canboat server {' '.join(cmd)}")
-        self.process=self.api.safeSpawn(cmd, shell=False,
+        if hasCanboatRust():
+            cmd=self._buildCmd(kind, device, port)
+            self.api.setStatus("RUNNING", f"starting canboat server {' '.join(cmd)}")
+            self.process=self.api.safeSpawn(cmd, shell=False,
                                         stdout_reader=lambda line: self.api.log("canboat: %s" % line),
                                         stderr_reader=lambda line: self.api.log("canboat: %s" % line))
-        #self.process=subprocess.Popen(cmd, stdout=sys.stdout, stderr=sys.stderr)
         if not self._checkProcess():
             self._safeWait(sequence, 10)
             return
