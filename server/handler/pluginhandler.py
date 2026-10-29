@@ -26,6 +26,7 @@
 ###############################################################################
 import importlib.util
 import inspect
+import shutil
 import urllib.parse
 from typing import Dict
 from zipfile import ZipFile
@@ -519,7 +520,8 @@ class ApiImpl(AVNApi):
                                           type=p.get('type'),
                                           rangeOrList=p.get('rangeOrList'),
                                           description=p.get('description'),
-                                          condition=p.get('condition'))
+                                          condition=p.get('condition'),
+                                          mandatory=p.get('mandatory'))
             AVNLog.info("registering editable parameter %s for %s" % (repr(description),self.prefix))
             editables.append(description)
         self.editables = editables
@@ -588,6 +590,10 @@ class ApiImpl(AVNApi):
     def getRunningAlarms(self):
         alarmhandler = self._getAlarmHandler()
         return list(alarmhandler.getAlarmsForApi(runningOnly=True).values())
+
+    def safeSpawn(self, cmd_args, kill_signal=signal.SIGKILL, **kwargs):
+        return SafePopen(cmd_args, kill_signal=kill_signal, **kwargs)
+
     def startAlarm(self, name,
                    defaultCategory=AlarmConfig.C_CRITICAL,
                    message=None,
