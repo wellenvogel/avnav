@@ -45,27 +45,69 @@ from avnav_api import AVNApi
 from avnav_worker import WorkerParameter
 from avnav_nmea import Key, NMEAParser
 
-
-class Status:
-    def __init__(self, base, source):
-        self.base = base
-        self.source = source
-
-    def toState(self, api):
+class SubState:
+    JSON = "JSON"
+    NMEA="NMEA"
+    PROCESS="PROCESS"
+    def __init__(self,key,status,info):
+        self.key=key
+        self.status=status
+        self.info=info
+    def update(self,api):
+        pass
+class NmeaState(SubState):
+    def __init__(self,source):
+        super().__init__(SubState.NMEA,"RUNNING","")
+        self._source=source
+    def update(self,api):
         lat = api.getSingleValue(NMEAParser.K_LAT.getKey(), True)
         lon = api.getSingleValue(NMEAParser.K_LON.getKey(), True)
         tm = api.getSingleValue(NMEAParser.K_TIME.getKey(), True)
-        hasPos = (lat is not None and lon is not None and lat.source == self.source and lon.source == self.source)
-        hasTime = (tm is not None and tm.source == self.source)
+        hasPos = (lat is not None and lon is not None and lat.source == self._source and lon.source == self._source)
+        hasTime = (tm is not None and tm.source == self._source)
         if not hasPos and not hasTime:
-            api.setStatus("RUNNING", self.base)
+            self.status="RUNNING"
+            self.info=""
         else:
-            txt = self.base
+            self.status="NMEA"
+            txt=""
             if hasTime:
-                txt += ", validTime"
+                txt += "time"
             if hasPos:
-                txt += ", validPosition"
-            api.setStatus("NMEA", txt)
+                if len(txt) > 0:
+                    txt+=", "
+                txt += "pos"
+            self.info=txt
+
+def importance(status):
+    if status == "ERROR":
+        return 3
+    if status == "NMEA":
+        return 2
+    if status == "RUNNING":
+        return 1
+    return 0
+
+class Status:
+    def __init__(self):
+        self._states={}
+
+    def reset(self):
+        self._states={}
+    def addState(self, state):
+        self._states[state.key] = state
+    def toState(self, api):
+        state="STARTED"
+        info=""
+        for k,v in self._states.items():
+            v.update(api)
+            if importance(v.status) > importance(state):
+                state=v.status
+            if len(info) > 0:
+                info+=", "
+            info+=v.info
+
+        api.setStatus(state, info or "started")
 
 
 class Plugin(object):
@@ -223,6 +265,9 @@ class Plugin(object):
         if self.process.poll() is not None:
             self.api.setStatus("ERROR", f"canboat server exited with {self.process.returncode}")
             return False
+        else:
+            self.state.addState(SubState(SubState.PROCESS,"RUNNING",f"pid {self.process.pid}"))
+            self.state.toState(self.api)
         return True
     def _stopWithError(self,sequence, msg):
         self.api.setStatus("ERROR", msg)
@@ -234,8 +279,10 @@ class Plugin(object):
         while sequence == self.changeSequence and not self.api.shouldStopMainThread() and (time.monotonic() - start) < timeout:
             time.sleep(0.1)
     def _runInternal(self):
-        self._stop()
         sequence = self.changeSequence
+        self._stop()
+        self.state=Status()
+        self.state.addState(NmeaState(self._getConfig(self.P_SRC)))
         device=self._getConfig(self.P_CANBOATDEV)
         kind=self._getConfig(self.P_CANBOATKIND)
         if device is None or device.strip() == "":
@@ -285,8 +332,8 @@ class Plugin(object):
                 self._safeWait(sequence, 10)
             try:
                 self.socket = socket.create_connection((host, port), timeout=20)
-                self.status = Status("connected to n2kd at %s:%d" % (host, port), source)
-                self.status.toState(self.api)
+                self.state.addState(SubState(SubState.JSON,"RUNNING",f"{host}:{port}"))
+                self.state.toState(self.api)
                 self.socket.settimeout(1)
                 buffer = ""
                 lastTimeSet = time.monotonic()
@@ -302,7 +349,7 @@ class Plugin(object):
                         pass
                     lines = buffer.splitlines(True)
                     if len(lines) == 0:
-                        self.status.toState(self.api)
+                        self.state.toState(self.api)
                         continue
                     if lines[-1][-1] == '\n':
                         buffer = ""
@@ -382,7 +429,7 @@ class Plugin(object):
                             # add other decoders here
                         except:
                             self.api.log("unable to decode json %s:%s" % (l, traceback.format_exc()))
-                        self.status.toState(self.api)
+                        self.state.toState(self.api)
                     if len(buffer) > 4096:
                         raise Exception("no line feed in long data, stopping")
             except Exception as e:
@@ -395,7 +442,8 @@ class Plugin(object):
                     except:
                         pass
                     sock = None
-                self.api.setStatus("STARTED", "connecting to n2kd at %s:%d" % (host, port))
+                self.state.addState(SubState(SubState.JSON,"STARTED", "try %s:%d" % (host, port)))
+                self.state.toState(self.api)
                 if sequence != self.changeSequence:
                     return
                 time.sleep(2)
