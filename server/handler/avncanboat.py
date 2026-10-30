@@ -281,10 +281,10 @@ class AVNCanboatHandler(AVNWorker):
             navdata.registerKey(key.getKey(),key.description,allowOverwrite=True)
 
     @classmethod
-    def getConfigParam(cls, child=None):
+    def getConfigParamCombined(cls, child=None):
         if child is not None:
             return None
-        return cls.CONFIG_ALL
+        return [cls.NAME_PARAMETER.copy(default='canboat'),cls.QUEUE_NAME_PARAMETER,cls.ENABLE_PARAM_DESCRIPTION]+cls.CONFIG_ALL
 
     def rmcWatcher(self, sequence, source):
         while sequence == self.changeSequence:
