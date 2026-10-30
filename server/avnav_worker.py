@@ -76,7 +76,7 @@ class WorkerParameter(object):
     if description is None:
       description=self.PREDEFINED_DESCRIPTIONS.get(type)
     self.description=description or ''
-    self.editable=editable
+    self.editable=editable if editable is not None else True
     self.mandatory=mandatory if mandatory is not None else default is None
     self.condition=condition #a dict with name:value that must match for visbility
     if self.type == self.T_SELECT:

@@ -35,20 +35,14 @@
 import datetime
 import json
 import socket
-import subprocess
-import sys
 import threading
 import time
 import traceback
-from csv import excel
 
 from avnav_api import AVNApi
+from avnav_nmea import NMEAParser
 from avnav_worker import WorkerParameter
-from avnav_nmea import Key, NMEAParser
 
-
-def hasCanboatRust():
-    return True
 
 class SubState:
     JSON = "JSON"
@@ -208,16 +202,45 @@ class Plugin(object):
     P_PRIORITY = WorkerParameter('priority', description='priority of for the channel',
                                  default=40,
                                  type=WorkerParameter.T_NUMBER)
-    P_CANBOATDEV = WorkerParameter('canboatDevice',
-                                   description='the canboat device to use (e.g. can0, vcan0, etc.)',
+    P_CANBOATTYPE= WorkerParameter('canboatType',
+                                   type=WorkerParameter.T_SELECT,
+                                   rangeOrList=['rust', 'legacy',''],
+                                   description='the canboat implementation to use , leave empty to disable',
                                    mandatory=False,
-                                   default=None)
+                                   default='rust',
+                                   editable=False)
+    P_CANBOATDEV = WorkerParameter('canboatDevice',
+                                   description='The canboat device to use (e.g. can0, vcan0, etc.).\n'+
+                                     'For special cases you can leave this empty and provide all parameters directly with canboatParam.',
+                                   mandatory=False,
+                                   default=None,
+                                   condition={P_CANBOATTYPE.name:'rust'})
     P_CANBOATKIND = WorkerParameter('canboatKind',
                                     type=WorkerParameter.T_SELECT,
-                                    rangeOrList=['actisense', 'socketcan', 'yachtd'],
-                                    description='the canboat device kind to use (socketcan, actisense, yachtd)',
+                                    rangeOrList=['actisense', 'socketcan', 'yachtd',''],
+                                    description='The canboat device kind to use (socketcan, actisense, yachtd).\n'+
+                                                'For special cases you can leave this empty and provide all parameters directly with canboatParam.',
                                     mandatory=False,
-                                    default='socketcan')
+                                    default='socketcan',
+                                    condition={P_CANBOATTYPE.name:'rust'})
+    P_CANBOATPARAM= WorkerParameter('canboatParam',
+                                    description='Additional parameters for the canboat rust call.\n'+
+                                      'Refer to the documentation for more details.\n',
+                                    default="",
+                                    mandatory=False,
+                                    condition={P_CANBOATTYPE.name:'rust'})
+    P_CANBOATNMEA=WorkerParameter('canboatNMEA',type=WorkerParameter.T_BOOLEAN,
+                                  description='Enable receiving NMEA messages from canboat.\n'+
+                                    'If you enable this DO NOT additionally configure a socket reader',
+                                  default=True,
+                                  condition={P_CANBOATTYPE.name:'rust'})
+    P_NMEAPORT=WorkerParameter('nmeaPort',type=WorkerParameter.T_NUMBER,
+                               mandatory=False,
+                               default=2607,
+                               description='The port to be used for NMEA data.\n'+
+                               'The default intentionally differs from the canboat default of 2599 to avoid issues with an additonal socket reader on the legacy port.',
+                               condition={P_CANBOATTYPE.name:'rust',P_CANBOATNMEA.name:True})
+
     PATHES = [
         NMEAParser.K_TIME,
         NMEAParser.K_SOG,
@@ -225,12 +248,8 @@ class Plugin(object):
         NMEAParser.K_LON,
         NMEAParser.K_LAT
     ]
-    CONFIG = ([] if not hasCanboatRust() else [
-        P_CANBOATKIND,
-        P_CANBOATDEV
-        ])+ [
+    CONFIG_ALL = [
         P_PORT,
-        P_HOST,
         P_SENDRMC,
         P_READPOS,
         P_SRC,
@@ -238,7 +257,18 @@ class Plugin(object):
         P_TIPGNS,
         P_PRIORITY
     ]
-    CONFIGLIST = list(map(lambda v: v.__dict__, CONFIG))
+    CONFIG_LEGACY = [
+        P_CANBOATTYPE,
+        P_HOST
+    ]
+    CONFIG_RUST=[
+        P_CANBOATTYPE,
+        P_CANBOATKIND,
+        P_CANBOATDEV,
+        P_CANBOATPARAM,
+        P_CANBOATNMEA,
+        P_NMEAPORT,
+    ]
 
     @classmethod
     def pluginInfo(cls):
@@ -253,11 +283,14 @@ class Plugin(object):
         """
         return {
             'description': 'a plugin that reads some PGNS from canboat. Currently supported: 126992:SystemTime. You need to set allowKeyOverwrite=true',
-            'version': '1.0',
-            'config': cls.CONFIGLIST,
+            'version': '2.0',
             'data': list(map(lambda k: {'path': k.getKey(), 'description': k.description}, cls.PATHES))
         }
 
+    def _hasRust(self):
+        return self._getConfig(self.P_CANBOATTYPE) == 'rust'
+    def _hasLegay(self):
+        return self._getConfig(self.P_CANBOATTYPE) == 'legacy'
     def __init__(self, api):
         """
             initialize a plugins
@@ -268,7 +301,12 @@ class Plugin(object):
         """
         self.api = api  # type: AVNApi
         self.api.registerRestart(self.stop)
-        self.api.registerEditableParameters(self.CONFIGLIST, self.changeConfig)
+        cfg=[]
+        if self._hasRust():
+            cfg=self.CONFIG_RUST+self.CONFIG_ALL
+        elif self._hasLegay():
+            cfg=self.CONFIG_LEGACY+self.CONFIG_ALL
+        self.api.registerEditableParameters(list(map(lambda v: v.__dict__, cfg)), self.changeConfig)
         self.changeSequence = 0
         self.lastRmc = time.monotonic()
         self.status = None
@@ -289,7 +327,15 @@ class Plugin(object):
         if self.process is not None:
             try:
                 self.api.log("stopping process %s", self.process)
-                self.process.terminate()
+                process=self.process
+                process.kill_all()
+                def wait_done():
+                    #catching the killed process to avoid defuncts
+                    while process.poll() is None:
+                        time.sleep(0.1)
+                    self.api.log("process %s finished", process)
+                waiter=threading.Thread(target=wait_done,daemon=True)
+                waiter.start()
                 self.process = None
             except Exception as e:
                 self.api.log("exception while stopping process %s: %s", self.process, repr(e))
@@ -341,7 +387,7 @@ class Plugin(object):
                 '--analyzer-port', str(jsonPort)]
 
     def _checkProcess(self):
-        if not hasCanboatRust():
+        if not self._hasRust():
             return True
         if self.process is None:
             self.api.setStatus("ERROR", "canboat server not running")
@@ -437,7 +483,7 @@ class Plugin(object):
         self.state.addState(NmeaState(self._getConfig(self.P_SRC)))
         device=self._getConfig(self.P_CANBOATDEV)
         kind=self._getConfig(self.P_CANBOATKIND)
-        if hasCanboatRust():
+        if self._hasRust():
             if device is None or device.strip() == "":
                 self._stopWithError(sequence, "no canboatDevice configured, stopping plugin")
             if kind is None or kind.strip() == "":
@@ -460,7 +506,7 @@ class Plugin(object):
         except:
             self.api.log("exception while reading config values %s", traceback.format_exc())
             raise
-        if hasCanboatRust():
+        if self._hasRust():
             cmd=self._buildCmd(kind, device, port)
             self.api.setStatus("RUNNING", f"starting canboat server {' '.join(cmd)}")
             self.process=self.api.safeSpawn(cmd, shell=False,

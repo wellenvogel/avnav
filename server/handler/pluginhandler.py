@@ -521,7 +521,8 @@ class ApiImpl(AVNApi):
                                           rangeOrList=p.get('rangeOrList'),
                                           description=p.get('description'),
                                           condition=p.get('condition'),
-                                          mandatory=p.get('mandatory'))
+                                          mandatory=p.get('mandatory'),
+                                          editable=p.get('editable'),)
             AVNLog.info("registering editable parameter %s for %s" % (repr(description),self.prefix))
             editables.append(description)
         self.editables = editables
