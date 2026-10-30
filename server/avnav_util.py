@@ -795,7 +795,10 @@ class PopenCallbackStream:
 
         with open(self._r_fd, mode, buffering=1, **kwargs) as f:
             for line in f:
-                self.callback(line)
+                if self.text:
+                    self.callback(line.rstrip())
+                else:
+                    self.callback(line)
 
     def __del__(self):
         """Automatically triggered when the variable goes out of scope."""

@@ -25,12 +25,6 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
 
-# -----------------------------------------------------------------------------
-# Hint:
-# this plugin uses a couple of internal functions of AvNav and therefore
-# you should not use this as an example for own plugins
-# Those internal functions can change at any point in time without notice.
-# -----------------------------------------------------------------------------
 
 import datetime
 import json
@@ -39,92 +33,42 @@ import threading
 import time
 import traceback
 
+import avnav_handlerList
 from avnav_api import AVNApi
 from avnav_nmea import NMEAParser
-from avnav_worker import WorkerParameter
+from avnav_store import AVNStore
+from avnav_util import AVNLog, AVNUtil, SafePopen
+from avnav_worker import WorkerParameter, AVNWorker, WorkerStatus
 
-
-class SubState:
-    JSON = "JSON"
-    NMEA="NMEA"
-    PROCESS="PROCESS"
-    def __init__(self,key,status,info):
-        self.key=key
-        self.status=status
-        self.info=info
-    def update(self,api):
-        pass
-class NmeaState(SubState):
-    def __init__(self,source):
-        super().__init__(SubState.NMEA,"RUNNING","")
-        self._source=source
-    def update(self,api):
-        lat = api.getSingleValue(NMEAParser.K_LAT.getKey(), True)
-        lon = api.getSingleValue(NMEAParser.K_LON.getKey(), True)
-        tm = api.getSingleValue(NMEAParser.K_TIME.getKey(), True)
-        hasPos = (lat is not None and lon is not None and lat.source == self._source and lon.source == self._source)
-        hasTime = (tm is not None and tm.source == self._source)
-        if not hasPos and not hasTime:
-            self.status="RUNNING"
-            self.info=""
-        else:
-            self.status="NMEA"
-            txt=""
-            if hasTime:
-                txt += "time"
-            if hasPos:
-                if len(txt) > 0:
-                    txt+=", "
-                txt += "pos"
-            self.info=txt
-
-def importance(status):
-    if status == "ERROR":
-        return 3
-    if status == "NMEA":
-        return 2
-    if status == "RUNNING":
-        return 1
-    return 0
-
-class Status:
-    def __init__(self):
-        self._states={}
-        self._lock=threading.Lock()
-
-    def reset(self):
-        with self._lock:
-            self._states={}
-    def addState(self, state):
-        with self._lock:
-            self._states[state.key] = state
-    def toState(self, api):
-        with self._lock:
-            state="STARTED"
-            info=""
-            for k,v in self._states.items():
-                v.update(api)
-                if importance(v.status) > importance(state):
-                    state=v.status
-                if len(info) > 0:
-                    info+=", "
-                info+=v.info
-        api.setStatus(state, info or "started")
 
 class Connection:
-    def __init__(self, host, port,key,state,callback):
+    def __init__(self, host, port,key,infoCb,callback):
         self._host=host
         self._port=port
         self._socket=None
         self._key=key
-        self._state=state #Status
+        self._infoCb=infoCb
         self._callback=callback
         self._stop=False
         self._thread=None
+        self._condition=threading.Condition()
+    def _info(self,key,*args):
+        if not self._stop:
+            self._infoCb(key,*args)
+        else:
+            self._infoCb(key,"stopped",WorkerStatus.INACTIVE)
+    def _wait(self,timeout):
+        with self._condition:
+            self._condition.wait(timeout)
+    def _wake(self):
+        with self._condition:
+            self._condition.notify()
     def connect(self):
-        self._state.addState(SubState(self._key,"STARTING",f"{self._key} con {self._host}:{self._port}"))
+        if self._stop:
+            return
+        self._info(self._key,f"trying {self._host}:{self._port}",WorkerStatus.STARTED)
         self._socket = socket.create_connection((self._host, self._port), timeout=20)
-        self._state.addState(SubState(self._key, "RUNNING", f"{self._key} {self._host}:{self._port}"))
+        self._info(self._key, f"connected {self._host}:{self._port}", WorkerStatus.RUNNING)
         self._socket.settimeout(1)
     def close(self):
         if self._socket is not None:
@@ -133,12 +77,20 @@ class Connection:
             except:
                 pass
             self._socket=None
+        self._info(self._key, f"closed {self._host}:{self._port}", WorkerStatus.INACTIVE)
     def start(self):
-        self._thread = threading.Thread(target=self._run, daemon=True)
+        if self._thread is not None:
+            return
+        if self._stop:
+            return
+        self._thread = threading.Thread(target=self._run,
+                                        daemon=True,
+                                        name=f"Canboat-{self._key}")
         self._thread.start()
     def stop(self):
         self._stop=True
         self.close()
+        self._wake()
         if self._thread is not None:
             self._thread.join(5)
             self._thread=None
@@ -148,6 +100,9 @@ class Connection:
             try:
                 if self._socket is None:
                     self.connect()
+                if self._socket is None:
+                    raise Exception("not connected")
+                self._info(self._key, f"receiving {self._host}:{self._port}", WorkerStatus.RUNNING)
                 data = self._socket.recv(1024)
                 if len(data) == 0:
                     raise Exception("connection lost")
@@ -155,9 +110,9 @@ class Connection:
             except socket.timeout:
                 pass
             except Exception as e:
-                self._state.addState(SubState(self._key, "ERROR", f"{self._key} {self._host}:{self._port}: {str(e)}"))
                 self.close()
-                time.sleep(2)
+                self._info(self._key, f"{self._host}:{self._port}: {str(e)}",WorkerStatus.ERROR)
+                self._wait(5)
                 continue
             try:
                 lines = buffer.splitlines(True)
@@ -174,11 +129,11 @@ class Connection:
                     try:
                         self._callback(l)
                     except Exception as e:
-                        self._state.addState(SubState(self._key, "ERROR", f"{self._key} {self._host}:{self._port}: unable to decode json {l}: {str(e)}"))
+                        AVNLog.debug(f"{self._key} {self._host}:{self._port}: unable to decode json {l}: {str(e)}")
             except Exception as e:
-                self._state.addState(SubState(self._key, "ERROR", f"{self._key} {str(e)}"))
                 self.close()
-                time.sleep(2)
+                self._info(self._key, f"{self._host}:{self._port}: {str(e)}", WorkerStatus.ERROR)
+                self._wait(3)
 
 class ConnectionList:
     def __init__(self):
@@ -200,7 +155,7 @@ class ConnectionList:
             connections=self._connections.copy()
             return connections
 
-class Plugin(object):
+class AVNCanboatHandler(AVNWorker):
     NM = 1852.0
     # PGNS used to set the time
     DEFAULT_PGNS = '126992,129029'
@@ -208,9 +163,6 @@ class Plugin(object):
     P_HOST = WorkerParameter('host', description='canbus json host (default: localhost)', default='localhost')
     P_SENDRMC = WorkerParameter('autoSendRMC', description='time in seconds with no RMC to start sending it,0: off',
                                 default=0, type=WorkerParameter.T_NUMBER)
-    P_SRC = WorkerParameter('sourceName',
-                            description='source name to be set for the generated records (defaults to plugin name)',
-                            default='')
     P_IV = WorkerParameter('timeInterval',
                            description='time in seconds to store time received via n2k (also used as interval for auto send RMC, 0 to disable)',
                            default=0.5, type=WorkerParameter.T_FLOAT)
@@ -232,7 +184,7 @@ class Plugin(object):
                                    description='The canboat device to use (e.g. can0, vcan0, etc.).\n'+
                                      'For special cases you can leave this empty and provide all parameters directly with canboatParam.',
                                    mandatory=False,
-                                   default=None,
+                                   default='',
                                    condition={P_CANBOATTYPE.name:'rust'})
     P_CANBOATKIND = WorkerParameter('canboatKind',
                                     type=WorkerParameter.T_SELECT,
@@ -268,26 +220,25 @@ class Plugin(object):
         NMEAParser.K_LAT
     ]
     CONFIG_ALL = [
-        P_PORT,
-        P_SENDRMC,
-        P_READPOS,
-        P_SRC,
-        P_IV,
-        P_TIPGNS,
-        P_PRIORITY
-    ]
-    CONFIG_LEGACY = [
-        P_CANBOATTYPE,
-        P_HOST
-    ]
-    CONFIG_RUST=[
         P_CANBOATTYPE,
         P_CANBOATKIND,
         P_CANBOATDEV,
         P_CANBOATPARAM,
+        P_HOST,
+        P_PORT,
         P_CANBOATNMEA,
         P_NMEAPORT,
+        P_SENDRMC,
+        P_READPOS,
+        P_IV,
+        P_TIPGNS,
+        P_PRIORITY
     ]
+    ST_JSON = "json"
+    ST_NMEA = "nmea"
+    ST_PROCESS = "server"
+    ST_MAIN="main"
+    ST_DECODE = "decode"
 
     @classmethod
     def pluginInfo(cls):
@@ -310,7 +261,7 @@ class Plugin(object):
         return self._getConfig(self.P_CANBOATTYPE) == 'rust'
     def _hasLegay(self):
         return self._getConfig(self.P_CANBOATTYPE) == 'legacy'
-    def __init__(self, api):
+    def __init__(self, cfgparam):
         """
             initialize a plugins
             do any checks here and throw an exception on error
@@ -318,24 +269,29 @@ class Plugin(object):
             @param api: the api to communicate with avnav
             @type  api: AVNApi
         """
-        self.api = api  # type: AVNApi
-        self.api.registerRestart(self.stop)
-        cfg=[]
-        if self._hasRust():
-            cfg=self.CONFIG_RUST+self.CONFIG_ALL
-        elif self._hasLegay():
-            cfg=self.CONFIG_LEGACY+self.CONFIG_ALL
-        self.api.registerEditableParameters(list(map(lambda v: v.__dict__, cfg)), self.changeConfig)
+        super().__init__(cfgparam)
         self.changeSequence = 0
         self.lastRmc = time.monotonic()
-        self.status = None
         self.process = None
         self.connections=ConnectionList()
+
+    def startInstance(self, navdata:AVNStore):
+        super().startInstance(navdata)
+        for key in self.PATHES:
+            navdata.registerKey(key.getKey(),key.description,allowOverwrite=True)
+
+    @classmethod
+    def getConfigParam(cls, child=None):
+        if child is not None:
+            return None
+        return cls.CONFIG_ALL
 
     def rmcWatcher(self, sequence, source):
         while sequence == self.changeSequence:
             seq = 0
-            seq, data = self.api.fetchFromQueue(seq, 10, includeSource=True, filter='$RMC')
+            seq, data = self.queue.fetchFromHistory(sequence, 10, includeSource=True,
+                                           nmeafilter=['$RMC'])
+                #self.queue.fetchFromQueue(seq, 10, includeSource=True, filter='$RMC'))
             if len(data) > 0:
                 for d in data:
                     if d.source != source:
@@ -345,35 +301,54 @@ class Plugin(object):
     def _stop(self):
         if self.process is not None:
             try:
-                self.api.log("stopping process %s", self.process)
+                AVNLog.info("stopping process %s", self.process)
                 process=self.process
                 process.kill_all()
                 def wait_done():
                     #catching the killed process to avoid defuncts
                     while process.poll() is None:
                         time.sleep(0.1)
-                    self.api.log("process %s finished", process)
+                    AVNLog.info("process %s finished", process)
                 waiter=threading.Thread(target=wait_done,daemon=True)
                 waiter.start()
                 self.process = None
             except Exception as e:
-                self.api.log("exception while stopping process %s: %s", self.process, repr(e))
-        for con in self.connections.all():
+                AVNLog.info("exception while stopping process %s: %s", self.process, repr(e))
+        for con in self.connections.all().values():
             if con is not None:
                 try:
                     con.stop()
                 except Exception as e:
-                    self.api.log("exception while stopping connection %s: %s", con, repr(e))
+                    AVNLog.info("exception while stopping connection %s: %s", con, repr(e))
         self.connections.clear()
+        self.setInfo(self.ST_MAIN,"stopped",WorkerStatus.INACTIVE)
+        for st in [self.ST_NMEA, self.ST_PROCESS,self.ST_JSON,self.ST_DECODE]:
+            self.deleteInfo(st)
 
+    @classmethod
+    def preventMultiInstance(cls):
+        return True
 
-    def changeConfig(self, newValues):
-        if self.P_CANBOATTYPE.name in newValues:
-            try:
-                del newValues[self.P_CANBOATTYPE.name]
-            except KeyError:
-                pass
-        self.api.saveConfigValues(newValues)
+    @classmethod
+    def autoInstantiate(cls):
+        return True #TODO
+
+    @classmethod
+    def canEdit(cls):
+        return True
+
+    @classmethod
+    def canDisable(cls):
+        return True
+
+    def updateConfig(self, newValues,child=None):
+        if child is None:
+            if self.P_CANBOATTYPE.name in newValues:
+                try:
+                    del newValues[self.P_CANBOATTYPE.name]
+                except KeyError:
+                    pass
+        super().updateConfig(newValues,child)
         self.changeSequence += 1
         self._stop()
 
@@ -382,12 +357,17 @@ class Plugin(object):
         self._stop()
 
     def run(self):
-        while not self.api.shouldStopMainThread():
-            self._runInternal()
+        while not self.shouldStop():
+            try:
+                self._runImpl()
+            except Exception as e:
+                AVNLog.info("exception while running plugin %s: %s", self.process, repr(e))
+            self._stop()
+            self.wait(5)
 
     def _getConfig(self, cfg: WorkerParameter):
-        v = self.api.getConfigValue(cfg.name, cfg.default)
-        return cfg.checkValue(v, False)
+        return self.getWParam(cfg, False)
+
 
     def _getField(self, msg, name, sub=None):
         fields = msg.get("fields")
@@ -400,45 +380,54 @@ class Plugin(object):
             return rt.get(sub)
         return rt
 
-    def _buildCmd(self, kind, device,jsonPort,nmeaPort=None):
-        rt= ["canboat", "server", "--kind", kind, "--device", device,
+    def _buildCmd(self, kind=None, device=None,jsonPort=None,nmeaPort=None,param=None):
+        rt= ["canboat", "server",
                 '--snapshot-port','0',
                 '--input-port','0',
                 '--ais-port','0',
                 '--raw-port','0',
                 '--nmea0183-filter-port','0',
-                '--overrides-port','0',
-                '--analyzer-port', str(jsonPort)]
+                '--overrides-port','0'
+        ]
+        if jsonPort is not None:
+            rt.append("--analyzer-port")
+            rt.append(str(jsonPort))
         if nmeaPort is not None:
             rt.append("--nmea0183-port")
             rt.append(str(nmeaPort))
+        if kind is not None:
+            rt.append("--kind")
+            rt.append(kind)
+        if device is not None:
+            rt.append("--device")
+            rt.append(device)
+        if param is not None:
+            for p in param.split(' '):
+                rt.append(p)
         return rt
 
     def _checkProcess(self):
         if not self._hasRust():
             return True
         if self.process is None:
-            self.api.setStatus("ERROR", "canboat server not running")
+            self.setInfo(self.ST_PROCESS, "canboat server not running",WorkerStatus.ERROR)
             return False
         if self.process.poll() is not None:
-            self.api.setStatus("ERROR", f"canboat server exited with {self.process.returncode}")
+            self.setInfo(self.ST_PROCESS, f"canboat server exited with {self.process.returncode}",WorkerStatus.ERROR)
             return False
         else:
-            self.state.addState(SubState(SubState.PROCESS,"RUNNING",f"pid {self.process.pid}"))
-            self.state.toState(self.api)
+            self.setInfo(self.ST_PROCESS,f"pid {self.process.pid}",WorkerStatus.NMEA)
         return True
     def _stopWithError(self,sequence, msg):
-        self.api.setStatus("ERROR", msg)
         self._stop()
-        while sequence == self.changeSequence and not self.api.shouldStopMainThread():
-            time.sleep(0.1)
+        self.setInfo(self.ST_MAIN, msg, WorkerStatus.ERROR)
+        while sequence == self.changeSequence and not self.shouldStop():
+            self.wait(5)
     def _safeWait(self, sequence, timeout):
-        start = time.monotonic()
-        while sequence == self.changeSequence and not self.api.shouldStopMainThread() and (time.monotonic() - start) < timeout:
-            time.sleep(0.1)
+        self.wait(timeout)
 
     def _handleNmea(self,line,source,priority):
-        self.api.addNMEA(line,source=source,sourcePriority=priority,omitDecode=False)
+        self.queue.addNMEA(line,source=source,sourcePriority=priority,omitDecode=False)
 
     def _handleJson(self, line, handledPGNs, readPos, source, priority, autoSendRMC, timeInterval):
         try:
@@ -455,16 +444,16 @@ class Plugin(object):
                         dt = datetime.datetime(year=1970, month=1, day=1)
                         dt += datetime.timedelta(days=cdate, milliseconds=ctime / 10)
                     if dt is not None:
-                        self.api.addData(NMEAParser.K_TIME.getKey(), self.formatTime(dt), source=source,
-                                         sourcePriority=priority)
+                        self.navdata.setValue(NMEAParser.K_TIME.getKey(), self.formatTime(dt), source=source,
+                                         priority=priority)
                     if autoSendRMC > 0:
                         if self.lastRmc is None or self.lastRmc < (now - autoSendRMC):
-                            lat = self.api.getSingleValue("gps.lat")
-                            lon = self.api.getSingleValue("gps.lon")
+                            lat = self.navdata.getSingleValue(NMEAParser.K_LAT.getKey())
+                            lon = self.navdata.getSingleValue(NMEAParser.K_LAT.getKey())
                             if lat is not None and lon is not None:
-                                speed = self.api.getSingleValue("gps.speed")
-                                cog = self.api.getSingleValue("gps.track")
-                                self.api.debug("generating RMC lat=%f,lon=%f,ts=%s", lat, lon,
+                                speed = self.navdata.getSingleValue(NMEAParser.K_SOG.getKey())
+                                cog = self.navdata.getSingleValue(NMEAParser.K_COG.getKey())
+                                AVNLog.debug("generating RMC lat=%f,lon=%f,ts=%s", lat, lon,
                                                dt.isoformat())
                                 fixutc = "%02d%02d%02d.%02d" % (dt.hour, dt.minute, dt.second,
                                                                 dt.microsecond / 1000)
@@ -477,48 +466,69 @@ class Plugin(object):
                                 record = "$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A" % (fixutc, latstr, NS,
                                                                                    lonstr, EW, speedstr,
                                                                                    cogstr, datestr)
-                                self.api.addNMEA(record, addCheckSum=True, source=source,sourcePriority=priority)
+                                self.queue.addNMEA(record, addCheckSum=True, source=source,sourcePriority=priority)
                     if readPos:
                         if pgn == 129025:  # pos
-                            clat = self.api.getSingleValue(NMEAParser.K_LAT.getKey(), includeInfo=True)
-                            clon = self.api.getSingleValue(NMEAParser.K_LON.getKey(), includeInfo=True)
+                            clat = self.navdata.getSingleValue(NMEAParser.K_LAT.getKey(), includeInfo=True)
+                            clon = self.navdata.getSingleValue(NMEAParser.K_LON.getKey(), includeInfo=True)
                             if clon is None or clon.source == source or clat is None or clat.source == source:
                                 lon = self._getField(msg, 'Longitude')
                                 lat = self._getField(msg, 'Latitude')
                                 if lon is not None and lat is not None:
-                                    self.api.addData(NMEAParser.K_LON.getKey(), lon, source=source,
-                                                     sourcePriority=priority)
-                                    self.api.addData(NMEAParser.K_LAT.getKey(), lat, source=source,
-                                                     sourcePriority=priority)
+                                    self.navdata.setValue(NMEAParser.K_LON.getKey(), lon, source=source,
+                                                     priority=priority)
+                                    self.navdata.setValue(NMEAParser.K_LAT.getKey(), lat, source=source,
+                                                     priority=priority)
                         if pgn == 129026:  # sog/cog
-                            csog = self.api.getSingleValue(NMEAParser.K_SOG.getKey(), includeInfo=True)
-                            ccog = self.api.getSingleValue(NMEAParser.K_COG.getKey(), includeInfo=True)
+                            csog = self.navdata.getSingleValue(NMEAParser.K_SOG.getKey(), includeInfo=True)
+                            ccog = self.navdata.getSingleValue(NMEAParser.K_COG.getKey(), includeInfo=True)
                             if csog is None or csog.source == source or ccog is None or ccog.source == source:
                                 ref = self._getField(msg, "COG Reference")
                                 if ref is not None and ref.get('value') == 0:
                                     cog = self._getField(msg, 'COG')
                                     sog = self._getField(msg, 'SOG')
                                     if sog is not None and cog is not None:
-                                        self.api.addData(NMEAParser.K_SOG.getKey(), sog, source=source,
-                                                         sourcePriority=priority)
-                                        self.api.addData(NMEAParser.K_COG.getKey(), cog, source=source,
-                                                         sourcePriority=priority)
+                                        self.navdata.setValue(NMEAParser.K_SOG.getKey(), sog, source=source,
+                                                         priority=priority)
+                                        self.navdata.setValue(NMEAParser.K_COG.getKey(), cog, source=source,
+                                                         priority=priority)
                     # add other decoders here
 
         except:
-            self.api.log("unable to decode json %s:%s" % (line, traceback.format_exc()))
+            AVNLog.info("unable to decode json %s:%s" % (line, traceback.format_exc()))
 
-    def _runInternal(self):
+    def _updateNmeaState(self):
+        source=self.getSourceName()
+        lat = self.navdata.getSingleValue(NMEAParser.K_LAT.getKey(), True)
+        lon = self.navdata.getSingleValue(NMEAParser.K_LON.getKey(), True)
+        tm = self.navdata.getSingleValue(NMEAParser.K_TIME.getKey(), True)
+        hasPos = (lat is not None and lon is not None and lat.source == source and lon.source == source)
+        hasTime = (tm is not None and tm.source == source)
+        status=WorkerStatus.INACTIVE
+        info=""
+        if not hasPos and not hasTime:
+            status = WorkerStatus.INACTIVE
+        else:
+            status = WorkerStatus.NMEA
+            if hasTime:
+                info += "time"
+            if hasPos:
+                if len(info) > 0:
+                    info += ", "
+                info += "pos"
+        self.setInfo(self.ST_DECODE, info, status)
+
+    def _runImpl(self):
         sequence = self.changeSequence
         self._stop()
-        self.state=Status()
-        self.state.addState(NmeaState(self._getConfig(self.P_SRC)))
+        self._updateNmeaState()
         device=self._getConfig(self.P_CANBOATDEV)
         kind=self._getConfig(self.P_CANBOATKIND)
+        param=self._getConfig(self.P_CANBOATPARAM)
         if self._hasRust():
-            if device is None or device.strip() == "":
+            if (device is None or device.strip() == "") and (param is None or not 'device' in param):
                 self._stopWithError(sequence, "no canboatDevice configured, stopping plugin")
-            if kind is None or kind.strip() == "":
+            if (kind is None or kind.strip() == "") and (param is None or not 'kind' in param):
                 self._stopWithError(sequence, "no canboatKind configured, stopping plugin")
         """
         the run method
@@ -535,17 +545,17 @@ class Plugin(object):
             port = self._getConfig(self.P_PORT)
             timeInterval = self._getConfig(self.P_IV)
         except:
-            self.api.log("exception while reading config values %s", traceback.format_exc())
+            AVNLog.info("exception while reading config values %s", traceback.format_exc())
             raise
         nmeaPort=None
         if self._hasRust():
             if self._getConfig(self.P_CANBOATNMEA):
                 nmeaPort = self._getConfig(self.P_NMEAPORT)
             cmd=self._buildCmd(kind, device, port,nmeaPort)
-            self.api.setStatus("RUNNING", f"starting canboat server {' '.join(cmd)}")
-            self.process=self.api.safeSpawn(cmd, shell=False,
-                                        stdout_reader=lambda line: self.api.log("canboat: %s" % line),
-                                        stderr_reader=lambda line: self.api.log("canboat: %s" % line))
+            self.setInfo(self.ST_PROCESS, f"starting canboat server {' '.join(cmd)}",WorkerStatus.RUNNING)
+            self.process=SafePopen(cmd, shell=False,
+                                        stdout_reader=lambda line: AVNLog.info("canboat: %s" % line),
+                                        stderr_reader=lambda line: AVNLog.info("canboat: %s" % line))
         if not self._checkProcess():
             self._safeWait(sequence, 10)
             return
@@ -553,32 +563,32 @@ class Plugin(object):
         handledPGNs = self._getConfig(self.P_TIPGNS).split(',')
         readPos = self._getConfig(self.P_READPOS)
         handledPGNs = [int(p) for p in handledPGNs]
-        self.api.log("started with host=%s,port %d, autoSendRMC=%d" % (host, port, autoSendRMC))
-        source = self._getConfig(self.P_SRC)
+        AVNLog.info("started with host=%s,port %d, autoSendRMC=%d" % (host, port, autoSendRMC))
+        self.setInfo(self.ST_MAIN, f"started",WorkerStatus.RUNNING)
+        source = self.getSourceName()
         rmcWatcher = threading.Thread(target=self.rmcWatcher, args=[sequence, source], daemon=True)
         rmcWatcher.start()
         priority = self._getConfig(self.P_PRIORITY)
-        self.api.setStatus("STARTED", "connecting to n2kd at %s:%d" % (host, port))
-        jCon=Connection(host=host, port=port,key=SubState.JSON,
-                                                   state=self.state,
-                                                   callback=lambda l: self._handleJson(l, handledPGNs,
-                                                                                       readPos, source, priority,
-                                                                                       autoSendRMC, timeInterval))
-        self.connections.add(SubState.JSON,jCon)
+        jCon=Connection(host=host, port=port,key=self.ST_JSON,
+                            infoCb=self.setInfo,
+                            callback=lambda l: self._handleJson(l, handledPGNs,
+                                                                readPos, source, priority,
+                                                                autoSendRMC, timeInterval))
+        self.connections.add(self.ST_JSON,jCon)
         jCon.start()
         if nmeaPort:
-            nCon=Connection(host=host, port=nmeaPort,key=SubState.NMEA,state=self.state,
+            nCon=Connection(host=host, port=nmeaPort,key=self.ST_NMEA,infoCb=self.setInfo,
                             callback=lambda l: self._handleNmea(l, source,priority))
-            self.connections.add(SubState.NMEA,nCon)
+            self.connections.add(self.ST_NMEA,nCon)
             nCon.start()
         while sequence == self.changeSequence:
             if not self._checkProcess():
                 self._safeWait(sequence, 10)
                 return
-            self.state.toState(self.api)
+            self._updateNmeaState()
             if sequence != self.changeSequence:
                 return
-            self._safeWait(sequence, 1)
+            self._safeWait(sequence, 3)
 
     def formatTime(self, ts):
         t = ts.isoformat()
@@ -604,3 +614,5 @@ class Plugin(object):
         else:
             rt = "%03d%05.2f" % (deg, min)
         return (rt, dir)
+
+avnav_handlerList.registerHandler(AVNCanboatHandler)

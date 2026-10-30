@@ -26,6 +26,7 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
 import os
+import traceback
 
 from avnav_store import *
 hasAisDecoder=False
@@ -412,8 +413,10 @@ class NMEAParser(object):
           fix=int(darray[2])
           if fix>1: rt[self.K_FIX_TYPE.key]=fix
         for i,k in enumerate((self.K_PDOP,self.K_HDOP,self.K_VDOP)):
-          if not k: continue
-          dop=float(darray[15+i])
+          v=darray[15+i]
+          if not v:
+              continue
+          dop=float(v)
           rt[k.key]=dop
         self.addToNavData(rt,source=source,record=tag,timestamp=timestamp,priority=basePriority)
         return True
