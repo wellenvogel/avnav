@@ -236,7 +236,9 @@ class ApiImpl(AVNApi):
                                            nmeafilter=filter)
 
     def addNMEA(self, nmea, addCheckSum=False, omitDecode=True, source=None,
-                sourcePriority=NMEAParser.DEFAULT_API_PRIORITY):
+                sourcePriority=None):
+        if sourcePriority is None:
+            sourcePriority=NMEAParser.DEFAULT_API_PRIORITY
         if source is None:
             source = self.prefix
         return self.queue.addNMEA(nmea, source=source, addCheckSum=addCheckSum, omitDecode=omitDecode,

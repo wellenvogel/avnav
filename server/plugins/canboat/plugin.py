@@ -180,6 +180,25 @@ class Connection:
                 self.close()
                 time.sleep(2)
 
+class ConnectionList:
+    def __init__(self):
+        self._lock=threading.Lock()
+        self._connections={}
+    def add(self,key,connection):
+        with self._lock:
+            self._connections[key]=connection
+    def remove(self,key):
+        with self._lock:
+            if key in self._connections:
+                del self._connections[key]
+                return True
+    def clear(self):
+        with self._lock:
+            self._connections.clear()
+    def all(self):
+        with self._lock:
+            connections=self._connections.copy()
+            return connections
 
 class Plugin(object):
     NM = 1852.0
@@ -311,7 +330,7 @@ class Plugin(object):
         self.lastRmc = time.monotonic()
         self.status = None
         self.process = None
-        self.connections={}
+        self.connections=ConnectionList()
 
     def rmcWatcher(self, sequence, source):
         while sequence == self.changeSequence:
@@ -339,7 +358,7 @@ class Plugin(object):
                 self.process = None
             except Exception as e:
                 self.api.log("exception while stopping process %s: %s", self.process, repr(e))
-        for con in self.connections.values():
+        for con in self.connections.all():
             if con is not None:
                 try:
                     con.stop()
@@ -349,6 +368,11 @@ class Plugin(object):
 
 
     def changeConfig(self, newValues):
+        if self.P_CANBOATTYPE.name in newValues:
+            try:
+                del newValues[self.P_CANBOATTYPE.name]
+            except KeyError:
+                pass
         self.api.saveConfigValues(newValues)
         self.changeSequence += 1
         self._stop()
@@ -376,8 +400,8 @@ class Plugin(object):
             return rt.get(sub)
         return rt
 
-    def _buildCmd(self, kind, device,jsonPort):
-        return ["canboat", "server", "--kind", kind, "--device", device,
+    def _buildCmd(self, kind, device,jsonPort,nmeaPort=None):
+        rt= ["canboat", "server", "--kind", kind, "--device", device,
                 '--snapshot-port','0',
                 '--input-port','0',
                 '--ais-port','0',
@@ -385,6 +409,10 @@ class Plugin(object):
                 '--nmea0183-filter-port','0',
                 '--overrides-port','0',
                 '--analyzer-port', str(jsonPort)]
+        if nmeaPort is not None:
+            rt.append("--nmea0183-port")
+            rt.append(str(nmeaPort))
+        return rt
 
     def _checkProcess(self):
         if not self._hasRust():
@@ -408,6 +436,10 @@ class Plugin(object):
         start = time.monotonic()
         while sequence == self.changeSequence and not self.api.shouldStopMainThread() and (time.monotonic() - start) < timeout:
             time.sleep(0.1)
+
+    def _handleNmea(self,line,source,priority):
+        self.api.addNMEA(line,source=source,sourcePriority=priority,omitDecode=False)
+
     def _handleJson(self, line, handledPGNs, readPos, source, priority, autoSendRMC, timeInterval):
         try:
             msg = json.loads(line)
@@ -445,7 +477,7 @@ class Plugin(object):
                                 record = "$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A" % (fixutc, latstr, NS,
                                                                                    lonstr, EW, speedstr,
                                                                                    cogstr, datestr)
-                                self.api.addNMEA(record, addCheckSum=True, source=source)
+                                self.api.addNMEA(record, addCheckSum=True, source=source,sourcePriority=priority)
                     if readPos:
                         if pgn == 129025:  # pos
                             clat = self.api.getSingleValue(NMEAParser.K_LAT.getKey(), includeInfo=True)
@@ -497,7 +529,6 @@ class Plugin(object):
         @return:
         """
         port = 2598
-        sock = None
         host = self._getConfig(self.P_HOST)
         timeInterval = 0.5
         try:
@@ -506,8 +537,11 @@ class Plugin(object):
         except:
             self.api.log("exception while reading config values %s", traceback.format_exc())
             raise
+        nmeaPort=None
         if self._hasRust():
-            cmd=self._buildCmd(kind, device, port)
+            if self._getConfig(self.P_CANBOATNMEA):
+                nmeaPort = self._getConfig(self.P_NMEAPORT)
+            cmd=self._buildCmd(kind, device, port,nmeaPort)
             self.api.setStatus("RUNNING", f"starting canboat server {' '.join(cmd)}")
             self.process=self.api.safeSpawn(cmd, shell=False,
                                         stdout_reader=lambda line: self.api.log("canboat: %s" % line),
@@ -527,9 +561,16 @@ class Plugin(object):
         self.api.setStatus("STARTED", "connecting to n2kd at %s:%d" % (host, port))
         jCon=Connection(host=host, port=port,key=SubState.JSON,
                                                    state=self.state,
-                                                   callback=lambda l: self._handleJson(l, handledPGNs, readPos, source, priority, autoSendRMC, timeInterval))
-        self.connections[SubState.JSON] = jCon
+                                                   callback=lambda l: self._handleJson(l, handledPGNs,
+                                                                                       readPos, source, priority,
+                                                                                       autoSendRMC, timeInterval))
+        self.connections.add(SubState.JSON,jCon)
         jCon.start()
+        if nmeaPort:
+            nCon=Connection(host=host, port=nmeaPort,key=SubState.NMEA,state=self.state,
+                            callback=lambda l: self._handleNmea(l, source,priority))
+            self.connections.add(SubState.NMEA,nCon)
+            nCon.start()
         while sequence == self.changeSequence:
             if not self._checkProcess():
                 self._safeWait(sequence, 10)
