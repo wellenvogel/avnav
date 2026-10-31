@@ -34,29 +34,29 @@ import time
 import traceback
 
 import avnav_handlerList
-from avnav_api import AVNApi
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
-from avnav_util import AVNLog, AVNUtil, SafePopen
-from avnav_worker import WorkerParameter, AVNWorker, WorkerStatus
+from avnav_util import AVNLog, SafePopen, MovingSum
+from avnav_worker import WorkerParameter, AVNWorker, WorkerStatus, ForwardInfoHandler, InfoHandler
+from avnqueue import AVNQueue
+from socketbase import SocketReader
 
 
 class Connection:
-    def __init__(self, host, port,key,infoCb,callback):
+    def __init__(self, host, port,key,infoHandler):
         self._host=host
         self._port=port
         self._socket=None
         self._key=key
-        self._infoCb=infoCb
-        self._callback=callback
+        self._infoHandler=infoHandler
         self._stop=False
         self._thread=None
         self._condition=threading.Condition()
     def _info(self,key,*args):
         if not self._stop:
-            self._infoCb(key,*args)
+            self._infoHandler.setInfo(key,*args)
         else:
-            self._infoCb(key,"stopped",WorkerStatus.INACTIVE)
+            self._infoHandler.setInfo(key,"stopped",WorkerStatus.INACTIVE)
     def _wait(self,timeout):
         with self._condition:
             self._condition.wait(timeout)
@@ -72,6 +72,10 @@ class Connection:
         self._socket.settimeout(1)
     def close(self):
         if self._socket is not None:
+            try:
+                self._socket.shutdown(socket.SHUT_RDWR)
+            except:
+                pass
             try:
                 self._socket.close()
             except:
@@ -94,18 +98,35 @@ class Connection:
         if self._thread is not None:
             self._thread.join(5)
             self._thread=None
+    def read(self):
+        raise NotImplementedError("must be implemented")
     def _run(self):
-        buffer=""
         while not self._stop:
             try:
                 if self._socket is None:
                     self.connect()
+                self.read()
+            except Exception as e:
+                self.close()
+                self._info(self._key, f"{self._host}:{self._port}: {str(e)}", WorkerStatus.ERROR)
+                self._wait(3)
+
+class CallbackConnection(Connection):
+    def __init__(self, host, port, key, infoHandler, callback):
+        super().__init__(host, port, key, infoHandler)
+        self._callback = callback
+        self._sum=MovingSum()
+    def read(self):
+        buffer = ""
+        self._sum.clear()
+        while not self._stop:
+            try:
                 if self._socket is None:
                     raise Exception("not connected")
-                self._info(self._key, f"receiving {self._host}:{self._port}", WorkerStatus.RUNNING)
                 data = self._socket.recv(1024)
                 if len(data) == 0:
                     raise Exception("connection lost")
+                self._sum.add(0)
                 buffer = buffer + data.decode('ascii', 'ignore')
             except socket.timeout:
                 pass
@@ -127,13 +148,51 @@ class Connection:
                         buffer = ""
                 for l in lines:
                     try:
+                        self._sum.add(1)
                         self._callback(l)
                     except Exception as e:
                         AVNLog.debug(f"{self._key} {self._host}:{self._port}: unable to decode json {l}: {str(e)}")
+                if self._sum.shouldUpdate():
+                    self._infoHandler.setInfo(self._key,
+                                             "%s:%s %.4g/s" % (self._host, str(self._port),self._sum.avg()),
+                                             WorkerStatus.NMEA if self._sum.val() > 0 else WorkerStatus.RUNNING)
+
             except Exception as e:
                 self.close()
                 self._info(self._key, f"{self._host}:{self._port}: {str(e)}", WorkerStatus.ERROR)
                 self._wait(3)
+class InjectInfoHandler(ForwardInfoHandler):
+    def __init__(self, forward: InfoHandler,txt=None):
+        super().__init__(forward)
+        self._txt = (txt + " ") if txt else ""
+
+    def setInfo(self, name, info, status, childId=None, canDelete=False, timeout=None):
+        super().setInfo(name, self._txt+info, status, childId, canDelete, timeout)
+
+
+class NmeaConnection(Connection):
+    def __init__(self, host, port, key, infoHandler,
+                 queue:AVNQueue,
+                 priority=NMEAParser.DEFAULT_SOURCE_PRIORITY,
+                 source=None,
+                 subsource=None,
+                 nmeaFilter=None):
+        super().__init__(host, port, key, InjectInfoHandler(infoHandler,txt=f"{host}:{port}"))
+        self._queue=queue
+        self._priority=priority
+        self._source=source
+        self._subsource=subsource
+        self._nmeaFilter=nmeaFilter
+    def read(self):
+        reader=SocketReader(self._socket,self._queue,
+                                  self._infoHandler,
+                                  shouldStop=lambda: self._stop,
+                                  sourcePriority=self._priority)
+        reader.readSocket(self._source,
+                          filter=self._nmeaFilter,
+                          ownsource=self._subsource,
+                          infoKey=self._key,
+                          )
 
 class ConnectionList:
     def __init__(self):
@@ -241,6 +300,7 @@ class AVNCanboatHandler(AVNWorker):
         P_PORT,
         P_CANBOATNMEA,
         P_NMEAPORT,
+        AVNWorker.FILTER_PARAM.copy(condition={P_CANBOATNMEA.name:True}),
         P_SENDRMC,
         P_READPOS,
         P_IV,
@@ -300,7 +360,7 @@ class AVNCanboatHandler(AVNWorker):
                     if d.source != source or d.subsource == self.SUBSOURCE_NMEA:
                         self.lastRmc = time.monotonic()
                         break
-            #self.wait(0.1)
+            self.wait(0.1)
 
     def _stop(self):
         if self.process is not None:
@@ -581,18 +641,23 @@ class AVNCanboatHandler(AVNWorker):
         #instead of the previous wire based value
         #as we do not support canboat >= 9 in the classical version (and we do not have rust < 9)
         #for us hasRust can be used to determine between versions < 9 and >= 9
-        jCon=Connection(host=host, port=port,key=self.ST_JSON,
-                            infoCb=self.setInfo,
+        jCon=CallbackConnection(host=host, port=port,key=self.ST_JSON,
+                            infoHandler=self,
                             callback=lambda l: self._handleJson(l, handledPGNs,
                                                                 readPos, source, priority,
                                                                 autoSendRMC, timeInterval,hasRust))
         self.connections.add(self.ST_JSON,jCon)
         jCon.start()
         if nmeaPort:
-            nCon=Connection(host=host, port=nmeaPort,key=self.ST_NMEA,infoCb=self.setInfo,
-                            callback=lambda l: self._handleNmea(l, source,priority))
+            nCon=NmeaConnection(host=host, port=nmeaPort,key=self.ST_NMEA,
+                                infoHandler=self,
+                            queue=self.queue, source=source,
+                            priority=priority,subsource=self.SUBSOURCE_NMEA,
+                            nmeaFilter=self._getConfig(self.FILTER_PARAM))
             self.connections.add(self.ST_NMEA,nCon)
             nCon.start()
+        else:
+            self.setInfo(self.ST_NMEA, f"disabled",WorkerStatus.INACTIVE)
         while sequence == self.changeSequence:
             if not self._checkProcess():
                 self._safeWait(sequence, 10)

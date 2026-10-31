@@ -361,6 +361,21 @@ class InfoHandler(object):
   def deleteInfo(self,name):
     pass
 
+class ForwardInfoHandler(InfoHandler):
+    def __init__(self,forward:InfoHandler):
+        super().__init__()
+        self._forward=forward
+
+    def deleteInfo(self, name):
+        self._forward.deleteInfo(name)
+
+    def refreshInfo(self, name, timeout=None):
+        self._forward.refreshInfo(name, timeout)
+
+    def setInfo(self, name, info, status, childId=None, canDelete=False, timeout=None):
+        self._forward.setInfo(name, info, status, childId, canDelete, timeout)
+
+
 class TrackingInfoHandler(InfoHandler):
   def __init__(self,handler:InfoHandler):
     self._handler=handler
