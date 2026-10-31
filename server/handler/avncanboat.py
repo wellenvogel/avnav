@@ -28,6 +28,8 @@
 
 import datetime
 import json
+import os
+import platform
 import socket
 import threading
 import time
@@ -225,28 +227,36 @@ class AVNCanboatHandler(AVNWorker):
                                     rangeOrList=[T_RUST, T_LEGACY, ''],
                                     description='the canboat implementation to use , leave empty to disable',
                                     mandatory=False,
-                                    default=T_RUST,
+                                    default=T_LEGACY if os.environ.get('AVNAV_LEGACY_CANBOAT') == '1' else T_RUST,
                                     editable=False)
     P_PORT = WorkerParameter('port', description='canbus json port', default=2598, type=WorkerParameter.T_NUMBER)
     P_HOST = WorkerParameter('host', description='canbus json host (default: localhost)',
                              default='localhost',
                              condition={P_CANBOATTYPE.name: T_LEGACY}
                              )
-    P_SENDRMC = WorkerParameter('autoSendRMC', description='If no other RMC record is seen within this time in seconds, start sending it.\n'+
-                                                           'Set 0 to disable RMC sending.',
-                                default=5, type=WorkerParameter.T_NUMBER)
-    P_RMCTALKER= WorkerParameter('talkerId', description='The talker id used when sending RMC messages',
-                                 default='GP')
-    P_IV = WorkerParameter('timeInterval',
-                           description='Time in seconds to store time received via n2k directly.\n'+
-                                       'Also use this as interval betwen two RMC messages if autoSendRMC is active.\n'+
-                                       'Set to 0 to disable receiving time data from N2K',
-                           default=0.5, type=WorkerParameter.T_FLOAT)
+    P_READPOS = WorkerParameter('readN2K', description='Read time and position from NMEA2000 directly.\n'+
+                                'Time data is read from the PGNS configured below, position from 129025 and cog/sog from 129026\n'+
+                                'This allows to have minimal navigation functions even without enabling the NMEA0183 stream.\n'+
+                                'If you have enabled the NMEA connection you normally do not need this.\n'+
+                                'You can check the "decode" status if time and position are already received with this setting off.',
+                                default=False, type=WorkerParameter.T_BOOLEAN)
     P_TIPGNS = WorkerParameter('timePGNs', description='PGNs used to set time',
-                               default=DEFAULT_PGNS)
-    P_READPOS = WorkerParameter('readPos', description='Read position from 129025 and cog/sog from 129026\n'+
-                                'This allows to have minimal navigation functions even without enabling the NMEA0183 stream',
-                                default=True, type=WorkerParameter.T_BOOLEAN)
+                               default=DEFAULT_PGNS,
+                               condition={P_READPOS.name: True})
+    P_SENDRMC = WorkerParameter('autoSendRMC',
+                                description='If no other RMC record is seen within this time in seconds, start sending it.\n' +
+                                            'Set 0 to disable RMC sending.',
+                                default=5, type=WorkerParameter.T_NUMBER,
+                                condition={P_READPOS.name: True})
+    P_RMCTALKER = WorkerParameter('talkerId', description='The talker id used when sending RMC messages',
+                                  default='GP',
+                                  condition={P_READPOS.name: True})
+    P_IV = WorkerParameter('timeInterval',
+                           description='Time in seconds to store time received via n2k directly.\n' +
+                                       'Also use this as interval betwen two RMC messages if autoSendRMC is active.\n',
+                           default=0.5, type=WorkerParameter.T_FLOAT,
+                           rangeOrList=[0.3,10],
+                           condition={P_READPOS.name: True})
     P_PRIORITY = WorkerParameter('priority', description='Priority of for the channel.\n'+
                                  'The priority is used for the NMEA messages.\n'
                                  'The values directly received from N2K (if enabled) use this priority +1.',
@@ -300,9 +310,12 @@ class AVNCanboatHandler(AVNWorker):
         P_PORT,
         P_CANBOATNMEA,
         P_NMEAPORT,
-        AVNWorker.FILTER_PARAM.copy(condition={P_CANBOATNMEA.name:True}),
-        P_SENDRMC,
+        AVNWorker.FILTER_PARAM.copy(condition={
+            P_CANBOATNMEA.name:True,
+            P_CANBOATTYPE.name:T_RUST,
+        }),
         P_READPOS,
+        P_SENDRMC,
         P_IV,
         P_TIPGNS,
         P_PRIORITY
@@ -345,7 +358,9 @@ class AVNCanboatHandler(AVNWorker):
     def getConfigParamCombined(cls, child=None):
         if child is not None:
             return None
-        return [cls.NAME_PARAMETER.copy(default='canboat'),cls.QUEUE_NAME_PARAMETER,cls.ENABLE_PARAM_DESCRIPTION]+cls.CONFIG_ALL
+        return [cls.NAME_PARAMETER.copy(default='canboat'),
+                cls.QUEUE_NAME_PARAMETER,
+                cls.ENABLE_PARAM_DESCRIPTION.copy(default=False)]+cls.CONFIG_ALL
 
     def rmcWatcher(self, sequence, source):
         while sequence == self.changeSequence:
@@ -496,9 +511,6 @@ class AVNCanboatHandler(AVNWorker):
     def _safeWait(self, sequence, timeout):
         self.wait(timeout)
 
-    def _handleNmea(self,line,source,priority):
-        self.queue.addNMEA(line,source=source,sourcePriority=priority,omitDecode=False,subsource=self.SUBSOURCE_NMEA)
-
     def _handleJson(self, line, handledPGNs, readPos, source, priority, autoSendRMC, timeInterval,timeInSeconds):
         try:
             msg = json.loads(line)
@@ -645,14 +657,17 @@ class AVNCanboatHandler(AVNWorker):
         #instead of the previous wire based value
         #as we do not support canboat >= 9 in the classical version (and we do not have rust < 9)
         #for us hasRust can be used to determine between versions < 9 and >= 9
-        jCon=CallbackConnection(host=host, port=port,key=self.ST_JSON,
+        if readPos:
+            jCon=CallbackConnection(host=host, port=port,key=self.ST_JSON,
                             infoHandler=self,
                             callback=lambda l: self._handleJson(l, handledPGNs,
-                                                                readPos, source, priority,
+                                                                True, source, priority,
                                                                 autoSendRMC, timeInterval,hasRust))
-        self.connections.add(self.ST_JSON,jCon)
-        jCon.start()
-        if nmeaPort:
+            self.connections.add(self.ST_JSON,jCon)
+            jCon.start()
+        else:
+            self.setInfo(self.ST_JSON, f"disabled",WorkerStatus.INACTIVE)
+        if nmeaPort and self._hasRust():
             nCon=NmeaConnection(host=host, port=nmeaPort,key=self.ST_NMEA,
                                 infoHandler=self,
                             queue=self.queue, source=source,
@@ -661,7 +676,8 @@ class AVNCanboatHandler(AVNWorker):
             self.connections.add(self.ST_NMEA,nCon)
             nCon.start()
         else:
-            self.setInfo(self.ST_NMEA, f"disabled",WorkerStatus.INACTIVE)
+            if self._hasRust():
+                self.setInfo(self.ST_NMEA, f"disabled",WorkerStatus.INACTIVE)
         while sequence == self.changeSequence:
             if not self._checkProcess():
                 self._safeWait(sequence, 10)

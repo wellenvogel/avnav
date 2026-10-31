@@ -49,7 +49,7 @@ task build_raspi(type: Deb) {
     requires('ntp').or('ntpsec')
     requires 'avahi-autoipd'
     requires 'python3-smbus' //could basically also directly go to avnav - but outside rpi there is no use case
-    requires('canboat','4.12',Flags.GREATER|Flags.EQUAL).or('base-files','11',Flags.LESS)
+    requires('canboat-rust','9.0',Flags.GREATER|Flags.EQUAL).or('base-files','11',Flags.LESS)
     requires('base-files','13',Flags.LESS)
     requires 'jq'
     packageName='avnav-raspi'
@@ -63,11 +63,11 @@ task build_raspi(type: Deb) {
             fileMode 0755
             include 'sound.sh'
             include 'setup-helper.sh'
-            include 'prestart.sh'
             include 'uart_control'
         }
         from(LEGACY){
             fileMode 0755
+            include 'prestart.sh'
             include 'settime.sh'
             include 'hostapd'
             include 'restore-iptables.sh'
