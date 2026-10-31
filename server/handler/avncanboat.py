@@ -159,33 +159,46 @@ class AVNCanboatHandler(AVNWorker):
     NM = 1852.0
     # PGNS used to set the time
     DEFAULT_PGNS = '126992,129029'
+    T_RUST='rust'
+    T_LEGACY='legacy'
+    P_CANBOATTYPE = WorkerParameter('canboatType',
+                                    type=WorkerParameter.T_SELECT,
+                                    rangeOrList=[T_RUST, T_LEGACY, ''],
+                                    description='the canboat implementation to use , leave empty to disable',
+                                    mandatory=False,
+                                    default=T_RUST,
+                                    editable=False)
     P_PORT = WorkerParameter('port', description='canbus json port', default=2598, type=WorkerParameter.T_NUMBER)
-    P_HOST = WorkerParameter('host', description='canbus json host (default: localhost)', default='localhost')
-    P_SENDRMC = WorkerParameter('autoSendRMC', description='time in seconds with no RMC to start sending it,0: off',
+    P_HOST = WorkerParameter('host', description='canbus json host (default: localhost)',
+                             default='localhost',
+                             condition={P_CANBOATTYPE.name: T_LEGACY}
+                             )
+    P_SENDRMC = WorkerParameter('autoSendRMC', description='If no other RMC record is seen within this time in seconds, start sending it.\n'+
+                                                           'Set 0 to disable RMC sending.',
                                 default=0, type=WorkerParameter.T_NUMBER)
+    P_RMCTALKER= WorkerParameter('talkerId', description='The talker id used when sending RMC messages',
+                                 default='GP')
     P_IV = WorkerParameter('timeInterval',
-                           description='time in seconds to store time received via n2k (also used as interval for auto send RMC, 0 to disable)',
+                           description='Time in seconds to store time received via n2k directly.\n'+
+                                       'Also use this as interval betwen two RMC messages if autoSendRMC is active.\n'+
+                                       'Set to 0 to disable receiving time data from N2K',
                            default=0.5, type=WorkerParameter.T_FLOAT)
     P_TIPGNS = WorkerParameter('timePGNs', description='PGNs used to set time',
                                default=DEFAULT_PGNS)
-    P_READPOS = WorkerParameter('readPos', description='read position from 129025 and cog/sog from 129026',
+    P_READPOS = WorkerParameter('readPos', description='Read position from 129025 and cog/sog from 129026\n'+
+                                'This allows to have minimal navigation functions even without enabling the NMEA0183 stream',
                                 default=True, type=WorkerParameter.T_BOOLEAN)
-    P_PRIORITY = WorkerParameter('priority', description='priority of for the channel',
+    P_PRIORITY = WorkerParameter('priority', description='Priority of for the channel.\n'+
+                                 'The priority is used for the NMEA messages\n.'
+                                 'The values directly received from N2K (if enabled) use this priority +1.',
                                  default=40,
                                  type=WorkerParameter.T_NUMBER)
-    P_CANBOATTYPE= WorkerParameter('canboatType',
-                                   type=WorkerParameter.T_SELECT,
-                                   rangeOrList=['rust', 'legacy',''],
-                                   description='the canboat implementation to use , leave empty to disable',
-                                   mandatory=False,
-                                   default='rust',
-                                   editable=False)
     P_CANBOATDEV = WorkerParameter('canboatDevice',
                                    description='The canboat device to use (e.g. can0, vcan0, etc.).\n'+
                                      'For special cases you can leave this empty and provide all parameters directly with canboatParam.',
                                    mandatory=False,
                                    default='',
-                                   condition={P_CANBOATTYPE.name:'rust'})
+                                   condition={P_CANBOATTYPE.name:T_RUST})
     P_CANBOATKIND = WorkerParameter('canboatKind',
                                     type=WorkerParameter.T_SELECT,
                                     rangeOrList=['actisense', 'socketcan', 'yachtd',''],
@@ -193,24 +206,24 @@ class AVNCanboatHandler(AVNWorker):
                                                 'For special cases you can leave this empty and provide all parameters directly with canboatParam.',
                                     mandatory=False,
                                     default='socketcan',
-                                    condition={P_CANBOATTYPE.name:'rust'})
+                                    condition={P_CANBOATTYPE.name:T_RUST})
     P_CANBOATPARAM= WorkerParameter('canboatParam',
                                     description='Additional parameters for the canboat rust call.\n'+
                                       'Refer to the documentation for more details.\n',
                                     default="",
                                     mandatory=False,
-                                    condition={P_CANBOATTYPE.name:'rust'})
+                                    condition={P_CANBOATTYPE.name:T_RUST})
     P_CANBOATNMEA=WorkerParameter('canboatNMEA',type=WorkerParameter.T_BOOLEAN,
                                   description='Enable receiving NMEA messages from canboat.\n'+
                                     'If you enable this DO NOT additionally configure a socket reader',
                                   default=True,
-                                  condition={P_CANBOATTYPE.name:'rust'})
+                                  condition={P_CANBOATTYPE.name:T_RUST})
     P_NMEAPORT=WorkerParameter('nmeaPort',type=WorkerParameter.T_NUMBER,
                                mandatory=False,
                                default=2607,
                                description='The port to be used for NMEA data.\n'+
                                'The default intentionally differs from the canboat default of 2599 to avoid issues with an additonal socket reader on the legacy port.',
-                               condition={P_CANBOATTYPE.name:'rust',P_CANBOATNMEA.name:True})
+                               condition={P_CANBOATTYPE.name:T_RUST,P_CANBOATNMEA.name:True})
 
     PATHES = [
         NMEAParser.K_TIME,
@@ -245,9 +258,9 @@ class AVNCanboatHandler(AVNWorker):
 
 
     def _hasRust(self):
-        return self._getConfig(self.P_CANBOATTYPE) == 'rust'
+        return self._getConfig(self.P_CANBOATTYPE) == self.T_RUST
     def _hasLegay(self):
-        return self._getConfig(self.P_CANBOATTYPE) == 'legacy'
+        return self._getConfig(self.P_CANBOATTYPE) == self.T_LEGACY
     def __init__(self, cfgparam):
         """
             initialize a plugins
@@ -387,13 +400,13 @@ class AVNCanboatHandler(AVNWorker):
         if nmeaPort is not None:
             rt.append("--nmea0183-port")
             rt.append(str(nmeaPort))
-        if kind is not None:
+        if kind is not None and not kind.strip() == '':
             rt.append("--kind")
             rt.append(kind)
-        if device is not None:
+        if device is not None and not device.strip() == '':
             rt.append("--device")
             rt.append(device)
-        if param is not None:
+        if param is not None and not param.strip() == '':
             for p in param.split(' '):
                 rt.append(p)
         return rt
@@ -440,7 +453,7 @@ class AVNCanboatHandler(AVNWorker):
                             dt += datetime.timedelta(days=cdate, milliseconds=ctime / 10)
                     if dt is not None:
                         self.navdata.setValue(NMEAParser.K_TIME.getKey(), self.formatTime(dt), source=source,
-                                         priority=priority)
+                                         priority=priority+1)
                     if autoSendRMC > 0:
                         if self.lastRmc is None or self.lastRmc < (now - autoSendRMC):
                             lat = self.navdata.getSingleValue(NMEAParser.K_LAT.getKey())
@@ -458,10 +471,12 @@ class AVNCanboatHandler(AVNWorker):
                                 year = "%04d" % dt.year
                                 datestr = "%02d%02d%s" % (dt.day, dt.month, year[-2:])
                                 cogstr = "" if cog is None else "%.2f" % cog
-                                record = "$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A" % (fixutc, latstr, NS,
+                                talker=self._getConfig(self.P_RMCTALKER) or 'GP'
+                                record = "$%sRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A" % (talker,fixutc, latstr, NS,
                                                                                    lonstr, EW, speedstr,
                                                                                    cogstr, datestr)
                                 self.queue.addNMEA(record, addCheckSum=True,
+                                                   omitDecode=True,
                                                    source=source,sourcePriority=priority,
                                                    subsource=self.SUBSOURCE_N2K)
             if readPos:
@@ -470,9 +485,9 @@ class AVNCanboatHandler(AVNWorker):
                     lat = self._getField(msg, 'Latitude')
                     if lon is not None and lat is not None:
                         self.navdata.setValue(NMEAParser.K_LON.getKey(), lon, source=source,
-                                              priority=priority)
+                                              priority=priority+1)
                         self.navdata.setValue(NMEAParser.K_LAT.getKey(), lat, source=source,
-                                              priority=priority)
+                                              priority=priority+1)
                 if pgn == 129026:  # sog/cog
                     ref = self._getField(msg, "COG Reference") or self._getField(msg, "cogReference")
                     if ref is not None and ref.get('value') == 0:
@@ -480,9 +495,9 @@ class AVNCanboatHandler(AVNWorker):
                         sog = self._getField(msg, 'SOG')
                         if sog is not None and cog is not None:
                             self.navdata.setValue(NMEAParser.K_SOG.getKey(), sog, source=source,
-                                                  priority=priority)
+                                                  priority=priority+1)
                             self.navdata.setValue(NMEAParser.K_COG.getKey(), cog, source=source,
-                                                  priority=priority)
+                                                  priority=priority+1)
             # add other decoders here
 
         except Exception as e:
@@ -543,7 +558,7 @@ class AVNCanboatHandler(AVNWorker):
         if self._hasRust():
             if self._getConfig(self.P_CANBOATNMEA):
                 nmeaPort = self._getConfig(self.P_NMEAPORT)
-            cmd=self._buildCmd(kind, device, port,nmeaPort)
+            cmd=self._buildCmd(kind, device, port,nmeaPort,self._getConfig(self.P_CANBOATPARAM))
             self.setInfo(self.ST_PROCESS, f"starting canboat server {' '.join(cmd)}",WorkerStatus.RUNNING)
             self.process=SafePopen(cmd, shell=False,
                                         stdout_reader=lambda line: AVNLog.info("canboat: %s" % line),
