@@ -71,8 +71,19 @@ class SocketReader(object):
       return line
     return line[match.span()[0]:]
 
-  def readSocket(self,sourceName,filter=None,timeout=None,minTime=None,ownsource=None):
-    INAME='reader'
+  def readSocket(self,sourceName,filter=None,timeout=None,
+                 minTime=None,ownsource=None,infoKey='reader'):
+    '''
+
+      :param sourceName: the source for the queue entry
+      :param filter: an NMEA filter string
+      :param timeout: a timeout - close when no data received
+      :param minTime: if set: ensure a delay between messages
+      :param ownsource: subsource for the queue
+      :param infoKey: the info key to use
+      :return:
+    '''
+    INAME=infoKey
     nmeaSum=MovingSum()
     def nmeaInfo(peer):
       if nmeaSum.shouldUpdate():

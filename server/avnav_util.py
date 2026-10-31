@@ -24,32 +24,29 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import datetime
 import glob
 import io
 import itertools
 import json
-import posixpath
-import shutil
-import urllib.parse
-
-import ctypes
 import logging
 import logging.handlers
+import math
 import os
+import platform
+import posixpath
 import re
+import signal
 import subprocess
 import sys
-import time
-import traceback
-
-import datetime
-import math
 import threading
+import time
+import urllib.parse
+import zipfile
 from http.server import SimpleHTTPRequestHandler
 from math import copysign
-import zipfile
-from os import path
 from typing import Any
+from typing import Callable
 
 
 class Enum(set):
@@ -740,6 +737,285 @@ def plainUrlToPath(path:str)->str:
         if AVNUtil.clean_filename(part) != part:
             raise Exception("invalid characters in path " + part)
     return posixpath.normpath(path)
+
+
+
+# On Linux, instead of loading a physical "libc.so.6" file, we load the
+# process's own symbol space via CDLL(None). This queries the kernel-provided
+# vDSO / memory space directly, removing any dependency on an external libc binary.
+_native_kernel = None
+if platform.system().lower() == "linux":
+    import ctypes
+
+    _native_kernel = ctypes.CDLL(None)
+
+
+class PopenCallbackStream:
+    """
+    A stream class that starts automatically upon instantiation and
+    cleans up its resources when the instance goes out of scope (__del__).
+    """
+
+    def __init__(self, callback: Callable[[str], None], text: bool = True, encoding: str = "utf-8"):
+        self.callback = callback
+        self.text = text
+        self.encoding = encoding
+
+        # Create an OS-level pipe
+        self._r_fd, self._w_fd = os.pipe()
+
+        # Start the background reader thread immediately
+        self._thread = threading.Thread(target=self._read_loop,name="streamreader")
+        self._thread.daemon = True
+        self._thread.start()
+
+    def fileno(self) -> int:
+        """Allows this object to be accepted directly by subprocess.Popen."""
+        if self._w_fd is None:
+            raise ValueError("Stream write descriptor is already closed.")
+        return self._w_fd
+
+    def close_write_end(self):
+        """
+        Closes the parent process's write descriptor.
+        Must be called immediately after subprocess.Popen starts so that
+        the pipe can receive the EOF signal when the child process exits.
+        """
+        if self._w_fd is not None:
+            try:
+                os.close(self._w_fd)
+            except OSError:
+                pass
+            self._w_fd = None
+
+    def _read_loop(self):
+        """Internal loop running in the background thread."""
+        mode = "r" if self.text else "rb"
+        kwargs = {"encoding": self.encoding} if self.text else {}
+
+        with open(self._r_fd, mode, buffering=1, **kwargs) as f:
+            for line in f:
+                if self.text:
+                    self.callback(line.rstrip())
+                else:
+                    self.callback(line)
+
+    def __del__(self):
+        """Automatically triggered when the variable goes out of scope."""
+        # Ensure the write descriptor is closed if not done already
+        self.close_write_end()
+
+        # Wait for the background thread to flush remaining lines and exit
+        if hasattr(self, '_thread') and self._thread and self._thread.is_alive():
+            self._thread.join()
+
+
+
+class SafePopen(subprocess.Popen):
+    """
+    A drop-in replacement for subprocess.Popen that guarantees the child process
+    AND all of its descendants are terminated when the parent exits.
+    Also provides a manual .kill_all() method to wipe out the tree at any time.
+    :param stdout_reader: Optional callable to read stdout lines in real-time.
+    :param stderr_reader: Optional callable to read stderr lines in real-time.
+    """
+    def _close_write_ends(self):
+        """Close the write ends of the pipes to signal EOF to the child process."""
+        if self._stdoutReader:
+            self._stdoutReader.close_write_end()
+        if self._stderrReader:
+            self._stderrReader.close_write_end()
+    def __init__(self, cmd_list, *args,
+                 stdout_reader=None,
+                 stderr_reader=None,
+                 kill_signal=signal.SIGKILL, **popen_kwargs):
+        self._job_handle = None
+        self._current_os = platform.system().lower()
+        self._kill_signal = kill_signal
+        self._stdoutReader = None
+        self._stderrReader = None
+        if stdout_reader  is not None:
+            self._stdoutReader = PopenCallbackStream(stdout_reader, text=True)
+            popen_kwargs["stdout"] = self._stdoutReader
+        if stderr_reader is not None:
+            self._stderrReader = PopenCallbackStream(stderr_reader, text=True)
+            popen_kwargs["stderr"] = self._stderrReader
+
+        # ----------------------------------------------------
+        # LINUX CONFIGURATION
+        # ----------------------------------------------------
+        if self._current_os == "linux" and _native_kernel is not None:
+            PR_SET_PDEATHSIG = 1
+            expected_parent_pid = os.getpid()
+            user_preexec = popen_kwargs.get("preexec_fn", None)
+
+            def linux_preexec():
+                # Isolate child and grandchildren into a dedicated process group
+                os.setpgrp()
+
+                # Register death signal trap for when parent terminates
+                _native_kernel.prctl(PR_SET_PDEATHSIG, int(self._kill_signal))
+
+                if os.getppid() != expected_parent_pid:
+                    os._exit(1)
+
+                if user_preexec:
+                    user_preexec()
+
+            popen_kwargs["preexec_fn"] = linux_preexec
+            super().__init__(cmd_list, *args, **popen_kwargs)
+            self._close_write_ends()
+
+        # ----------------------------------------------------
+        # WINDOWS CONFIGURATION
+        # ----------------------------------------------------
+        elif self._current_os == "windows":
+            import ctypes
+            from ctypes import wintypes
+
+            self._kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+
+            CREATE_SUSPENDED = 0x00000004
+            JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x2000
+            JobObjectExtendedLimitInformation = 9
+            TH32CS_SNAPTHREAD = 0x00000004
+            THREAD_SUSPEND_RESUME = 0x0002
+            INVALID_HANDLE_VALUE = -1
+
+            class THREADENTRY32(ctypes.Structure):
+                _fields_ = [
+                    ("dwSize", wintypes.DWORD), ("cntUsage", wintypes.DWORD),
+                    ("th32ThreadID", wintypes.DWORD), ("th32OwnerProcessID", wintypes.DWORD),
+                    ("tpBasePri", wintypes.LONG), ("tpDeltaPri", wintypes.LONG), ("dwFlags", wintypes.DWORD),
+                ]
+
+            class JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
+                _fields_ = [("LimitFlags", wintypes.DWORD)]
+
+            class IO_COUNTERS(ctypes.Structure):
+                _fields_ = [("ReadOperationCount", ctypes.c_uint64), ("WriteOperationCount", ctypes.c_uint64),
+                            ("DataOperationCount", ctypes.c_uint64), ("ReadTransferCount", ctypes.c_uint64),
+                            ("WriteTransferCount", ctypes.c_uint64), ("OtherTransferCount", ctypes.c_uint64)]
+
+            class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
+                _fields_ = [
+                    ("BasicLimitInformation", JOBOBJECT_BASIC_LIMIT_INFORMATION), ("IoCounters", IO_COUNTERS),
+                    ("ProcessMemoryLimit", ctypes.c_size_t), ("JobMemoryLimit", ctypes.c_size_t),
+                    ("PeakProcessMemoryUsed", ctypes.c_size_t), ("PeakJobMemoryUsed", ctypes.c_size_t),
+                ]
+
+            user_creationflags = popen_kwargs.get("creationflags", 0)
+            popen_kwargs["creationflags"] = user_creationflags | CREATE_SUSPENDED
+
+            h_job = None
+            if self._kill_signal in (signal.SIGKILL, getattr(signal, 'SIGSTOP', None), signal.SIGTERM):
+                h_job = self._kernel32.CreateJobObjectW(None, None)
+                if not h_job:
+                    raise ctypes.WinError(ctypes.get_last_error())
+
+                limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
+                limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+
+                res = self._kernel32.SetInformationJobObject(
+                    h_job, JobObjectExtendedLimitInformation, ctypes.byref(limits), ctypes.sizeof(limits)
+                )
+                if not res:
+                    self._kernel32.CloseHandle(h_job)
+                    raise ctypes.WinError(ctypes.get_last_error())
+
+            super().__init__(cmd_list, *args, **popen_kwargs)
+            self._close_write_ends()
+
+            try:
+                PROCESS_SET_QUOTA = 0x0100
+                PROCESS_TERMINATE = 0x0001
+                h_process = self._kernel32.OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE, False, self.pid)
+                if not h_process:
+                    raise ctypes.WinError(ctypes.get_last_error())
+
+                try:
+                    if h_job:
+                        res = self._kernel32.AssignProcessToJobObject(h_job, h_process)
+                        if not res:
+                            raise ctypes.WinError(ctypes.get_last_error())
+                finally:
+                    self._kernel32.CloseHandle(h_process)
+
+                h_snapshot = self._kernel32.CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0)
+                if h_snapshot == INVALID_HANDLE_VALUE:
+                    raise ctypes.WinError(ctypes.get_last_error())
+
+                target_thread_id = None
+                try:
+                    te = THREADENTRY32()
+                    te.dwSize = ctypes.sizeof(THREADENTRY32)
+
+                    if self._kernel32.Thread32First(h_snapshot, ctypes.byref(te)):
+                        while True:
+                            if te.th32OwnerProcessID == self.pid:
+                                target_thread_id = te.th32ThreadID
+                                break
+                            if not self._kernel32.Thread32Next(h_snapshot, ctypes.byref(te)):
+                                break
+                finally:
+                    self._kernel32.CloseHandle(h_snapshot)
+
+                if target_thread_id is None:
+                    raise RuntimeError(f"Could not find initial thread for PID {self.pid}")
+
+                h_thread = self._kernel32.OpenThread(THREAD_SUSPEND_RESUME, False, target_thread_id)
+                if not h_thread:
+                    raise ctypes.WinError(ctypes.get_last_error())
+
+                try:
+                    res = self._kernel32.ResumeThread(h_thread)
+                    if res == -1:
+                        raise ctypes.WinError(ctypes.get_last_error())
+                finally:
+                    self._kernel32.CloseHandle(h_thread)
+
+            except Exception:
+                self.terminate()
+                if h_job:
+                    self._kernel32.CloseHandle(h_job)
+                raise
+
+            if h_job:
+                self._job_handle = h_job
+
+        # Fallback (macOS)
+        else:
+            super().__init__(cmd_list, *args, **popen_kwargs)
+            self._close_write_ends()
+
+    def kill_all(self):
+        """
+        Manually terminates the main child process and ALL of its descended
+        subprocesses across the entire process tree instantly.
+        """
+        # 1. Linux Implementation (Kills the whole process group via negative PID trap)
+        if self._current_os == "linux":
+            try:
+                # Using os.getpgid(self.pid) finds the dedicated group ID we created.
+                # Passing a negative value to os.kill hits every process in that group.
+                pgid = os.getpgid(self.pid)
+                os.killpg(pgid, int(self._kill_signal))
+            except ProcessLookupError:
+                pass  # Process tree is already dead
+
+        # 2. Windows Implementation (Terminates the Job Object sandbox)
+        elif self._current_os == "windows" and self._job_handle:
+            # TerminateJobObject takes the job handle and an exit code (e.g., 1)
+            # It violently kills every process currently assigned to the job.
+            self._kernel32.TerminateJobObject(self._job_handle, 1)
+            self._kernel32.CloseHandle(self._job_handle)
+            self._job_handle = None
+
+        # 3. Fallback standard termination (Only hits direct child)
+        else:
+            self.terminate()
+
+
 
 class AVNDownload(object):
     '''

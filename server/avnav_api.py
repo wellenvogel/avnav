@@ -22,6 +22,8 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 ###############################################################################
+import signal
+
 
 class ConverterApi:
   def countConvertibleFiles(self,dirOrFile):
@@ -161,7 +163,7 @@ class AVNApi(object):
     """
     raise NotImplemented()
 
-  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None):
+  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None,sourcePriority=None):
     """
     add NMEA data to the queue
     caution: you should never add a new NMEA record for each record you received by fetchFromQueue
@@ -524,3 +526,19 @@ class AVNApi(object):
                  equal to getOwnName for my alarms
       :return:
       '''
+
+  def safeSpawn(self, cmd_args, kill_signal=signal.SIGKILL, stdout_reader=None, stderr_reader=None,**kwargs):
+      """
+          A drop-in replacement for subprocess.Popen that guarantees the child process
+          is terminated when the parent process exits or is killed.
+            :param cmd_args: The command and arguments to execute as a list.
+            :param kill_signal: The signal to send to the child process when terminating it.
+            :param kwargs: Additional keyword arguments to pass to subprocess.Popen.
+            :param stdout_reader: Optional callable to read stdout lines in real-time.
+            :param stderr_reader: Optional callable to read stderr lines in real-time.
+            :return: A subprocess.Popen object representing the child process.
+                     The returned object has an additional method kill_all to
+                     safely kill the child process with all it's children using
+                     the kill_signal signal.
+          """
+      raise NotImplemented()

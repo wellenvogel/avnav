@@ -587,9 +587,8 @@ Importiert Karten, die noch konvertiert werden müssen. Kategorie 2
 Konfiguration von externen WLAN-Verbindungen zum Raspberry. (Legacy: nicht für Versionen ab Debian Trixie). Kategorie 3 (einmalig,
 optional)
 
-|  |  |  |
-| --- | --- | --- |
 | Name | Beschreibung | default/template |
+| --- | --- | --- |
 | wpaSocket | die Steuerverbindung zu wpa\_supplicant | /var/run/wpa\_supplicant/wlan-av1 |
 | ownSsid | eigene SSIDs, diese werden ausgeblendet | avnav,avnav1,avnav2 |
 | firewallCommand | wenn konfiguriert, kann damit der externe Zugriff über ein WLAN freigeschaltet werden | sudo -n $BASEDIR/../raspberry/iptables-ext.sh wlan-av1 |
@@ -612,12 +611,35 @@ angesprochen werden. Die Default-Konfiguration ist:
 
 #### Parameter für Command
 
-|  |  |  |
-| --- | --- | --- |
 | Name | Beschreibung | default/template |
+| --- | --- | --- |
 | name | Name des Kommandos |  |
 | command | Auszuführender Befehl |  |
 | repeat | Zahl der Wiederholungen | 1 |
+
+### AVNCanboatHandler
+
+Dieser Handler steuert die Verbindung zu [canboat](nmea2000.md#canboat).
+Beim Start von AvNav auf älteren Images (< trixie) wird geprüft, ob `canboat-rust` installiert ist oder nur `canboat`. Falls nur canboat vorhanden ist, muss die Konfiguration für canboat partiell ausserhalb von AvNav erfolgen (siehe die [legacy Dokumentation]({{OLDLINK("hints/CanboatAndSignalk.html:h2:CanboatNMEA2000")}})). In diesem Falle wird der default für den Parameter canboatType auf `legacy`gesetzt.
+
+In der AvNav Oberfläche weren in diesem Falle einige Parameter ausgeblendet - diese sind mit einem * gekennzeichnet.
+
+| Name | Beschreibung | default/template |
+| --- | --- | --- |
+| canboatType | `rust`oder `legacy`. Dieser Wert kann nicht in AvNav geämdert werden (nur in avnav_server.xml). | rust |
+| canboatKind * | Der Parameter --kind für [canboat](https://canboat.github.io/canboat/server.html) | socketcan |
+| canboatDevice * | Der Parameter --device für [canboat](https://canboat.github.io/canboat/server.html). Der Wert hängt von kind ab. z.B. can0 ||
+| canboatParam * | Freie Parameter für [canboat](https://canboat.github.io/canboat/server.html) ||
+| canboatNMEA * | Öffne eine Verbindung und empfange NMEA0183 Daten | ein |
+| nmeaPort * | Der Port, der für die NMEA0183 Daten genutzt wird| 2607 |
+| filter * | Ein [NMEAfilter](#filter) für die empfangenen NMEA0183 Daten. ||
+| readN2K | Öffne eine Verbindung und lies direkt NMEA2000 Daten im JSON Format. | aus |
+| port | Der Port für die NMEA2000 JSON Verbindung | 2598 |
+| autoSendRMC | Wenn ungleich 0 erzeugt AvNav RMC Datensätze falls noch keine solchen Sätze in den NMEA Daten vorhanden sind | 5 |
+| timeInterval | Zeitabstand in Sekunden für ein Auslesen der Zeit von NMEA2000. Das ist auch das Intervall für die erzeugten RMC Daten. | 0.5 |
+| timePGNs | Die PGNs, die für die Zeit genutzt werden | 129029, 126992 |
+| priority | Die Priorität für die eingespeisten Daten. Per readN2K empfangene Daten nutzen priority + 1| 40 |
+
 
 ### AVNAlarmHandler
 

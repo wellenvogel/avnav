@@ -35,6 +35,7 @@ import editableParameterUIFactory, {EditableParameterListUI} from "./EditablePar
 import {ConfirmDialog, SelectDialog} from "./BasicDialogs";
 import {useDialogContext} from "./DialogContext";
 import ButtonDefs from "./ButtonDefs";
+import {unsetOrTrue} from "../util/helper";
 
 const undefToNull=(val)=>{
     if (typeof val !== "object") return val;
@@ -81,6 +82,7 @@ const EditHandlerDialog=(props)=>{
                     if (type === 'FILTER') param.type = 'STRING';
                     const editableParameterUI=editableParameterUIFactory.createEditableParameterUI(
                         {...param,
+                                    readOnly: !unsetOrTrue(param.editable),
                                     list:param.rangeOrList
                         })
                     parameters.push(editableParameterUI);
