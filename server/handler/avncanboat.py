@@ -240,22 +240,9 @@ class AVNCanboatHandler(AVNWorker):
     ST_MAIN="main"
     ST_DECODE = "decode"
 
-    @classmethod
-    def pluginInfo(cls):
-        """
-        the description for the module
-        @return: a dict with the content described below
-                parts:
-                   * description (mandatory)
-                   * data: list of keys to be stored (optional)
-                     * path - the key - see AVNApi.addData, all pathes starting with "gps." will be sent to the GUI
-                     * description
-        """
-        return {
-            'description': 'a plugin that reads some PGNS from canboat. Currently supported: 126992:SystemTime. You need to set allowKeyOverwrite=true',
-            'version': '2.0',
-            'data': list(map(lambda k: {'path': k.getKey(), 'description': k.description}, cls.PATHES))
-        }
+    SUBSOURCE_NMEA="NMEA"
+    SUBSOURCE_N2K="N2K"
+
 
     def _hasRust(self):
         return self._getConfig(self.P_CANBOATTYPE) == 'rust'
@@ -271,7 +258,8 @@ class AVNCanboatHandler(AVNWorker):
         """
         super().__init__(cfgparam)
         self.changeSequence = 0
-        self.lastRmc = time.monotonic()
+        self.lastRmc = time.monotonic() #last foreign RMC
+        self.lastOwnTime = time.monotonic() #last handled time/last send RMC
         self.process = None
         self.connections=ConnectionList()
 
@@ -294,7 +282,9 @@ class AVNCanboatHandler(AVNWorker):
                 #self.queue.fetchFromQueue(seq, 10, includeSource=True, filter='$RMC'))
             if len(data) > 0:
                 for d in data:
-                    if d.source != source:
+                    #we consider RMC ok if another source provides this
+                    #or if our own NMEA stream provides this
+                    if d.source != source or d.subsource == self.SUBSOURCE_NMEA:
                         self.lastRmc = time.monotonic()
                         break
 
@@ -373,7 +363,9 @@ class AVNCanboatHandler(AVNWorker):
         fields = msg.get("fields")
         if fields is None:
             return
-        rt = fields.get(name)
+        rt = fields.get(name) or fields.get(name.lower())
+        if rt is None:
+            return
         if sub is None or rt is None:
             return rt
         if isinstance(rt, dict):
@@ -427,29 +419,32 @@ class AVNCanboatHandler(AVNWorker):
         self.wait(timeout)
 
     def _handleNmea(self,line,source,priority):
-        self.queue.addNMEA(line,source=source,sourcePriority=priority,omitDecode=False)
+        self.queue.addNMEA(line,source=source,sourcePriority=priority,omitDecode=False,subsource=self.SUBSOURCE_NMEA)
 
-    def _handleJson(self, line, handledPGNs, readPos, source, priority, autoSendRMC, timeInterval):
+    def _handleJson(self, line, handledPGNs, readPos, source, priority, autoSendRMC, timeInterval,timeInSeconds):
         try:
             msg = json.loads(line)
             pgn = msg.get('pgn')
             if pgn in handledPGNs:
                 now = time.monotonic()
-                if now >= (self.lastRmc + timeInterval) and timeInterval > 0:
-                    self.lastRmc = now
+                if now >= (self.lastOwnTime + timeInterval) and timeInterval > 0:
+                    self.lastOwnTime = now
                     cdate = self._getField(msg, 'Date', 'value')
                     ctime = self._getField(msg, 'Time', 'value')
                     dt = None
                     if cdate is not None and ctime is not None:
                         dt = datetime.datetime(year=1970, month=1, day=1)
-                        dt += datetime.timedelta(days=cdate, milliseconds=ctime / 10)
+                        if timeInSeconds:
+                            dt += datetime.timedelta(days=cdate, seconds=ctime )
+                        else:
+                            dt += datetime.timedelta(days=cdate, milliseconds=ctime / 10)
                     if dt is not None:
                         self.navdata.setValue(NMEAParser.K_TIME.getKey(), self.formatTime(dt), source=source,
                                          priority=priority)
                     if autoSendRMC > 0:
                         if self.lastRmc is None or self.lastRmc < (now - autoSendRMC):
                             lat = self.navdata.getSingleValue(NMEAParser.K_LAT.getKey())
-                            lon = self.navdata.getSingleValue(NMEAParser.K_LAT.getKey())
+                            lon = self.navdata.getSingleValue(NMEAParser.K_LON.getKey())
                             if lat is not None and lon is not None:
                                 speed = self.navdata.getSingleValue(NMEAParser.K_SOG.getKey())
                                 cog = self.navdata.getSingleValue(NMEAParser.K_COG.getKey())
@@ -466,35 +461,31 @@ class AVNCanboatHandler(AVNWorker):
                                 record = "$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A" % (fixutc, latstr, NS,
                                                                                    lonstr, EW, speedstr,
                                                                                    cogstr, datestr)
-                                self.queue.addNMEA(record, addCheckSum=True, source=source,sourcePriority=priority)
-                    if readPos:
-                        if pgn == 129025:  # pos
-                            clat = self.navdata.getSingleValue(NMEAParser.K_LAT.getKey(), includeInfo=True)
-                            clon = self.navdata.getSingleValue(NMEAParser.K_LON.getKey(), includeInfo=True)
-                            if clon is None or clon.source == source or clat is None or clat.source == source:
-                                lon = self._getField(msg, 'Longitude')
-                                lat = self._getField(msg, 'Latitude')
-                                if lon is not None and lat is not None:
-                                    self.navdata.setValue(NMEAParser.K_LON.getKey(), lon, source=source,
-                                                     priority=priority)
-                                    self.navdata.setValue(NMEAParser.K_LAT.getKey(), lat, source=source,
-                                                     priority=priority)
-                        if pgn == 129026:  # sog/cog
-                            csog = self.navdata.getSingleValue(NMEAParser.K_SOG.getKey(), includeInfo=True)
-                            ccog = self.navdata.getSingleValue(NMEAParser.K_COG.getKey(), includeInfo=True)
-                            if csog is None or csog.source == source or ccog is None or ccog.source == source:
-                                ref = self._getField(msg, "COG Reference")
-                                if ref is not None and ref.get('value') == 0:
-                                    cog = self._getField(msg, 'COG')
-                                    sog = self._getField(msg, 'SOG')
-                                    if sog is not None and cog is not None:
-                                        self.navdata.setValue(NMEAParser.K_SOG.getKey(), sog, source=source,
-                                                         priority=priority)
-                                        self.navdata.setValue(NMEAParser.K_COG.getKey(), cog, source=source,
-                                                         priority=priority)
-                    # add other decoders here
+                                self.queue.addNMEA(record, addCheckSum=True,
+                                                   source=source,sourcePriority=priority,
+                                                   subsource=self.SUBSOURCE_N2K)
+            if readPos:
+                if pgn == 129025:  # pos
+                    lon = self._getField(msg, 'Longitude')
+                    lat = self._getField(msg, 'Latitude')
+                    if lon is not None and lat is not None:
+                        self.navdata.setValue(NMEAParser.K_LON.getKey(), lon, source=source,
+                                              priority=priority)
+                        self.navdata.setValue(NMEAParser.K_LAT.getKey(), lat, source=source,
+                                              priority=priority)
+                if pgn == 129026:  # sog/cog
+                    ref = self._getField(msg, "COG Reference") or self._getField(msg, "cogReference")
+                    if ref is not None and ref.get('value') == 0:
+                        cog = self._getField(msg, 'COG')
+                        sog = self._getField(msg, 'SOG')
+                        if sog is not None and cog is not None:
+                            self.navdata.setValue(NMEAParser.K_SOG.getKey(), sog, source=source,
+                                                  priority=priority)
+                            self.navdata.setValue(NMEAParser.K_COG.getKey(), cog, source=source,
+                                                  priority=priority)
+            # add other decoders here
 
-        except:
+        except Exception as e:
             AVNLog.info("unable to decode json %s:%s" % (line, traceback.format_exc()))
 
     def _updateNmeaState(self):
@@ -525,7 +516,8 @@ class AVNCanboatHandler(AVNWorker):
         device=self._getConfig(self.P_CANBOATDEV)
         kind=self._getConfig(self.P_CANBOATKIND)
         param=self._getConfig(self.P_CANBOATPARAM)
-        if self._hasRust():
+        hasRust=self._hasRust()
+        if hasRust:
             if (device is None or device.strip() == "") and (param is None or not 'device' in param):
                 self._stopWithError(sequence, "no canboatDevice configured, stopping plugin")
             if (kind is None or kind.strip() == "") and (param is None or not 'kind' in param):
@@ -569,11 +561,15 @@ class AVNCanboatHandler(AVNWorker):
         rmcWatcher = threading.Thread(target=self.rmcWatcher, args=[sequence, source], daemon=True)
         rmcWatcher.start()
         priority = self._getConfig(self.P_PRIORITY)
+        #with version 9 canboat changed the time to be in seconds
+        #instead of the previous wire based value
+        #as we do not support canboat >= 9 in the classical version (and we do not have rust < 9)
+        #for us hasRust can be used to determine between versions < 9 and >= 9
         jCon=Connection(host=host, port=port,key=self.ST_JSON,
                             infoCb=self.setInfo,
                             callback=lambda l: self._handleJson(l, handledPGNs,
                                                                 readPos, source, priority,
-                                                                autoSendRMC, timeInterval))
+                                                                autoSendRMC, timeInterval,hasRust))
         self.connections.add(self.ST_JSON,jCon)
         jCon.start()
         if nmeaPort:
