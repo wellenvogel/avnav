@@ -37,7 +37,7 @@ import avnav_handlerList
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
 from avnav_util import AVNLog, SafePopen, MovingSum
-from avnav_worker import WorkerParameter, AVNWorker, WorkerStatus, ForwardInfoHandler, InfoHandler
+from avnav_worker import WorkerParameter, AVNWorker, WorkerStatus, ForwardInfoHandler, InfoHandler, WorkerKind
 from avnqueue import AVNQueue
 from socketbase import SocketReader
 
@@ -234,7 +234,7 @@ class AVNCanboatHandler(AVNWorker):
                              )
     P_SENDRMC = WorkerParameter('autoSendRMC', description='If no other RMC record is seen within this time in seconds, start sending it.\n'+
                                                            'Set 0 to disable RMC sending.',
-                                default=0, type=WorkerParameter.T_NUMBER)
+                                default=5, type=WorkerParameter.T_NUMBER)
     P_RMCTALKER= WorkerParameter('talkerId', description='The talker id used when sending RMC messages',
                                  default='GP')
     P_IV = WorkerParameter('timeInterval',
@@ -248,7 +248,7 @@ class AVNCanboatHandler(AVNWorker):
                                 'This allows to have minimal navigation functions even without enabling the NMEA0183 stream',
                                 default=True, type=WorkerParameter.T_BOOLEAN)
     P_PRIORITY = WorkerParameter('priority', description='Priority of for the channel.\n'+
-                                 'The priority is used for the NMEA messages\n.'
+                                 'The priority is used for the NMEA messages.\n'
                                  'The values directly received from N2K (if enabled) use this priority +1.',
                                  default=40,
                                  type=WorkerParameter.T_NUMBER)
@@ -267,7 +267,7 @@ class AVNCanboatHandler(AVNWorker):
                                     default='socketcan',
                                     condition={P_CANBOATTYPE.name:T_RUST})
     P_CANBOATPARAM= WorkerParameter('canboatParam',
-                                    description='Additional parameters for the canboat rust call.\n'+
+                                    description='Additional parameters for the canboat-rust call of "canboat server".\n'+
                                       'Refer to the documentation for more details.\n',
                                     default="",
                                     mandatory=False,
@@ -404,6 +404,10 @@ class AVNCanboatHandler(AVNWorker):
     @classmethod
     def canDisable(cls):
         return True
+
+    @classmethod
+    def getKind(cls):
+        return WorkerKind.CHANNEL
 
     def updateConfig(self, newValues,child=None):
         if child is None:
