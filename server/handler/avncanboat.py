@@ -300,6 +300,7 @@ class AVNCanboatHandler(AVNWorker):
                     if d.source != source or d.subsource == self.SUBSOURCE_NMEA:
                         self.lastRmc = time.monotonic()
                         break
+            #self.wait(0.1)
 
     def _stop(self):
         if self.process is not None:
