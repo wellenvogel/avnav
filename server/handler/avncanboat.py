@@ -229,7 +229,6 @@ class AVNCanboatHandler(AVNWorker):
                                     mandatory=False,
                                     default=T_LEGACY if os.environ.get('AVNAV_LEGACY_CANBOAT') == '1' else T_RUST,
                                     editable=False)
-    P_PORT = WorkerParameter('port', description='canbus json port', default=2598, type=WorkerParameter.T_NUMBER)
     P_HOST = WorkerParameter('host', description='canbus json host (default: localhost)',
                              default='localhost',
                              condition={P_CANBOATTYPE.name: T_LEGACY}
@@ -240,6 +239,10 @@ class AVNCanboatHandler(AVNWorker):
                                 'If you have enabled the NMEA connection you normally do not need this.\n'+
                                 'You can check the "decode" status if time and position are already received with this setting off.',
                                 default=False, type=WorkerParameter.T_BOOLEAN)
+    P_PORT = WorkerParameter('port', description='canbus json port',
+                             default=2598, type=WorkerParameter.T_NUMBER,
+                             condition={P_READPOS.name: True}
+                             )
     P_TIPGNS = WorkerParameter('timePGNs', description='PGNs used to set time',
                                default=DEFAULT_PGNS,
                                condition={P_READPOS.name: True})
@@ -307,7 +310,6 @@ class AVNCanboatHandler(AVNWorker):
         P_CANBOATDEV,
         P_CANBOATPARAM,
         P_HOST,
-        P_PORT,
         P_CANBOATNMEA,
         P_NMEAPORT,
         AVNWorker.FILTER_PARAM.copy(condition={
@@ -315,6 +317,7 @@ class AVNCanboatHandler(AVNWorker):
             P_CANBOATTYPE.name:T_RUST,
         }),
         P_READPOS,
+        P_PORT,
         P_SENDRMC,
         P_IV,
         P_TIPGNS,
