@@ -698,11 +698,15 @@ class AVNWorker(InfoHandler):
   def getId(self):
     return self.id
 
-  def getMainThreadId(self):
-      th=self.currentThread
-      if th is None:
-          return 0
-      return th.avnavId
+  def getAvNavThreadId(self):
+      '''
+      should only be called in the run method
+      to hand this over to child threads for calling shouldStop
+      When calling this in other threads it will return an arbitrary
+      value that is not known elsewhere.
+      :return:
+      '''
+      return self.__tlId.value()
 
   def getParam(self,child=None,filtered=False):
     if child is not None:
