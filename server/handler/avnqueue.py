@@ -270,7 +270,6 @@ class AVNQueue(AVNWorker):
     self.setInfo('main', "running", WorkerStatus.RUNNING)
     sequence=None
     while not self.shouldStop():
-      while True:
         self.wait(1)
 
 

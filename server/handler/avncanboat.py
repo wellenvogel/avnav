@@ -103,15 +103,19 @@ class Connection:
     def read(self):
         raise NotImplementedError("must be implemented")
     def _run(self):
+        AVNLog.info("canboat connection %s started for %s:%s",self._key,self._host,self._port)
         while not self._stop:
             try:
                 if self._socket is None:
                     self.connect()
+                if self._socket is None:
+                    raise Exception("not connected")
                 self.read()
             except Exception as e:
                 self.close()
                 self._info(self._key, f"{self._host}:{self._port}: {str(e)}", WorkerStatus.ERROR)
                 self._wait(3)
+        AVNLog.info("canboat connection %s stopped for %s:%s", self._key, self._host, self._port)
 
 class CallbackConnection(Connection):
     def __init__(self, host, port, key, infoHandler, callback):
@@ -366,6 +370,7 @@ class AVNCanboatHandler(AVNWorker):
                 cls.ENABLE_PARAM_DESCRIPTION.copy(default=False)]+cls.CONFIG_ALL
 
     def rmcWatcher(self, sequence, source):
+        AVNLog.info("canboat: rmcWatcher started")
         while sequence == self.changeSequence:
             seq = 0
             seq, data = self.queue.fetchFromHistory(sequence, 10, includeSource=True,
@@ -379,20 +384,22 @@ class AVNCanboatHandler(AVNWorker):
                         self.lastRmc = time.monotonic()
                         break
             self.wait(0.1)
+        AVNLog.info("canboat: rmcWatcher stopped")
 
     def _stop(self):
         if self.process is not None:
             try:
                 AVNLog.info("stopping process %s", self.process)
                 process=self.process
-                process.kill_all()
-                def wait_done():
-                    #catching the killed process to avoid defuncts
-                    while process.poll() is None:
-                        time.sleep(0.1)
-                    AVNLog.info("process %s finished", process)
-                waiter=threading.Thread(target=wait_done,daemon=True)
-                waiter.start()
+                if process is not None:
+                    process.kill_all()
+                    def wait_done():
+                        #catching the killed process to avoid defuncts
+                        while process.poll() is None:
+                            time.sleep(0.1)
+                        AVNLog.info("process %s finished", process)
+                    waiter=threading.Thread(target=wait_done,daemon=True)
+                    waiter.start()
                 self.process = None
             except Exception as e:
                 AVNLog.info("exception while stopping process %s: %s", self.process, repr(e))
@@ -438,9 +445,6 @@ class AVNCanboatHandler(AVNWorker):
         self.changeSequence += 1
         self._stop()
 
-    def stop(self):
-        self.changeSequence += 1
-        self._stop()
 
     def run(self):
         while not self.shouldStop():
@@ -448,8 +452,10 @@ class AVNCanboatHandler(AVNWorker):
                 self._runImpl()
             except Exception as e:
                 AVNLog.info("exception while running plugin %s: %s", self.process, repr(e))
-            self._stop()
-            self.wait(5)
+                raise e
+            finally:
+                self._stop()
+        AVNLog.info("canboat stopped")
 
     def _getConfig(self, cfg: WorkerParameter):
         return self.getWParam(cfg, False)
