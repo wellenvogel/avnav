@@ -550,12 +550,13 @@ class AVNApi(object):
       :return:
       '''
 
-  def safeSpawn(self, cmd_args, kill_signal=signal.SIGKILL, stdout_reader=None, stderr_reader=None,**kwargs):
+  def safeSpawn(self, cmd_args, kill_signal=None, stdout_reader=None, stderr_reader=None,**kwargs):
       """
           A drop-in replacement for subprocess.Popen that guarantees the child process
           is terminated when the parent process exits or is killed.
             :param cmd_args: The command and arguments to execute as a list.
             :param kill_signal: The signal to send to the child process when terminating it.
+                   Defaults to SIGKILL (SIGTERM on windows).
             :param kwargs: Additional keyword arguments to pass to subprocess.Popen.
             :param stdout_reader: Optional callable to read stdout lines in real-time.
             :param stderr_reader: Optional callable to read stderr lines in real-time.

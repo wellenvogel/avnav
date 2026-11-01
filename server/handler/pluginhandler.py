@@ -609,7 +609,7 @@ class ApiImpl(AVNApi):
         alarmhandler = self._getAlarmHandler()
         return list(alarmhandler.getAlarmsForApi(runningOnly=True).values())
 
-    def safeSpawn(self, cmd_args, kill_signal=signal.SIGKILL, **kwargs):
+    def safeSpawn(self, cmd_args, kill_signal=None, **kwargs):
         return SafePopen(cmd_args, kill_signal=kill_signal, **kwargs)
 
     def startAlarm(self, name,

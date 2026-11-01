@@ -452,9 +452,10 @@ class AVNCanboatHandler(AVNWorker):
             try:
                 self._runImpl()
             except Exception as e:
-                AVNLog.info("exception while running plugin %s: %s", self.process, repr(e))
+                AVNLog.info("exception while running canboat %s: %s", self.process, repr(e))
                 raise e
             finally:
+                self.changeSequence+=1
                 self._stop()
         AVNLog.info("canboat stopped")
 
