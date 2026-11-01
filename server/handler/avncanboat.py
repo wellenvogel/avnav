@@ -111,6 +111,7 @@ class Connection:
                 if self._socket is None:
                     raise Exception("not connected")
                 self.read()
+                raise Exception("read ended")
             except Exception as e:
                 self.close()
                 self._info(self._key, f"{self._host}:{self._port}: {str(e)}", WorkerStatus.ERROR)
