@@ -6,6 +6,8 @@ Avnav Releases
 ==============
 Das Verzeichnis mit allen Releases findet man [hier]({{DLLINK("release")}}).  
 
+Beta Versionen findet man unter [diesem Link]({{DLLINK("daily")}}).
+
 Hinweise
 --------
 

@@ -311,10 +311,10 @@ def define_env(env):
         if not base: 
             return ''
         if not sub:
-            return base
+            return add_lang(base, pageVariables.get(PV_LANG))
         if not base.endswith("/"):
             base+="/"
-        return base+sub
+        return add_lang(base+sub, pageVariables.get(PV_LANG))
 
     @env.macro
     def HPLINK(sub=None):
@@ -322,10 +322,10 @@ def define_env(env):
         if not base:
             return ''
         if not sub:
-            return base
+            return add_lang(base, pageVariables.get(PV_LANG))
         if not base.endswith("/"):
             base+="/"
-        return base+sub
+        return add_lang(base+sub, pageVariables.get(PV_LANG))
     
     
 def on_pre_page_macros(env):
