@@ -218,7 +218,8 @@ class Plugin(object):
         self.api.setStatus('STARTED', 'starting')
         self.api.setStatus('NMEA', 'running')
         while not self.api.shouldStopMainThread():
-            time.sleep(1)
+            self.api.sleep(5)
+        self.api.log("stopped")
 
     def short_path(self,path):
         if path is None:

@@ -828,9 +828,12 @@ class SafePopen(subprocess.Popen):
     def __init__(self, cmd_list, *args,
                  stdout_reader=None,
                  stderr_reader=None,
-                 kill_signal=signal.SIGKILL, **popen_kwargs):
+                 kill_signal=None, **popen_kwargs):
         self._job_handle = None
         self._current_os = platform.system().lower()
+        if kill_signal is None:
+            # signal.SIGKILL does not exist on windows
+            kill_signal = getattr(signal, 'SIGKILL', signal.SIGTERM)
         self._kill_signal = kill_signal
         self._stdoutReader = None
         self._stderrReader = None
@@ -890,11 +893,16 @@ class SafePopen(subprocess.Popen):
                 ]
 
             class JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
-                _fields_ = [("LimitFlags", wintypes.DWORD)]
+                # must match the full Win32 layout - otherwise SetInformationJobObject fails with ERROR_BAD_LENGTH
+                _fields_ = [("PerProcessUserTimeLimit", ctypes.c_int64), ("PerJobUserTimeLimit", ctypes.c_int64),
+                            ("LimitFlags", wintypes.DWORD),
+                            ("MinimumWorkingSetSize", ctypes.c_size_t), ("MaximumWorkingSetSize", ctypes.c_size_t),
+                            ("ActiveProcessLimit", wintypes.DWORD), ("Affinity", ctypes.c_size_t),
+                            ("PriorityClass", wintypes.DWORD), ("SchedulingClass", wintypes.DWORD)]
 
             class IO_COUNTERS(ctypes.Structure):
                 _fields_ = [("ReadOperationCount", ctypes.c_uint64), ("WriteOperationCount", ctypes.c_uint64),
-                            ("DataOperationCount", ctypes.c_uint64), ("ReadTransferCount", ctypes.c_uint64),
+                            ("OtherOperationCount", ctypes.c_uint64), ("ReadTransferCount", ctypes.c_uint64),
                             ("WriteTransferCount", ctypes.c_uint64), ("OtherTransferCount", ctypes.c_uint64)]
 
             class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
@@ -908,7 +916,7 @@ class SafePopen(subprocess.Popen):
             popen_kwargs["creationflags"] = user_creationflags | CREATE_SUSPENDED
 
             h_job = None
-            if self._kill_signal in (signal.SIGKILL, getattr(signal, 'SIGSTOP', None), signal.SIGTERM):
+            if self._kill_signal in (getattr(signal, 'SIGKILL', None), getattr(signal, 'SIGSTOP', None), signal.SIGTERM):
                 h_job = self._kernel32.CreateJobObjectW(None, None)
                 if not h_job:
                     raise ctypes.WinError(ctypes.get_last_error())

@@ -112,13 +112,18 @@ class ApiImpl(AVNApi):
         self.jsCssOnly = False
         self.internal = internal
         self.directory = directory
-        self.thread = None
+        self.thread = None #type: WorkerThread|None
+        self.threadId=WorkerThreadId()
         self.plugin = None
         self.proxy = None
         self.stopped = False
         self.dirtype = dirtype
         self.version = None
+        self.condition= threading.Condition()
 
+    def _wake(self):
+        with self.condition:
+            self.condition.notify_all()
     def isEnabled(self):
         return AVNUtil.getBool(self.getConfigValue(AVNPluginHandler.ENABLE_PARAMETER.name), True)
 
@@ -196,12 +201,14 @@ class ApiImpl(AVNApi):
         try:
             if self.stopHandler is not None:
                 self.thread = None
+                self._wake()
                 self.stopHandler()
             else:
                 running = self.thread
                 try:
                     # if the plugin is using shouldStopMainThread
                     self.thread = None
+                    self._wake()
                 except:
                     pass
                 if running is not None and running.is_alive():
@@ -543,12 +550,20 @@ class ApiImpl(AVNApi):
                                            and len(self.editables) > 0)
                                        )
 
-    def shouldStopMainThread(self):
-        current = threading.get_ident()
+    def shouldStopMainThread(self,threadId=None):
+        if threadId is None:
+            threadId=self.threadId.value()
         running = self.thread
         if running is None:
             return True
-        return running.ident != current
+        return running.avnavId != threadId
+
+    def getAvNavThreadId(self):
+        return self.threadId.value()
+
+    def sleep(self, timeout):
+        with self.condition:
+            self.condition.wait(timeout)
 
     def sendRemoteCommand(self, command, param, channel=0):
         channelhandler = AVNWorker.findHandlerByName(AVNRemoteChannelHandler.getConfigName())
@@ -594,7 +609,7 @@ class ApiImpl(AVNApi):
         alarmhandler = self._getAlarmHandler()
         return list(alarmhandler.getAlarmsForApi(runningOnly=True).values())
 
-    def safeSpawn(self, cmd_args, kill_signal=signal.SIGKILL, **kwargs):
+    def safeSpawn(self, cmd_args, kill_signal=None, **kwargs):
         return SafePopen(cmd_args, kill_signal=kill_signal, **kwargs)
 
     def startAlarm(self, name,
@@ -713,6 +728,7 @@ class ApiImpl(AVNApi):
             if current.is_alive():
                 return
             self.thread = None
+            self._wake()
         enabled = self.isEnabled()
         if not enabled:
             AVNLog.info("plugin %s is disabled by config", self.prefix)
@@ -732,14 +748,16 @@ class ApiImpl(AVNApi):
             self.setStatus(WorkerStatus.ERROR, 'no plugin could be created')
             return
         AVNLog.info("starting plugin %s", self.prefix)
-        thread = threading.Thread(target=self.runPlugin, args=[])
+        mainThreadId = threadIdGen.next()
+        thread = WorkerThread(avnavId=mainThreadId,target=self.runPlugin, args=[mainThreadId])
         thread.setDaemon(True)
         thread.setName("Plugin: %s" % (self.prefix))
         thread.start()
         self.thread = thread
 
-    def runPlugin(self):
+    def runPlugin(self,avnavId):
         self.log("run started")
+        self.threadId.set(avnavId)
         self.setStatus(WorkerStatus.INACTIVE, "plugin started")
         try:
             self.registerKeys()
@@ -773,9 +791,9 @@ class PluginApiProxy():
         self.__check = AVNApi()
         self.__name = name
 
-    def shouldStopMainThread(self):
+    def shouldStopMainThread(self,threadId=None):
         if self.__impl is not None:
-            return self.__impl.shouldStopMainThread()
+            return self.__impl.shouldStopMainThread(threadId)
         return True
 
     def __getattr__(self, item):

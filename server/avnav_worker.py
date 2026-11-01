@@ -39,6 +39,33 @@ from avnav_util import Enum, AVNLog
 import sys
 import os
 
+class WorkerId:
+    def __init__(self):
+        self.__id=0
+        self.__lock=threading.Lock()
+    def next(self):
+        with self.__lock:
+            self.__id += 1
+            return self.__id
+
+threadIdGen=WorkerId()
+
+
+class WorkerThreadId(threading.local):
+    def __init__(self,id=None):
+        if id is None:
+            id = threadIdGen.next()
+        self.__id=id
+    def set(self,id):
+        self.__id=id
+    def value(self):
+        return self.__id
+
+class WorkerThread(threading.Thread):
+    def __init__(self,avnavId=0, **kwargs):
+        super().__init__(**kwargs)
+        self.avnavId=avnavId
+
 
 class ParamValueError(Exception):
   pass
@@ -335,17 +362,6 @@ class WorkerStatus(object):
   def __str__(self) -> str:
     return "STATUS[%s] %s, %s"%(self.name,self.status,self.info)
 
-class WorkerId(object):
-  def __init__(self):
-    self.id=0
-    self.lock=threading.Lock()
-  def next(self):
-    self.lock.acquire()
-    try:
-      self.id+=1
-      return self.id
-    finally:
-      self.lock.release()
 
 def forceExit():
   time.sleep(8)
@@ -603,11 +619,12 @@ class AVNWorker(InfoHandler):
     self.param=cfgparam
     self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"created")}
     self.__statusLock=threading.Lock()
+    self.__tlId=WorkerThreadId()
     self.type=self.Type.DEFAULT
     self.queue=None
     self.configChanger=None #reference for writing back to the DOM
     self.condition=threading.Condition()
-    self.currentThread=None
+    self.currentThread=None #WorkerThread
     self.name=self.getName()
     self.usedResources=[]
     self.navdata=None
@@ -681,6 +698,15 @@ class AVNWorker(InfoHandler):
   def getId(self):
     return self.id
 
+  def getAvNavThreadId(self):
+      '''
+      should only be called in the run method
+      to hand this over to child threads for calling shouldStop
+      When calling this in other threads it will return an arbitrary
+      value that is not known elsewhere.
+      :return:
+      '''
+      return self.__tlId.value()
 
   def getParam(self,child=None,filtered=False):
     if child is not None:
@@ -792,13 +818,13 @@ class AVNWorker(InfoHandler):
   def deleteChild(self,child):
     raise Exception("delete child not allowed for %s"%self.getName())
 
-  def shouldStop(self):
-    current=self.currentThread
-    if current is None:
-      return True
-    if threading.get_ident() != current.ident:
-      return True
-    return False
+  def shouldStop(self,internalThreadId=None):
+      if internalThreadId is None:
+          internalThreadId=self.__tlId.value()
+      t=self.currentThread
+      if t is None:
+          return True
+      return t.avnavId != internalThreadId
 
   def timeChanged(self):
     '''
@@ -1020,7 +1046,8 @@ class AVNWorker(InfoHandler):
   def run(self):
     raise Exception("run must be overloaded")
 
-  def _runInternal(self):
+  def _runInternal(self,mainThreadId):
+    self.__tlId.set(mainThreadId)
     self.usedResources=[]
     AVNLog.info("run started")
     try:
@@ -1043,7 +1070,8 @@ class AVNWorker(InfoHandler):
     pass
   def startThread(self):
     AVNLog.info("starting %s with config %s", self.getName(), self.getConfigString())
-    self.currentThread = threading.Thread(target=self._runInternal, name=self.name or '')
+    mainThreadId=threadIdGen.next()
+    self.currentThread = WorkerThread(avnavId=mainThreadId,target=self._runInternal,args=[mainThreadId], name=self.name or '')
     self.currentThread.setDaemon(True)
     self.currentThread.start()
 

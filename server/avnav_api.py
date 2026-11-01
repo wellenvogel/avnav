@@ -408,14 +408,37 @@ class AVNApi(object):
     '''
     raise NotImplemented()
 
-  def shouldStopMainThread(self):
+  def shouldStopMainThread(self,threadId=None):
     '''
     check if the main thread of the plugin should stop
     this method will always return True if you call
     it from a different thread
+    @param threadId: if this is called outside the mainThread just pick the value
+                     from getMainThreadId in the beginning of run and use it here
     @return:
     '''
     raise NotImplemented()
+
+  def getAvNavThreadId(self):
+      '''
+      return the main thread id
+      you should only call this in your run method.
+      You can use the result as a parameter in shouldStopMainThread
+      If you call this from other threads.
+      Do not call this in other threads as it will return an arbitrary value
+      that is useless,
+      :return:
+      '''
+      raise NotImplemented()
+
+  def sleep(self,timeout):
+      '''
+      sleep method that will get interrupted
+      when the plugin should stop or change something
+      :param timeout: timeout in seconds
+      :return:
+      '''
+      raise NotImplemented()
 
   def deregisterUsbHandler(self,usbid=None):
     '''
@@ -527,12 +550,13 @@ class AVNApi(object):
       :return:
       '''
 
-  def safeSpawn(self, cmd_args, kill_signal=signal.SIGKILL, stdout_reader=None, stderr_reader=None,**kwargs):
+  def safeSpawn(self, cmd_args, kill_signal=None, stdout_reader=None, stderr_reader=None,**kwargs):
       """
           A drop-in replacement for subprocess.Popen that guarantees the child process
           is terminated when the parent process exits or is killed.
             :param cmd_args: The command and arguments to execute as a list.
             :param kill_signal: The signal to send to the child process when terminating it.
+                   Defaults to SIGKILL (SIGTERM on windows).
             :param kwargs: Additional keyword arguments to pass to subprocess.Popen.
             :param stdout_reader: Optional callable to read stdout lines in real-time.
             :param stderr_reader: Optional callable to read stderr lines in real-time.

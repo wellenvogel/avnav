@@ -1,20 +1,14 @@
 {
     "title":"Wellenvogel-AvNav",
     "headline": "Wellenvogel AvNav",
-    "headlineLink":"beschreibung.html",
+    "headlineLink":"../newDoc/latest/index.html",
+    "en_headlineLink":"../newDoc/latest/en/index.html",
     "menutitle": "AvNav",
     "navlist":[
-        {"title":"Einführung","en_title":"Introduction","url":"../docs/beschreibung.html"},
-        {"title":"Demo","url":"../docs/demo.html"},
-        {"title":"Quickstart","url":"../docs/quickstart.html"},
-        {"title":"Installation und Updates","en_title":"Installation and Updates","url":"../docs/install.html"},
-        {"title":"Karten","en_title":"Charts","url":"../docs/charts.html"},
-        {"title":"Benutzung","en_title":"Usage","url":"../docs/userdoc/index.html"},
-        {"title":"Android","url":"../docs/android.html"},
-        {"title":"Import und Export","en_title":"Import and Export","url":"../docs/userdoc/downloadpage.html"},
-        {"title":"Konfiguration und Anpassung","en_title":"Configuration and Adaptation","url":"../docs/hints/index.html"},
-        {"title":"Erweiterungen und Zusätze","en_title":"Extensions and AddOns","url":"../docs/hints/extensions.html"},
-        {"title":"Index","url":"../docs/docmap.html"}
-    
+        {"title":"Relase Seite","en_title":"Relase Page","url":"../newDoc/latest/installation/release.html","en_url":"../newDoc/latest/en/installation/release.html"},
+        {"title":"Relases","en_title":"Relases","url":"release"},
+        {"title":"Beta(Daily)","url":"daily"},
+        {"title":"OchartsNG Releases","url":"release-ochartsng"},
+        {"title":"OchartsNG Beta(Daily)","url":"daily-ochartsng"}
     ]
 }
