@@ -521,6 +521,7 @@ The [API](https://github.com/wellenvogel/avnav/blob/master/viewer/api/api.interf
 | --- | --- |
 | [registerUserButton](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L669) | Register a button with a callback function that is called on click. |
 | [showDialog](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L721) | Show a dialog. |
+| [editRoute](https://github.com/wellenvogel/avnav/blob/master/viewer/api/api.interface.ts) | Open a route in the route editor and show it on the chart, like Edit on the routes page. As context pass the event of your user button. The event of a dialog button does not work. |
 
 ### Buttons {: #userbutton }
 
