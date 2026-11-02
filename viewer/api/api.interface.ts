@@ -721,6 +721,20 @@ export interface ApiV2 extends Api{
     showDialog(dialog:DialogConfig,context:object):Promise<(()=>void)>
 
     /**
+     * open a route in the route editor (like Edit on the routes page)
+     * and show it on the chart
+     * @param name the name of the route, e.g. a route the plugin has written
+     *             to the routes directory on the server
+     * @param context the event object you got from the click on a user button
+     *                (it carries the page history)
+     *                the event from a button in a dialog does not carry it
+     *                so keep the event of your user button for this
+     * @returns a promise that rejects if the route cannot be loaded,
+     *          no chart is selected or the context is wrong
+     */
+    editRoute(name:string,context:object):Promise<void>
+
+    /**
      * write some data to the local storage
      * @param key a name
      * @param data {StoreData} undefined to remove the item

@@ -26,7 +26,7 @@ import Toast from "../components/Toast";
 import globalstore from "./globalstore";
 import keys from "./keys";
 import {ApiV2} from "./api.impl";
-import {CSSPRIORITIES, Index, loadJs, loadOrUpdateCss, urlToString} from "./helper";
+import {CSSPRIORITIES, getav, Index, loadJs, loadOrUpdateCss, urlToString} from "./helper";
 // @ts-ignore
 import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";
@@ -54,6 +54,13 @@ import {
     UserMapLayerCallback
 } from "../api/api.interface";
 import addons from "./Addons";
+// @ts-ignore
+import NavHandler from "../nav/navdata";
+import RouteEdit from "../nav/routeeditor";
+// @ts-ignore
+import mapholder from "../map/mapholder";
+import {PAGEIDS} from "./pageids";
+import {IHistory} from "./history";
 
 
 
@@ -124,6 +131,10 @@ class PluginApi extends ApiV2 {
 
     override showDialog(dialog:DialogConfig, context:object) {
         return this.#impl.showDialog(dialog, context);
+    }
+
+    override editRoute(name:string, context:object) {
+        return this.#impl.editRoute(name, context);
     }
 
 
@@ -373,6 +384,17 @@ class Plugin extends ApiV2{
             }
         }
         return this.manager.dialogStarter(context,dialog);
+    }
+
+    override async editRoute(name:string, context:object):Promise<void> {
+        //same as the edit action on the routes page (FileDialog)
+        const history:IHistory=getav(context).history;
+        if (! history) throw new Error("editRoute: no history in context, use the event of a user button");
+        if (mapholder.getCurrentChartEntry() === undefined) throw new Error("editRoute: no chart selected");
+        const route=await NavHandler.getRoutingHandler().fetchRoute(name);
+        const editor=new RouteEdit(RouteEdit.MODES.EDIT);
+        editor.setNewRoute(route,0);
+        history.push(PAGEIDS.ROUTE,{center:true});
     }
 
     override getLocalStorage(key:string, defaultv?:StoreData) {

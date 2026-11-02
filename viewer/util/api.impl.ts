@@ -262,6 +262,11 @@ export class ApiV2 extends ApiImpl implements ApiV2Intf {
         throw new Error("Method not implemented.");
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    editRoute(_name: string, _context: object): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+
     getLocalStorage(_key: string, _defaultv?: StoreData): StoreData {
         throw new Error("Method not implemented.");
     }
