@@ -1,0 +1,11 @@
+{
+    "title":"Wellenvogel-AvNav",
+    "headline": "Wellenvogel AvNav",
+    "headlineLink":"../newDoc/latest/index.html",
+    "en_headlineLink":"../newDoc/latest/en/index.html",
+    "menutitle": "AvNav",
+    "navlist":[
+        {"title":"Raspberry Pi","url":"../newDoc/latest/installation/raspberry.html","en_url":"../newDoc/latest/en/installation/raspberry.html"},
+        {"title":"Relase Seite","en_title":"Relase Page","url":"../newDoc/latest/installation/release.html","en_url":"../newDoc/latest/en/installation/release.html"}
+    ]
+}
