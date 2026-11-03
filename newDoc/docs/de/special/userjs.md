@@ -588,7 +588,7 @@ Das [API](https://github.com/wellenvogel/avnav/blob/master/viewer/api/api.interf
 | --- | --- |
 | [registerUserButton](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L669) | Registriere ein Button mit einer Callback-Funktion, die bei Click aufgerufen wird. |
 | [showDialog](https://github.com/wellenvogel/avnav/blob/66f12023f6f863fcbb24d18efe1ed40494421782/viewer/api/api.interface.ts#L721) | Zeige einen Dialog an. |
-| [editRoute](https://github.com/wellenvogel/avnav/blob/master/viewer/api/api.interface.ts) | Öffne eine Route im Routen-Editor und zeige sie auf der Karte an, wie Edit auf der Routen-Seite. Als context das Event des eigenen User-Buttons übergeben. Das Event eines Dialog-Buttons funktioniert nicht. |
+| [editRoute](https://github.com/wellenvogel/avnav/blob/master/viewer/api/api.interface.ts) | Öffne eine Route im Routen-Editor und zeige sie auf der Karte an, wie Edit auf der Routen-Seite. Als context das Event eines (AvNav-) Buttons übergeben. Also z.B. eines eigenen User-Buttons oder eines Dialog-Buttons. |
 
 ### Buttons {: #userbutton }
 
