@@ -17,7 +17,7 @@ import {
 } from '../components/OverlayDialog';
 import Compare from "../util/compare";
 import {AisInfoWithFunctions, aisNearestAction} from "../components/AisInfoDisplay";
-import Helper, {avitem} from "../util/helper";
+import Helper, {avitem, getav} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
 import {useHistory} from "../components/HistoryProvider";
@@ -28,7 +28,7 @@ import {scrollInContainer} from "../util/UiHelper";
 import cloneDeep from "clone-deep";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import AisPageButtons from "./AisPageButtons";
-import {ButtonDef, updateButtons} from "../components/Button";
+import {ButtonDef, ButtonEvent, updateButtons} from "../components/Button";
 import { AisProxyItem } from '../nav/aistypes';
 import {StoreKeys} from "../api/api.interface";
 import {getPageTitle} from "../components/pagetitles";
@@ -421,7 +421,7 @@ export const AisButtonActions = ({nearestAction}:AisButtonActionParam) => {
             }
         },
         AisSort: {
-            onClick: sortDialog
+            onClick: (ev:ButtonEvent)=>sortDialog(getav(ev)?.dialogContext)
 
         },
         AisLock: {

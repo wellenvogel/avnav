@@ -1,4 +1,4 @@
-import React, {useCallback, useRef} from 'react';
+import React, {SyntheticEvent, useCallback, useRef} from 'react';
 import {useKeyEventHandlerPlain, useTimer} from '../util/UiHelper';
 import {DynamicProps, dynamicWrapper, Options,UpdateFunction, useStore, useStoreState} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
@@ -13,7 +13,7 @@ import {KeyComponents} from "../util/keyhandler";
 import {ButtonBase, StoreKeys} from "../api/api.interface";
 
 
-export type ButtonEventBase=Record<string, any>;
+export interface ButtonEventBase extends SyntheticEvent ,Record<string, any>{}
 export interface ButtonEvent extends ButtonEventBase {
     avnav?:{
         dialogContext: IDialogContext;

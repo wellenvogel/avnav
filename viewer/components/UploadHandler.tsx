@@ -23,7 +23,7 @@
  ###############################################################################
  */
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import Button, {ButtonEvent, ButtonEventHandler} from "./Button";
+import Button, {ButtonEventHandler} from "./Button";
 import Requests, {prepareUrl} from "../util/requests";
 import AndroidEventHandler from "../util/androidEventHandler";
 import {IDialogContext, useDialogContext} from "./DialogContext";
@@ -76,8 +76,8 @@ export const uploadClick=(callback:(e:UploadEvent)=>void,type?:string)=>{
         fi.setAttribute('accept', type);
     }
     document.body.appendChild(fi);
-    fi.addEventListener('change', (e:UploadEvent) => {
-        callback(e);
+    fi.addEventListener('change', (e:Event) => {
+        callback(e as UploadEvent);
     })
     fi.click();
 }
@@ -345,7 +345,7 @@ export const useUploadHelperHandler =(
     const [uploadFile, setUploadFile] = useState(undefined);
     const clickHandler = async () => {
         const allowed = extensionListToAccept(await actions.getAllowedExtensions());
-        uploadClick((ev: ButtonEvent) => {
+        uploadClick((ev: UploadEvent) => {
             ev.preventDefault();
             setUploadFile(ev.target.files[0]);
         }, allowed);

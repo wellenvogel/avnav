@@ -26,7 +26,7 @@ import LayoutHandler from '../util/layouthandler';
 import EulaDialog from './EulaDialog';
 // @ts-ignore
 import EditOverlaysDialog from './EditOverlaysDialog';
-import Helper, {concatsp, injectav} from "../util/helper";
+import Helper, {concatsp, getav} from "../util/helper";
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import {DynamicTitleIcons} from "./TitleIcons";
 import ButtonList from "./ButtonList";
@@ -163,10 +163,10 @@ const WidgetContainer=(wcprops:WidgetContainerProps)=> {
                       }}
                       itemList={panelItems.list}
                       onItemClick={(ev) => {
-                          const avev = injectav(ev);
-                          avev.avnav.panelName = panelItems.name;
-                          avev.avnav.invertEditDirection = invertEditDirection;
-                          wcprops.onItemClick(avev);
+                          const avnavdata = getav(ev);
+                          avnavdata.panelName = panelItems.name;
+                          avnavdata.invertEditDirection = invertEditDirection;
+                          wcprops.onItemClick(ev);
                       }}
                       onClick={() => {
                           EditWidgetDialog.createDialog(undefined, layoutPage, panelItems.name, {

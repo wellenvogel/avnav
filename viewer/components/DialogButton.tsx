@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useRef} from 'react';
 import {useKeyEventHandlerPlain} from '../util/UiHelper';
 import {DialogKeyComponents} from '../util/keyhandler';
 import {concatsp, setav} from "../util/helper";
@@ -22,6 +22,7 @@ export interface DialogButtonProps extends Options,ButtonBase{
 const COMPONENT=DialogKeyComponents.DIALOGBUTTON;
 const DialogButton=(props:DialogButtonProps)=>{
         const dialogContext=useDialogContext();
+        const bref=useRef<HTMLDivElement>(null);
     // eslint-disable-next-line prefer-const
         let {icon,longText,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,iconClass,...forward}=useStore(props);
         const add:Record<string, any> = {};
@@ -47,11 +48,14 @@ const DialogButton=(props:DialogButtonProps)=>{
             if (onClick) onClick(ev,dialogContext);
         };
         useKeyEventHandlerPlain(props.name,COMPONENT,()=>{
-            if ( ! disabled && visible !== false) clickHandler({});
+            if ( ! disabled && visible !== false && bref.current){
+                bref.current.dispatchEvent(new CustomEvent('click'));
+            }
         });
         if (visible === false) return null;
         return (
             <div
+                ref={bref}
                 {...forward}
                 {...add}
                 {...style}

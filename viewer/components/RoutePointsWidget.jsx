@@ -11,7 +11,7 @@ import WaypointItem from './WayPointItem.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.ts';
 import GuiHelper from '../util/GuiHelpers.js';
 import {WidgetFrame} from "./WidgetBase";
-import {injectav} from "../util/helper";
+import {getav} from "../util/helper";
 import {WidgetProps} from "../util/types";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
@@ -50,11 +50,11 @@ const RoutePointsWidget = (props) => {
                 scrollable={true}
                 onItemClick={(ev) => {
                     if (props.onClick) {
-                        const avev = injectav(ev);
-                        if (avev.avnav.item) {
-                            avev.avnav.point=new routeobjects.RoutePoint(avev.avnav.item)
-                            delete avev.avnav.item; //let the container fill this
-                            props.onClick(avev);
+                        const av = getav(ev);
+                        if (av.item) {
+                            av.point=new routeobjects.RoutePoint(av.item)
+                            delete av.item; //let the container fill this
+                            props.onClick(ev);
                         }
                     }
                 }}

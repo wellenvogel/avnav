@@ -294,16 +294,19 @@ export const isObject = (value:any) => {
         && !(value instanceof Set)
         && !(value instanceof Map)
 }
+const avnavKey=Symbol();
 export const injectav=(obj:any)=>{
     if (obj === undefined){ obj={};}
     if (! isObject(obj)){ throw new Error("expecting an object or undefined for injectav, found "+typeof(obj)+ ": "+obj);}
-    if (obj.avnav === undefined){ obj.avnav = {};}
-    if (! isObject(obj.avnav)){ throw new Error("injectav: avnav exists, no object: "+typeof(obj.avnav)) ;}
+    if (obj[avnavKey] === undefined){
+        Object.defineProperty(obj,avnavKey,{value:{},writable:true});
+    }
+    if (! isObject(obj[avnavKey])){ throw new Error("injectav: avnav exists, no object: "+typeof(obj[avnavKey])) ;}
     return obj;
 }
 export const getav=(obj:any)=>{
     const av=injectav(obj);
-    return av.avnav;
+    return av[avnavKey];
 }
 export const avitem=(obj:any,itemName='item',defaultv={})=>{
     const rt=getav(obj)[itemName];
@@ -313,7 +316,7 @@ export const avitem=(obj:any,itemName='item',defaultv={})=>{
 export const setav=(obj:any,avdata:Record<string, any>)=>{
     if (! isObject(avdata)){ throw new Error("setav: expecting an object as data, got "+typeof(avdata)+": "+avdata);}
     const av=injectav(obj);
-    av.avnav={...av.avnav,...avdata};
+    av[avnavKey]={...av[avnavKey],...avdata};
     return av;
 }
 
