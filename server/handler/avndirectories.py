@@ -28,9 +28,12 @@
 #
 ###############################################################################
 import os.path
+import shutil
 
-from avnav_manager import *
-from avnav_worker import *
+import avnav_handlerList
+from avnav_manager import AVNHandlerManager
+from avnav_util import AVNLog, AVNJsDownload
+from avnav_worker import WorkerKind
 from avndirectorybase import AVNDirectoryHandlerBase
 from httpserver import AVNHttpServer
 
@@ -162,15 +165,15 @@ class AVNIconHandler(AVNDirectoryHandlerBase):
     return cls.PREFIX
 
   @classmethod
-  def canDelete(self):
+  def canDelete(cls):
     return False
 
   @classmethod
-  def canUpload(self):
+  def canUpload(cls):
     return False
 
   @classmethod
-  def canDownload(self):
+  def canDownload(cls):
     return False
 
   def __init__(self,param):
@@ -188,11 +191,11 @@ class AVNIconHandler(AVNDirectoryHandlerBase):
 
   def listDirectory(self, includeDirs=False, baseDir=None, extension=None, scope=None, entryCallback=None):
       rt= super().listDirectory(False, baseDir, extension, scope=None, entryCallback=None)
-      for dir in ['default','legacy']:
-          sub=os.path.join(self.baseDir,dir)
+      for curdir in ['default','legacy']:
+          sub=os.path.join(self.baseDir,curdir)
           def updateItem(element):
-              element.url=element.url.replace(self.getPrefix(),self.getPrefix()+"/"+dir)
-              element.name=dir+"."+element.name
+              element.url=element.url.replace(self.getPrefix(),self.getPrefix()+"/"+curdir)
+              element.name=curdir+"."+element.name
               return True
           if os.path.isdir(sub):
             subdata = super().listDirectory(False, sub, extension,entryCallback=updateItem)

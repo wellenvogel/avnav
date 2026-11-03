@@ -25,12 +25,14 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import socket
-from socketbase import *
+import threading
+import traceback
 
 import avnav_handlerList
-from avnav_nmea import *
-from avnav_worker import *
-from avnav_util import MovingSum
+from avnav_store import AVNStore
+from avnav_util import AVNLog
+from avnav_worker import AVNWorker, WorkerParameter, WorkerKind, WorkerStatus, SubInfoHandler
+from socketbase import SocketReader
 
 
 #a Worker to read from a remote NMEA source via a socket

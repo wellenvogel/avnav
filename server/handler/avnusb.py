@@ -24,9 +24,18 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-from serialwriter import *
-from avnserial import *
+import threading
+import time
+import traceback
+
 import avnav_handlerList
+from avnav_util import AVNLog
+from avnav_worker import TrackingInfoHandler, InfoHandler, WorkerStatus, SubInfoHandler, AVNWorker, WorkerParameter, \
+    WorkerKind, UsedResource
+from avnqueue import AVNQueue
+from avnserial import SerialReader
+from serialwriter import SerialWriter
+
 hasUdev=False
 try:
   import pyudev
@@ -110,7 +119,7 @@ class UsbSerialHandler(USBInfoHandler):
     if self.serialHandler:
       self.serialHandler.stopHandler()
     with self.lock:
-      self.lock.notifyAll()
+      self.lock.notify_all()
     start=time.monotonic()
     while (time.monotonic() < (start+0.2)):
       if not self.isRunning:

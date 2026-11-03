@@ -24,20 +24,29 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import datetime
 import importlib.util
 import inspect
+import json
+import os
+import re
 import shutil
+import threading
+import time
+import traceback
 import urllib.parse
 from typing import Dict
 from zipfile import ZipFile
 
 import avnav_handlerList
-import avnav_util
 from alarmhandler import AVNAlarmHandler, AlarmConfig, AlarmInfo
 from avnav_api import AVNApi, ConverterApi
 from avnav_manager import AVNHandlerManager
-from avnav_util import *
-from avnav_worker import *
+from avnav_nmea import NMEAParser
+from avnav_store import AVNStore
+from avnav_util import AVNUtil, AVNLog, SafePopen, AVNStringDownload, AVNJsDownload, plainUrlToPath, AVNFileDownload, \
+    AVNZipDownload
+from avnav_worker import WorkerThreadId, WorkerParameter, WorkerStatus, threadIdGen, WorkerThread, WorkerKind
 from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
 from avnremotechannel import AVNRemoteChannelHandler
 from avnusb import AVNUsbSerialReader
@@ -458,7 +467,7 @@ class ApiImpl(AVNApi):
 
     def timestampFromDateTime(self, dt=None):
         if dt is None:
-            dt = datetime.datetime.utcnow()
+            dt = datetime.datetime.now(datetime.UTC)
         return AVNUtil.datetimeToTsUTC(dt)
 
     def getDataDir(self):
@@ -1182,7 +1191,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             url = self.PREFIX + "/" + name
             addCode = "var AVNAV_PLUGIN_NAME=\"%s\";\n" % (name)
             return AVNJsDownload(fname, url, addCode)
-        fname = os.path.join(api.directory, avnav_util.plainUrlToPath(internalPath))
+        fname = os.path.join(api.directory, plainUrlToPath(internalPath))
         if api.dirtype != self.D_USER:
             return AVNFileDownload(fname)
         if not os.path.isfile(fname):

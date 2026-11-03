@@ -32,8 +32,8 @@ import hashlib
 import time
 
 import avnav_handlerList
-from avnav_nmea import *
-from avnav_worker import *
+from avnav_util import AVNLog, AVNUtil, AVNDownloadError
+from avnav_worker import AVNWorker, WorkerKind, WorkerStatus
 from httpserver import AVNHttpServer
 
 

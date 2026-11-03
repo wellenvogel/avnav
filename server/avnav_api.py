@@ -22,7 +22,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 ###############################################################################
-import signal
 
 
 class ConverterApi:

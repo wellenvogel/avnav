@@ -24,14 +24,19 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
+import datetime
+import json
+import os
 import shutil
+import sys
+import threading
+import traceback
 import xml.dom as dom
 import xml.dom.minidom as parser
 
 import avnav_handlerList
-from avnav_util import *
-from avnav_worker import *
+from avnav_util import AVNLog, AVNUtil, AVNFileDownloadLB, Enum
+from avnav_worker import UsedResource, forceExit
 
 
 class ConfigChanger(object):
@@ -308,7 +313,7 @@ class AVNHandlerManager(IHandlerManager):
       return cfgname+".ok"
   @classmethod
   def getInvalidName(cls,fileName):
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.UTC)
     return fileName + ".invalid-" + now.strftime("%Y%m%d%H%M%S")
 
   def isDisabled(self):
@@ -515,7 +520,7 @@ class AVNHandlerManager(IHandlerManager):
           AVNLog.errorOut("unable to remove old cfg file %s:%s",full,traceback.format_exc())
 
   def getBackupName(self,fileName):
-    now=datetime.datetime.utcnow()
+    now=datetime.datetime.now(datetime.UTC)
     return fileName+"-"+now.strftime("%Y%m%d%H%M%S")
 
 

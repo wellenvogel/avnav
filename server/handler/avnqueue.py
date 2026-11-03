@@ -24,10 +24,13 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import threading
+import time
 
-from avnav_worker import *
-from avnav_util import MovingSum
+from avnav_nmea import NMEAParser
+from avnav_util import MovingSum, AVNLog
 import avnav_handlerList
+from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus, InfoHandler
 
 
 class NmeaEntry(object):
@@ -104,7 +107,7 @@ class AVNQueue(AVNWorker):
     super().stop()
     self.listlock.acquire()
     try:
-      self.listlock.notifyAll()
+      self.listlock.notify_all()
     finally:
       self.listlock.release()
 
@@ -144,7 +147,7 @@ class AVNQueue(AVNWorker):
   def wakeUp(self):
     super().wakeUp()
     with self.listlock:
-      self.listlock.notifyAll()
+      self.listlock.notify_all()
 
   #fetch entries from the history
   #only return entries with higher sequence

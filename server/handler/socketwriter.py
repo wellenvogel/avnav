@@ -25,13 +25,16 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import socket
-
-from avnavavahi import AVNAvahi
-from socketbase import *
+import threading
+import traceback
 
 import avnav_handlerList
-from avnav_nmea import *
-from avnav_worker import *
+from avnav_store import AVNStore
+from avnav_util import AVNLog, AVNUtil
+from avnav_worker import AVNWorker, WorkerParameter, WorkerKind, TrackingInfoHandler, SubInfoHandler, WorkerStatus, \
+    UsedResource
+from avnavavahi import AVNAvahi
+from socketbase import SocketReader
 
 
 #a worker to output data via a socket
@@ -164,7 +167,7 @@ class AVNSocketWriter(AVNWorker):
     tinfo.deleteInfo(infoName)
 
   def clientRead(self,connection,addr,startSequence):
-    threading.currentThread().setName("%s-Reader-%s"%(self.getName(),str(addr)))
+    threading.current_thread().setName("%s-Reader-%s"%(self.getName(),str(addr)))
     #on each newly connected socket we recompute the filter
     ownsource=self.getSubSource(addr) if not self.getWParam(self.REPLY_RECEIVED) else None
     connection.readSocket(

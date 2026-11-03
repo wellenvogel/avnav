@@ -26,6 +26,11 @@
 ###############################################################################
 import socket
 import struct
+import traceback
+
+from avnav_util import AVNLog
+from avnav_worker import AVNWorker, WorkerParameter, WorkerKind, UsedResource, WorkerStatus
+from socketbase import SocketReader
 
 hasNetifaces=False
 try:
@@ -34,11 +39,7 @@ try:
 except:
   pass
 
-from socketbase import *
-
 import avnav_handlerList
-from avnav_nmea import *
-from avnav_worker import *
 
 
 #a Worker to read  NMEA source from a udp socket

@@ -25,11 +25,13 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
 import socket
+import traceback
+
 import avnav_handlerList
+from avnav_util import AVNLog
+from avnav_worker import AVNWorker, WorkerParameter, WorkerKind, WorkerStatus
 from avnqueue import Fetcher
-from socketbase import *
 
 
 #a worker to output data via a UDP socket

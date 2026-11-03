@@ -25,13 +25,14 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import os
+import threading
 import time
+import traceback
 
-from serial.serialutil import SerialBase
-
-from avnav_util import *
-from avnav_nmea import *
-from avnav_worker import *
+from avnav_nmea import NMEAParser
+from avnav_util import AVNUtil, AVNLog, MovingSum
+from avnav_worker import WorkerParameter, AVNWorker, InfoHandler, TrackingInfoHandler, WorkerStatus, UsedResource, \
+    WorkerKind
 from avnqueue import AVNQueue
 
 hasSerial=False
@@ -135,7 +136,7 @@ class SerialReader(object):
       AVNLog.debug("unable to close serial device: %s",str(e))
     try:
       with self.lock:
-        self.lock.notifyAll()
+        self.lock.notify_all()
     except Exception as e:
       AVNLog.debug("unable to stop serial reader: %s",str(e))
 

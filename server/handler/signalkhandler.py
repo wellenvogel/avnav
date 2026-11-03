@@ -91,7 +91,6 @@ import hashlib
 import hmac
 import json
 import os
-import posixpath
 import re
 import sys
 import threading
@@ -1503,7 +1502,7 @@ class AVNSignalKHandler(AVNWorker):
           else:
             AVNLog.info("prepare alarm %s on SK on (sk: none, local: own on)",skAlarm.skPath)
             self.deleteAndActivateActions.add(SKSendListEntry(skAlarm,False))
-      self.__alarmCondition.notifyAll()
+      self.__alarmCondition.notify_all()
 
   def webSocketMessage(self,data,socket,first):
     if first:

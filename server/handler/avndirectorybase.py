@@ -28,19 +28,19 @@
 #
 ###############################################################################
 import io
-import json
-import shutil
 import os
-import urllib.request, urllib.parse, urllib.error
-from fileinput import filename
-from zipfile import ZipFile
+import threading
+import time
+import traceback
+import urllib.error
+import urllib.parse
+import urllib.request
 from typing import List
+from zipfile import ZipFile
 
-import avnav_util
 from avnav_manager import AVNHandlerManager
-from avnav_nmea import *
-from avnav_worker import *
-from avnav_util import AVNDownload
+from avnav_util import AVNLog, AVNUtil, AVNStreamDownload, plainUrlToPath, AVNFileDownload
+from avnav_worker import AVNWorker, WorkerStatus
 from httphandler import RequestException
 from httpserver import AVNHttpServer
 
@@ -55,9 +55,9 @@ class AVNDirectoryListEntry(object):
                 if value is not None and not key.startswith("_") and key not in self.getFilteredKeys())
 
   @classmethod
-  def getFilteredKeys(self):
+  def getFilteredKeys(cls):
     return []
-  def __init__(self,type,name,time=0,size=0,
+  def __init__(self,type,name,ftime=0,size=0,
                canDelete=False,isDirectory=False,canDownload=True,
                extension=None,scope=None,url=None,filename=None,
                userData=None,displayName=None,downloadName=None,
@@ -67,7 +67,7 @@ class AVNDirectoryListEntry(object):
     self.displayName=displayName
     self.type=type
     self.url=url
-    self.time=time
+    self.time=ftime
     self.size=size
     self.canDelete=canDelete
     self.isDirectory=isDirectory
@@ -182,11 +182,11 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def run(self):
     lastCleanup=0
     if not os.path.exists(self.baseDir):
-      AVNLog.info("creating user dir %s"%self.baseDir)
+      AVNLog.info("creating user dir %s" % self.baseDir)
       os.makedirs(self.baseDir)
     if not os.path.exists(self.baseDir):
       self.setInfo("main","unable to create %s"%self.baseDir,WorkerStatus.ERROR)
-      AVNLog.error("unable to create user dir %s"%self.baseDir)
+      AVNLog.error("unable to create user dir %s" % self.baseDir)
       return
     self.onPreRun()
     self.setInfo('main', "handling %s"%self.baseDir, WorkerStatus.NMEA)
@@ -194,7 +194,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
       try:
         self.periodicRun()
       except:
-        AVNLog.debug("%s: exception in periodic run: %s",self.getName(),traceback.format_exc())
+        AVNLog.debug("%s: exception in periodic run: %s", self.getName(), traceback.format_exc())
       now=time.monotonic()
       if (lastCleanup+3600) < now or lastCleanup > now:
         try:
@@ -242,7 +242,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
       return self.getPrefix()+"/"+urllib.parse.quote(name.encode('utf-8'))
 
   def listDirectory(self,includeDirs=False,baseDir=None,extension=None,scope=None,entryCallback=None):
-    # type: (bool,str,str|None,str|None) -> list[AVNDirectoryListEntry]
+    # type: (bool,str,str|None,str|None,str|None) -> list[AVNDirectoryListEntry]
     data = []
     if baseDir is None:
       baseDir=self.baseDir
@@ -381,7 +381,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     """
     #TODO: should we limit this to only one level?
     #we could use checkName and this way ensure that we only have one level
-    subPath= avnav_util.plainUrlToPath(path)
+    subPath= plainUrlToPath(path)
     (subPath,baseDir)=self.convertLocalPath(subPath)
     if subPath is None:
       return #not found

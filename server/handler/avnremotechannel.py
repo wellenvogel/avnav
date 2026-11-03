@@ -28,9 +28,10 @@ import socket
 import threading
 
 import avnav_handlerList
-from avnav_util import AVNLog, AVNUtil
+from avnav_util import AVNLog
 from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus, UsedResource
 from httpserver import WebSocketHandler
+
 
 class OurWebSocketHandler(WebSocketHandler):
   def __init__(self, handler,channel):
@@ -45,11 +46,11 @@ class OurWebSocketHandler(WebSocketHandler):
 
 
 class Channel(object):
-  def __init__(self,id,statusCallback,enabled=True):
+  def __init__(self,cid,statusCallback,enabled=True):
     self.connections=[]
     self.lock=threading.Lock()
     self.enabled=enabled
-    self.id=id
+    self.id=cid
     self.statusCallback=statusCallback
     self.numMessages=0
     self._setStatus()

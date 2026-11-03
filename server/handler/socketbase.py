@@ -24,16 +24,15 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-import socket
 import re
+import socket
+import time
+import traceback
 
-from avnav_nmea import *
-from avnav_worker import *
-from avnav_util import MovingSum
-
-  
-
-#a base class for socket readers and writers
+from avnav_nmea import NMEAParser
+from avnav_util import MovingSum, AVNUtil, AVNLog
+from avnav_worker import WorkerParameter, InfoHandler, TrackingInfoHandler, WorkerStatus
+# a base class for socket readers and writers
 from avnqueue import AVNQueue, Fetcher
 
 
@@ -173,7 +172,6 @@ class SocketReader(object):
     '''
     write method
     there is no stop handling so the socket must be closed from another thread
-    :param infoName:
     :param filterstr:
     :param version:
     :param blacklist:

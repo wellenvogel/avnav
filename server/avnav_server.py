@@ -26,13 +26,14 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import datetime
+import glob
 import logging.handlers
 import optparse
 import signal
 
+from avnav_nmea import NMEAParser
 from handler.baseconfig import AVNBaseConfig
 from httpserver import AVNHttpServer
-from avnav_nmea import NMEAParser
 
 try:
   import create_overview

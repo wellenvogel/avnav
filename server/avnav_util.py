@@ -327,7 +327,7 @@ class AVNUtil(object):
         if dt is None:
             return None
         # subtract the EPOCH
-        td = (dt - datetime.datetime(1970, 1, 1, tzinfo=None))
+        td = (dt - datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC))
         ts = ((td.days * 24 * 3600 + td.seconds) * 10 ** 6 + td.microseconds) / 1e6
         return ts
 
@@ -339,7 +339,7 @@ class AVNUtil(object):
     # now timestamp in utc
     @classmethod
     def utcnow(cls):
-        return cls.datetimeToTsUTC(datetime.datetime.utcnow())
+        return cls.datetimeToTsUTC(datetime.datetime.now(datetime.UTC))
 
     @classmethod
     def utctomonotonic(cls, utcts):

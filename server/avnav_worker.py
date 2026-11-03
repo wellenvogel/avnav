@@ -30,11 +30,9 @@ from __future__ import annotations
 import copy
 import os
 import re
-import sys
 import threading
 import time
 import traceback
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

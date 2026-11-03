@@ -24,6 +24,14 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import re
+import socket
+import threading
+import traceback
+
+from avnav_util import AVNLog
+from avnav_worker import AVNWorker, WorkerParameter, WorkerKind, WorkerStatus, SubInfoHandler
+from socketbase import SocketReader
 
 hasBluetooth=False
 
@@ -32,7 +40,6 @@ try:
   hasBluetooth=True
 except:
   pass
-from socketbase import *
 import avnav_handlerList
 
 if hasBluetooth:

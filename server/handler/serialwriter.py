@@ -24,16 +24,15 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import threading
 import traceback
 
-import time
-
-from avnqueue import AVNQueue, Fetcher
-from avnserial import *
 import avnav_handlerList
 from avnav_nmea import NMEAParser
-from avnav_util import AVNLog
-from avnav_worker import AVNWorker
+from avnav_util import AVNLog, MovingSum
+from avnav_worker import WorkerParameter, AVNWorker, InfoHandler, WorkerStatus, UsedResource, WorkerKind
+from avnqueue import Fetcher, AVNQueue
+from avnserial import SerialReader
 
 hasSerial=False
 

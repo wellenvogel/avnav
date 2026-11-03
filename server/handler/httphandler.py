@@ -1,15 +1,15 @@
-import http.server
 import cgi
-import json
-import os
+import http.server
 import posixpath
 import re
 import threading
 import traceback
-import urllib.request, urllib.parse, urllib.error
+import urllib.error
 import urllib.parse
+import urllib.parse
+import urllib.request
 
-from avnav_util import AVNUtil, AVNLog, AVNDownload, AVNStringDownload, Encoder, AVNJsonDownload
+from avnav_util import AVNUtil, AVNLog, AVNDownload, AVNJsonDownload
 from avnav_websocket import HTTPWebSocketsHandler
 
 
@@ -116,7 +116,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
           length = int(self.headers.get('content-length'))
           if length > maxlen:
               raise Exception("too much data" + str(length))
-          postvars = cgi.parse_qs(self.rfile.read(length).decode('utf-8'), keep_blank_values=1)
+          postvars = urllib.parse.parse_qs(self.rfile.read(length).decode('utf-8'), keep_blank_values=True)
       elif ctype == 'application/json':
           length = int(self.headers.get('content-length'))
           if length > maxlen:

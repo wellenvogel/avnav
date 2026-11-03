@@ -24,15 +24,12 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
-import json
-
-import time
+import os
 
 import avnav_handlerList
-from avnav_worker import AVNWorker
 from avnav_manager import AVNHandlerManager
-from avndirectorybase import *
-from avnav_util import *
+from avnav_worker import WorkerKind
+from avndirectorybase import AVNScopedDirectoryHandler
 
 TYPE="settings"
 PREFIX="/settings"

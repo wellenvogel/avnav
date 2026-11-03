@@ -25,7 +25,6 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
 import avnav_handlerList
-from avnav_handlerList import findHandlerByConfigName
 from avnav_store import AVNStore
 from avnav_worker import AVNWorker, WorkerParameter, WorkerKind, WorkerStatus
 from baseconfig import AVNBaseConfig

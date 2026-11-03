@@ -25,10 +25,18 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
+import datetime
+import logging
 import os
+import re
+import sys
+import threading
+import time
 import traceback
 
-from avnav_store import *
+from avnav_store import AVNStore
+from avnav_util import AVNUtil, AVNLog
+
 hasAisDecoder=False
 try:
   import ais
@@ -237,7 +245,7 @@ class NMEAParser(object):
     gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'))
     AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
     if gpsdate is None:
-      curdt=datetime.datetime.utcnow()
+      curdt=datetime.datetime.now(datetime.UTC)
       gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
       AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
       #now correct the time if we are just changing from one day to another
@@ -752,7 +760,6 @@ class NMEAParser(object):
     '''
 
     :param value:
-    :param type:
     :return:
     '''
     #see e.g. https://gpsd.gitlab.io/gpsd/NMEA.html#_xdr_transducer_measurement

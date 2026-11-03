@@ -24,15 +24,22 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
+import datetime
 import glob
 import gzip
 import io
 import os
+import re
+import threading
+import time
+import traceback
 
 import avnav_handlerList
 from avnav_manager import AVNHandlerManager
-from avndirectorybase import *
+from avnav_store import AVNStore
+from avnav_util import AVNUtil, AVNLog, AVNFileDownload, AVNFileDownloadLB, AVNStreamDownload
+from avnav_worker import WorkerParameter, WorkerKind, WorkerStatus
+from avndirectorybase import AVNDirectoryHandlerBase
 
 
 class TrackPoint:
@@ -134,7 +141,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     return fstr
   def cleanupTrack(self):
     numremoved=0
-    cleanupTime=datetime.datetime.utcnow()-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
+    cleanupTime=datetime.datetime.now(datetime.UTC)-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
     with self.tracklock:
       while len(self.track) > 0:
         if self.track[0].ts<=cleanupTime:
@@ -203,7 +210,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
           if curts is None or tp.ts > (curts + intervaldt):
             rt.append(tp.getFormatted())
             curts=tp.ts
-      except:
+      except Exception as e:
         pass
     return rt[-maxnum:]
   #read in a track file (our csv syntax)
@@ -326,7 +333,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     and the cleanup time
     @return:
     '''
-    currentTime = datetime.datetime.utcnow()
+    currentTime = datetime.datetime.now(datetime.UTC)
     timelist=[currentTime]
     nextTime=currentTime-datetime.timedelta(days=1)
     minTime=currentTime-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
@@ -342,7 +349,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def _readTrackDataFromFiles(self):
     self.track=[]
     fnames=self._getNecessaryNames()
-    currentTime = datetime.datetime.utcnow()
+    currentTime = datetime.datetime.now(datetime.UTC)
     minTime=currentTime-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
     for fname in fnames:
       realfilename = self._nameToFullName(fname,self.WEXT)
@@ -422,7 +429,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def periodicRun(self):
     try:
       self.loopCount+=1
-      currentTime = datetime.datetime.utcnow()
+      currentTime = datetime.datetime.now(datetime.UTC)
       curfname = self.createFileName(currentTime)
       newFile=False
       realfilename=None
@@ -534,7 +541,6 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       else:
           return AVNFileDownload(filename)
 
-      return super().handleDownload(name, handler, requestparam)
 
   def handleRename(self, name, newName, requestparam):
       name = self.checkName(name)

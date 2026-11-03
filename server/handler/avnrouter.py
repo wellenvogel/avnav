@@ -30,11 +30,10 @@ import math
 import os
 import sys
 
-import gpxpy098.parser as gpxparser
-from avnav_worker import AVNWorker,WorkerParameter
-
-from avnav_manager import AVNHandlerManager
-from avnav_util import AVNLog
+from avnav_nmea import NMEAParser
+from avnav_store import AVNStore
+from avnav_util import Enum
+from avnav_worker import WorkerParameter, WorkerKind
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","..","libraries"))
 
@@ -43,10 +42,10 @@ import avnav_handlerList
 
 class AVNRoutingLeg(object):
   MOBNAME="MOB" #the waypoint name fro MOB
-  def __init__(self,dict):
-    if dict is None:
-      dict={}
-    self.plain=dict
+  def __init__(self,dct):
+    if dct is None:
+      dct={}
+    self.plain=dct
     #TODO: some checks here
 
   def getFrom(self):

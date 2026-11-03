@@ -22,18 +22,27 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 ###############################################################################
+import datetime
 import hashlib
 import json
+import os
 import shutil
+import subprocess
+import sys
+import threading
+import time
+import traceback
+import zipfile
+from enum import Enum
 
 import avnav_handlerList
 from avnav_api import ConverterApi
 from avnav_manager import AVNHandlerManager
-from avnav_util import *
-from avnav_worker import *
+from avnav_util import AVNLog, AVNUtil, AVNDownloadError, AVNZipDownload, AVNFileDownloadLB, AVNFileDownload
+from avnav_worker import WorkerStatus, AVNWorker, WorkerParameter, WorkerKind
 from avndirectorybase import AVNDirectoryHandlerBase
 from httpserver import AVNHttpServer
-import zipfile
+
 
 class ExternalConverter(ConverterApi):
   def __init__(self,converter:ConverterApi,id):
@@ -867,14 +876,14 @@ class AVNImporter(AVNWorker):
       name=AVNUtil.getHttpRequestParam(requestparam,'name',True)
       candidate=self.findCandidate(name)
       if candidate is None:
-        return AVNDownloadError("item %s not found"%name)
+        return AVNDownloadError(404,"item %s not found"%name)
       dlfile=None
       if candidate.converter is not None:
         dlfile=candidate.converter.getOutFileOrDir(candidate.name)
       if dlfile is None:
-        return AVNDownloadError("no download for %s"%name)
+        return AVNDownloadError(404,"no download for %s"%name)
       if not os.path.exists(dlfile):
-        return AVNDownloadError("%s not found"%dlfile)
+        return AVNDownloadError(404,"%s not found"%dlfile)
       if os.path.isdir(dlfile):
         subDir=candidate.name
         if hasattr(candidate.converter,'getZipSubDir'):
@@ -925,16 +934,16 @@ class AVNImporter(AVNWorker):
         if running is not None and running.running:
           candidate=running.candidate
         if candidate is None:
-          rt=AVNDownloadError("no conversion running")
+          rt=AVNDownloadError(404,"no conversion running")
       else:
         candidate=self.findCandidate(name)
       if rt is None:
         if candidate is None:
-          rt=AVNDownloadError("%s not found"%name)
+          rt=AVNDownloadError(404,"%s not found"%name)
       if rt is None:
         logName=self.getLogFileName(candidate.name,True)
         if logName is None:
-          rt=AVNDownloadError("log for %s not found"%name)
+          rt=AVNDownloadError(404,"log for %s not found"%name)
         if rt is None:
           filename=os.path.basename(logName)
           rt=AVNFileDownloadLB(logName,lastBytes=lastBytes,dlname=filename)

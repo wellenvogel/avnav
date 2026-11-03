@@ -27,18 +27,15 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
-from math import floor
-
-import time
 
 import threading
-from typing import Set, Any, Dict
+import time
+from typing import Dict
 
 import avnav_handlerList
 from avnav_util import AVNLog, AVNUtil
 from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
-
-#taken from https://github.com/carlosefr/mdns-publisher/tree/master/mpublisher
+# taken from https://github.com/carlosefr/mdns-publisher/tree/master/mpublisher
 from httpserver import AVNHttpServer
 
 hasDbus=False

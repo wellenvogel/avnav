@@ -24,16 +24,15 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
-import shutil
 import traceback
-import urllib.request
 import urllib.parse
+import urllib.request
 from urllib.error import HTTPError
 
 import avnav_handlerList
 from avnav_util import AVNUtil, AVNLog, AVNProxyDownload, AVNDownloadError
 from avnav_worker import AVNWorker, WorkerStatus
-from httphandler import AVNHTTPHandler, RequestException
+from httphandler import AVNHTTPHandler
 
 
 class AVNProxy(AVNWorker):

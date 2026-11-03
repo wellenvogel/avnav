@@ -28,15 +28,13 @@
 import datetime
 import socket
 import struct
-import threading
 import time
 import traceback
 
 import avnav_handlerList
-from avnav_store import AVNStore
-from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
-from avnav_util import AVNLog, AVNUtil
 from avnav_nmea import NMEAParser
+from avnav_util import AVNLog, AVNUtil
+from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 
 
 class TimeSource(object):
@@ -82,7 +80,7 @@ class TimeSource(object):
   def formatTs(cls,ts):
     if ts is None:
       return "<none>"
-    return datetime.datetime.utcfromtimestamp(ts).isoformat()
+    return datetime.datetime.fromtimestamp(ts,datetime.UTC).isoformat()
 
 
 def getNTPTime(host = "pool.ntp.org"):
@@ -250,7 +248,7 @@ class AVNBaseConfig(AVNWorker):
       #query the data to get old entries being removed
       curutc=time.time()
       curmonotonic=time.monotonic()
-      self.setInfo(self.SYSTIME_CHILD,"UTC: %s"%datetime.datetime.utcfromtimestamp(curutc).isoformat(),WorkerStatus.RUNNING)
+      self.setInfo(self.SYSTIME_CHILD,"UTC: %s"%datetime.datetime.fromtimestamp(curutc,datetime.UTC).isoformat(),WorkerStatus.RUNNING)
       newDiffToMonotonic=curutc-curmonotonic
       delta =  newDiffToMonotonic-diffToMonotonic
       diffToMonotonic=newDiffToMonotonic
@@ -381,7 +379,7 @@ class AVNBaseConfig(AVNWorker):
                           TimeSource.formatTs(now),
                           checkSource.name,
                           TimeSource.formatTs(checkSource.externalTs))
-              curts=datetime.datetime.utcfromtimestamp(checkSource.getCurrent())
+              curts=datetime.datetime.fromtimestamp(checkSource.getCurrent(),datetime.UTC)
               newtime="%02d%02d%02d%02d%04d.%02d"%(curts.month,curts.day,curts.hour,curts.minute,curts.year,curts.second)
               cmd=[settimecmd,newtime]
               self.setInfo(self.TIME_CHILD,
@@ -402,7 +400,7 @@ class AVNBaseConfig(AVNWorker):
                 AVNLog.error("unable to set system time to %s , %d still above difference",newtime,newdiff)
                 self.setInfo(self.TIME_CHILD,
                              "unable to set system time to UTC %s (%s) from %s at UTC %s"%
-                             (curts.isoformat()," ".join(cmd),checkSource.name,datetime.datetime.utcfromtimestamp(curutc).isoformat()),
+                             (curts.isoformat()," ".join(cmd),checkSource.name,datetime.datetime.fromtimestamp(curutc,datetime.UTC).isoformat()),
                              WorkerStatus.ERROR)
               else:
                 self.setInfo(self.TIME_CHILD,
@@ -412,7 +410,7 @@ class AVNBaseConfig(AVNWorker):
               lastchecktime=curmonotonic
             else:
               self.setInfo(self.TIME_CHILD,"Last check ok at UTC: %s from %s"%(
-                datetime.datetime.utcfromtimestamp(checkSource.getCurrent()).isoformat(),
+                datetime.datetime.fromtimestamp(checkSource.getCurrent(),datetime.UTC).isoformat(),
                 checkSource.name
               ),WorkerStatus.NMEA)
         else:
