@@ -103,14 +103,16 @@ class AVNAlarmHandler(AVNWorker):
   P_DEFAULTPARAM=WorkerParameter('defaultParameter',default='',editable=False)
 
   @classmethod
-  def getSoundDirs(cls):
+  def getSoundDirs(cls,handlerManager:AVNHandlerManager):
     soundDirs=[]
-    instance=cls.findHandlerByName(AVNUserHandler.getConfigName())
+    if handlerManager is None:
+      return soundDirs
+    instance=handlerManager.findHandlerByName(AVNUserHandler.getConfigName())
     if instance:
       base=instance.baseDir
       if os.path.isdir(base):
         soundDirs.append(base)
-    instance=cls.findHandlerByName(cls.getConfigName())
+    instance=handlerManager.findHandlerByName(cls.getConfigName())
     if instance:
       base=instance.getStringParam(AVNHandlerManager.BASEPARAM.BASEDIR)
       if base:
@@ -120,9 +122,9 @@ class AVNAlarmHandler(AVNWorker):
     return soundDirs
 
   @classmethod
-  def listAlarmSounds(cls):
+  def listAlarmSounds(cls,handlerManager:AVNHandlerManager):
     sounds=set()
-    soundDirs=cls.getSoundDirs()
+    soundDirs=cls.getSoundDirs(handlerManager)
     for dir in soundDirs:
       for f in os.listdir(dir):
             if f.endswith('.mp3') or f.endswith('.MP3'):
@@ -130,8 +132,8 @@ class AVNAlarmHandler(AVNWorker):
     return list(sounds)
 
   @classmethod
-  def listCommands(cls):
-    cmdhandler=cls.findHandlerByName(AVNCommandHandler.getConfigName())
+  def listCommands(cls,handlerManager:AVNHandlerManager):
+    cmdhandler=handlerManager.findHandlerByName(AVNCommandHandler.getConfigName()) if handlerManager is not None else None
     if cmdhandler:
       return cmdhandler.listCommandNames()
     return ['sound']
@@ -172,16 +174,16 @@ class AVNAlarmHandler(AVNWorker):
     return "AVNAlarmHandler"
 
   @classmethod
-  def getConfigParamCombined(cls, child=None):
-    return cls.getConfigParam(child)
+  def getConfigParamCombined(cls, handlerManager=None, child=None):
+    return cls.getConfigParam(handlerManager,child=child)
 
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is None:
-      rt=[cls.P_INFOSOUND.copy(rangeOrList=cls.listAlarmSounds),
-          cls.P_CRITICALSOUND.copy(rangeOrList=cls.listAlarmSounds),
-          cls.P_ALARMSOUND.copy(rangeOrList=cls.listAlarmSounds),
-          cls.P_DEFAULTCOMMAND.copy(rangeOrList=cls.listCommands),
+      rt=[cls.P_INFOSOUND.copy(rangeOrList=lambda: cls.listAlarmSounds(handlerManager)),
+          cls.P_CRITICALSOUND.copy(rangeOrList=lambda: cls.listAlarmSounds(handlerManager)),
+          cls.P_ALARMSOUND.copy(rangeOrList=lambda: cls.listAlarmSounds(handlerManager)),
+          cls.P_DEFAULTCOMMAND.copy(rangeOrList=lambda: cls.listCommands(handlerManager)),
           cls.P_DEFAULTPARAM]
       return rt
     if child == "Alarm":
@@ -195,6 +197,11 @@ class AVNAlarmHandler(AVNWorker):
         'parameter':'',
         'message':'',
       }
+
+  @classmethod
+  def getEditableParameters(cls, handlerManager: AVNHandlerManager, makeCopy=True, id=None):
+      return super().getEditableParameters(handlerManager, makeCopy, id)
+
   @classmethod
   def preventMultiInstance(cls):
     return True
@@ -208,7 +215,7 @@ class AVNAlarmHandler(AVNWorker):
     return True
 
   def run(self):
-    self.commandHandler=self.findHandlerByName(AVNCommandHandler.getConfigName())
+    self.commandHandler=self._handlerManager.findHandlerByName(AVNCommandHandler.getConfigName())
     if self.commandHandler is None:
       self.setInfo('main',"no command handler found",WorkerStatus.ERROR)
       return
@@ -504,7 +511,7 @@ class AVNAlarmHandler(AVNWorker):
     if os.path.exists(name):
       #legacy support with fully qualified file name
       return name
-    dirs=self.getSoundDirs()
+    dirs=self.getSoundDirs(self._handlerManager)
     name=AVNUtil.clean_filename(name)
     for d in dirs:
       fn=os.path.join(d,name)

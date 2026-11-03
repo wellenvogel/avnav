@@ -42,8 +42,8 @@ class AVNIpServiceReader(AVNWorker):
   def getServiceType(cls):
     raise NotImplemented("getServiceType must be implemented")
   @classmethod
-  def _listServices(cls):
-    avahi=cls.findHandlerByName(AVNAvahi.getConfigName())
+  def _listServices(cls,handlerManager):
+    avahi=handlerManager.findHandlerByName(AVNAvahi.getConfigName()) if handlerManager is not None else None
     if avahi is None:
       return []
     return avahi.listFoundServices(stype=cls.getServiceType())
@@ -64,12 +64,12 @@ class AVNIpServiceReader(AVNWorker):
   P_MINTIME=WorkerParameter('minTime', 0, type=WorkerParameter.T_FLOAT,
                             description='if this is set, wait this time before reading new data (ms)')
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     rt = [
       cls.PRIORITY_PARAM_DESCRIPTION,
-      cls.P_SERVICE_NAME.copy(rangeOrList=cls._listServices,existingUnchecked=True),
+      cls.P_SERVICE_NAME.copy(rangeOrList=lambda: cls._listServices(handlerManager),existingUnchecked=True),
       cls.P_TIMEOUT,
       cls.P_MINTIME,
       cls.FILTER_PARAM,
@@ -131,7 +131,7 @@ class AVNIpServiceReader(AVNWorker):
     lastInfo = None
     lastName=None
     while not self.shouldStop():
-      avahi=self.findHandlerByName(AVNAvahi.getConfigName())
+      avahi=self._handlerManager.findHandlerByName(AVNAvahi.getConfigName())
       if avahi is None:
         raise Exception("no avahi handler found")
       serviceName=self.P_SERVICE_NAME.fromDict(self.param,rangeOrListCheck=False)

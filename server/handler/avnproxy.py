@@ -50,7 +50,7 @@ class AVNProxy(AVNWorker):
         return True
 
     @classmethod
-    def getConfigParam(cls, child=None):
+    def getConfigParam(cls, handlerManager=None, child=None):
         return []
 
     @classmethod

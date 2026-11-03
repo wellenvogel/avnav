@@ -363,7 +363,7 @@ class AVNCanboatHandler(AVNWorker):
             navdata.registerKey(key.getKey(),key.description,allowOverwrite=True)
 
     @classmethod
-    def getConfigParamCombined(cls, child=None):
+    def getConfigParamCombined(cls, handlerManager=None, child=None):
         if child is not None:
             return None
         return [cls.NAME_PARAMETER.copy(default='canboat'),

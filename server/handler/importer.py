@@ -361,7 +361,7 @@ class AVNImporter(AVNWorker):
     return "AVNImporter"
   
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     rt=[
@@ -423,7 +423,7 @@ class AVNImporter(AVNWorker):
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have to find the feeder...
   def startInstance(self, navdata):
-    httpserver=self.findHandlerByName(AVNHttpServer.getConfigName())
+    httpserver=self._handlerManager.findHandlerByName(AVNHttpServer.getConfigName())
     if httpserver is None:
       raise Exception("unable to find the httpserver")
     self.chartbase=httpserver.getChartBaseDir()

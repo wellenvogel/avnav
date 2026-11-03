@@ -60,7 +60,7 @@ class AVNAISWorker(AVNWorker):
             self._updateParam(param,self.navdata)
 
     def startInstance(self, navdata:AVNStore):
-        self.baseConfig=self.findHandlerByName(AVNBaseConfig.getConfigName())
+        self.baseConfig=self._handlerManager.findHandlerByName(AVNBaseConfig.getConfigName())
         aisParam=self.getParam()
         updates = {}
         if self.baseConfig is not None:
@@ -116,7 +116,7 @@ class AVNAISWorker(AVNWorker):
             self.wait(1)
 
     @classmethod
-    def getConfigParam(cls, child=None):
+    def getConfigParam(cls, handlerManager=None, child=None):
         if child is not None:
             return None
         return [cls.P_OWNMMSI,cls.P_AIS_EXPIRYTIME]

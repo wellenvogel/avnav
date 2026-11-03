@@ -55,7 +55,7 @@ class AVNQueue(AVNWorker):
                         rangeOrList=[1,1000])
   P_ALL=[P_MAXLIST,P_SLEEP,P_NAME,P_AGE]
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     return cls.P_ALL
 
   @classmethod
@@ -72,7 +72,7 @@ class AVNQueue(AVNWorker):
 
   def __init__(self,cfgparam):
     super().__init__(cfgparam)
-    self.type=AVNWorker.Type.FEEDER
+    self.type=AVNWorker.HandlerType.FEEDER
     self.listlock=threading.Condition()
     self.history=[]
     #sequence semantics:

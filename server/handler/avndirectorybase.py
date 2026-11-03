@@ -30,6 +30,7 @@
 import io
 import json
 import shutil
+import os
 import urllib.request, urllib.parse, urllib.error
 from fileinput import filename
 from zipfile import ZipFile
@@ -125,7 +126,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def getPrefix(cls):
     return None
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     rt = {
@@ -159,7 +160,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     self.lock = threading.Lock()
 
   def startInstance(self, navdata):
-    self.httpServer=self.findHandlerByName(AVNHttpServer.getConfigName())
+    self.httpServer=self._handlerManager.findHandlerByName(AVNHttpServer.getConfigName())
     if self.httpServer is None:
       raise Exception("unable to find AVNHttpServer")
     super().startInstance(navdata)

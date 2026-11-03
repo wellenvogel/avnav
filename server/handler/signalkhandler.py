@@ -826,7 +826,7 @@ class AVNSignalKHandler(AVNWorker):
   ICON="images/signalk.svg"
 
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     rt=[cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE, cls.P_MIGRATED,
             cls.P_UUID,cls.P_IGNORE_TS]
@@ -893,7 +893,7 @@ class AVNSignalKHandler(AVNWorker):
 
   def migrateConfig(self):
     pluginName='builtin-signalk'
-    pluginHandler=self.findHandlerByName(AVNPluginHandler.getConfigName())
+    pluginHandler=self._handlerManager.findHandlerByName(AVNPluginHandler.getConfigName())
     updates={}
     alreadyMigrated=self.P_MIGRATED.fromDict(self.param)
     if self.P_UUID.fromDict(self.param) == self.P_UUID.default:
@@ -905,7 +905,7 @@ class AVNSignalKHandler(AVNWorker):
         pluginParam=pluginParam[0]
         if type(pluginParam) is dict and not self.P_MIGRATED.fromDict(pluginParam):
           pluginHandler.changeChildConfigDict(pluginName,{self.P_MIGRATED.name:True})
-          for p in self.getConfigParam():
+          for p in self.getConfigParam(self._handlerManager):
             if p.name == self.ENABLE_PARAM_DESCRIPTION.name:
               continue
             if p.name == self.P_MIGRATED.name:
@@ -915,7 +915,7 @@ class AVNSignalKHandler(AVNWorker):
               own=self.param.get(p.name)
               if ov != own:
                 updates[p.name]=ov
-    for p in self.getConfigParam():
+    for p in self.getConfigParam(self._handlerManager):
       newParam=updates.get(p.name)
       if newParam is None:
         continue
@@ -960,8 +960,8 @@ class AVNSignalKHandler(AVNWorker):
     if not self.navdata.isKeyRegistered(key):
       self.navdata.registerKey(self.PATH+".*",'signalK',self.sourceName)
     self.migrateConfig()
-    self.alarmhandler=self.findHandlerByName(AVNAlarmHandler.getConfigName())
-    charthandler = self.findHandlerByName(AVNChartHandler.getConfigName())
+    self.alarmhandler=self._handlerManager.findHandlerByName(AVNAlarmHandler.getConfigName())
+    charthandler = self._handlerManager.findHandlerByName(AVNChartHandler.getConfigName())
     if charthandler is not None:
       charthandler.registerExternalProvider(self.CHARTHANDLER_PREFIX,self.listCharts)
     while not self.shouldStop():
@@ -971,7 +971,7 @@ class AVNSignalKHandler(AVNWorker):
       self._runI()
       self.deleteInfo(self.I_CHARTS)
       self.deleteInfo(self.I_AIS)
-      addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
+      addonhandler=self._handlerManager.findHandlerByName(AVNUserAppHandler.getConfigName())
       if self.alarmhandler is not None:
         self.alarmhandler.deregisterHandler(self)
       if addonhandler:
@@ -1187,7 +1187,7 @@ class AVNSignalKHandler(AVNWorker):
                  %(self.config.skHost,self.config.port,self.config.period))
     baseUrl="http://%s:%d/signalk"%(self.config.skHost,self.config.port)
 
-    addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
+    addonhandler=self._handlerManager.findHandlerByName(AVNUserAppHandler.getConfigName())
     if addonhandler:
       if self.config.skHost == "localhost":
         addonhandler.registerAddOn(self.USERAPP_NAME,"http://$HOST:%s"%self.config.port,
@@ -1198,7 +1198,7 @@ class AVNSignalKHandler(AVNWorker):
                                    shortText='SignalK',longText='SignalK')
     router=None
     if self.config.write:
-      router=self.findHandlerByName(AVNRouter.getConfigName())
+      router=self._handlerManager.findHandlerByName(AVNRouter.getConfigName())
     errorReported=False
     self.setInfo(self.I_MAIN,"connecting at %s" % baseUrl,WorkerStatus.STARTED)
     while sequence == self.configSequence:

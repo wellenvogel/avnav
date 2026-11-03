@@ -149,7 +149,7 @@ class AVNBaseConfig(AVNWorker):
     return True
 
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is not None:
       return None
     return [
@@ -167,8 +167,8 @@ class AVNBaseConfig(AVNWorker):
     ]
 
   @classmethod
-  def getConfigParamCombined(cls, child=None):
-    return cls.getConfigParam(child)
+  def getConfigParamCombined(cls, handlerManager=None, child=None):
+    return cls.getConfigParam(handlerManager, child=child)
 
   @classmethod
   def preventMultiInstance(cls):
@@ -258,7 +258,7 @@ class AVNBaseConfig(AVNWorker):
         AVNLog.warn("time shift (%d seconds) detected",delta)
         #if the time is shifting all condition waits must
         #be notified...
-        for h in AVNWorker.allHandlers:
+        for h in self._handlerManager.getAllHandlers():
           try:
             h.timeChanged()
           except:

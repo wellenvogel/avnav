@@ -25,19 +25,25 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
+from __future__ import annotations
+
+import copy
+import os
 import re
+import sys
+import threading
+import time
 import traceback
 
-import time
+from typing import TYPE_CHECKING
 
-import threading
-import copy
-
+if TYPE_CHECKING:
+  # only for type hints - avnav_manager imports this module
+  from avnav_manager import AVNHandlerManager
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
 from avnav_util import Enum, AVNLog
-import sys
-import os
+
 
 class WorkerId:
     def __init__(self):
@@ -467,41 +473,16 @@ class AVNWorker(InfoHandler):
   REPLY_RECEIVED=WorkerParameter('sendOwn',False,type=WorkerParameter.T_BOOLEAN,
                          description='send out data that we received on this connection')
 
-  handlerListLock=threading.Lock()
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
-  allHandlers=[] #the list of all instantiated handlers
   __workerId=WorkerId()
-  Type=Enum(['DEFAULT','FEEDER','HTTPSERVER'])
+  HandlerType=Enum(['DEFAULT', 'FEEDER', 'HTTPSERVER'])
   #worker kind
 
   @classmethod
   def getNextWorkerId(cls):
     return cls.__workerId.next()
 
-  @classmethod
-  def findHandlerByTypeAndName(cls, type, name=None):
-    """find a handler by its type and name (not configName)
-       leave the name unset to find by type
-       do not find any disabled handler
-    """
-    if not name is None and name == '':
-      name = None
-    rt = None
-    for handler in cls.allHandlers:
-      if handler.type == type and not handler.isDisabled():
-        if not name is None:
-          if handler.getName() == name:
-            rt = handler
-            break
-        else:
-          rt = handler
-          break
-    return rt
-  @classmethod
-  def resetHandlerList(cls):
-      with cls.handlerListLock:
-        cls.allHandlers=[]
   @classmethod
   def getKind(cls):
       return WorkerKind.OTHER
@@ -513,38 +494,12 @@ class AVNWorker(InfoHandler):
         #support legacy config
         feedername=self.getStringParam('feederName')
     """find a feeder by its name (not configName)"""
-    rt=self.findHandlerByTypeAndName(self.Type.FEEDER,feedername)
+    rt=self._handlerManager.findHandlerByTypeAndName(self.HandlerType.FEEDER, feedername)
     if rt is None:
       #try fallback to main
-      rt=self.findHandlerByTypeAndName(self.Type.FEEDER)
+      rt=self._handlerManager.findHandlerByTypeAndName(self.HandlerType.FEEDER)
       if rt is None:
         raise Exception("unable to find queue %s"%(feedername or ""))
-    return rt
-  
-  @classmethod
-  def findHandlerByName(cls,name,disabled=False):
-    """find a handler by its config name"""
-    for handler in cls.allHandlers:
-      if handler.getConfigName() == name and (not handler.isDisabled() or disabled):
-        return handler
-    return None
-
-  @classmethod
-  def findHandlerById(cls,id):
-    for handler in cls.allHandlers:
-      if handler.id == id:
-        return handler
-    return None
-
-  @classmethod
-  def getAllHandlers(cls,disabled=False) -> 'list[AVNWorker]':
-    """get the list of all instantiated handlers
-    :param disabled if set to true also return disabled handler
-    """
-    rt=[]
-    for h in cls.allHandlers:
-      if not h.isDisabled() or disabled:
-        rt.append(h)
     return rt
 
   @classmethod
@@ -565,62 +520,23 @@ class AVNWorker(InfoHandler):
     return False
 
   @classmethod
-  def getEditableParameters(cls, makeCopy=True,id=None):
+  def getEditableParameters(cls,handlerManager:AVNHandlerManager, makeCopy=True,id=None):
     '''
     get the parameters we can edit
     @return:
     '''
     if not cls.canEdit():
       return None
-    return WorkerParameter.filterEditables(cls.getConfigParamCombined(),makeCopy=makeCopy)
+    return WorkerParameter.filterEditables(cls.getConfigParamCombined(handlerManager), makeCopy=makeCopy)
 
 
-  @classmethod
-  def removeHandler(cls,handlerId):
-    handler=cls.findHandlerById(handlerId)
-    if handler is None:
-      raise Exception("handler for id %s not found"%str(handlerId))
-    if not handler.canDeleteHandler():
-      raise Exception("handler %s cannot be deleted"%str(handlerId))
-    cls.handlerListLock.acquire()
-    try:
-      cls.allHandlers.remove(handler)
-    finally:
-      cls.handlerListLock.release()
-    handler.stop()
-    handler.configChanger.removeSelf()
-
-  @classmethod
-  def shutdownServer(cls):
-    #first stop the http server
-    #to avoid any strange responses
-    httpserver=cls.findHandlerByName("AVNHttpServer")
-    if httpserver is not None:
-        httpserver.stop()
-    for handler in cls.allHandlers:
-      if handler == httpserver:
-          continue
-      try:
-        AVNLog.info("stopping handler %s",handler.getName())
-        handler.stop()
-      except:
-        pass
-    fe = threading.Thread(target=forceExit)
-    fe.start()
-    sys.exit(1)
-  
   def __init__(self,cfgparam):
-    self.handlerListLock.acquire()
-    try:
-      self.allHandlers.append(self) #fill the static list of handlers
-    finally:
-      self.handlerListLock.release()
     self.id=self.getNextWorkerId()
     self.param=cfgparam
     self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"created")}
     self.__statusLock=threading.Lock()
     self.__tlId=WorkerThreadId()
-    self.type=self.Type.DEFAULT
+    self.type=self.HandlerType.DEFAULT
     self.queue=None
     self.configChanger=None #reference for writing back to the DOM
     self.condition=threading.Condition()
@@ -628,7 +544,11 @@ class AVNWorker(InfoHandler):
     self.name=self.getName()
     self.usedResources=[]
     self.navdata=None
+    from avnav_manager import IHandlerManager # avoid circular import at module level
+    self._handlerManager=IHandlerManager() # type: IHandlerManager
 
+  def setManager(self,manager:AVNHandlerManager):
+      self._handlerManager=manager
 
   def setNameIfEmpty(self,name):
     if self.getParamValue('name') is not None:
@@ -713,7 +633,7 @@ class AVNWorker(InfoHandler):
       raise Exception("cannot return child parameters")
     try:
       if filtered:
-        return WorkerParameter.filterByList(self.getConfigParamCombined(), self.param)
+        return WorkerParameter.filterByList(self.getConfigParamCombined(self._handlerManager), self.param)
       else:
         return self.param
     except:
@@ -788,7 +708,7 @@ class AVNWorker(InfoHandler):
     '''
     if child is not None:
       raise Exception("cannot modify child %s"%str(child))
-    checked = WorkerParameter.checkValuesFor(self.getEditableParameters(id=self.id), param, self.getParam())
+    checked = WorkerParameter.checkValuesFor(self.getEditableParameters(self._handlerManager, id=self.id), param, self.getParam())
     newEnable = None
     if 'enabled' in checked:
       newEnable=checked.get('enabled',True)
@@ -960,9 +880,9 @@ class AVNWorker(InfoHandler):
     return cls.__name__
 
   @classmethod
-  def getConfigParamCombined(cls,child=None):
+  def getConfigParamCombined(cls, handlerManager=None, child=None):
     if child is None:
-      rt=cls.getConfigParam()
+      rt= cls.getConfigParam(handlerManager)
       if type(rt) is dict:
         rt.update({'name':''})
         return rt
@@ -971,14 +891,14 @@ class AVNWorker(InfoHandler):
           rt=cls.ENABLE_CONFIG_PARAM+rt
         return cls.DEFAULT_CONFIG_PARAM+rt
     else:
-      return cls.getConfigParam(child)
+      return cls.getConfigParam(handlerManager,child=child)
 
   #return the default cfg values
   #if the parameter child is set, the parameter for a child node
   #must be returned, child nodes are added to the parameter dict
   #as an entry with childnodeName=[] - the child node configs being in the list
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     raise Exception("getConfigParam must be overwritten")
 
 
@@ -990,9 +910,7 @@ class AVNWorker(InfoHandler):
     """
     return False
   @classmethod
-  def createInstance(cls,cfgparam):
-    if cls.preventMultiInstance():
-      cls.checkSingleInstance()
+  def createInstance(cls, cfgparam)->AVNWorker:
     instance =cls(cfgparam)
     return instance
 
@@ -1124,35 +1042,15 @@ class AVNWorker(InfoHandler):
     '''
     return self.usedResources
 
-  @classmethod
-  def findUsersOf(cls,type,ownId=None,value=None,toPlain=False,onlyRunning=True):
-    used=[]
-    for handler in cls.getAllHandlers():
-      if onlyRunning and handler.currentThread is None:
-        continue
-      if handler.getId() == ownId:
-        continue
-      used+=handler.getUsedResources(type)
-    if value is None:
-      if toPlain:
-        return UsedResource.toPlain(used)
-      return used
-    rt=[]
-    for us in used:
-      if us.usingTypeValue(type,value):
-        rt.append(us)
-    if toPlain:
-      return UsedResource.toPlain(rt)
-    return rt
 
   def checkUsedResource(self,type,value,prefix=None):
     if value is None:
       return
-    others=self.findUsersOf(type,ownId=self.id,value=value)
+    others=self._handlerManager.findUsersOf(type,ownId=self.id,value=value)
     if len(others) >0:
       if prefix is None:
         prefix = others[0].type
-      h=self.findHandlerById(others[0].handlerId)
+      h=self._handlerManager.findHandlerById(others[0].handlerId)
       if h is None:
         name='handler %s'%others[0].handlerId
       else:
@@ -1222,15 +1120,6 @@ class AVNWorker(InfoHandler):
   @classmethod
   def getStartupGroup(cls):
     return 2
-  @classmethod
-  def checkSingleInstance(cls):
-    """"
-    check that we only run in one instance
-    workers that rely on running only once should call this in createInstance
-    """
-    other=cls.findHandlerByName(cls.getConfigName())
-    if not other is None:
-      raise Exception("there is already a handler with %s, cannot create another one"%(cls.getConfigName()))
 
   def getRequestIp(self, handler, default="localhost"):
     hostip = default

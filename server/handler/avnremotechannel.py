@@ -150,7 +150,7 @@ class AVNRemoteChannelHandler(AVNWorker):
   HOST_PARAM=WorkerParameter('host',"127.0.0.1",type=WorkerParameter.T_STRING,
                             description="bind address for port, use 0.0.0.0 for external access")
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     return [
       cls.PORT_PARAM,
       cls.HOST_PARAM

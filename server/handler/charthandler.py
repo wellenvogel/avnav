@@ -217,7 +217,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
   def getConfigName(cls):
     return "AVNChartHandler"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is not None:
       return None
     return {
@@ -252,7 +252,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
 
   def run(self):
     self.baseDir = self.httpServer.getChartBaseDir()
-    self.importer = self.findHandlerByName("AVNImporter")
+    self.importer = self._handlerManager.findHandlerByName("AVNImporter")
     super().run()
 
   def wakeUp(self):

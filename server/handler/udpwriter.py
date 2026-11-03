@@ -44,7 +44,7 @@ class AVNUdpWriter(AVNWorker):
   P_BROADCAST=WorkerParameter('broadcast', True,type=WorkerParameter.T_BOOLEAN,
                               description="send broadcast packages")
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is None:
       rt=[
           cls.P_HOST,

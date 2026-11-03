@@ -164,9 +164,9 @@ class AVNAvahi(AVNWorker):
     self.lock=threading.Lock()
 
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is not None:
-      return super().getConfigParam(child)
+      return super().getConfigParam(handlerManager, child=child)
     return [
       WorkerParameter('serviceName','avnav-server',
                       description='the name for the web service that will be visible in avahi/mdns'),
@@ -180,10 +180,10 @@ class AVNAvahi(AVNWorker):
     ]
 
   @classmethod
-  def getConfigParamCombined(cls, child=None):
+  def getConfigParamCombined(cls, handlerManager=None, child=None):
     if child is not None:
-      return super().getConfigParamCombined(child)
-    return [cls.ENABLE_PARAM_DESCRIPTION]+cls.getConfigParam()
+      return super().getConfigParamCombined(handlerManager,child=child)
+    return [cls.ENABLE_PARAM_DESCRIPTION]+ cls.getConfigParam(handlerManager)
 
   @classmethod
   def preventMultiInstance(cls):
@@ -351,13 +351,13 @@ class AVNAvahi(AVNWorker):
       self.loop.run()
     except KeyboardInterrupt:
       AVNLog.error("Keyboard interrupt in DBUS loop, shutting down")
-      self.shutdownServer()
+      self._handlerManager.shutdownServer()
 
   def run(self):
     sequence=self.stateSequence
     if not hasDbus:
       raise Exception("no DBUS found, cannot register avahi")
-    httpServer=self.findHandlerByName(AVNHttpServer.getConfigName())
+    httpServer=self._handlerManager.findHandlerByName(AVNHttpServer.getConfigName())
     if httpServer is None:
       raise Exception("unable to find AVNHttpServer")
     self.setInfo('main','starting',WorkerStatus.STARTED)

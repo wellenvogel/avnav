@@ -53,7 +53,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
   P_TIMEOUT=WorkerParameter('timeout',10,type=WorkerParameter.T_FLOAT,
                             description='timeout in sec for connecting and waiting for data, close connection if no data within 5*timeout')
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     rt=[

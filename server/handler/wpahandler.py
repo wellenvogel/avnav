@@ -58,7 +58,7 @@ class AVNWpaHandler(AVNWorker):
   def getConfigName(cls):
     return "AVNWpaHandler"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is not None:
       return None
     return {
@@ -72,7 +72,7 @@ class AVNWpaHandler(AVNWorker):
   def preventMultiInstance(cls):
     return True
   def run(self):
-    self.commandHandler = self.findHandlerByName("AVNCommandHandler")
+    self.commandHandler = self._handlerManager.findHandlerByName("AVNCommandHandler")
     wpaSocket=self.getStringParam('wpaSocket')
     ownSocket=self.getStringParam('ownSocket')
     watcherThread=threading.Thread(target=self.allowDenyWatcher,name="Wpa:fwWatcher")

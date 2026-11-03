@@ -54,7 +54,7 @@ class AVNUserAppHandler(AVNWorker):
 
   SIMPLE_CHILDPARAM = ['title', 'newWindow', 'page', 'shortText', 'longText']
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     #we add this to the ones configured at HTTPServer
     if child == cls.CHILDNAME:
       rt= {
@@ -93,13 +93,13 @@ class AVNUserAppHandler(AVNWorker):
     AVNWorker.__init__(self,param)
 
   def startInstance(self, navdata):
-    self.userHandler=self.findHandlerByName('AVNUserHandler')
+    self.userHandler=self._handlerManager.findHandlerByName('AVNUserHandler')
     if self.userHandler is None:
       raise Exception("unable to find a user handler")
-    self.imagesHandler=self.findHandlerByName('AVNImagesHandler')
+    self.imagesHandler=self._handlerManager.findHandlerByName('AVNImagesHandler')
     if self.imagesHandler is None:
       raise Exception("unable to find an images handler")
-    self.httpServer = self.findHandlerByName(AVNHttpServer.getConfigName())
+    self.httpServer = self._handlerManager.findHandlerByName(AVNHttpServer.getConfigName())
     if self.httpServer is None:
       raise Exception("unable to find AVNHttpServer")
     super().startInstance(navdata)

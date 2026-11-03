@@ -392,7 +392,7 @@ class SerialReader(object):
 class AVNSerialReader(AVNWorker):
 
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     return SerialReader.getConfigParam()
@@ -405,11 +405,11 @@ class AVNSerialReader(AVNWorker):
     return rt
 
   @classmethod
-  def getEditableParameters(cls, makeCopy=True,id=None):
-    rt= super().getEditableParameters(True,id=id)
+  def getEditableParameters(cls, handlerManager,makeCopy=True,id=None):
+    rt= super().getEditableParameters(handlerManager, True,id=id)
     slist=SerialReader.listSerialPorts()
     slist=UsedResource.filterListByUsed(UsedResource.T_SERIAL,slist,
-                                        cls.findUsersOf(UsedResource.T_SERIAL,ownId=id))
+                                        handlerManager.findUsersOf(UsedResource.T_SERIAL,ownId=id))
     WorkerParameter.updateParamFor(rt, SerialReader.P_PORT.name, {'rangeOrList':slist})
     return rt
 

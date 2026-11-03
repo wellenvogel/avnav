@@ -45,7 +45,7 @@ class AVNDecoder(AVNWorker):
   P_FILTER=WorkerParameter('decoderFilter',default='',type=WorkerParameter.T_FILTER)
   P_ALL=[P_FILTER]
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     return cls.P_ALL
 
   @classmethod

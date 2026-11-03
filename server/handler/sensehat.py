@@ -70,7 +70,7 @@ class AVNSenseHatReader(AVNWorker):
     return "AVNSenseHatReader"
 
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     rt = [

@@ -49,7 +49,7 @@ class AVNNmeaLogger(AVNWorker):
   def getConfigName(cls):
     return "AVNNmeaLogger"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is not None:
       return None
     return [
@@ -98,7 +98,7 @@ class AVNNmeaLogger(AVNWorker):
     self._fetcher=Fetcher(self.queue,self,includeSource=False,returnErrors=False, nmeaFilter=self.P_FILTER.fromDict(self.param))
     trackdir=AVNHandlerManager.getDirWithDefault(self.param, self.P_TRACKDIR.name)
     if trackdir is None:
-      trackwriter=self.findHandlerByName(AVNTrackWriter.getConfigName())
+      trackwriter=self._handlerManager.findHandlerByName(AVNTrackWriter.getConfigName())
       if trackwriter is not None:
         trackdir=trackwriter.getTrackDir()
       if trackdir is None or not trackdir :

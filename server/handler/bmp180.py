@@ -160,7 +160,7 @@ class AVNBMP180Reader(AVNWorker):
   P_ADDR=ParamHex('addr', '0x77',
                          description='I2C address for the BME in 0xnn notation')
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     rt = [

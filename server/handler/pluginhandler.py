@@ -138,19 +138,19 @@ class ApiImpl(AVNApi):
 
     def deregister(self,forDelete=False):
         try:
-            charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName(),disabled=True)
+            charthandler = self.phandler._handlerManager.findHandlerByName(AVNChartHandler.getConfigName(),disabled=True)
             charthandler.registerExternalProvider(self.prefix, None,removeOverlays=forDelete)
         except:
             pass
         try:
-            usbhandler = AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName(),disabled=True)
+            usbhandler = self.phandler._handlerManager.findHandlerByName(AVNUsbSerialReader.getConfigName(),disabled=True)
             usbhandler.deregisterExternalHandlers(self.prefix)
         except:
             pass
         self.requestHandler = None
         try:
             self.userApps = []
-            addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
+            addonhandler = self.phandler._handlerManager.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
             for id in self.addons:
                 try:
                     addonhandler.unregisterAddOn(id)
@@ -161,7 +161,7 @@ class ApiImpl(AVNApi):
         except:
             pass
         try:
-            layouthandler = AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName(),disabled=True)
+            layouthandler = self.phandler._handlerManager.findHandlerByName(AVNLayoutHandler.getConfigName(),disabled=True)
             if layouthandler:
                 for layout in self.layouts:
                     layouthandler.deregisterPluginItem(self.getPrefixForItems(), layout)
@@ -169,7 +169,7 @@ class ApiImpl(AVNApi):
         except:
             pass
         try:
-            settingshandler = AVNWorker.findHandlerByName(AVNSettingsHandler.getConfigName(),disabled=True)
+            settingshandler = self.phandler._handlerManager.findHandlerByName(AVNSettingsHandler.getConfigName(),disabled=True)
             if settingshandler:
                 for setting in self.settingsFiles:
                     settingshandler.deregisterPluginItem(self.getPrefixForItems(), setting)
@@ -177,13 +177,13 @@ class ApiImpl(AVNApi):
         except:
             pass
         try:
-            cmdHandler = AVNWorker.findHandlerByName(AVNCommandHandler.getConfigName(),disabled=True)  # type: AVNCommandHandler
+            cmdHandler = self.phandler._handlerManager.findHandlerByName(AVNCommandHandler.getConfigName(),disabled=True)  # type: AVNCommandHandler
             if cmdHandler:
                 cmdHandler.removePluginCommands(self.prefix)
         except:
             pass
         try:
-            importer = AVNWorker.findHandlerByName(AVNImporter.getConfigName(),disabled=True)  # type: AVNImporter
+            importer = self.phandler._handlerManager.findHandlerByName(AVNImporter.getConfigName(),disabled=True)  # type: AVNImporter
             if importer:
                 for name in self.converters:
                     importer.deregisterConverter(name)
@@ -362,7 +362,7 @@ class ApiImpl(AVNApi):
                         shortText=None,
                         longText=None,
                         ):
-        addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
+        addonhandler = self.phandler._handlerManager.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
         if addonhandler is None:
             raise Exception("no http server")
         self.checkAppName(name)
@@ -399,7 +399,7 @@ class ApiImpl(AVNApi):
         return regid
 
     def registerCommand(self, name, command, parameters=None, iconFile=None, client=None):
-        cmdhandler = AVNWorker.findHandlerByName(AVNCommandHandler.getConfigName(),disabled=True)  # type: AVNCommandHandler
+        cmdhandler = self.phandler._handlerManager.findHandlerByName(AVNCommandHandler.getConfigName(),disabled=True)  # type: AVNCommandHandler
         if cmdhandler is None:
             raise Exception("no command handler")
         iconUrl = None
@@ -422,7 +422,7 @@ class ApiImpl(AVNApi):
         return id
 
     def unregisterUserApp(self, id):
-        addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
+        addonhandler = self.phandler._handlerManager.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
         if addonhandler is None:
             raise Exception("no http server")
         return addonhandler.unregisterAddOn(id)
@@ -432,7 +432,7 @@ class ApiImpl(AVNApi):
             layoutFile = os.path.join(self.directory, layoutFile)
         if not os.path.exists(layoutFile):
             raise Exception("layout file %s not found", layoutFile)
-        layoutHandler = AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName(),disabled=True)  # type: AVNScopedDirectoryHandler
+        layoutHandler = self.phandler._handlerManager.findHandlerByName(AVNLayoutHandler.getConfigName(),disabled=True)  # type: AVNScopedDirectoryHandler
         if layoutHandler is None:
             raise Exception("no layout handler")
         if name in self.layouts:
@@ -446,7 +446,7 @@ class ApiImpl(AVNApi):
             settingsFile = os.path.join(os.path.dirname(self.fileName), settingsFile)
         if not os.path.exists(settingsFile):
             raise Exception("settings file %s not found", settingsFile)
-        settingsHandler = AVNWorker.findHandlerByName(
+        settingsHandler = self.phandler._handlerManager.findHandlerByName(
             AVNSettingsHandler.getConfigName(),disabled=True)  # type: AVNScopedDirectoryHandler
         if settingsHandler is None:
             raise Exception("no settings handler")
@@ -465,7 +465,7 @@ class ApiImpl(AVNApi):
         return self.phandler.getParamValue(AVNHandlerManager.BASEPARAM.DATADIR)
 
     def registerChartProvider(self, callback,local=False):
-        charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName(),disabled=True)
+        charthandler = self.phandler._handlerManager.findHandlerByName(AVNChartHandler.getConfigName(),disabled=True)
         if local:
             charthandler.registerExternalProvider(self.prefix, callback)
         else:
@@ -493,19 +493,19 @@ class ApiImpl(AVNApi):
             return rt+"/"
 
     def registerUsbHandler(self, usbid, callback):
-        usbhandler = AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName(),disabled=True)
+        usbhandler = self.phandler._handlerManager.findHandlerByName(AVNUsbSerialReader.getConfigName(),disabled=True)
         if usbhandler is None:
             raise Exception("no usb handler configured, cannot register %s" % usbid)
         usbhandler.registerExternalHandler(usbid, self.prefix, callback)
 
     def deregisterUsbHandler(self, usbid=None):
-        usbhandler = AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName(),disabled=True)
+        usbhandler = self.phandler._handlerManager.findHandlerByName(AVNUsbSerialReader.getConfigName(),disabled=True)
         if usbhandler is None:
             raise Exception("no usb handler configured, cannot register %s" % usbid)
         usbhandler.deregisterExternalHandler(self.prefix, usbid)
 
     def getAvNavVersion(self):
-        baseConfig = AVNWorker.findHandlerByName("AVNConfig")
+        baseConfig = self.phandler._handlerManager.findHandlerByName("AVNConfig")
         if baseConfig is None:
             raise Exception("internal error: no base config")
         return int(baseConfig.getVersion())
@@ -566,13 +566,13 @@ class ApiImpl(AVNApi):
             self.condition.wait(timeout)
 
     def sendRemoteCommand(self, command, param, channel=0):
-        channelhandler = AVNWorker.findHandlerByName(AVNRemoteChannelHandler.getConfigName())
+        channelhandler = self.phandler._handlerManager.findHandlerByName(AVNRemoteChannelHandler.getConfigName())
         if channelhandler is None:
             raise Exception("no remote channel handler configured")
         channelhandler.sendMessage(command + " " + param, channel=channel)
 
     def registerConverter(self, converter: ConverterApi, name=None):
-        importer = AVNWorker.findHandlerByName(AVNImporter.getConfigName(),disabled=True)  # type: AVNImporter
+        importer = self.phandler._handlerManager.findHandlerByName(AVNImporter.getConfigName(),disabled=True)  # type: AVNImporter
         if importer is None:
             raise Exception("no importer available")
         name = self.prefix if name is None else self.prefix + ":" + name
@@ -580,7 +580,7 @@ class ApiImpl(AVNApi):
         importer.registerConverter(name, converter)
 
     def deregisterConverter(self, name=None):
-        importer = AVNWorker.findHandlerByName(AVNImporter.getConfigName(),disabled=True)  # type: AVNImporter
+        importer = self.phandler._handlerManager.findHandlerByName(AVNImporter.getConfigName(),disabled=True)  # type: AVNImporter
         if importer is None:
             raise Exception("no importer available")
         name = self.prefix if name is None else self.prefix + ":" + name
@@ -588,7 +588,7 @@ class ApiImpl(AVNApi):
         importer.deregisterConverter(name)
 
     def _getAlarmHandler(self):
-        alarmhandler = AVNWorker.findHandlerByName(AVNAlarmHandler.getConfigName())  # type: AVNAlarmHandler
+        alarmhandler = self.phandler._handlerManager.findHandlerByName(AVNAlarmHandler.getConfigName())  # type: AVNAlarmHandler
         if alarmhandler is None:
             raise Exception("cannot find alarm handler")
         return alarmhandler
@@ -860,7 +860,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         self.baseDir = self.getPluginBaseDir(self.D_USER)
 
     @classmethod
-    def getConfigParam(cls, child=None):
+    def getConfigParam(cls, handlerManager=None, child=None):
         if child is None:
             return {
                 'builtinDir': os.path.join(os.path.dirname(__file__), '..', 'plugins'),
@@ -952,7 +952,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         for api in newApis.values():
             api.startPluginThread()
             chartkeys.append(api.prefix)
-        charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName(),disabled=True)
+        charthandler = self._handlerManager.findHandlerByName(AVNChartHandler.getConfigName(),disabled=True)
         if charthandler is not None:
             charthandler.cleanupExternalOverlays(chartkeys)
         self.createdApis = newApis

@@ -53,11 +53,11 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
     self.addonHandler=None
 
   def startInstance(self, navdata):
-    self.addonHandler = self.findHandlerByName("AVNUserAppHandler")
+    self.addonHandler = self._handlerManager.findHandlerByName("AVNUserAppHandler")
     return super().startInstance(navdata)
 
   def onPreRun(self):
-    httpserver=self.findHandlerByName(AVNHttpServer.getConfigName())
+    httpserver=self._handlerManager.findHandlerByName(AVNHttpServer.getConfigName())
     if not httpserver:
       return
     srcDir=httpserver.handlePathmapping(AVNHttpServer.PATH_VIEWER)

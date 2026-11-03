@@ -32,7 +32,7 @@ import urllib.parse
 from typing import Dict
 
 from httphandler import AVNHTTPHandler, WebSocketHandler
-from avnav_util import plainUrlToPath
+from avnav_worker import AVNWorker, WorkerParameter, UsedResource
 
 try:
   import create_overview
@@ -84,11 +84,14 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     return True
 
   @classmethod
+  def preventMultiInstance(cls):
+      return True
+
+  @classmethod
   def createInstance(cls, cfgparam):
-    cls.checkSingleInstance()
     return AVNHttpServer(cfgparam, AVNHTTPHandler)
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child == "Directory":
       return {
               "urlpath":None,
@@ -156,7 +159,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       for mtype in mtypes:
         self.overwrite_map[mtype['extension']]=mtype['type']
     AVNWorker.__init__(self, cfgparam)
-    self.type=AVNWorker.Type.HTTPSERVER
+    self.type=AVNWorker.HandlerType.HTTPSERVER
     self.interfaceReader=None
     self.addresslist=[]
     self.handlerMap={}
@@ -218,7 +221,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       '''
       if url is None:
           return False
-      cfg=self.getConfigParam()
+      cfg= self.getConfigParam(self._handlerManager)
       for navurl in [cfg.get('navurl'),cfg.get('navurlCompat')]:
         if navurl is not None and url.startswith(navurl):
             return url[len(navurl)+1:]

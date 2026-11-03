@@ -226,7 +226,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
                            condition=[{P_WPMODE.name:'early'}],
                            rangeOrList=[5,100])
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is None:
       
       rt=[
@@ -421,7 +421,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     AVNLog.debug("router main loop")
 
   def startStopAlarm(self,start,name=ALARMS.waypoint):
-    alert = self.findHandlerByName("AVNAlarmHandler")
+    alert = self._handlerManager.findHandlerByName("AVNAlarmHandler")
     if alert is None:
       return
     try:

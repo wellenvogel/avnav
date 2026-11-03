@@ -179,7 +179,7 @@ class AVNUsbSerialReader(AVNWorker):
   P_DTYPE=WorkerParameter('type', 'reader',type=WorkerParameter.T_SELECT,rangeOrList=UsbSerialHandler.ALL_INTERNAL_TYPES,
                           description="the type of this serial channel: reader or writer or combined (both reader and writer)\nor ignored to not use it at all")
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is None:
       #get the default configuration for a serial reader
       rt=list(filter(lambda p: p.name != 'port',SerialReader.getConfigParam()))
@@ -203,12 +203,15 @@ class AVNUsbSerialReader(AVNWorker):
         AVNWorker.NAME_PARAMETER
         ]
     return rt+ownParam
-  
+
+  @classmethod
+  def preventMultiInstance(cls):
+      return True
+
   @classmethod
   def createInstance(cls, cfgparam):
     if not hasUdev:
       raise Exception("no pyudev installed, cannot run %s"%(cls.getConfigName()))
-    cls.checkSingleInstance()
     return AVNUsbSerialReader(cfgparam)
 
   @classmethod

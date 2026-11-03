@@ -55,7 +55,7 @@ class AVNUdpReader(AVNWorker):
                            condition={P_ALLOWMC.name:True})
   
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     rt=[

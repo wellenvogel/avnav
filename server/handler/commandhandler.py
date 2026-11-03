@@ -142,7 +142,7 @@ class AVNCommandHandler(AVNWorker):
   def getConfigName(cls):
     return "AVNCommandHandler"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is None:
       return {
       }

@@ -32,6 +32,7 @@ import signal
 
 from handler.baseconfig import AVNBaseConfig
 from httpserver import AVNHttpServer
+from avnav_nmea import NMEAParser
 
 try:
   import create_overview
@@ -59,8 +60,6 @@ def avnavPrint(*args, **kwargs):
 
 builtins.print=avnavPrint
 
-def sighandler(signal,frame):
-  AVNWorker.shutdownServer()
 
 def findHandlerByConfig(list,configName):
   for h in list:
@@ -229,8 +228,8 @@ def main(argv):
         sys.exit(1)
     else:
       handlerManager.copyFileWithCheck(cfgname,fallbackName,False) #write a "last known good"
-  baseConfig=AVNWorker.findHandlerByName("AVNConfig") #type: AVNBaseConfig
-  httpServer=AVNWorker.findHandlerByName(AVNHttpServer.getConfigName())
+  baseConfig=handlerManager.findHandlerByName("AVNConfig") #type: AVNBaseConfig
+  httpServer=handlerManager.findHandlerByName(AVNHttpServer.getConfigName())
   if baseConfig is None:
     AVNLog.errorOut("internal error: base config not loaded")
     sys.exit(1)
@@ -261,7 +260,7 @@ def main(argv):
     if options.chartbase is not None:
         mappings[AVNHttpServer.PATH_CHARTS]=options.chartbase
     httpServer.updatePathMappings(mappings)
-    for handler in AVNWorker.getAllHandlers(disabled=True):
+    for handler in handlerManager.getAllHandlers():
       handledCommands=handler.getApiType()
       if handledCommands is not None:
           httpServer.registerRequestHandler(handledCommands,handler)
@@ -275,7 +274,7 @@ def main(argv):
     optPort=getattr(options,A_SERVERPORT)
     if optPort is not None:
       httpServer.param[AVNHttpServer.PORT_CONFIG]=optPort
-  aishandler=AVNWorker.findHandlerByName('AVNAISWorker')
+  aishandler=handlerManager.findHandlerByName('AVNAISWorker')
   if aishandler is None:
       aishandler=baseConfig
   navData=AVNStore(
@@ -290,6 +289,9 @@ def main(argv):
     if f is not None:
       f.write(str(os.getpid())+"\n")
       f.close()
+
+  def sighandler(signal, frame):
+      handlerManager.shutdownServer()
   #really start processing here - we start all handlers that have been configured
   signal.signal(signal.SIGINT, sighandler)
   signal.signal(signal.SIGTERM, sighandler)
