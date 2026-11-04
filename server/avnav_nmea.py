@@ -207,15 +207,7 @@ class NMEAParser(object):
     self.navdata=navdata # type: AVNStore
     self.satStore={}
     self.lock=threading.Lock()
-  @classmethod
-  def formatTime(cls,ts):
-    t = ts.isoformat()
-    # seems that isoformat does not well harmonize with OpenLayers.Date
-    # they expect at leas a timezone info
-    # as we are at GMT we should have a "Z" at the end
-    if not t[-1:] == "Z":
-      t += "Z"
-    return t
+
   #------------------ some nmea data specific methods -------------------
   def _getSatStore(self,source):
     with self.lock:
@@ -472,7 +464,7 @@ class NMEAParser(object):
         if darray[10] and darray[11]:
           rt[self.K_MVAR.key] = float(darray[10]) * (-1 if darray[11] == 'W' else +1)
         if darray[1] and darray[9]:
-          rt['time']=self.formatTime(self.gpsTimeToTime(darray[1], darray[9]))
+          rt['time']=AVNUtil.timeToIso8601(self.gpsTimeToTime(darray[1], darray[9]))
         self.addToNavData(rt,source=source,priority=basePriority+1,record=tag,timestamp=timestamp)
         return True
       if tag == 'ZDA':
@@ -480,7 +472,7 @@ class NMEAParser(object):
         gpstime=darray[1]
         #ensure each 2 digits for day and month
         gpsdate=('0' + darray[2])[-2:] +('0' + darray[3])[-2:]+('0000'+darray[4])[-4:]
-        rt['time']=self.formatTime(self.gpsTimeToTime(gpstime,gpsdate))
+        rt['time']=AVNUtil.timeToIso8601(self.gpsTimeToTime(gpstime,gpsdate))
         self.addToNavData(rt,source=source,priority=basePriority,record=tag,timestamp=timestamp)
         return True
       if tag == 'VWR':

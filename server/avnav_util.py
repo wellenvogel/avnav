@@ -553,7 +553,7 @@ class AVNUtil(object):
     # parse an ISO8601 t8ime string
     # see http://stackoverflow.com/questions/127803/how-to-parse-iso-formatted-date-in-python
     # a bit limited to what we write into track files or what GPSD sends us
-    # returns a datetime object
+    # returns a datetime object with timezone UTC
     @classmethod
     def gt(cls, dt_str):
         dt, delim, us = dt_str.partition(".")
@@ -568,7 +568,14 @@ class AVNUtil(object):
         return dt + datetime.timedelta(microseconds=us)
 
     @classmethod
-    def timeToIso8601(cls, dt):
+    def timeToIso8601(cls, dt:datetime.datetime):
+        '''
+        convert datetime to iso8601 format in UTC
+        naive datetime objects are assumed to be UTC
+        others are converted to UTC
+        :param dt:
+        :return:
+        '''
         if not dt:
             return None
         if dt.tzinfo is not None and dt.tzinfo != datetime.UTC:

@@ -539,7 +539,7 @@ class AVNCanboatHandler(AVNWorker):
                         else:
                             dt += datetime.timedelta(days=cdate, milliseconds=ctime / 10)
                     if dt is not None:
-                        self.navdata.setValue(NMEAParser.K_TIME.getKey(), self.formatTime(dt), source=source,
+                        self.navdata.setValue(NMEAParser.K_TIME.getKey(), AVNUtil.timeToIso8601(dt), source=source,
                                          priority=priority+1)
                     if autoSendRMC > 0:
                         if self.lastRmc is None or self.lastRmc < (now - autoSendRMC):
@@ -549,7 +549,7 @@ class AVNCanboatHandler(AVNWorker):
                                 speed = self.navdata.getSingleValue(NMEAParser.K_SOG.getKey())
                                 cog = self.navdata.getSingleValue(NMEAParser.K_COG.getKey())
                                 AVNLog.debug("generating RMC lat=%f,lon=%f,ts=%s", lat, lon,
-                                               dt.isoformat())
+                                               AVNUtil.timeToIso8601(dt))
                                 fixutc = "%02d%02d%02d.%02d" % (dt.hour, dt.minute, dt.second,
                                                                 dt.microsecond / 1000)
                                 (latstr, NS) = self.nmeaFloatToPos(lat, True)
@@ -696,15 +696,6 @@ class AVNCanboatHandler(AVNWorker):
             if sequence != self.changeSequence:
                 return
             self._safeWait(sequence, 3)
-
-    def formatTime(self, ts):
-        t = ts.isoformat()
-        # seems that isoformat does not well harmonize with OpenLayers.Date
-        # they expect at leas a timezone info
-        # as we are at GMT we should have a "Z" at the end
-        if not t[-1:] == "Z":
-            t += "Z"
-        return t
 
     def nmeaFloatToPos(self, pos, isLat):
         '''return a tuple (string,direction) from a position'''
