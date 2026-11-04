@@ -48,6 +48,8 @@ from math import copysign
 from typing import Any
 from typing import Callable
 
+from dateutil.tz import tz
+
 
 class Enum(set):
     def __getattr__(self, name):
@@ -227,9 +229,7 @@ class AVNLog(object):
     def changeLogLevelAndFilter(cls, level, filter, timeout=None):
         try:
             numeric_level = cls.levelToNumeric(level)
-            oldlevel = None
             if not cls.logger.getEffectiveLevel() == numeric_level:
-                oldlevel = cls.logger.getEffectiveLevel()
                 cls.logger.setLevel(numeric_level)
             if not cls.consoleHandler is None:
                 cls.consoleHandler.setLevel(numeric_level)
@@ -321,25 +321,35 @@ class AVNUtil(object):
     R = 6371000  # earth radius in m
     NMEA_SERVICE = "_nmea-0183._tcp"  # avahi service for NMEA
 
+    @classmethod
+
+    def timeToDatetime(cls, ts=None,localTime=False):
+        if ts is None:
+            ts=time.time()
+        rt=datetime.datetime.fromtimestamp(ts,tz=datetime.UTC)
+        if localTime:
+            rt.astimezone(tz= tz.tzlocal())
+        return rt
     # convert a datetime UTC to a timestamp in seconds
     @classmethod
     def datetimeToTsUTC(cls, dt):
         if dt is None:
             return None
-        # subtract the EPOCH
-        td = (dt - datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC))
-        ts = ((td.days * 24 * 3600 + td.seconds) * 10 ** 6 + td.microseconds) / 1e6
-        return ts
+        if dt.tzinfo is None or dt.tzinfo == datetime.UTC:
+            #assume UTC for naive
+            return dt.replace(tzinfo=datetime.UTC).timestamp()
+        else:
+            return dt.astimezone(tz=datetime.UTC).timestamp()
 
     # timedelta total_seconds that is not available in 2.6
     @classmethod
-    def total_seconds(cls, td):
+    def total_seconds(cls, td:datetime.timedelta):
         return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10 ** 6) / 10 ** 6
 
     # now timestamp in utc
     @classmethod
     def utcnow(cls):
-        return cls.datetimeToTsUTC(datetime.datetime.now(datetime.UTC))
+        return time.time()
 
     @classmethod
     def utctomonotonic(cls, utcts):
@@ -550,12 +560,23 @@ class AVNUtil(object):
         if delim is None or delim == '':
             dt = dt.rstrip("Z")
         dt = datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")
+        dt= dt.replace(tzinfo=datetime.timezone.utc)
         if not us is None and us != "":
             us = int(us.rstrip("Z"), 10)
         else:
             us = 0
         return dt + datetime.timedelta(microseconds=us)
 
+    @classmethod
+    def timeToIso8601(cls, dt):
+        if not dt:
+            return None
+        if dt.tzinfo is not None and dt.tzinfo != datetime.UTC:
+            dt=dt.astimezone(datetime.UTC)
+        ts=dt.replace(tzinfo=None).isoformat()
+        if not ts[-1:]=="Z":
+            ts+="Z"
+        return ts
     # return a regex to be used to check for NMEA data
     @classmethod
     def getNMEACheck(cls):
@@ -1426,8 +1447,6 @@ class AVNZipDownload(AVNDownload):
                         fp.write(buf)
                         if stream.hasData():
                             yield stream.readall()
-                        else:
-                            debug = 1
             zf.close()
         yield stream.readall()
 

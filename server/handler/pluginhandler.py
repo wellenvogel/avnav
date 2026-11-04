@@ -24,7 +24,6 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-import datetime
 import importlib.util
 import inspect
 import json
@@ -467,7 +466,7 @@ class ApiImpl(AVNApi):
 
     def timestampFromDateTime(self, dt=None):
         if dt is None:
-            dt = datetime.datetime.now(datetime.UTC)
+            return time.time()
         return AVNUtil.datetimeToTsUTC(dt)
 
     def getDataDir(self):
@@ -812,7 +811,7 @@ class PluginApiProxy():
         if hasattr(self.__check, item):
             return getattr(self.__impl, item)
         AVNLog.debug("plugin %s:trying to acccess invalid api method %s", self.__name, item)
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def disable(self):
         self.__check = None
@@ -1232,10 +1231,10 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         if command == 'status':
             info=self.getInfo()
             if info is None:
-                return AVNUtil.getReturnData(error=f"no plugin status")
+                return AVNUtil.getReturnData(error="no plugin status")
             items=info.get('items')
             if items is None:
-                return AVNUtil.getReturnData(error=f"no items for plugin status")
+                return AVNUtil.getReturnData(error="no items for plugin status")
             return AVNUtil.getReturnData(data=items)
         return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
 

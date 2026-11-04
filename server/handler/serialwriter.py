@@ -152,7 +152,6 @@ class SerialWriter(SerialReader):
     threading.current_thread().setName("%s - %s"%(self.getName(),self.param['port']))
     self.device=None
     init=True
-    isOpen=False
     AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in list(self.param.keys())))
     self.infoHandler.setInfo(INAME,"created",WorkerStatus.STARTED)
     startReader=self.P_COMBINED.fromDict(self.param)

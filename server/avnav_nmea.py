@@ -242,10 +242,10 @@ class NMEAParser(object):
   @classmethod
   def gpsTimeToTime(cls,gpstime,gpsdate=None):
     #we take day/month/year from our system and add everything else from the GPS
-    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'))
+    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'),tzinfo=datetime.UTC)
     AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
     if gpsdate is None:
-      curdt=datetime.datetime.now(datetime.UTC)
+      curdt=AVNUtil.timeToDatetime()
       gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
       AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
       #now correct the time if we are just changing from one day to another
@@ -734,7 +734,6 @@ class NMEAParser(object):
           try:
             # we need 4 fields
             if all(darray[i + k] for k in range(4)):
-              ttype = darray[i]
               tdata = float(darray[i + 1])
               tunit = darray[i + 2]
               tname = darray[i + 3]
@@ -752,7 +751,7 @@ class NMEAParser(object):
     except EmptyPosition:
       AVNLog.ld("empty position in %s",str(data))
       return False
-    except Exception as e:
+    except Exception:
       AVNLog.info(" error parsing nmea data %s:%s", str(data),traceback.format_exc())
 
   @classmethod
@@ -815,7 +814,7 @@ class NMEAParser(object):
         except ValueError:
             pad = 0
         crc = fields[6].split('*')[1].strip()
-    except IndexError as e:
+    except IndexError:
         AVNLog.debug("malformed line: %s: %sn",line.strip(),traceback.format_exc())
         return False
     if csum != crc:
@@ -858,7 +857,6 @@ class NMEAParser(object):
           cooked = ais.postprocess(cooked)
           expected = ais.lengths.get(values['msgtype'], None)
           # Check length; has to be done after so we have the type field
-          bogon = False
           if expected is not None:
               if type(expected) == type(0):
                   expected_range = (expected, expected)
@@ -879,7 +877,6 @@ class NMEAParser(object):
 
   def storeAISdata(self,bitfield,source='internal',priority=0,timestamp=None):
     rt={'class':'AIS'}
-    storeData=False
     for bfe in bitfield:
       try:
         name=bfe[0].name

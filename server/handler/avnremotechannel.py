@@ -137,6 +137,7 @@ class AVNRemoteChannelHandler(AVNWorker):
       self.socket.close()
     except Exception as e:
       pass
+    return rt
 
   def stop(self):
     super().stop()

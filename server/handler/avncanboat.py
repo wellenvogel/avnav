@@ -37,7 +37,7 @@ import traceback
 import avnav_handlerList
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
-from avnav_util import AVNLog, SafePopen, MovingSum
+from avnav_util import AVNLog, SafePopen, MovingSum, AVNUtil
 from avnav_worker import WorkerParameter, AVNWorker, WorkerStatus, ForwardInfoHandler, InfoHandler, WorkerKind
 from avnqueue import AVNQueue
 from socketbase import SocketReader
@@ -533,7 +533,7 @@ class AVNCanboatHandler(AVNWorker):
                     ctime = self._getField(msg, 'Time', 'value')
                     dt = None
                     if cdate is not None and ctime is not None:
-                        dt = datetime.datetime(year=1970, month=1, day=1)
+                        dt = AVNUtil.timeToDatetime(0)
                         if timeInSeconds:
                             dt += datetime.timedelta(days=cdate, seconds=ctime )
                         else:
@@ -658,7 +658,7 @@ class AVNCanboatHandler(AVNWorker):
         readPos = self._getConfig(self.P_READPOS)
         handledPGNs = [int(p) for p in handledPGNs]
         AVNLog.info("started with host=%s,port %d, autoSendRMC=%d" % (host, port, autoSendRMC))
-        self.setInfo(self.ST_MAIN, f"started",WorkerStatus.RUNNING)
+        self.setInfo(self.ST_MAIN, "started",WorkerStatus.RUNNING)
         source = self.getSourceName()
         rmcWatcher = threading.Thread(target=self.rmcWatcher, args=[sequence, source], daemon=True)
         rmcWatcher.start()
@@ -676,7 +676,7 @@ class AVNCanboatHandler(AVNWorker):
             self.connections.add(self.ST_JSON,jCon)
             jCon.start()
         else:
-            self.setInfo(self.ST_JSON, f"disabled",WorkerStatus.INACTIVE)
+            self.setInfo(self.ST_JSON, "disabled",WorkerStatus.INACTIVE)
         if nmeaPort and self._hasRust():
             nCon=NmeaConnection(host=host, port=nmeaPort,key=self.ST_NMEA,
                                 infoHandler=self,
@@ -687,7 +687,7 @@ class AVNCanboatHandler(AVNWorker):
             nCon.start()
         else:
             if self._hasRust():
-                self.setInfo(self.ST_NMEA, f"disabled",WorkerStatus.INACTIVE)
+                self.setInfo(self.ST_NMEA, "disabled",WorkerStatus.INACTIVE)
         while sequence == self.changeSequence:
             if not self._checkProcess():
                 self._safeWait(sequence, 10)

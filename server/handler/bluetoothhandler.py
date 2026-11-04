@@ -219,7 +219,6 @@ class AVNBlueToothReader(AVNWorker):
         filter=filterstr.split(',') 
       for match in service_matches:
         port = match["port"]
-        name = match["name"]
         host = match["host"]
         found=False
         if len(filter) > 0:

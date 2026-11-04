@@ -22,7 +22,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 ###############################################################################
-import datetime
 import hashlib
 import json
 import os
@@ -34,7 +33,6 @@ import time
 import traceback
 import zipfile
 from enum import Enum
-
 import avnav_handlerList
 from avnav_api import ConverterApi
 from avnav_manager import AVNHandlerManager
@@ -218,8 +216,9 @@ class ConversionResult:
     self.disabled=disabled
   def valid(self):
     return self.md5 is not None
-  def dateStr(self):
-    return datetime.datetime.fromtimestamp(self.ts).strftime('%Y-%m-%d %H:%M')
+  def dateStr(self,localTime=True):
+    dt=AVNUtil.timeToDatetime(self.ts,localTime=localTime)
+    return dt.strftime('%Y-%m-%d %H:%M')
   def isOk(self):
     return self.error is None
   def isDisabled(self):
@@ -741,12 +740,10 @@ class AVNImporter(AVNWorker):
         os.unlink(logfile)
       except:
         pass
-    rt=False
     if os.path.isdir(fullname):
       AVNLog.info("deleting import directory %s",fullname)
       try:
         shutil.rmtree(fullname)
-        rt=True
       except:
         AVNLog.error("error deleting directory %s:%s",fullname,traceback.format_exc())
     else:
@@ -754,7 +751,6 @@ class AVNImporter(AVNWorker):
         AVNLog.info("deleting import file %s",fullname)
         try:
           os.unlink(fullname)
-          rt=True
         except:
           AVNLog.error("error deleting file %s:%s",fullname,traceback.format_exc())
     self.wakeUp()

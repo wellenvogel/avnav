@@ -29,9 +29,18 @@ import datetime
 import glob
 import logging.handlers
 import optparse
+import os
+import re
+import shutil
 import signal
+import sys
+import time
+import traceback
 
+from avnav_manager import AVNHandlerManager
 from avnav_nmea import NMEAParser
+from avnav_store import AVNStore
+from avnav_util import AVNUtil, AVNLog
 from handler.baseconfig import AVNBaseConfig
 from httpserver import AVNHttpServer
 
@@ -39,17 +48,14 @@ try:
   import create_overview
 except:
   pass
-AVNAV_VERSION=datetime.datetime.now().strftime("%Y%m%d")
+AVNAV_VERSION=AVNUtil.timeToDatetime().strftime("%Y%m%d")
 try:
   from avnav_server_version import AVNAV_VERSION
 except:
   pass
-from avnav_manager import *
-from avnav_store import *
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 import builtins
-
-loggingInitialized=False
 
 def avnavPrint(*args, **kwargs):
   line=""
@@ -69,7 +75,7 @@ def findHandlerByConfig(list,configName):
   return None
 
 def getFailedBackupName(fileName):
-  now=datetime.datetime.utcnow()
+  now=AVNUtil.timeToDatetime()
   return fileName+"-failed-"+now.strftime("%Y%m%d%H%M%S")
 
 def houseKeepingCfg(cfgFile):
@@ -125,7 +131,7 @@ def writeStderr(txt):
   sys.stderr.write("AVNAV-ERROR: "+txt+"\n")
 A_SERVERPORT="serverport"
 def main(argv):
-  global loggingInitialized,debugger
+  global debugger
   try:
     #workaround for some strange bug AttributeError: 'module' object has no attribute '_strptime'
     #see http://code-trick.com/python-bug-attribute-error-_strptime
@@ -306,7 +312,7 @@ def main(argv):
     while not handlerManager.shouldStop:
       time.sleep(1)
 
-  except Exception as e:
+  except Exception:
     AVNLog.errorOut("Exception in main %s",traceback.format_exc())
   AVNLog.info("stopping")
   sighandler(None, None)

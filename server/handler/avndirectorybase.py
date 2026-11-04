@@ -644,7 +644,7 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
 
   def handleDownload(self, name, handler, requestparam):
       if not name:
-          raise Exception(f"missing name")
+          raise Exception("missing name")
       if name.startswith(self.SCOPE_PLUGIN) or name.startswith(self.SCOPE_SYSTEM):
         item=self.findSystemOrPluginItem(name)
         if item is not None:

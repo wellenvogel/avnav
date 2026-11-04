@@ -6,7 +6,6 @@ import threading
 import traceback
 import urllib.error
 import urllib.parse
-import urllib.parse
 import urllib.request
 
 from avnav_util import AVNUtil, AVNLog, AVNDownload, AVNJsonDownload

@@ -1137,8 +1137,6 @@ class AVNSignalKHandler(AVNWorker):
           ep = endpoints[k]
           if apiUrl is None:
               apiUrl = ep.get('signalk-http')
-              if apiUrl is not None:
-                  errorReported = False
           if websocketUrl is None:
               websocketUrl = ep.get("signalk-ws")
           if version is None:
@@ -1210,7 +1208,6 @@ class AVNSignalKHandler(AVNWorker):
         if sequence != self.configSequence:
           return
         self.connected=False
-        responseData=None
         try:
           [apiUrl,websocketUrl,version]=self._queryBase(baseUrl)
         except:

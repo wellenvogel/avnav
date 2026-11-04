@@ -42,7 +42,7 @@ class AVNIpServiceReader(AVNWorker):
 
   @classmethod
   def getServiceType(cls):
-    raise NotImplemented("getServiceType must be implemented")
+    raise NotImplementedError("getServiceType must be implemented")
   @classmethod
   def _listServices(cls,handlerManager):
     avahi=handlerManager.findHandlerByName(AVNAvahi.getConfigName()) if handlerManager is not None else None

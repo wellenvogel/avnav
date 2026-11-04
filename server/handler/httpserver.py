@@ -314,7 +314,6 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     return rt
 
   def getWebSocketsHandler(self,path,query,handler):
-    requestParam=urllib.parse.parse_qs(query,True)
     path=posixpath.normpath(path)
     for prefix in list(self.webSocketHandlers.keys()):
       if path.startswith(prefix) and not self.webSocketHandlers[prefix].isDisabled():

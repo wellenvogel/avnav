@@ -242,7 +242,7 @@ class AVNQueue(AVNWorker):
             if wait <= 0:
               break
             self.listlock.wait(wait)
-      except Exception as e:
+      except Exception:
         pass
     if len(rtlist) < 1:
       if returnError:
@@ -271,7 +271,6 @@ class AVNQueue(AVNWorker):
   def run(self):
     AVNLog.info("feeder started")
     self.setInfo('main', "running", WorkerStatus.RUNNING)
-    sequence=None
     while not self.shouldStop():
         self.wait(1)
 
