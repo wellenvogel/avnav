@@ -285,7 +285,8 @@ class AVNCanboatHandler(AVNWorker):
                                     condition={P_CANBOATTYPE.name:T_RUST})
     P_CANBOATPARAM= WorkerParameter('canboatParam',
                                     description='Additional parameters for the canboat-rust call of "canboat server".\n'+
-                                      'Refer to the documentation for more details.\n',
+                                      'Refer to the documentation for more details.\n'+
+                                      'To replay a dump file set canboatKind and canboatDevice empty and use --replay filename.',
                                     default="",
                                     mandatory=False,
                                     condition={P_CANBOATTYPE.name:T_RUST})
@@ -620,9 +621,9 @@ class AVNCanboatHandler(AVNWorker):
         param=self._getConfig(self.P_CANBOATPARAM)
         hasRust=self._hasRust()
         if hasRust:
-            if (device is None or device.strip() == "") and (param is None or not 'device' in param):
+            if (device is None or device.strip() == "") and (param is None or param.strip() == ""):
                 self._stopWithError(sequence, "no canboatDevice configured, stopping plugin")
-            if (kind is None or kind.strip() == "") and (param is None or not 'kind' in param):
+            if (kind is None or kind.strip() == "") and (param is None or param.strip() == ""):
                 self._stopWithError(sequence, "no canboatKind configured, stopping plugin")
         """
         the run method
