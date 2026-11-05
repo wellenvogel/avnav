@@ -57,7 +57,7 @@ class AVNDirectoryListEntry(object):
   @classmethod
   def getFilteredKeys(cls):
     return []
-  def __init__(self,type,name,ftime=0,size=0,
+  def __init__(self,type,name,time=0.0,size=0,
                canDelete=False,isDirectory=False,canDownload=True,
                extension=None,scope=None,url=None,filename=None,
                userData=None,displayName=None,downloadName=None,
@@ -67,7 +67,7 @@ class AVNDirectoryListEntry(object):
     self.displayName=displayName
     self.type=type
     self.url=url
-    self.time=ftime
+    self.time=time
     self.size=size
     self.canDelete=canDelete
     self.isDirectory=isDirectory
