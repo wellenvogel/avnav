@@ -32,11 +32,10 @@ import threading
 import time
 import traceback
 import zipfile
-from enum import Enum
 import avnav_handlerList
 from avnav_api import ConverterApi
 from avnav_manager import AVNHandlerManager
-from avnav_util import AVNLog, AVNUtil, AVNDownloadError, AVNZipDownload, AVNFileDownloadLB, AVNFileDownload
+from avnav_util import AVNLog, AVNUtil, AVNDownloadError, AVNZipDownload, AVNFileDownloadLB, AVNFileDownload, Enum
 from avnav_worker import WorkerStatus, AVNWorker, WorkerParameter, WorkerKind
 from avndirectorybase import AVNDirectoryHandlerBase
 from httpserver import AVNHttpServer
