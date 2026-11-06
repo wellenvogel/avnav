@@ -1031,7 +1031,8 @@ class LayoutHandler{
             panelData.splice(index, 1);
             this._addAction(new LayoutAction(ACTIONS.ACTION_ADD,page,panel,{
                 index: index,
-                item: old
+                item: old,
+                addMode: ADD_MODES.beforeIndex
             }));
         }
         this.incrementSequence();

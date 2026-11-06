@@ -217,6 +217,7 @@ const MapWidgetsDialog = () => {
         dialogContext.showDialog(() => <EditWidgetDialogWithFunc
             widgetItem={item}
             panelname={OVERLAYPANEL}
+            panelList={[OVERLAYPANEL]}
             pageWithOptions={PAGENAME}
             opt_options={{fixPanel: true, types: ['map']}}
         />)
@@ -241,6 +242,7 @@ const MapWidgetsDialog = () => {
                         widgetItem={undefined}
                         pageWithOptions={PAGENAME}
                         panelname={OVERLAYPANEL}
+                        panelList={[OVERLAYPANEL]}
                         opt_options={{fixPanel: true, types: ['map']}}
                     />)
                 },
@@ -692,7 +694,8 @@ const NavPage=(props:PageProps)=>{
                 widgetItem={item}
                 pageWithOptions={PAGENAME}
                 panelname={panel}
-                opt_options={{fixPanel: pagePanels, beginning: invertEditDirection, types: ["!map"]}}
+                panelList={pagePanels}
+                opt_options={{beginning: invertEditDirection, types: ["!map"]}}
             />)
             return;
         }
