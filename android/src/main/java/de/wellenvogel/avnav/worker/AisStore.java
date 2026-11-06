@@ -27,8 +27,9 @@ public class AisStore {
 
     }
     private HashMap<Integer,JSONObject> aisData=new HashMap<Integer, JSONObject>();
-    private static final int HANDLED_MESSAGES[]=new int[]{1,2,3,5,18,19,24,4,21};
-    private static final String MERGE_FIELDS[]=new String[]{"imo_id","callsign","shipname","shiptype","destination","length","beam","draught"};
+    private static final int[] HANDLED_MESSAGES =new int[]{1,2,3,5,18,19,24,4,21};
+    private static final String[] MERGE_FIELDS =new String[]{"imo_id","callsign","shipname","shiptype",
+            "destination","length","beam","draught","to_bow","to_stern","to_port","to_starboard"};
     private static final String LOGPRFX="Avnav.AisStore";
     private static final String AGE_KEY="age";
     private static final String PRIO_KEY="__priority";
@@ -179,6 +180,10 @@ public class AisStore {
                     if (msgId == 5 || part24 != 0) {
                         rt.put("callsign", m.getCallsign() != null ? m.getCallsign().replaceAll("@*$", "") : "");
                         rt.put("shiptype", m.getShipType());
+                        rt.put("to_bow", m.getDimBow());
+                        rt.put("to_stern", m.getDimStern());
+                        rt.put("to_port", m.getDimPort());
+                        rt.put("to_starboard", m.getDimStarboard());
                         rt.put("length", m.getDimBow() + m.getDimStern());
                         rt.put("beam", m.getDimPort() + m.getDimStarboard());
                     }
@@ -209,6 +214,10 @@ public class AisStore {
                     }
                     rt.put("name",m.getName().replaceAll("@*$",""));
                     rt.put("aid_type",m.getAtonType());
+                    rt.put("to_bow",m.getDimBow());
+                    rt.put("to_stern",m.getDimStern());
+                    rt.put("to_port",m.getDimPort());
+                    rt.put("to_starboard",m.getDimStarboard());
                     rt.put("length",m.getDimBow()+m.getDimStern());
                     rt.put("beam",m.getDimPort()+m.getDimStarboard());
                     break;

@@ -44,7 +44,6 @@ import time
 import urllib.parse
 import zipfile
 from http.server import SimpleHTTPRequestHandler
-from math import copysign
 from typing import Any
 from typing import Callable
 
@@ -489,66 +488,6 @@ class AVNUtil(object):
             rt = 360 + rt
         return rt
 
-    ais_converters = {
-        "mmsi": str,
-        "imo_id": int,
-        "shiptype": int,
-        "type": int,
-        "epfd": int,
-        "status": int,
-        "month": int,  # ETA
-        "day": int,  # ETA
-        "hour": int,  # ETA
-        "minute": int,  # ETA
-        "second": int,  # timestamp
-        "maneuver": int,
-        "accuracy": int,
-        "lat": lambda v: float(v) / 600000,
-        "lon": lambda v: float(v) / 600000,
-        "speed": lambda v: float(v) / 10 * AVNUtil.NM / 3600,
-        "course": lambda v: float(v) / 10,
-        "heading": int,
-        "turn": lambda v: round(copysign((float(v) / 4.733) ** 2, float(v)))
-        if abs(float(v)) < 128
-        else None,
-        "draught": lambda v: float(v) / 10,
-        "to_bow": int,  # A
-        "to_stern": int,  # B
-        "to_port": int,  # C
-        "to_starboard": int,  # D
-    }
-    @classmethod
-    def computeDim(cls,data,target,p1,p2):
-        p1r=data.get(p1)
-        p2r=data.get(p2)
-        if p1r is None and p2r is None:
-            return
-        if p1r is None and p2r is not None:
-            p1r=0
-        if p2r is None and p1r is not None:
-            p2r=0
-        data[target]=p1r+p2r
-
-    @classmethod
-    def convertAIS(cls, aisdata):
-        "convert ais raw values to real values"
-        rt = aisdata.copy()
-
-        for k, f in cls.ais_converters.items():
-            if k not in rt:  # only convert data that's actually present
-                continue
-            try:
-                rt[k] = f(rt[k])
-            except:
-                rt[k] = None  # explicitly map invalid data to none
-
-        try:
-            cls.computeDim(rt,"beam","to_port","to_starboard")
-            cls.computeDim(rt,"length","to_bow","to_stern")
-        except:
-            pass
-
-        return rt
 
     # parse an ISO8601 t8ime string
     # see http://stackoverflow.com/questions/127803/how-to-parse-iso-formatted-date-in-python

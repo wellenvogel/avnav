@@ -33,6 +33,7 @@ import sys
 import threading
 import time
 import traceback
+from math import copysign
 
 from avnav_store import AVNStore
 from avnav_util import AVNUtil, AVNLog
@@ -190,6 +191,35 @@ class NMEAParser(object):
     K_SET,
     K_DFT
   ]
+
+  ais_converters = {
+      "mmsi": str,
+      "imo_id": int,
+      "shiptype": int,
+      "type": int,
+      "epfd": int,
+      "status": int,
+      "month": int,  # ETA
+      "day": int,  # ETA
+      "hour": int,  # ETA
+      "minute": int,  # ETA
+      "second": int,  # timestamp
+      "maneuver": int,
+      "accuracy": int,
+      "lat": lambda v: float(v) / 600000,
+      "lon": lambda v: float(v) / 600000,
+      "speed": lambda v: float(v) / 10 * AVNUtil.NM / 3600,
+      "course": lambda v: float(v) / 10,
+      "heading": int,
+      "turn": lambda v: round(copysign((float(v) / 4.733) ** 2, float(v)))
+            if abs(float(v)) < 128
+            else None,
+      "draught": lambda v: float(v) / 10,
+      "to_bow": int,  # A
+      "to_stern": int,  # B
+      "to_port": int,  # C
+      "to_starboard": int,  # D
+  }
 
   @classmethod
   def registerKeys(cls,navdata):
@@ -867,6 +897,38 @@ class NMEAParser(object):
           AVNLog.debug("exception while decoding AIS data %s:%s",raw,traceback.format_exc())
           return False
 
+  @classmethod
+  def computeDim(cls, data, target, p1, p2):
+      p1r = data.get(p1)
+      p2r = data.get(p2)
+      if p1r is None and p2r is None:
+          return
+      if p1r is None and p2r is not None:
+          p1r = 0
+      if p2r is None and p1r is not None:
+          p2r = 0
+      data[target] = p1r + p2r
+
+  @classmethod
+  def convertAIS(cls, aisdata):
+      "convert ais raw values to real values"
+      rt = aisdata.copy()
+
+      for k, f in cls.ais_converters.items():
+          if k not in rt:  # only convert data that's actually present
+              continue
+          try:
+              rt[k] = f(rt[k])
+          except:
+              rt[k] = None  # explicitly map invalid data to none
+
+      try:
+          cls.computeDim(rt, "beam", "to_port", "to_starboard")
+          cls.computeDim(rt, "length", "to_bow", "to_stern")
+      except:
+          pass
+
+      return rt
   def storeAISdata(self,bitfield,source='internal',priority=0,timestamp=None):
     rt={'class':'AIS'}
     for bfe in bitfield:
@@ -886,7 +948,7 @@ class NMEAParser(object):
     if mmsi is None:
       AVNLog.debug("ignoring AIS data without mmsi, %s"%rt)
       return
-    self.navdata.setAisValue(mmsi,AVNUtil.convertAIS(rt),source=source,priority=priority,timestamp=timestamp)
+    self.navdata.setAisValue(mmsi,self.convertAIS(rt),source=source,priority=priority,timestamp=timestamp)
 
 def to360(a):
     "limit a to [0,360)"

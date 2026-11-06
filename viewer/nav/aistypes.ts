@@ -310,6 +310,10 @@ export interface AisProxyItem extends Omit<AISItem,'received'|'cpadata'>,Cpa{
     destination?:string,
     length?:number,
     beam?:number,
+    to_stern?:number,
+    to_bow?:number,
+    to_port?:number,
+    to_starboard?:number,
     draught?:number,
     aid_type?:number,
 }
