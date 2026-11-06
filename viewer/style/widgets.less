@@ -21,7 +21,7 @@
     padding: var(--avnav-widget-border-width);
     gap: var(--avnav-widget-border-width);
   }
-  .widgetContainer:empty { display: none; }
+  div&:not(.editing) .widgetContainer:empty { display: none; }
   .widgetContainer.vertical   { padding-bottom: 0; }
   .widgetContainer.bottomLeft { padding-right: 0; }
 }

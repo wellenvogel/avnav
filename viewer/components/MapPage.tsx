@@ -258,7 +258,7 @@ const MapPage =(iprops:MapPageProps)=>{
             const widgets=Array.from(children[i].children);
             if (rect?.height < maxHeight){
                 //must enlarge widget
-                widgets[widgets.length-1].classList.add("expand");
+                widgets[widgets.length-1]?.classList.add("expand");
             }
             else{
                 for (const widget of widgets){
