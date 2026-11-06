@@ -502,9 +502,15 @@ class AVNWorker(InfoHandler):
 
   @classmethod
   def autoInstantiate(cls):
-    """should we instantiate this handler even without config?
+    '''
+    should we instantiate this handler even without config?
        instantiation can still be prevented by setting enabled=false
-    """
+    @return:  one of:
+                 None
+                 True|False
+                 a xml string with the documentElement having the config name
+                 a xml.minidom.Element with the tag name being the config name
+    '''
     return False
 
   @classmethod

@@ -27,6 +27,7 @@
 import threading
 import time
 import traceback
+from xml.dom import minidom
 
 import avnav_handlerList
 from avnav_util import AVNLog
@@ -237,7 +238,12 @@ class AVNUsbSerialReader(AVNWorker):
 
   @classmethod
   def autoInstantiate(cls):
-      return hasUdev
+      if not hasUdev:
+          return False
+      name=cls.getConfigName()
+      rt=minidom.Element(name)
+      rt.setAttribute('enabled','false')
+      return rt
 
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)

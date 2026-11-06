@@ -32,6 +32,7 @@ import threading
 import traceback
 import xml.dom as dom
 import xml.dom.minidom as parser
+from xml.dom.minidom import Element
 
 import avnav_handlerList
 from avnav_util import AVNLog, AVNUtil, AVNFileDownloadLB, Enum
@@ -407,17 +408,20 @@ class AVNHandlerManager(IHandlerManager):
       if ai:
         existing=self.findHandlerByName(name, True)
         if existing is None:
-          AVNLog.info("auto instantiate for %s", name)
-          if not isinstance(ai,str):
+          AVNLog.info("auto instantiate for %s: '%s'", name,str(ai))
+          if type(ai) == bool:
             ai="<"+name+"/>"
           try:
-            node=parser.parseString(ai)
-            if node.documentElement.nodeType != dom.Node.ELEMENT_NODE or node.documentElement.tagName != name:
-              raise Exception("invalid main node or main node name for autoInstantiate")
-            self.parseHandler(node.documentElement, handler, domAttached=False)
+            if isinstance(ai,Element):
+                element=ai
+            else:
+                node=parser.parseString(str(ai))
+                element=node.documentElement
+            if element is None or element.nodeType != dom.Node.ELEMENT_NODE or element.tagName != name:
+              raise Exception(f"invalid main node or main node name for autoInstantiate {str(ai)}")
+            self.parseHandler(element, handler, domAttached=False)
           except Exception:
-              AVNLog.errorOut("error parsing default config %s for %s:%s",ai,name,traceback.format_exc())
-              return False
+              AVNLog.errorOut("error parsing default config '%s' for %s:%s",ai,name,traceback.format_exc())
     return len(self._allHandlers) > 0
 
 
