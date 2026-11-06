@@ -24,16 +24,22 @@
 ###############################################################################
 import hashlib
 import json
+import os
 import shutil
-
+import subprocess
+import sys
+import threading
+import time
+import traceback
+import zipfile
 import avnav_handlerList
 from avnav_api import ConverterApi
 from avnav_manager import AVNHandlerManager
-from avnav_util import *
-from avnav_worker import *
+from avnav_util import AVNLog, AVNUtil, AVNDownloadError, AVNZipDownload, AVNFileDownloadLB, AVNFileDownload, Enum
+from avnav_worker import WorkerStatus, AVNWorker, WorkerParameter, WorkerKind
 from avndirectorybase import AVNDirectoryHandlerBase
 from httpserver import AVNHttpServer
-import zipfile
+
 
 class ExternalConverter(ConverterApi):
   def __init__(self,converter:ConverterApi,id):
@@ -209,8 +215,9 @@ class ConversionResult:
     self.disabled=disabled
   def valid(self):
     return self.md5 is not None
-  def dateStr(self):
-    return datetime.datetime.fromtimestamp(self.ts).strftime('%Y-%m-%d %H:%M')
+  def dateStr(self,localTime=True):
+    dt=AVNUtil.timeToDatetime(self.ts,localTime=localTime)
+    return dt.strftime('%Y-%m-%d %H:%M')
   def isOk(self):
     return self.error is None
   def isDisabled(self):
@@ -361,7 +368,7 @@ class AVNImporter(AVNWorker):
     return "AVNImporter"
   
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     rt=[
@@ -423,7 +430,7 @@ class AVNImporter(AVNWorker):
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have to find the feeder...
   def startInstance(self, navdata):
-    httpserver=self.findHandlerByName(AVNHttpServer.getConfigName())
+    httpserver=self._handlerManager.findHandlerByName(AVNHttpServer.getConfigName())
     if httpserver is None:
       raise Exception("unable to find the httpserver")
     self.chartbase=httpserver.getChartBaseDir()
@@ -732,12 +739,10 @@ class AVNImporter(AVNWorker):
         os.unlink(logfile)
       except:
         pass
-    rt=False
     if os.path.isdir(fullname):
       AVNLog.info("deleting import directory %s",fullname)
       try:
         shutil.rmtree(fullname)
-        rt=True
       except:
         AVNLog.error("error deleting directory %s:%s",fullname,traceback.format_exc())
     else:
@@ -745,7 +750,6 @@ class AVNImporter(AVNWorker):
         AVNLog.info("deleting import file %s",fullname)
         try:
           os.unlink(fullname)
-          rt=True
         except:
           AVNLog.error("error deleting file %s:%s",fullname,traceback.format_exc())
     self.wakeUp()
@@ -867,14 +871,14 @@ class AVNImporter(AVNWorker):
       name=AVNUtil.getHttpRequestParam(requestparam,'name',True)
       candidate=self.findCandidate(name)
       if candidate is None:
-        return AVNDownloadError("item %s not found"%name)
+        return AVNDownloadError(404,"item %s not found"%name)
       dlfile=None
       if candidate.converter is not None:
         dlfile=candidate.converter.getOutFileOrDir(candidate.name)
       if dlfile is None:
-        return AVNDownloadError("no download for %s"%name)
+        return AVNDownloadError(404,"no download for %s"%name)
       if not os.path.exists(dlfile):
-        return AVNDownloadError("%s not found"%dlfile)
+        return AVNDownloadError(404,"%s not found"%dlfile)
       if os.path.isdir(dlfile):
         subDir=candidate.name
         if hasattr(candidate.converter,'getZipSubDir'):
@@ -925,16 +929,16 @@ class AVNImporter(AVNWorker):
         if running is not None and running.running:
           candidate=running.candidate
         if candidate is None:
-          rt=AVNDownloadError("no conversion running")
+          rt=AVNDownloadError(404,"no conversion running")
       else:
         candidate=self.findCandidate(name)
       if rt is None:
         if candidate is None:
-          rt=AVNDownloadError("%s not found"%name)
+          rt=AVNDownloadError(404,"%s not found"%name)
       if rt is None:
         logName=self.getLogFileName(candidate.name,True)
         if logName is None:
-          rt=AVNDownloadError("log for %s not found"%name)
+          rt=AVNDownloadError(404,"log for %s not found"%name)
         if rt is None:
           filename=os.path.basename(logName)
           rt=AVNFileDownloadLB(logName,lastBytes=lastBytes,dlname=filename)

@@ -1,4 +1,4 @@
-import React, {useCallback, useRef} from 'react';
+import React, {SyntheticEvent, useCallback, useRef} from 'react';
 import {useKeyEventHandlerPlain, useTimer} from '../util/UiHelper';
 import {DynamicProps, dynamicWrapper, Options,UpdateFunction, useStore, useStoreState} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
@@ -13,7 +13,7 @@ import {KeyComponents} from "../util/keyhandler";
 import {ButtonBase, StoreKeys} from "../api/api.interface";
 
 
-export type ButtonEventBase=Record<string, any>;
+export interface ButtonEventBase extends SyntheticEvent ,Record<string, any>{}
 export interface ButtonEvent extends ButtonEventBase {
     avnav?:{
         dialogContext: IDialogContext;
@@ -114,6 +114,7 @@ const Button = (sprops:ButtonProps) => {
     const [hoverTime]=useStoreState(keys.properties.buttonTitleTime);
     const [buttonSize]=useStoreState(keys.properties.style.buttonSize);
     const [hover,setHover]=React.useState(false);
+    const bref=useRef<HTMLDivElement>(null);
     const hoverTimer=useTimer((seq:number)=>{
         hoverTimer.guardedCall(seq,()=>setHover(true));
         hoverStopTimer.restart();
@@ -126,14 +127,11 @@ const Button = (sprops:ButtonProps) => {
     const history = useHistory();
     const disabledv=((typeof (iprops.disabled) === 'function') ? iprops.disabled() : iprops.disabled);
     const syntheticClick=useCallback(()=>{
-        if (sprops.onClick && !disabledv) {
+        if (sprops.onClick && !disabledv && bref.current) {
             base.log("synthetic button click",idxRef.current);
-            const ev= setav({},{
-                dialogContext:dialogContext,
-                history:history
-            });
-            if (!iprops.closeDialogs) sprops.onClick(ev);
-            else dialogContext.closeDialog().then(()=>sprops.onClick(ev));
+            const ev=new Event("click",{bubbles:true});
+            if (!iprops.closeDialogs) bref.current.dispatchEvent(ev);
+            else dialogContext.closeDialog().then(()=>bref.current.dispatchEvent(ev));
         }
     },[sprops.name,sprops.onClick,disabledv])
     useKeyEventHandlerPlain(sprops.name, KeyComponents.BUTTON, () => {
@@ -177,7 +175,9 @@ const Button = (sprops:ButtonProps) => {
         style.fontSize=`${buttonSize/ButtonFontSizeFactor}px`;
     }
     return (
-        <div onClick={onClick}
+        <div
+             ref={bref}
+             onClick={onClick}
              style={style}
              className={classNamev}
              //title={displayName+""}

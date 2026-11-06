@@ -28,4 +28,4 @@ Die Installation hängt vom verwendeten System ab und ist in den Installationsan
 Versionen
 ---------
 
-### [202608xx](versions/202610xx.md)
+### [20261102](versions/20261102.md)

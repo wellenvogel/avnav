@@ -22,7 +22,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 ###############################################################################
-import signal
 
 
 class ConverterApi:
@@ -103,7 +102,7 @@ class AVNApi(object):
     @param param: the list of parameters
     @return:
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def debug(self, format, *param):
     """
@@ -113,7 +112,7 @@ class AVNApi(object):
     @param param: the list of parameters
     @return:
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def error(self, format, *param):
     """
@@ -123,7 +122,7 @@ class AVNApi(object):
     @param param: the list of parameters
     @return:
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def getConfigValue(self, key, default=None):
     """
@@ -137,7 +136,7 @@ class AVNApi(object):
     @param default: the default value if the attribute is not set
     @return:
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def fetchFromQueue(self, sequence, number=10,includeSource=False,waitTime=0.5,filter=None):
     """
@@ -161,7 +160,7 @@ class AVNApi(object):
                    only NMEA sentences matching this filter will be returned
     @return: (sequence,data) - sequence being the last sequence you have, data being a list of nmea data
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None,sourcePriority=None):
     """
@@ -177,7 +176,7 @@ class AVNApi(object):
     @param source: the name of the source to be set, defaults to the plugin name
     @return: None
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def addData(self, key, value, source=None,record=None, sourcePriority=60):
     """
@@ -198,7 +197,7 @@ class AVNApi(object):
     @type  prefix: str
     @return: a dict with the values found (potentially hierarchical)
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def getSingleValue(self,key,includeInfo=False):
     """
@@ -208,7 +207,7 @@ class AVNApi(object):
     @type  key: str
     @return: the value or the object
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def getExpiryPeriod(self):
     """
@@ -216,7 +215,7 @@ class AVNApi(object):
     considered to be expired, just refresh within this time
     @return:
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def setStatus(self,value,info):
     """
@@ -227,7 +226,7 @@ class AVNApi(object):
     @param info: an info text
     @return:
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def registerUserApp(self,url,iconFile,title=None,preventConnectionLost=False,
                       name=None,page=None,
@@ -258,7 +257,7 @@ class AVNApi(object):
     @param longText: the text to be shown as tooltip or at the main menu
     @return:
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def registerLayout(self,name,layoutFile):
     """
@@ -267,7 +266,7 @@ class AVNApi(object):
     @param layoutFile: a file (relative to the plugin dir)
     @return:
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def timestampFromDateTime(self,dt=None):
     '''
@@ -275,14 +274,14 @@ class AVNApi(object):
     @param dt: the datetime, if None use datetime.datetime.utcnow
     @return: timestamp in seconds
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def getDataDir(self):
     '''
     get the AvNav data directory
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def registerChartProvider(self,callback):
     '''
@@ -300,7 +299,7 @@ class AVNApi(object):
     @param callback: function that will be called with a parameter host containing the IP if the server
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def registerRequestHandler(self,callback):
     '''
@@ -320,7 +319,7 @@ class AVNApi(object):
                      if you provide None it deletes an existing handler
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def getBaseUrl(self,ensureSlash=False):
     '''
@@ -332,7 +331,7 @@ class AVNApi(object):
            just be sure to not have two slashes in the URL as AvNav cannot handle this
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def registerUsbHandler(self,usbid,callback):
     '''
@@ -345,14 +344,14 @@ class AVNApi(object):
     @param callback:
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def getAvNavVersion(self):
     '''
     get the version of AvNav as an int
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def saveConfigValues(self,configDict):
     '''
@@ -364,7 +363,7 @@ class AVNApi(object):
     @param configDict:
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def registerEditableParameters(self,paramList,changeCallback):
     '''
@@ -385,7 +384,7 @@ class AVNApi(object):
     @type paramList list
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def registerRestart(self,stopCallback):
     '''
@@ -398,7 +397,7 @@ class AVNApi(object):
     the plugin must exit it's run method
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def unregisterUserApp(self,id):
     '''
@@ -406,7 +405,7 @@ class AVNApi(object):
     @param id: the id returend by registerUserApp
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def shouldStopMainThread(self,threadId=None):
     '''
@@ -417,7 +416,7 @@ class AVNApi(object):
                      from getMainThreadId in the beginning of run and use it here
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def getAvNavThreadId(self):
       '''
@@ -429,7 +428,7 @@ class AVNApi(object):
       that is useless,
       :return:
       '''
-      raise NotImplemented()
+      raise NotImplementedError()
 
   def sleep(self,timeout):
       '''
@@ -438,7 +437,7 @@ class AVNApi(object):
       :param timeout: timeout in seconds
       :return:
       '''
-      raise NotImplemented()
+      raise NotImplementedError()
 
   def deregisterUsbHandler(self,usbid=None):
     '''
@@ -446,7 +445,7 @@ class AVNApi(object):
     @param usbid: if None deregister all ids we have registered
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
   def sendRemoteCommand(self,command,param,channel=0):
     '''
     send a remote channel command
@@ -456,7 +455,7 @@ class AVNApi(object):
     @param channel: the channel id (0...4)
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def registerSettingsFile(self,name,fileName):
     '''
@@ -465,7 +464,7 @@ class AVNApi(object):
     @param fileName: the file name (relative to the plugin dir)
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def registerCommand(self, name, command, parameters=None,iconFile=None,client=None):
     '''
@@ -478,7 +477,7 @@ class AVNApi(object):
     @param client: client mode: None|all|local
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def registerConverter(self,converter:ConverterApi,name=None):
     '''
@@ -487,27 +486,27 @@ class AVNApi(object):
     @param name: if you want to register more then one converter you need to assign different names to each of them
     @return: None
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
   def deregisterConverter(self,name=None):
     '''
     deregister a chartt converter
     @param name:
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
 
   def clearAlarms(self):
     '''
     clear all existing alarms
     @return:
     '''
-    raise NotImplemented()
+    raise NotImplementedError()
   def getOwnName(self):
       '''
       get the name of the plugin as used internally by AvNav
       :return:
       '''
-      raise NotImplemented()
+      raise NotImplementedError()
   def clearAlarm(self,name):
       '''
       clear a running alarm
@@ -517,7 +516,7 @@ class AVNApi(object):
                    or an arbitrary name
       :return:
       '''
-      raise NotImplemented()
+      raise NotImplementedError()
   def startAlarm(self,name,
                  defaultCategory='critical',
                  message=None,
@@ -565,4 +564,4 @@ class AVNApi(object):
                      safely kill the child process with all it's children using
                      the kill_signal signal.
           """
-      raise NotImplemented()
+      raise NotImplementedError()

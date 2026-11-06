@@ -29,7 +29,6 @@
 import datetime
 import json
 import os
-import platform
 import socket
 import threading
 import time
@@ -38,7 +37,7 @@ import traceback
 import avnav_handlerList
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
-from avnav_util import AVNLog, SafePopen, MovingSum
+from avnav_util import AVNLog, SafePopen, MovingSum, AVNUtil
 from avnav_worker import WorkerParameter, AVNWorker, WorkerStatus, ForwardInfoHandler, InfoHandler, WorkerKind
 from avnqueue import AVNQueue
 from socketbase import SocketReader
@@ -286,7 +285,8 @@ class AVNCanboatHandler(AVNWorker):
                                     condition={P_CANBOATTYPE.name:T_RUST})
     P_CANBOATPARAM= WorkerParameter('canboatParam',
                                     description='Additional parameters for the canboat-rust call of "canboat server".\n'+
-                                      'Refer to the documentation for more details.\n',
+                                      'Refer to the documentation for more details.\n'+
+                                      'To replay a dump file set canboatKind and canboatDevice empty and use --replay filename.',
                                     default="",
                                     mandatory=False,
                                     condition={P_CANBOATTYPE.name:T_RUST})
@@ -363,7 +363,7 @@ class AVNCanboatHandler(AVNWorker):
             navdata.registerKey(key.getKey(),key.description,allowOverwrite=True)
 
     @classmethod
-    def getConfigParamCombined(cls, child=None):
+    def getConfigParamCombined(cls, handlerManager=None, child=None):
         if child is not None:
             return None
         return [cls.NAME_PARAMETER.copy(default='canboat'),
@@ -534,13 +534,13 @@ class AVNCanboatHandler(AVNWorker):
                     ctime = self._getField(msg, 'Time', 'value')
                     dt = None
                     if cdate is not None and ctime is not None:
-                        dt = datetime.datetime(year=1970, month=1, day=1)
+                        dt = AVNUtil.timeToDatetime(0)
                         if timeInSeconds:
                             dt += datetime.timedelta(days=cdate, seconds=ctime )
                         else:
                             dt += datetime.timedelta(days=cdate, milliseconds=ctime / 10)
                     if dt is not None:
-                        self.navdata.setValue(NMEAParser.K_TIME.getKey(), self.formatTime(dt), source=source,
+                        self.navdata.setValue(NMEAParser.K_TIME.getKey(), AVNUtil.timeToIso8601(dt), source=source,
                                          priority=priority+1)
                     if autoSendRMC > 0:
                         if self.lastRmc is None or self.lastRmc < (now - autoSendRMC):
@@ -550,7 +550,7 @@ class AVNCanboatHandler(AVNWorker):
                                 speed = self.navdata.getSingleValue(NMEAParser.K_SOG.getKey())
                                 cog = self.navdata.getSingleValue(NMEAParser.K_COG.getKey())
                                 AVNLog.debug("generating RMC lat=%f,lon=%f,ts=%s", lat, lon,
-                                               dt.isoformat())
+                                               AVNUtil.timeToIso8601(dt))
                                 fixutc = "%02d%02d%02d.%02d" % (dt.hour, dt.minute, dt.second,
                                                                 dt.microsecond / 1000)
                                 (latstr, NS) = self.nmeaFloatToPos(lat, True)
@@ -621,9 +621,9 @@ class AVNCanboatHandler(AVNWorker):
         param=self._getConfig(self.P_CANBOATPARAM)
         hasRust=self._hasRust()
         if hasRust:
-            if (device is None or device.strip() == "") and (param is None or not 'device' in param):
+            if (device is None or device.strip() == "") and (param is None or param.strip() == ""):
                 self._stopWithError(sequence, "no canboatDevice configured, stopping plugin")
-            if (kind is None or kind.strip() == "") and (param is None or not 'kind' in param):
+            if (kind is None or kind.strip() == "") and (param is None or param.strip() == ""):
                 self._stopWithError(sequence, "no canboatKind configured, stopping plugin")
         """
         the run method
@@ -659,7 +659,7 @@ class AVNCanboatHandler(AVNWorker):
         readPos = self._getConfig(self.P_READPOS)
         handledPGNs = [int(p) for p in handledPGNs]
         AVNLog.info("started with host=%s,port %d, autoSendRMC=%d" % (host, port, autoSendRMC))
-        self.setInfo(self.ST_MAIN, f"started",WorkerStatus.RUNNING)
+        self.setInfo(self.ST_MAIN, "started",WorkerStatus.RUNNING)
         source = self.getSourceName()
         rmcWatcher = threading.Thread(target=self.rmcWatcher, args=[sequence, source], daemon=True)
         rmcWatcher.start()
@@ -677,7 +677,7 @@ class AVNCanboatHandler(AVNWorker):
             self.connections.add(self.ST_JSON,jCon)
             jCon.start()
         else:
-            self.setInfo(self.ST_JSON, f"disabled",WorkerStatus.INACTIVE)
+            self.setInfo(self.ST_JSON, "disabled",WorkerStatus.INACTIVE)
         if nmeaPort and self._hasRust():
             nCon=NmeaConnection(host=host, port=nmeaPort,key=self.ST_NMEA,
                                 infoHandler=self,
@@ -688,7 +688,7 @@ class AVNCanboatHandler(AVNWorker):
             nCon.start()
         else:
             if self._hasRust():
-                self.setInfo(self.ST_NMEA, f"disabled",WorkerStatus.INACTIVE)
+                self.setInfo(self.ST_NMEA, "disabled",WorkerStatus.INACTIVE)
         while sequence == self.changeSequence:
             if not self._checkProcess():
                 self._safeWait(sequence, 10)
@@ -697,15 +697,6 @@ class AVNCanboatHandler(AVNWorker):
             if sequence != self.changeSequence:
                 return
             self._safeWait(sequence, 3)
-
-    def formatTime(self, ts):
-        t = ts.isoformat()
-        # seems that isoformat does not well harmonize with OpenLayers.Date
-        # they expect at leas a timezone info
-        # as we are at GMT we should have a "Z" at the end
-        if not t[-1:] == "Z":
-            t += "Z"
-        return t
 
     def nmeaFloatToPos(self, pos, isLat):
         '''return a tuple (string,direction) from a position'''

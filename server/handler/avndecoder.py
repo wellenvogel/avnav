@@ -24,8 +24,13 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-from avnav_util import MovingSum, AVNUtil
-from avnav_worker import *
+import time
+import traceback
+
+from avnav_nmea import NMEAParser
+from avnav_store import AVNStore
+from avnav_util import MovingSum, AVNUtil, AVNLog
+from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 from avnqueue import Fetcher
 import avnav_handlerList
 
@@ -45,7 +50,7 @@ class AVNDecoder(AVNWorker):
   P_FILTER=WorkerParameter('decoderFilter',default='',type=WorkerParameter.T_FILTER)
   P_ALL=[P_FILTER]
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     return cls.P_ALL
 
   @classmethod

@@ -12,7 +12,7 @@
 
 import React, {useEffect, useRef} from 'react';
 import {OnDragEnd, SortContext, SortModes, useAvNavSortFrame} from "../hoc/Sortable";
-import Helper, {injectav} from "../util/helper";
+import Helper, {getav} from "../util/helper";
 import {ButtonEvent, ButtonEventHandler} from "./Button";
 
 export type KeyFunction=(p:Record<string, any>)=>string
@@ -73,16 +73,16 @@ const Content=(props:ContentProps)=>{
                 let onClick;
                 const className=Helper.concatsp(itemProps.className,itemProps.selected?SELECTED_CLASS:undefined);
                 if (!itemProps.onClick && props.onItemClick) {
-                    onClick=(idata:ButtonEvent)=>{
-                        const data=injectav(idata);
+                    onClick=(data:ButtonEvent)=>{
                         if (data && data.stopPropagation) data.stopPropagation();
                         if (data && data.preventDefault) data.preventDefault();
+                        const avnavdata=getav(data)
                         if (props.reverse){
                             const len=props.itemList?props.itemList.length:0;
-                            data.avnav.item=data.avnav.item?{...data.avnav.item,index:len-itemProps.index}:{...itemProps,index:len-itemProps.index};
+                            avnavdata.item=avnavdata.item?{...avnavdata.item,index:len-itemProps.index}:{...itemProps,index:len-itemProps.index};
                         }
                         else {
-                            data.avnav.item=data.avnav.item?{...data.avnav.item,index:itemProps.index}:{...itemProps};
+                            avnavdata.item=avnavdata.item?{...avnavdata.item,index:itemProps.index}:{...itemProps};
                         }
                         props.onItemClick(data);
                     }

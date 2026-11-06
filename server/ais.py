@@ -979,7 +979,7 @@ class BitVector(object):
         "Used for dumping binary data."
         return str(self.bitlen) + ":" + "".join(["%02x" % d for d in self.bits[:(self.bitlen + 7)//8]])
 
-import sys,  re
+import  re
 
 class AISUnpackingException(Exception):
     def __init__(self, lc, fieldname, value):

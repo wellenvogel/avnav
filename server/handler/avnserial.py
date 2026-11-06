@@ -25,13 +25,14 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import os
+import threading
 import time
+import traceback
 
-from serial.serialutil import SerialBase
-
-from avnav_util import *
-from avnav_nmea import *
-from avnav_worker import *
+from avnav_nmea import NMEAParser
+from avnav_util import AVNUtil, AVNLog, MovingSum
+from avnav_worker import WorkerParameter, AVNWorker, InfoHandler, TrackingInfoHandler, WorkerStatus, UsedResource, \
+    WorkerKind
 from avnqueue import AVNQueue
 
 hasSerial=False
@@ -135,7 +136,7 @@ class SerialReader(object):
       AVNLog.debug("unable to close serial device: %s",str(e))
     try:
       with self.lock:
-        self.lock.notifyAll()
+        self.lock.notify_all()
     except Exception as e:
       AVNLog.debug("unable to stop serial reader: %s",str(e))
 
@@ -392,7 +393,7 @@ class SerialReader(object):
 class AVNSerialReader(AVNWorker):
 
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     return SerialReader.getConfigParam()
@@ -405,11 +406,11 @@ class AVNSerialReader(AVNWorker):
     return rt
 
   @classmethod
-  def getEditableParameters(cls, makeCopy=True,id=None):
-    rt= super().getEditableParameters(True,id=id)
+  def getEditableParameters(cls, handlerManager,makeCopy=True,id=None):
+    rt= super().getEditableParameters(handlerManager, True,id=id)
     slist=SerialReader.listSerialPorts()
     slist=UsedResource.filterListByUsed(UsedResource.T_SERIAL,slist,
-                                        cls.findUsersOf(UsedResource.T_SERIAL,ownId=id))
+                                        handlerManager.findUsersOf(UsedResource.T_SERIAL,ownId=id))
     WorkerParameter.updateParamFor(rt, SerialReader.P_PORT.name, {'rangeOrList':slist})
     return rt
 

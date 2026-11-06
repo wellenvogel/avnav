@@ -3,7 +3,7 @@ import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, showPromiseDialo
 import Toast from './Toast';
 
 import Addons, {getAllAddons, InternalAddonProps} from '../util/Addons';
-import Helper, {avitem, concatsp, getav, unsetOrTrue} from '../util/helper';
+import Helper, {avitem, concatsp, getav, setav, unsetOrTrue} from '../util/helper';
 import Requests from '../util/requests';
 import UploadHandler, {uploadClick} from "./UploadHandler";
 import globalStore from "../util/globalstore";
@@ -36,6 +36,7 @@ import {iconClasses} from './Icons';
 import ItemList from "./ItemList";
 import {IHistory} from "../util/history";
 import {getPageTitle} from "./pagetitles";
+import {CustomSyntheticEvent} from "../util/UiHelper";
 
 export interface InternalAddonDisplayProps extends InternalAddonProps{
     buttonKey?:string
@@ -254,7 +255,7 @@ export const selectAddonForPlugin=(dialogContext:IDialogContext,history:IHistory
     const pluginAddons=getAddonsByPluginName(pluginName);
     if (!pluginAddons?.length) return;
     if (pluginAddons.length === 1){
-        runAddonAction(pluginAddons[0],history);
+        runAddonAction(pluginAddons[0],history,dialogContext);
         dialogContext.closeDialog();
         return;
     }
@@ -264,7 +265,7 @@ export const selectAddonForPlugin=(dialogContext:IDialogContext,history:IHistory
                 itemClass={(item)=><AddonItem {...item} preventButton={true}/>}
                 onItemClick={(ev)=>{
                     const item=avitem(ev);
-                    runAddonAction(item,history);
+                    runAddonAction(item,history,dialogContext);
                     dialogContext.closeDialog();
                 }}
                 />
@@ -567,7 +568,7 @@ interface AddonItemProps extends InternalAddonProps {
     preventButton?:boolean;
 }
 
-const runAddonAction=(props:AddonItemProps,history:IHistory)=>{
+const runAddonAction=(props:AddonItemProps,history:IHistory,dialogContext:IDialogContext)=>{
     if (props.newWindow) {
         window.open(props.url, props.name);
         return;
@@ -583,7 +584,12 @@ const runAddonAction=(props:AddonItemProps,history:IHistory)=>{
     if (!page) page = PAGEIDS.ADDON;
     if (page === PAGEIDS.ACTIONS) {
         if (props.button?.onClick){
-            props.button.onClick(new Event("click"));
+            const ev=new CustomSyntheticEvent("click")
+            setav(ev,{
+                dialogContext:dialogContext,
+                history:history,
+            })
+            props.button.onClick(ev);
         }
         return;
     }
@@ -592,6 +598,7 @@ const runAddonAction=(props:AddonItemProps,history:IHistory)=>{
 
 export const AddonItem = (props: AddonItemProps) => {
     const history = useHistory();
+    const dialogContext=useDialogContext();
     let source = props.source || 'user';
     if (props.invalid) source += ", invalid";
     if (props.newWindow) source += ", new window";
@@ -614,7 +621,7 @@ export const AddonItem = (props: AddonItemProps) => {
                         if (props.preventButton) return;
                         ev.preventDefault();
                         ev.stopPropagation();
-                        runAddonAction(props, history);
+                        runAddonAction(props, history,dialogContext);
                     }
                     }
                     iconClass={props.button.iconClass}

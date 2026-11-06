@@ -24,13 +24,15 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-import json
+import os
+import threading
 import time
+import traceback
 
 import avnav_handlerList
 from avnav_manager import AVNHandlerManager
-from avnav_util import *
-from avnav_worker import *
+from avnav_util import AVNUtil, AVNLog
+from avnav_worker import AVNWorker, WorkerStatus
 from wpa_control import WpaControl
 
 
@@ -58,7 +60,7 @@ class AVNWpaHandler(AVNWorker):
   def getConfigName(cls):
     return "AVNWpaHandler"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is not None:
       return None
     return {
@@ -72,7 +74,7 @@ class AVNWpaHandler(AVNWorker):
   def preventMultiInstance(cls):
     return True
   def run(self):
-    self.commandHandler = self.findHandlerByName("AVNCommandHandler")
+    self.commandHandler = self._handlerManager.findHandlerByName("AVNCommandHandler")
     wpaSocket=self.getStringParam('wpaSocket')
     ownSocket=self.getStringParam('ownSocket')
     watcherThread=threading.Thread(target=self.allowDenyWatcher,name="Wpa:fwWatcher")
@@ -303,7 +305,7 @@ class AVNWpaHandler(AVNWorker):
     except:
       return None
 
-  def handleApiRequest(self, command, requestparam, handler=None):
+  def handleApiRequest(self, command, requestparam, handler=None,**kwargs):
     start=time.monotonic()
     AVNLog.debug("wpa api request %s",command)
     rt=None

@@ -24,26 +24,27 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
+import os
 import re
 import signal
-import urllib.parse
-
+import subprocess
+import threading
 import time
+import traceback
 
 import avnav_handlerList
 from avnav_manager import AVNHandlerManager
-from avnav_util import *
-from avnav_worker import *
+from avnav_util import AVNLog, AVNUtil
+from avnav_worker import AVNWorker, WorkerStatus
 
 
 class Handler(object):
-  def __init__(self,command,id,callback,parameters=None):
+  def __init__(self,command,hid,callback,parameters=None):
     repeat=command.get('repeat')
     self.command=command
     self.parameters=parameters
     self.name=command.get('name')
-    self.id=id
+    self.id=hid
     self.callback=callback
     self.thread=None
     self.stop=False
@@ -69,8 +70,7 @@ class Handler(object):
     self.subprocess.stdin.close()
   def start(self):
     self._startCmd()
-    self.thread=threading.Thread(target=self.run)
-    self.thread.setDaemon(True)
+    self.thread=threading.Thread(target=self.run,daemon=True)
     self.thread.start()
 
   def stopHandler(self):
@@ -142,7 +142,7 @@ class AVNCommandHandler(AVNWorker):
   def getConfigName(cls):
     return "AVNCommandHandler"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is None:
       return {
       }

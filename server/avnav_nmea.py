@@ -25,10 +25,19 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
+import datetime
+import logging
 import os
+import re
+import sys
+import threading
+import time
 import traceback
+from math import copysign
 
-from avnav_store import *
+from avnav_store import AVNStore
+from avnav_util import AVNUtil, AVNLog
+
 hasAisDecoder=False
 try:
   import ais
@@ -183,6 +192,35 @@ class NMEAParser(object):
     K_DFT
   ]
 
+  ais_converters = {
+      "mmsi": str,
+      "imo_id": int,
+      "shiptype": int,
+      "type": int,
+      "epfd": int,
+      "status": int,
+      "month": int,  # ETA
+      "day": int,  # ETA
+      "hour": int,  # ETA
+      "minute": int,  # ETA
+      "second": int,  # timestamp
+      "maneuver": int,
+      "accuracy": int,
+      "lat": lambda v: float(v) / 600000,
+      "lon": lambda v: float(v) / 600000,
+      "speed": lambda v: float(v) / 10 * AVNUtil.NM / 3600,
+      "course": lambda v: float(v) / 10,
+      "heading": int,
+      "turn": lambda v: round(copysign((float(v) / 4.733) ** 2, float(v)))
+            if abs(float(v)) < 128
+            else None,
+      "draught": lambda v: float(v) / 10,
+      "to_bow": int,  # A
+      "to_stern": int,  # B
+      "to_port": int,  # C
+      "to_starboard": int,  # D
+  }
+
   @classmethod
   def registerKeys(cls,navdata):
     for key in cls.GPS_DATA:
@@ -199,15 +237,7 @@ class NMEAParser(object):
     self.navdata=navdata # type: AVNStore
     self.satStore={}
     self.lock=threading.Lock()
-  @classmethod
-  def formatTime(cls,ts):
-    t = ts.isoformat()
-    # seems that isoformat does not well harmonize with OpenLayers.Date
-    # they expect at leas a timezone info
-    # as we are at GMT we should have a "Z" at the end
-    if not t[-1:] == "Z":
-      t += "Z"
-    return t
+
   #------------------ some nmea data specific methods -------------------
   def _getSatStore(self,source):
     with self.lock:
@@ -234,10 +264,10 @@ class NMEAParser(object):
   @classmethod
   def gpsTimeToTime(cls,gpstime,gpsdate=None):
     #we take day/month/year from our system and add everything else from the GPS
-    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'))
+    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'),tzinfo=datetime.UTC)
     AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
     if gpsdate is None:
-      curdt=datetime.datetime.utcnow()
+      curdt=AVNUtil.timeToDatetime()
       gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
       AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
       #now correct the time if we are just changing from one day to another
@@ -464,7 +494,7 @@ class NMEAParser(object):
         if darray[10] and darray[11]:
           rt[self.K_MVAR.key] = float(darray[10]) * (-1 if darray[11] == 'W' else +1)
         if darray[1] and darray[9]:
-          rt['time']=self.formatTime(self.gpsTimeToTime(darray[1], darray[9]))
+          rt['time']=AVNUtil.timeToIso8601(self.gpsTimeToTime(darray[1], darray[9]))
         self.addToNavData(rt,source=source,priority=basePriority+1,record=tag,timestamp=timestamp)
         return True
       if tag == 'ZDA':
@@ -472,7 +502,7 @@ class NMEAParser(object):
         gpstime=darray[1]
         #ensure each 2 digits for day and month
         gpsdate=('0' + darray[2])[-2:] +('0' + darray[3])[-2:]+('0000'+darray[4])[-4:]
-        rt['time']=self.formatTime(self.gpsTimeToTime(gpstime,gpsdate))
+        rt['time']=AVNUtil.timeToIso8601(self.gpsTimeToTime(gpstime,gpsdate))
         self.addToNavData(rt,source=source,priority=basePriority,record=tag,timestamp=timestamp)
         return True
       if tag == 'VWR':
@@ -726,7 +756,6 @@ class NMEAParser(object):
           try:
             # we need 4 fields
             if all(darray[i + k] for k in range(4)):
-              ttype = darray[i]
               tdata = float(darray[i + 1])
               tunit = darray[i + 2]
               tname = darray[i + 3]
@@ -744,7 +773,7 @@ class NMEAParser(object):
     except EmptyPosition:
       AVNLog.ld("empty position in %s",str(data))
       return False
-    except Exception as e:
+    except Exception:
       AVNLog.info(" error parsing nmea data %s:%s", str(data),traceback.format_exc())
 
   @classmethod
@@ -752,7 +781,6 @@ class NMEAParser(object):
     '''
 
     :param value:
-    :param type:
     :return:
     '''
     #see e.g. https://gpsd.gitlab.io/gpsd/NMEA.html#_xdr_transducer_measurement
@@ -808,7 +836,7 @@ class NMEAParser(object):
         except ValueError:
             pad = 0
         crc = fields[6].split('*')[1].strip()
-    except IndexError as e:
+    except IndexError:
         AVNLog.debug("malformed line: %s: %sn",line.strip(),traceback.format_exc())
         return False
     if csum != crc:
@@ -851,7 +879,6 @@ class NMEAParser(object):
           cooked = ais.postprocess(cooked)
           expected = ais.lengths.get(values['msgtype'], None)
           # Check length; has to be done after so we have the type field
-          bogon = False
           if expected is not None:
               if type(expected) == type(0):
                   expected_range = (expected, expected)
@@ -870,9 +897,40 @@ class NMEAParser(object):
           AVNLog.debug("exception while decoding AIS data %s:%s",raw,traceback.format_exc())
           return False
 
+  @classmethod
+  def computeDim(cls, data, target, p1, p2):
+      p1r = data.get(p1)
+      p2r = data.get(p2)
+      if p1r is None and p2r is None:
+          return
+      if p1r is None and p2r is not None:
+          p1r = 0
+      if p2r is None and p1r is not None:
+          p2r = 0
+      data[target] = p1r + p2r
+
+  @classmethod
+  def convertAIS(cls, aisdata):
+      "convert ais raw values to real values"
+      rt = aisdata.copy()
+
+      for k, f in cls.ais_converters.items():
+          if k not in rt:  # only convert data that's actually present
+              continue
+          try:
+              rt[k] = f(rt[k])
+          except:
+              rt[k] = None  # explicitly map invalid data to none
+
+      try:
+          cls.computeDim(rt, "beam", "to_port", "to_starboard")
+          cls.computeDim(rt, "length", "to_bow", "to_stern")
+      except:
+          pass
+
+      return rt
   def storeAISdata(self,bitfield,source='internal',priority=0,timestamp=None):
     rt={'class':'AIS'}
-    storeData=False
     for bfe in bitfield:
       try:
         name=bfe[0].name
@@ -890,7 +948,7 @@ class NMEAParser(object):
     if mmsi is None:
       AVNLog.debug("ignoring AIS data without mmsi, %s"%rt)
       return
-    self.navdata.setAisValue(mmsi,AVNUtil.convertAIS(rt),source=source,priority=priority,timestamp=timestamp)
+    self.navdata.setAisValue(mmsi,self.convertAIS(rt),source=source,priority=priority,timestamp=timestamp)
 
 def to360(a):
     "limit a to [0,360)"

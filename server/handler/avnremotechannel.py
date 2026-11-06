@@ -28,9 +28,10 @@ import socket
 import threading
 
 import avnav_handlerList
-from avnav_util import AVNLog, AVNUtil
+from avnav_util import AVNLog
 from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus, UsedResource
 from httpserver import WebSocketHandler
+
 
 class OurWebSocketHandler(WebSocketHandler):
   def __init__(self, handler,channel):
@@ -45,11 +46,11 @@ class OurWebSocketHandler(WebSocketHandler):
 
 
 class Channel(object):
-  def __init__(self,id,statusCallback,enabled=True):
+  def __init__(self,cid,statusCallback,enabled=True):
     self.connections=[]
     self.lock=threading.Lock()
     self.enabled=enabled
-    self.id=id
+    self.id=cid
     self.statusCallback=statusCallback
     self.numMessages=0
     self._setStatus()
@@ -136,6 +137,7 @@ class AVNRemoteChannelHandler(AVNWorker):
       self.socket.close()
     except Exception as e:
       pass
+    return rt
 
   def stop(self):
     super().stop()
@@ -150,7 +152,7 @@ class AVNRemoteChannelHandler(AVNWorker):
   HOST_PARAM=WorkerParameter('host',"127.0.0.1",type=WorkerParameter.T_STRING,
                             description="bind address for port, use 0.0.0.0 for external access")
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     return [
       cls.PORT_PARAM,
       cls.HOST_PARAM

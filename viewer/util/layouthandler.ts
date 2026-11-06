@@ -511,6 +511,7 @@ export const layoutLoader=new LayoutLoader();
 const FORBIDDEN_LAYOUTSETTINGS=[
     keys.properties.layoutName
 ]
+export type LayoutOptionArray =valueof<LAYOUT_OPTIONS>[]
 class LayoutHandler{
     private layout: LayoutData;
     private name: string;
@@ -778,6 +779,40 @@ class LayoutHandler{
     }
 
     /**
+     * build an array of option combinations to try
+     * we always consider the order of the flags in LAYOUT_OPTIONS
+     * and we also finally consider a combination of all the flags upto
+     * the most important one
+     * Cases:
+     * small: - consider small
+     * anchor - consider anchor
+     * small+anchor: consider anchor+small, anchor, small
+     * @param options
+     * @private
+     */
+    buildCandidateOptions(options:LayoutOptionFlags){
+        const rt:LayoutOptionArray[]=[];
+        const combined:LayoutOptionArray=[];
+        for (const o of Object.values(LAYOUT_OPTIONS)){
+            if (options[o]){
+                combined.push(o);
+                rt.push([o]);
+                if (combined.length > 1){
+                    rt.push(combined)
+                }
+            }
+        }
+        return rt.reverse();
+    }
+    getPanelNameForCombination(basename:string,combination:LayoutOptionArray){
+        let name=basename;
+        for (const sfx of Object.values(LAYOUT_OPTIONS)){
+            if (combination.indexOf(sfx) < 0) continue;
+            name+="_"+sfx
+        }
+        return name;
+    }
+    /**
      * get an array of panel names to try for the options being set
      * the last element is the basename and the first element is the name with the max amount of options
      * @param basename
@@ -786,19 +821,19 @@ class LayoutHandler{
      */
     getPanelTryList(basename:string,options:LayoutOptionFlags){
         if (! options) options={};
-        let panelName=basename;
+        const panelName=basename;
         const tryList=[panelName];
-        for (const o of Object.values(LAYOUT_OPTIONS)){
-            if (options[o]){
-                panelName+="_"+o;
-                tryList.push(panelName);
+        const combinations=this.buildCandidateOptions(options);
+        for (const combination of combinations){
+            let name=panelName;
+            for (const sfx of combination){
+                name+="_"+sfx
+            }
+            if (name != panelName){
+                tryList.push(name);
             }
         }
-        const rt:string[]=[];
-        for (let k=tryList.length-1;k>=0;k--){
-            rt.push(tryList[k]);
-        }
-        return rt;
+        return tryList.reverse();
     }
     /**
      *
@@ -810,19 +845,23 @@ class LayoutHandler{
     getPanelData(
         pageWithOptions:LayoutPage,
         basename:string,
-        options:LayoutOptionFlags): {name:string|PageType,list?:InternalWidgetDefinition[]} {
+        options:LayoutOptionFlags): {name:string|PageType,list?:InternalWidgetDefinition[],combination?:LayoutOptionArray} {
         const page=getPagename(pageWithOptions);
         const pageData=this.getPageData(page);
         if (!pageData) return {name:basename};
-        const tryList=this.getPanelTryList(basename,options);
-        for (let i=0;i<tryList.length;i++){
-            const list=this.getDirectPanelData(page,tryList[i]);
-            if (list) {
-                return {name:tryList[i],list:list};
+        const combinations=this.buildCandidateOptions(options);
+        for (const combination of combinations){
+            const name=this.getPanelNameForCombination(basename,combination);
+            if (name != basename){
+                const list=this.getDirectPanelData(page,name);
+                if (list) {
+                    return {name:name,list:list, combination:combination};
+                }
             }
         }
-        return {name:basename};
+        return {name:basename,list:this.getDirectPanelData(page,basename)};
     }
+
 
     splitPanelName(panel:string){
         const parts=panel.split(":");
@@ -992,7 +1031,8 @@ class LayoutHandler{
             panelData.splice(index, 1);
             this._addAction(new LayoutAction(ACTIONS.ACTION_ADD,page,panel,{
                 index: index,
-                item: old
+                item: old,
+                addMode: ADD_MODES.beforeIndex
             }));
         }
         this.incrementSequence();

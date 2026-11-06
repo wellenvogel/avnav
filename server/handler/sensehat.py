@@ -25,6 +25,10 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 #  parts contributed by free-x https://github.com/free-x
 ###############################################################################
+import traceback
+
+from avnav_util import AVNLog
+from avnav_worker import AVNWorker, WorkerParameter, WorkerKind, WorkerStatus
 
 hasSenseHat=False
 try:
@@ -33,9 +37,6 @@ try:
 except:
   pass
 
-from avnav_util import *
-from avnav_nmea import *
-from avnav_worker import *
 import avnav_handlerList
 
 
@@ -70,7 +71,7 @@ class AVNSenseHatReader(AVNWorker):
     return "AVNSenseHatReader"
 
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     rt = [

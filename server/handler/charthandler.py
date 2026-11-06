@@ -27,11 +27,14 @@
 import json
 import os.path
 import shutil
+import traceback
+import urllib.parse
+from typing import Any
 
 import avnav_handlerList
 import gemf_reader
 import mbtiles_reader
-from avnav_util import *
+from avnav_util import ChartFile, AVNUtil, AVNLog, AVNFileDownload, AVNStringDownload, AVNJsonDownload, AVNDataDownload
 from avnav_worker import WorkerStatus, WorkerKind
 from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
 
@@ -217,7 +220,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
   def getConfigName(cls):
     return "AVNChartHandler"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is not None:
       return None
     return {
@@ -252,7 +255,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
 
   def run(self):
     self.baseDir = self.httpServer.getChartBaseDir()
-    self.importer = self.findHandlerByName("AVNImporter")
+    self.importer = self._handlerManager.findHandlerByName("AVNImporter")
     super().run()
 
   def wakeUp(self):
@@ -284,7 +287,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     :param includeDirs:
     :param previousItems:
     :param onItem:
-    :param scope:
     :return:
     '''
     newContent = self.listDirectory(includeDirs,self.baseDir,scope=self.SCOPE_USER)

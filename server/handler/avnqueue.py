@@ -24,10 +24,13 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import threading
+import time
 
-from avnav_worker import *
-from avnav_util import MovingSum
+from avnav_nmea import NMEAParser
+from avnav_util import MovingSum, AVNLog
 import avnav_handlerList
+from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus, InfoHandler
 
 
 class NmeaEntry(object):
@@ -55,7 +58,7 @@ class AVNQueue(AVNWorker):
                         rangeOrList=[1,1000])
   P_ALL=[P_MAXLIST,P_SLEEP,P_NAME,P_AGE]
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     return cls.P_ALL
 
   @classmethod
@@ -72,7 +75,7 @@ class AVNQueue(AVNWorker):
 
   def __init__(self,cfgparam):
     super().__init__(cfgparam)
-    self.type=AVNWorker.Type.FEEDER
+    self.type=AVNWorker.HandlerType.FEEDER
     self.listlock=threading.Condition()
     self.history=[]
     #sequence semantics:
@@ -104,7 +107,7 @@ class AVNQueue(AVNWorker):
     super().stop()
     self.listlock.acquire()
     try:
-      self.listlock.notifyAll()
+      self.listlock.notify_all()
     finally:
       self.listlock.release()
 
@@ -144,7 +147,7 @@ class AVNQueue(AVNWorker):
   def wakeUp(self):
     super().wakeUp()
     with self.listlock:
-      self.listlock.notifyAll()
+      self.listlock.notify_all()
 
   #fetch entries from the history
   #only return entries with higher sequence
@@ -239,7 +242,7 @@ class AVNQueue(AVNWorker):
             if wait <= 0:
               break
             self.listlock.wait(wait)
-      except Exception as e:
+      except Exception:
         pass
     if len(rtlist) < 1:
       if returnError:
@@ -268,7 +271,6 @@ class AVNQueue(AVNWorker):
   def run(self):
     AVNLog.info("feeder started")
     self.setInfo('main', "running", WorkerStatus.RUNNING)
-    sequence=None
     while not self.shouldStop():
         self.wait(1)
 

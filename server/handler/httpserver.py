@@ -24,21 +24,26 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
+import os
+import posixpath
+import re
 import socketserver
 import http.server
+import time
+import traceback
 import urllib.request, urllib.parse, urllib.error
 import urllib.parse
 from typing import Dict
-
+import avnav_handlerList
+from avnav_manager import AVNHandlerManager
+from avnav_util import AVNLog, AVNDownloadError, plainUrlToPath, AVNFileDownload, AVNUtil
 from httphandler import AVNHTTPHandler, WebSocketHandler
-from avnav_util import plainUrlToPath
+from avnav_worker import AVNWorker, WorkerParameter, UsedResource, WorkerStatus
 
 try:
   import create_overview
 except:
   pass
-from avnav_manager import *
 hasIfaces=False
 try:
   import netifaces
@@ -84,11 +89,14 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     return True
 
   @classmethod
+  def preventMultiInstance(cls):
+      return True
+
+  @classmethod
   def createInstance(cls, cfgparam):
-    cls.checkSingleInstance()
     return AVNHttpServer(cfgparam, AVNHTTPHandler)
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child == "Directory":
       return {
               "urlpath":None,
@@ -156,7 +164,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       for mtype in mtypes:
         self.overwrite_map[mtype['extension']]=mtype['type']
     AVNWorker.__init__(self, cfgparam)
-    self.type=AVNWorker.Type.HTTPSERVER
+    self.type=AVNWorker.HandlerType.HTTPSERVER
     self.interfaceReader=None
     self.addresslist=[]
     self.handlerMap={}
@@ -218,7 +226,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       '''
       if url is None:
           return False
-      cfg=self.getConfigParam()
+      cfg= self.getConfigParam(self._handlerManager)
       for navurl in [cfg.get('navurl'),cfg.get('navurlCompat')]:
         if navurl is not None and url.startswith(navurl):
             return url[len(navurl)+1:]
@@ -306,7 +314,6 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     return rt
 
   def getWebSocketsHandler(self,path,query,handler):
-    requestParam=urllib.parse.parse_qs(query,True)
     path=posixpath.normpath(path)
     for prefix in list(self.webSocketHandlers.keys()):
       if path.startswith(prefix) and not self.webSocketHandlers[prefix].isDisabled():

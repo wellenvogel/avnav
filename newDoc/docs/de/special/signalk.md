@@ -91,8 +91,7 @@ AvNav noch arbeiten können.
 
 ### 2. NMEA-Daten zuerst zu SignalK {: #flow2}
 
-In diesem Signalfluss, der unter OpenPlotter der Default ist (ab AvNavInstaller
-Version xxxx), werden NMEA-Daten zunächst in SignalK empfangen und
+In diesem Signalfluss, der unter OpenPlotter der Default ist, werden NMEA-Daten zunächst in SignalK empfangen und
 gespeichert. Dazu müssen in SignalK die entsprechenden *Data Connections*
 konfiguriert werden.
 
@@ -293,8 +292,8 @@ Im AVNAlarmHandler können auch weitere Alarme [konfiguriert ](configfile.md#avn
 
 ## SignalK - Karten {: #SignalKCharts}
 
-Ab Version 202011xx ist auch der [SignalK
-Chart Provider](https://github.com/SignalK/charts-plugin) integriert. Karten, die von dort angeboten werden, können auf der Einstiegsseite ebenfalls ausgewählt werden. Dazu muss
+Auch der [SignalK
+Chart Provider](https://github.com/SignalK/charts-plugin) ist integriert. Karten, die von dort angeboten werden, können auf der Einstiegsseite ebenfalls ausgewählt werden. Dazu muss
 natürlich innerhalb von SignalK das entsprechende Plugin installiert und aktiviert sein - und Karten müssen dort verfügbar sein.
 
 Im Normalfall werden durch AvNav nur die Informationen über die Karten

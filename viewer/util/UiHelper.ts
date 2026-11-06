@@ -314,3 +314,50 @@ export const useStoreHelper=(callback:DataChangedFunction,storeKeys:StoreKeys,ca
     }, [callback]);
     if (callImmediate) callback([]);
 }
+
+export class CustomSyntheticEvent implements SyntheticEvent {
+    bubbles: boolean;
+    cancelable: boolean;
+    currentTarget: EventTarget & Element=null;
+    defaultPrevented: boolean=false;
+    eventPhase: number;
+    isTrusted: boolean;
+    nativeEvent: Event;
+    target: EventTarget=null;
+    timeStamp: number;
+    type: string;
+    private propagationStopped:boolean=false;
+
+    constructor(name:string,options?:Partial<SyntheticEvent>) {
+        this.nativeEvent=new Event(name);
+        this.bubbles=options?.bubbles;
+        this.cancelable=options?.cancelable;
+        this.defaultPrevented=options?.defaultPrevented;
+        this.eventPhase=options?.eventPhase;
+        this.isTrusted=options?.isTrusted;
+        this.type=options?.type||name;
+        this.timeStamp=options?.timeStamp||(new Date).getTime();
+    }
+
+    isDefaultPrevented(): boolean {
+        return this.defaultPrevented;
+    }
+
+    isPropagationStopped(): boolean {
+        return this.propagationStopped;
+    }
+
+    persist(): void {
+    }
+
+    preventDefault(): void {
+        this.defaultPrevented=true;
+        if (this.nativeEvent) {this.nativeEvent.preventDefault()}
+    }
+
+    stopPropagation(): void {
+        this.propagationStopped = true;
+        if (this.nativeEvent) {this.nativeEvent.stopPropagation()}
+    }
+
+}

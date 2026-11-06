@@ -24,6 +24,14 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import re
+import socket
+import threading
+import traceback
+
+from avnav_util import AVNLog
+from avnav_worker import AVNWorker, WorkerParameter, WorkerKind, WorkerStatus, SubInfoHandler
+from socketbase import SocketReader
 
 hasBluetooth=False
 
@@ -32,7 +40,6 @@ try:
   hasBluetooth=True
 except:
   pass
-from socketbase import *
 import avnav_handlerList
 
 if hasBluetooth:
@@ -81,7 +88,7 @@ class AVNBlueToothReader(AVNWorker):
     return "AVNBlueToothReader"
   
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     rt=[
         cls.PRIORITY_PARAM_DESCRIPTION,
         WorkerParameter('maxDevices',5,description="maximal number of bluetooth devices",type=WorkerParameter.T_NUMBER),
@@ -212,7 +219,6 @@ class AVNBlueToothReader(AVNWorker):
         filter=filterstr.split(',') 
       for match in service_matches:
         port = match["port"]
-        name = match["name"]
         host = match["host"]
         found=False
         if len(filter) > 0:

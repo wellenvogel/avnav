@@ -24,9 +24,19 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-from serialwriter import *
-from avnserial import *
+import threading
+import time
+import traceback
+from xml.dom import minidom
+
 import avnav_handlerList
+from avnav_util import AVNLog
+from avnav_worker import TrackingInfoHandler, InfoHandler, WorkerStatus, SubInfoHandler, AVNWorker, WorkerParameter, \
+    WorkerKind, UsedResource
+from avnqueue import AVNQueue
+from avnserial import SerialReader
+from serialwriter import SerialWriter
+
 hasUdev=False
 try:
   import pyudev
@@ -110,7 +120,7 @@ class UsbSerialHandler(USBInfoHandler):
     if self.serialHandler:
       self.serialHandler.stopHandler()
     with self.lock:
-      self.lock.notifyAll()
+      self.lock.notify_all()
     start=time.monotonic()
     while (time.monotonic() < (start+0.2)):
       if not self.isRunning:
@@ -179,7 +189,7 @@ class AVNUsbSerialReader(AVNWorker):
   P_DTYPE=WorkerParameter('type', 'reader',type=WorkerParameter.T_SELECT,rangeOrList=UsbSerialHandler.ALL_INTERNAL_TYPES,
                           description="the type of this serial channel: reader or writer or combined (both reader and writer)\nor ignored to not use it at all")
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is None:
       #get the default configuration for a serial reader
       rt=list(filter(lambda p: p.name != 'port',SerialReader.getConfigParam()))
@@ -203,12 +213,15 @@ class AVNUsbSerialReader(AVNWorker):
         AVNWorker.NAME_PARAMETER
         ]
     return rt+ownParam
-  
+
+  @classmethod
+  def preventMultiInstance(cls):
+      return True
+
   @classmethod
   def createInstance(cls, cfgparam):
     if not hasUdev:
       raise Exception("no pyudev installed, cannot run %s"%(cls.getConfigName()))
-    cls.checkSingleInstance()
     return AVNUsbSerialReader(cfgparam)
 
   @classmethod
@@ -225,7 +238,12 @@ class AVNUsbSerialReader(AVNWorker):
 
   @classmethod
   def autoInstantiate(cls):
-      return hasUdev
+      if not hasUdev:
+          return False
+      name=cls.getConfigName()
+      rt=minidom.Element(name)
+      rt.setAttribute('enabled','false')
+      return rt
 
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useRef} from 'react';
 import {useKeyEventHandlerPlain} from '../util/UiHelper';
 import {DialogKeyComponents} from '../util/keyhandler';
 import {concatsp, setav} from "../util/helper";
@@ -7,6 +7,7 @@ import {IDialogContext, useDialogContext} from "./DialogContext";
 import {ButtonEvent, ButtonEventHandler} from "./Button";
 import {Icon} from "./Icons";
 import {ButtonBase} from "../api/api.interface";
+import {useHistory} from "./HistoryProvider";
 
 export interface DialogButtonProps extends Options,ButtonBase{
     onClick?: ButtonEventHandler;
@@ -22,6 +23,8 @@ export interface DialogButtonProps extends Options,ButtonBase{
 const COMPONENT=DialogKeyComponents.DIALOGBUTTON;
 const DialogButton=(props:DialogButtonProps)=>{
         const dialogContext=useDialogContext();
+        const history=useHistory();
+        const bref=useRef<HTMLDivElement>(null);
     // eslint-disable-next-line prefer-const
         let {icon,longText,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,iconClass,...forward}=useStore(props);
         const add:Record<string, any> = {};
@@ -36,7 +39,7 @@ const DialogButton=(props:DialogButtonProps)=>{
             if (disabled){
                 return;
             }
-            setav(ev,{dialogContext:dialogContext});
+            setav(ev,{dialogContext:dialogContext,history:history});
             if (! onClick || close) {
                 let closeDialog=true;
                 if (onPreClose) {
@@ -47,11 +50,15 @@ const DialogButton=(props:DialogButtonProps)=>{
             if (onClick) onClick(ev,dialogContext);
         };
         useKeyEventHandlerPlain(props.name,COMPONENT,()=>{
-            if ( ! disabled && visible !== false) clickHandler({});
+            if ( ! disabled && visible !== false && bref.current){
+                const ev=new Event('click',{bubbles:true});
+                bref.current.dispatchEvent(ev);
+            }
         });
         if (visible === false) return null;
         return (
             <div
+                ref={bref}
                 {...forward}
                 {...add}
                 {...style}

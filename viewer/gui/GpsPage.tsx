@@ -6,7 +6,7 @@ import {useStoreState} from '../hoc/Dynamic';
 import ItemList, {ItemListProps} from '../components/ItemList';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 // @ts-ignore
 import MapHolder from '../map/mapholder.js';
@@ -24,13 +24,13 @@ import {DynamicTitleIcons} from "../components/TitleIcons";
 import {showDialog} from "../components/OverlayDialog";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import ButtonList from "../components/ButtonList";
-import Helper, {injectav} from "../util/helper";
+import Helper, {getav} from "../util/helper";
 import {useHistory} from "../components/HistoryProvider";
 import {useDialogContext} from "../components/DialogContext";
 import {PAGEIDS, PageType} from "../util/pageids";
 import layouthandler from "../util/layouthandler";
 import remotechannel,{COMMANDS} from '../util/remotechannel';
-import Button, {ButtonDef, DynamicButtonProps, updateButtons} from "../components/Button";
+import Button, {ButtonDef, ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import GpsPageButtons, {pageButtons} from "./GpsPageButtons";
 import {MultiView, useScrollHelper} from "../components/MultiView";
@@ -119,7 +119,7 @@ interface DashboardPanelProps{
     visible?:boolean;
     pageNumber:number;
     fontSize:number;
-    onItemClick:(ev:Event,panelData:PanelData) => void;
+    onItemClick:(ev:SyntheticEvent,panelData:PanelData) => void;
 }
 const DashboardPanel=(props:DashboardPanelProps)=>{
     if (!Helper.unsetorTrue(props.visible)) {
@@ -149,7 +149,7 @@ const DashboardPanel=(props:DashboardPanelProps)=>{
             },
             itemList: panelData.list,
             fontSize: props.fontSize,
-            onItemClick: (ev:Event) => {
+            onItemClick: (ev:ButtonEvent) => {
                 props.onItemClick(ev, panelData);
             },
             onClick: () => {
@@ -315,9 +315,9 @@ const GpsPage = (props:Partial<PageProps>) => {
     }
     const buttons=updateButtons(InjectMainMenu(PAGE,updateButtons(GpsPageButtons())),buttonActions);
 
-    const onItemClick = useCallback((ev:Event, panelInfo:PanelData) => {
-        const avev=injectav(ev);
-        const item=avev.avnav.item;
+    const onItemClick = useCallback((ev:SyntheticEvent, panelInfo:PanelData) => {
+        const av=getav(ev);
+        const item=av.item;
         if (! item) return;
         if (LayoutHandler.isEditing()) {
             showDialog(dialogContext, () => <EditWidgetDialogWithFunc
@@ -333,7 +333,7 @@ const GpsPage = (props:Partial<PageProps>) => {
             return;
         }
         if (item && item.name === "AisTarget") {
-            const mmsi = avev.avnav.mmsi;
+            const mmsi = av.mmsi;
             if (mmsi === undefined) return;
             showDialog(dialogContext, () => {
                 return <AisInfoWithFunctions

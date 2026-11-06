@@ -24,17 +24,19 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-import codecs
 import json
-
+import os
 import shutil
-
-from avnav_util import *
-from avnav_worker import *
+import sys
+import threading
+import traceback
 import xml.dom as dom
 import xml.dom.minidom as parser
-import avnav_handlerList
+from xml.dom.minidom import Element
 
+import avnav_handlerList
+from avnav_util import AVNLog, AVNUtil, AVNFileDownloadLB, Enum
+from avnav_worker import UsedResource, forceExit
 
 
 class ConfigChanger(object):
@@ -202,11 +204,57 @@ class ConfigChanger(object):
 
 
 
+class IHandlerManager(object):
+  """
+  placeholder for a handler that has not (yet) been connected to a real AVNHandlerManager
+  every call logs an error and returns an empty default to avoid follow up crashes
+  """
+  def _report(self, name):
+    AVNLog.error("call of %s on the dummy handler manager - no manager set\n%s",
+                 name, "".join(traceback.format_stack()[-5:-2]))
+
+  def getAllHandlers(self, filterf=None):
+    self._report("getAllHandlers")
+    return []
+
+  def findHandler(self, filterf):
+    self._report("findHandler")
+    return None
+
+  def findHandlerByName(self, name, disabled=False):
+    self._report("findHandlerByName(%s)" % name)
+    return None
+
+  def findHandlerByTypeAndName(self, type, name=None):
+    self._report("findHandlerByTypeAndName(%s,%s)" % (type, name))
+    return None
+
+  def findHandlerById(self, id):
+    self._report("findHandlerById(%s)" % id)
+    return None
+
+  def findUsersOf(self, type, ownId=None, value=None, toPlain=False, onlyRunning=True):
+    self._report("findUsersOf(%s)" % type)
+    return []
+
+  def __getattr__(self, name):
+    # any other call: log and return None
+    if name.startswith('__'):
+      raise AttributeError(name)
+    def dummy(*args, **kwargs):
+      self._report(name)
+      return None
+    return dummy
+
+
 # a class for parsing the config file
-class AVNHandlerManager(object):
+class AVNHandlerManager(IHandlerManager):
   class BASEPARAM(Enum):
     BASEDIR='BASEDIR' #the base directory for the server - location of the main python file
     DATADIR='DATADIR' #the data directory if not provided on the commandline: either parent dir of chart dir or $HOME/avnav
+
+  # the catch all of the dummy base must not hide missing attributes of the real manager
+  __getattr__ = object.__getattribute__
 
   @classmethod
   def getDirWithDefault(cls, parameters, name, defaultSub=None, belowData=True):
@@ -265,7 +313,7 @@ class AVNHandlerManager(object):
       return cfgname+".ok"
   @classmethod
   def getInvalidName(cls,fileName):
-    now = datetime.datetime.utcnow()
+    now = AVNUtil.timeToDatetime()
     return fileName + ".invalid-" + now.strftime("%Y%m%d%H%M%S")
 
   def isDisabled(self):
@@ -291,7 +339,26 @@ class AVNHandlerManager(object):
     self.canRestart=canRestart
     self.configLock=threading.Lock()
     self.shouldStop=False
+    self._allHandlers=[]
 
+  def _addHandler(self,handler):
+      with self.configLock:
+          if handler not in self._allHandlers:
+              self._allHandlers.append(handler)
+              return True
+      return False
+
+  def getAllHandlers(self,filterf=None):
+      with self.configLock:
+          if filterf is None:
+              return self._allHandlers.copy()
+          else:
+            return list(filter(lambda h:filterf(h),self._allHandlers))
+  def findHandler(self,filterf):
+      rt=self.getAllHandlers(filterf)
+      if len(rt):
+          return rt[0]
+      return None
   def setBaseParam(self,name,value):
     if not hasattr(self.BASEPARAM,name):
       raise Exception("invalid parameter for setBaseParam")
@@ -316,7 +383,8 @@ class AVNHandlerManager(object):
 
   def readConfigAndCreateHandlers(self,filename,allowNoConfig=False):
     AVNLog.info("reading config %s",filename)
-    AVNWorker.resetHandlerList()
+    with self.configLock:
+        self._allHandlers=[]
     existingConfig=True
     if not os.path.exists(filename):
       if not allowNoConfig:
@@ -338,20 +406,23 @@ class AVNHandlerManager(object):
       name=handler.getConfigName()
       ai=handler.autoInstantiate()
       if ai:
-        existing=AVNWorker.findHandlerByName(name, True)
+        existing=self.findHandlerByName(name, True)
         if existing is None:
-          AVNLog.info("auto instantiate for %s", name)
-          if not isinstance(ai,str):
+          AVNLog.info("auto instantiate for %s: '%s'", name,str(ai))
+          if type(ai) == bool:
             ai="<"+name+"/>"
           try:
-            node=parser.parseString(ai)
-            if node.documentElement.nodeType != dom.Node.ELEMENT_NODE or node.documentElement.tagName != name:
-              raise Exception("invalid main node or main node name for autoInstantiate")
-            self.parseHandler(node.documentElement, handler, domAttached=False)
+            if isinstance(ai,Element):
+                element=ai
+            else:
+                node=parser.parseString(str(ai))
+                element=node.documentElement
+            if element is None or element.nodeType != dom.Node.ELEMENT_NODE or element.tagName != name:
+              raise Exception(f"invalid main node or main node name for autoInstantiate {str(ai)}")
+            self.parseHandler(element, handler, domAttached=False)
           except Exception:
-              AVNLog.errorOut("error parsing default config %s for %s:%s",ai,name,traceback.format_exc())
-              return False
-    return len(AVNWorker.getAllHandlers()) > 0
+              AVNLog.errorOut("error parsing default config '%s' for %s:%s",ai,name,traceback.format_exc())
+    return len(self._allHandlers) > 0
 
 
   def parseDomAndCreateHandlers(self,filename):
@@ -381,7 +452,7 @@ class AVNHandlerManager(object):
         nextElement=nextElement.nextSibling
 
   def parseHandler(self, element, handlerClass, domAttached=True):
-    configParam= handlerClass.getConfigParamCombined()
+    configParam= handlerClass.getConfigParamCombined(self)
     if type(configParam) is list:
       cfg=handlerClass.parseConfigNew(element.attributes,configParam)
     else:
@@ -391,7 +462,7 @@ class AVNHandlerManager(object):
     while child is not None:
       if child.nodeType == dom.Node.ELEMENT_NODE:
         childName=child.tagName
-        cfgDefaults= handlerClass.getConfigParamCombined(childName)
+        cfgDefaults= handlerClass.getConfigParamCombined(self, child=childName)
         if cfgDefaults is not None:
           if childPointer.get(childName) is None:
             childPointer[childName]=[]
@@ -405,11 +476,15 @@ class AVNHandlerManager(object):
             cfg[childName].append(handlerClass.parseConfig(child.attributes,cfgDefaults))
       child=child.nextSibling
     cfg.update(self.baseParam)
+    if handlerClass.preventMultiInstance():
+        self.checkSingleInstance(handlerClass.getConfigName())
     instance=handlerClass.createInstance(cfg)
     if instance is None:
       AVNLog.errorOut("unable to instantiate handler %s",element.tagName)
     else:
       instance.setConfigChanger(ConfigChanger(self, self.domObject, domAttached, element, childPointer))
+      instance.setManager(self)
+      self._addHandler(instance)
     return instance
 
   def acquireLock(self):
@@ -448,7 +523,7 @@ class AVNHandlerManager(object):
           AVNLog.errorOut("unable to remove old cfg file %s:%s",full,traceback.format_exc())
 
   def getBackupName(self,fileName):
-    now=datetime.datetime.utcnow()
+    now=AVNUtil.timeToDatetime()
     return fileName+"-"+now.strftime("%Y%m%d%H%M%S")
 
 
@@ -478,7 +553,6 @@ class AVNHandlerManager(object):
       raise Exception("no cfg file set")
     if self.domObject is None:
       raise Exception("no dom available")
-    dir=os.path.dirname(self.cfgfileName)
     fallback=self.getFallbackName(self.cfgfileName)
     backupFile=self.getBackupName(self.cfgfileName)
     copyFile=backupFile
@@ -511,12 +585,14 @@ class AVNHandlerManager(object):
   def startHandlers(self,navData):
     self.navData=navData
     groups = set()
-    for handler in AVNWorker.getAllHandlers():
-      groups.add(handler.getStartupGroup())
+    allHandlers=self.getAllHandlers()
+    for handler in allHandlers:
+        if not handler.isDisabled():
+            groups.add(handler.getStartupGroup())
     grouplist = list(groups)
     grouplist.sort()
     for group in grouplist:
-      for handler in AVNWorker.getAllHandlers(disabled=True):
+      for handler in allHandlers:
         try:
           if handler.getStartupGroup() == group:
             handler.startInstance(navData)
@@ -566,7 +642,7 @@ class AVNHandlerManager(object):
         raise Exception("unable to find handler for %s" % tagName)
       if not handlerClass.canDeleteHandler():
         raise Exception("handler %s cannot be added" % tagName)
-      rt['data'] = handlerClass.getEditableParameters()
+      rt['data'] = handlerClass.getEditableParameters(self)
       return rt
 
     if command == 'canRestart':
@@ -593,7 +669,7 @@ class AVNHandlerManager(object):
         return AVNUtil.getReturnData(level=level,filter=filter)
 
     if command == 'capabilities':
-        commands=AVNWorker.findHandlerByName('AVNCommandHandler')
+        commands=self.findHandlerByName('AVNCommandHandler')
         hasShutdown=False
         if commands is not None:
             configuredCommands=commands.getStatusProperties()
@@ -641,12 +717,12 @@ class AVNHandlerManager(object):
                      'kind': handler.getKind()
                      }
         if id is not None:
-            handler = AVNWorker.findHandlerById(int(id))
+            handler = self.findHandlerById(int(id))
             if handler is None:
                 return AVNUtil.getReturnData(error="unable to find handler for %s" % str(id))
             return AVNUtil.getReturnData(handler=handlerToStatus(handler))
         rt = []
-        allHandlers = AVNWorker.getAllHandlers(True)
+        allHandlers = self.getAllHandlers()
         # find for each type the first id
         typIds = {}
         for h in allHandlers:
@@ -656,7 +732,7 @@ class AVNHandlerManager(object):
         # get the sorted list of typeIds
         typeList = sorted(typIds.keys(), key=lambda k: typIds[k])
         for type in typeList:
-            for handler in AVNWorker.getAllHandlers(True):
+            for handler in allHandlers:
                 if handler.getConfigName() != type: continue
                 rt.append(handlerToStatus(handler))
         return AVNUtil.getReturnData(handler=rt)
@@ -664,11 +740,11 @@ class AVNHandlerManager(object):
       if id is None and configName is None:
         return AVNUtil.getReturnData(error="either id or handlerName must be provided")
       if id is not None:
-        handler = AVNWorker.findHandlerById(int(id))
+        handler = self.findHandlerById(int(id))
         if handler is None:
           return AVNUtil.getReturnData(error="unable to find handler for %s"%str(id))
       else:
-        handler=AVNWorker.findHandlerByName(configName,disabled=True)
+        handler=self.findHandlerByName(configName,disabled=True)
         if handler is None:
           return AVNUtil.getReturnData(error="unable to find handler for %s"%configName)
         if not handler.preventMultiInstance():
@@ -677,7 +753,7 @@ class AVNHandlerManager(object):
         data = handler.getEditableChildParameters(child)
         canDelete = handler.canDeleteChild(child)
       else:
-        data = handler.getEditableParameters(id=handler.getId())
+        data = handler.getEditableParameters(self,id=handler.getId())
         canDelete = handler.canDeleteHandler()
       if data is not None:
           rt['handlerId']=handler.getId()
@@ -688,7 +764,7 @@ class AVNHandlerManager(object):
       return rt
     if id is None:
       return AVNUtil.getReturnData(error="missing parameter id")
-    handler = AVNWorker.findHandlerById(int(id))
+    handler = self.findHandlerById(int(id))
     if handler is None:
       raise Exception("unable to find handler for id %s" % id)
     if command == 'setConfig':
@@ -705,9 +781,102 @@ class AVNHandlerManager(object):
       self.updateChangeCounter()
     elif command == 'deleteHandler':
       AVNLog.info("removing handler %s", handler.getName())
-      AVNWorker.removeHandler(int(id))
+      self.removeHandler(int(id))
       self.updateChangeCounter()
 
     else:
       raise Exception("unknown command %s" % command)
     return rt
+
+  def findUsersOf(self, type, ownId=None, value=None, toPlain=False, onlyRunning=True):
+      used = []
+      def filterf(handler):
+          if onlyRunning and handler.currentThread is None:
+              return False
+          if handler.getId() == ownId:
+              return False
+          return True
+      for handler in self.getAllHandlers(filterf=filterf):
+          used += handler.getUsedResources(type)
+      if value is None:
+          if toPlain:
+              return UsedResource.toPlain(used)
+          return used
+      rt = []
+      for us in used:
+          if us.usingTypeValue(type, value):
+              rt.append(us)
+      if toPlain:
+          return UsedResource.toPlain(rt)
+      return rt
+
+  def findHandlerByTypeAndName(self, type, name=None):
+      """find a handler by its type and name (not configName)
+         leave the name unset to find by type
+         do not find any disabled handler
+      """
+      if not name is None and name == '':
+          name = None
+      def filterf(handler):
+          if handler.type != type:
+              return False
+          if handler.isDisabled():
+              return False
+          if name is None or handler.getName() == name:
+              return True
+          return False
+      return self.findHandler(filterf)
+
+  def findHandlerByName(self,name,disabled=False):
+    """find a handler by its config name"""
+    def filterf(handler):
+        if handler.getConfigName() != name:
+            return False
+        if handler.isDisabled() and not disabled:
+            return False
+        return True
+    return self.findHandler(filterf)
+  def shutdownServer(self):
+    #first stop the http server
+    #to avoid any strange responses
+    httpserver=self.findHandlerByName("AVNHttpServer")
+    if httpserver is not None:
+        httpserver.stop()
+    for handler in self.getAllHandlers():
+      if handler == httpserver:
+          continue
+      try:
+        AVNLog.info("stopping handler %s",handler.getName())
+        handler.stop()
+      except:
+        pass
+    fe = threading.Thread(target=forceExit)
+    fe.start()
+    sys.exit(1)
+
+  def checkSingleInstance(self,configName):
+    """"
+    check that we only run in one instance
+    workers that rely on running only once should call this in createInstance
+    """
+    other=self.findHandlerByName(configName,True)
+    if not other is None:
+      raise Exception("there is already a handler with %s, cannot create another one"%(self.getConfigName()))
+
+  def findHandlerById(self,id):
+      def filterf(handler):
+          if handler.id == id:
+              return True
+          return False
+      return self.findHandler(filterf)
+
+  def removeHandler(self, handlerId):
+      handler = self.findHandlerById(handlerId)
+      if handler is None:
+          raise Exception("handler for id %s not found" % str(handlerId))
+      if not handler.canDeleteHandler():
+          raise Exception("handler %s cannot be deleted" % str(handlerId))
+      with self.configLock:
+          self._allHandlers.remove(handler)
+      handler.stop()
+      handler.configChanger.removeSelf()

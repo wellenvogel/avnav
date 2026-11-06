@@ -25,28 +25,32 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import io
 import json
 import math
 import os
 import sys
-
-import gpxpy098.parser as gpxparser
-from avnav_worker import AVNWorker,WorkerParameter
+import threading
+import time
+import traceback
 
 from avnav_manager import AVNHandlerManager
-from avnav_util import AVNLog
+from avnav_nmea import NMEAParser
+from avnav_store import AVNStore
+from avnav_util import Enum, AVNUtil, AVNLog
+from avnav_worker import WorkerParameter, WorkerKind, WorkerStatus
+from avndirectorybase import AVNDirectoryListEntry, AVNDirectoryHandlerBase
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","..","libraries"))
 
-from avndirectorybase import *
 import avnav_handlerList
 
 class AVNRoutingLeg(object):
   MOBNAME="MOB" #the waypoint name fro MOB
-  def __init__(self,dict):
-    if dict is None:
-      dict={}
-    self.plain=dict
+  def __init__(self,dct):
+    if dct is None:
+      dct={}
+    self.plain=dct
     #TODO: some checks here
 
   def getFrom(self):
@@ -226,7 +230,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
                            condition=[{P_WPMODE.name:'early'}],
                            rangeOrList=[5,100])
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is None:
       
       rt=[
@@ -421,7 +425,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     AVNLog.debug("router main loop")
 
   def startStopAlarm(self,start,name=ALARMS.waypoint):
-    alert = self.findHandlerByName("AVNAlarmHandler")
+    alert = self._handlerManager.findHandlerByName("AVNAlarmHandler")
     if alert is None:
       return
     try:

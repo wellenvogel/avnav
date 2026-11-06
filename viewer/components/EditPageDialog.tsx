@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import LayoutHandler, {LAYOUT_OPTIONS, LayoutPage} from '../util/layouthandler';
+import LayoutHandler, {LAYOUT_OPTIONS, LayoutOptionArray, LayoutOptionFlags, LayoutPage} from '../util/layouthandler';
 import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog';
 import {Checkbox} from './Inputs';
 import DB from './DialogButton';
@@ -13,6 +13,7 @@ import Helper from "../util/helper";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import {TEditableParameterUI} from "./ParameterDialog";
+import layouthandler from "../util/layouthandler";
 
 const OPTION_COMBINATIONS=[
     {
@@ -52,11 +53,26 @@ const getFilteredOptions=(handledOptions:LAYOUT_OPTIONS[])=>{
     }
     return rt;
 };
-const optionListToObject=(optionList:LAYOUT_OPTIONS[],opt_false?:boolean)=>{
-    const option:Partial<Record<LAYOUT_OPTIONS,boolean>> = {};
-    optionList.forEach((el)=>{option[el]=opt_false?false:true;});
-    return option;
-};
+
+const combinationEqual=(coma:LayoutOptionArray,comb:LayoutOptionArray)=>{
+    if (comb == null) {
+        return !coma.length
+    }
+    for (const o of comb){
+        if (coma.indexOf(o) < 0) return false;
+    }
+    for (const o of coma){
+        if (comb.indexOf(o) < 0) return false;
+    }
+    return true
+}
+
+const indexForCombination=(combination:LayoutOptionArray)=>{
+    for (let i=0;i<OPTION_COMBINATIONS.length;i++){
+        if (combinationEqual(OPTION_COMBINATIONS[i].options,combination)) return i;
+    }
+    return DEFAULT_OPTION_COMBINATION_INDEX;
+}
 class PanelListEntry{
     private pagename: string;
     private handledOptions: LAYOUT_OPTIONS[];
@@ -77,10 +93,12 @@ class PanelListEntry{
         const combinations=getFilteredOptions(this.handledOptions);
         for (const i in combinations){
             const definition=combinations[i];
-            const tryList=LayoutHandler.getPanelTryList(this.basename,optionListToObject(definition.options));
-            //first element has the panel we check for
-            const panelData=LayoutHandler.getDirectPanelData(this.pagename,tryList[0]);
-            if (panelData){
+            const options:LayoutOptionFlags={}
+            for (const def of definition.options){
+                options[def]=true;
+            }
+            const usedCombination=layouthandler.getPanelData(this.pagename,this.basename,options);
+            if (combinationEqual(definition.options,usedCombination.combination||[])) {
                 this.foundCombinations.push(true);
             }
             else{
@@ -94,13 +112,13 @@ class PanelListEntry{
         for (let i=0;i<this.foundCombinations.length;i++){
             const definition=combinations[i];
             const shouldExist=this.foundCombinations[i];
-            const tryList=LayoutHandler.getPanelTryList(this.basename,optionListToObject(definition.options));
+            const panelName=LayoutHandler.getPanelNameForCombination(this.basename,definition.options)
             if (! shouldExist){
-                LayoutHandler.removePanel(this.pagename,tryList[0]);
+                LayoutHandler.removePanel(this.pagename,panelName);
             }
             else
             {
-                LayoutHandler.getDirectPanelData(this.pagename,tryList[0],true);
+                LayoutHandler.getDirectPanelData(this.pagename,panelName,true);
             }
         }
     }
@@ -171,24 +189,17 @@ const EditPageDialog=(props:EditPageDialogProps)=>{
         nv[panel.basename].foundCombinations[index]=!nv[panel.basename].foundCombinations[index];
         setPanelList(nv);
     }
-    const combinations=getFilteredOptions(props.handledOptions);
-    //find the current active option combination index
-    let activeIndex:number;
-    combinations.forEach((combination,index)=>{
-        const required=optionListToObject(combination.options);
-        let match=true;
-        for (const k of props.handledOptions) {
-            if (!!required[k] != !!currentOptions[k]){
-                match=false;
-                break;
-            }
-        }
-        if (match){
-            activeIndex = index;
-        }
-    })
-    if (activeIndex===undefined){
-        activeIndex=0;
+    /*
+    build a list of candidate option combinations
+    that the layout handler would use
+    we add our index in the list of option combinations to each entry
+    to highlight the correct entry we go through the list in each panel
+    and select the first entry that has foundCombination[index] being set
+    we fall back to the default
+     */
+    const currentActiveOptions: { combination: LayoutOptionArray; index: number; }[]=[];
+    for (const opt of layouthandler.buildCandidateOptions(currentOptions)){
+        currentActiveOptions.push({combination:opt,index:indexForCombination(opt)});
     }
     let dataValid=true;
     if (props.parameters) {
@@ -232,8 +243,13 @@ const EditPageDialog=(props:EditPageDialogProps)=>{
                 <div className="panelList">
                     <div className="panelHeadline">Panel Configurations</div>
                 {getPanelsAsArray().map((panel)=>{
-                    const activePanelIndex=panel.foundCombinations[activeIndex]?activeIndex:
-                        (panel.foundCombinations[DEFAULT_OPTION_COMBINATION_INDEX]?DEFAULT_OPTION_COMBINATION_INDEX:undefined);
+                    let activePanelIndex=DEFAULT_OPTION_COMBINATION_INDEX;
+                    for (const candidate of currentActiveOptions){
+                        if (panel.foundCombinations[candidate.index]){
+                            activePanelIndex=candidate.index;
+                            break;
+                        }
+                    }
                     return <div className={"editPanel "+panel.basename} key={panel.basename.replace(/  */,'')}>
                         <span className="label">{panel.basename}</span>
                         <div className="combinationFrame">

@@ -24,15 +24,22 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
+import datetime
 import glob
 import gzip
 import io
 import os
+import re
+import threading
+import time
+import traceback
 
 import avnav_handlerList
 from avnav_manager import AVNHandlerManager
-from avndirectorybase import *
+from avnav_store import AVNStore
+from avnav_util import AVNUtil, AVNLog, AVNFileDownload, AVNFileDownloadLB, AVNStreamDownload
+from avnav_worker import WorkerParameter, WorkerKind, WorkerStatus
+from avndirectorybase import AVNDirectoryHandlerBase
 
 
 class TrackPoint:
@@ -57,14 +64,12 @@ class TrackPoint:
       del rt['distance']
     except:
       pass
-    rt['ts']=AVNUtil.datetimeToTsUTC(self.ts)
-    rt['time']=self.ts.isoformat()
+    rt['ts']=self.ts
+    rt['time']=AVNUtil.timeToIso8601(AVNUtil.timeToDatetime(self.ts))
     return rt
 
   def getLine(self):
-    ts=self.ts.replace(microsecond=0).isoformat()
-    if not ts[-1:]=="Z":
-        ts+="Z"
+    ts=AVNUtil.timeToIso8601(AVNUtil.timeToDatetime(self.ts).replace(microsecond=0))
     return "%s,%f,%f,%f,%f,%f\n"%(ts,self.lat,self.lon,self.course or 0,self.speed or 0,self.distance or 0)
 
 #a writer for our track
@@ -97,7 +102,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     self.startSequence=0
 
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is not None:
       return None
     return [
@@ -129,21 +134,25 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def writeLine(self,filehandle,tp: TrackPoint):
     filehandle.write(tp.getLine())
     filehandle.flush()
-  def createFileName(self,dt):
-    fstr=str(dt.strftime("%Y-%m-%d"))
+  def createFileName(self,dt:float):
+    fstr=str(AVNUtil.timeToDatetime(dt).strftime("%Y-%m-%d"))
     return fstr
   def cleanupTrack(self):
     numremoved=0
-    cleanupTime=datetime.datetime.utcnow()-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
-    with self.tracklock:
-      while len(self.track) > 0:
-        if self.track[0].ts<=cleanupTime:
-          numremoved+=1
-          self.track.pop(0)
-        else:
-          break
-    if numremoved > 0:
-      AVNLog.debug("removed %d track entries older then %s",numremoved,cleanupTime.isoformat())
+    try:
+        cleanupTime=(AVNUtil.timeToDatetime()-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP)))
+        cleanupTs=cleanupTime.timestamp()
+        with self.tracklock:
+            while len(self.track) > 0:
+                if self.track[0].ts<=cleanupTs:
+                    numremoved+=1
+                    self.track.pop(0)
+                else:
+                    break
+        if numremoved > 0:
+            AVNLog.debug("removed %d track entries older then %s",numremoved,AVNUtil.timeToIso8601(cleanupTime))
+    except Exception:
+        AVNLog.error("error in track cleanup %s",traceback.format_exc())
 
 
   def handleSpecialApiRequest(self, command, requestparam, handler):
@@ -169,9 +178,6 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     return AVNUtil.getReturnData()
 
   def handleTrackRequest(self, requestParam,v2=False):
-      lat = None
-      lon = None
-      dist = None
       maxnum = 60  # with default settings this is one hour
       interval = 60
       full=False
@@ -196,14 +202,13 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def getTrackFormatted(self,maxnum,interval):
     rt=[]
     curts=None
-    intervaldt=datetime.timedelta(seconds=interval)
     with self.tracklock:
       try:
         for tp in self.track:
-          if curts is None or tp.ts > (curts + intervaldt):
+          if curts is None or tp.ts > (curts + interval):
             rt.append(tp.getFormatted())
             curts=tp.ts
-      except:
+      except Exception as e:
         pass
     return rt[-maxnum:]
   #read in a track file (our csv syntax)
@@ -225,7 +230,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         if len(par) < 3:
           continue
         try:
-          tp=TrackPoint(AVNUtil.gt(par[0]),
+          tp=TrackPoint(AVNUtil.gt(par[0]).timestamp(),
                         lat=float(par[1]),
                         lon=float(par[2]),
                         course=float(par[3]),
@@ -273,9 +278,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     try:
       f.write(header%(title,))
       for trackpoint in data:
-        ts=trackpoint.ts.isoformat()
-        if not ts[-1:]=="Z":
-          ts+="Z"
+        ts=AVNUtil.timeToIso8601(AVNUtil.timeToDatetime(trackpoint.ts))
         f.write(trkpstr%(trackpoint.lat,trackpoint.lon,ts,trackpoint.course,trackpoint.speed))
       f.write(footer)
     except:
@@ -326,7 +329,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     and the cleanup time
     @return:
     '''
-    currentTime = datetime.datetime.utcnow()
+    currentTime = AVNUtil.timeToDatetime()
     timelist=[currentTime]
     nextTime=currentTime-datetime.timedelta(days=1)
     minTime=currentTime-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
@@ -335,15 +338,16 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       nextTime-=datetime.timedelta(days=1)
     rt=[]
     for ts in reversed(timelist):
-      curfname = self.createFileName(ts)
+      curfname = self.createFileName(ts.timestamp())
       rt.append(curfname)
     return rt
 
   def _readTrackDataFromFiles(self):
     self.track=[]
     fnames=self._getNecessaryNames()
-    currentTime = datetime.datetime.utcnow()
-    minTime=currentTime-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
+    currentTime = AVNUtil.timeToDatetime()
+    minTime=(currentTime-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))).timestamp()
+    currentTs=currentTime.timestamp()
     for fname in fnames:
       realfilename = self._nameToFullName(fname,self.WEXT)
       if os.path.exists(realfilename):
@@ -352,12 +356,11 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         data = self.readTrackFile(realfilename)
         with self.tracklock:
           for trkpoint in data:
-            if trkpoint.ts >= minTime and trkpoint.ts < currentTime:
+            if trkpoint.ts >= minTime and trkpoint.ts < currentTs:
               self.track.append(trkpoint)
     self.modifySequence=time.monotonic()
 
   def _renameFile(self,basename):
-    fullbase=os.path.join(self.baseDir,basename)
     extensions=[self.WEXT,self.GPXEXT]
     def alreadyExists(sfx=None):
       for ext in extensions:
@@ -422,7 +425,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def periodicRun(self):
     try:
       self.loopCount+=1
-      currentTime = datetime.datetime.utcnow()
+      currentTime = time.time()
       curfname = self.createFileName(currentTime)
       newFile=False
       realfilename=None
@@ -452,7 +455,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
             AVNLog.info("new trackfile %s", realfilename)
           if newFile:
             self.currentFile = open(realfilename, "a",encoding='utf-8')
-            self.currentFile.write("#anvnav Trackfile started/continued at %s\n" % (currentTime.isoformat()))
+            self.currentFile.write("#anvnav Trackfile started/continued at %s\n" % (AVNUtil.timeToIso8601(AVNUtil.timeToDatetime(currentTime))))
             self.currentFile.flush()
         self.setInfo('main', "writing to %s" % (self.fname,), WorkerStatus.NMEA)
       else:
@@ -534,7 +537,6 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       else:
           return AVNFileDownload(filename)
 
-      return super().handleDownload(name, handler, requestparam)
 
   def handleRename(self, name, newName, requestparam):
       name = self.checkName(name)

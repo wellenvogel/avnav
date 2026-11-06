@@ -24,16 +24,15 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import threading
 import traceback
 
-import time
-
-from avnqueue import AVNQueue, Fetcher
-from avnserial import *
 import avnav_handlerList
 from avnav_nmea import NMEAParser
-from avnav_util import AVNLog
-from avnav_worker import AVNWorker
+from avnav_util import AVNLog, MovingSum
+from avnav_worker import WorkerParameter, AVNWorker, InfoHandler, WorkerStatus, UsedResource, WorkerKind
+from avnqueue import Fetcher, AVNQueue
+from avnserial import SerialReader
 
 hasSerial=False
 
@@ -153,7 +152,6 @@ class SerialWriter(SerialReader):
     threading.current_thread().setName("%s - %s"%(self.getName(),self.param['port']))
     self.device=None
     init=True
-    isOpen=False
     AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in list(self.param.keys())))
     self.infoHandler.setInfo(INAME,"created",WorkerStatus.STARTED)
     startReader=self.P_COMBINED.fromDict(self.param)
@@ -277,7 +275,7 @@ class AVNSerialWriter(AVNWorker):
     return "AVNSerialWriter"
   
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if not child is None:
       return None
     cfg=SerialWriter.getConfigParam()
@@ -300,11 +298,11 @@ class AVNSerialWriter(AVNWorker):
     return True
 
   @classmethod
-  def getEditableParameters(cls, makeCopy=True,id=None):
-    rt= super().getEditableParameters(True,id=id)
+  def getEditableParameters(cls,handlerManager, makeCopy=True,id=None):
+    rt= super().getEditableParameters(handlerManager,True,id=id)
     slist = SerialReader.listSerialPorts()
     slist = UsedResource.filterListByUsed(UsedResource.T_SERIAL, slist,
-                                          cls.findUsersOf(UsedResource.T_SERIAL, ownId=id))
+                                          handlerManager.findUsersOf(UsedResource.T_SERIAL, ownId=id))
     WorkerParameter.updateParamFor(rt, SerialWriter.P_PORT.name, {'rangeOrList':slist})
     return rt
 

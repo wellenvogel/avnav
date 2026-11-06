@@ -23,7 +23,7 @@ import {
     showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog';
-import Helper, {injectav} from '../util/helper';
+import Helper, {getav} from '../util/helper';
 import {useKeyEventHandlerPlain, useStoreHelper, useTimer} from '../util/UiHelper';
 // @ts-ignore
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
@@ -217,6 +217,7 @@ const MapWidgetsDialog = () => {
         dialogContext.showDialog(() => <EditWidgetDialogWithFunc
             widgetItem={item}
             panelname={OVERLAYPANEL}
+            panelList={[OVERLAYPANEL]}
             pageWithOptions={PAGENAME}
             opt_options={{fixPanel: true, types: ['map']}}
         />)
@@ -241,6 +242,7 @@ const MapWidgetsDialog = () => {
                         widgetItem={undefined}
                         pageWithOptions={PAGENAME}
                         panelname={OVERLAYPANEL}
+                        panelList={[OVERLAYPANEL]}
                         opt_options={{fixPanel: true, types: ['map']}}
                     />)
                 },
@@ -678,26 +680,27 @@ const NavPage=(props:PageProps)=>{
         }
     },[overlayButtonList]);
     const widgetClick=useCallback((ev:SyntheticEvent)=>{
-        const avev=injectav(ev);
-        const item=avev.avnav.item||{};
-        const panel=avev.avnav.panelName||"";
+        const av=getav(ev);
+        const item=av.item||{};
+        const panel=av.panelName||"";
         const pagePanels=LayoutHandler.getPagePanels(PAGENAME);
         const idx=pagePanels.indexOf(OVERLAYPANEL);
         if (idx >=0){
             pagePanels.splice(idx,1);
         }
         if (LayoutHandler.isEditing()) {
-            const invertEditDirection=avev.avnav.invertEditDirection;
+            const invertEditDirection=av.invertEditDirection;
             showDialog(dialogCtx, () => <EditWidgetDialogWithFunc
                 widgetItem={item}
                 pageWithOptions={PAGENAME}
                 panelname={panel}
-                opt_options={{fixPanel: pagePanels, beginning: invertEditDirection, types: ["!map"]}}
+                panelList={pagePanels}
+                opt_options={{beginning: invertEditDirection, types: ["!map"]}}
             />)
             return;
         }
         if (item.name == "AisTarget"){
-            const mmsi=avev.avnav.mmsi;
+            const mmsi=av.mmsi;
             showAisInfo(mmsi);
             return;
         }

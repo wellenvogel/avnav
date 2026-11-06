@@ -44,9 +44,10 @@ import time
 import urllib.parse
 import zipfile
 from http.server import SimpleHTTPRequestHandler
-from math import copysign
 from typing import Any
 from typing import Callable
+
+from dateutil.tz import tz
 
 
 class Enum(set):
@@ -227,9 +228,7 @@ class AVNLog(object):
     def changeLogLevelAndFilter(cls, level, filter, timeout=None):
         try:
             numeric_level = cls.levelToNumeric(level)
-            oldlevel = None
             if not cls.logger.getEffectiveLevel() == numeric_level:
-                oldlevel = cls.logger.getEffectiveLevel()
                 cls.logger.setLevel(numeric_level)
             if not cls.consoleHandler is None:
                 cls.consoleHandler.setLevel(numeric_level)
@@ -321,25 +320,35 @@ class AVNUtil(object):
     R = 6371000  # earth radius in m
     NMEA_SERVICE = "_nmea-0183._tcp"  # avahi service for NMEA
 
+    @classmethod
+
+    def timeToDatetime(cls, ts=None,localTime=False):
+        if ts is None:
+            ts=time.time()
+        rt=datetime.datetime.fromtimestamp(ts,tz=datetime.UTC)
+        if localTime:
+            rt.astimezone(tz= tz.tzlocal())
+        return rt
     # convert a datetime UTC to a timestamp in seconds
     @classmethod
     def datetimeToTsUTC(cls, dt):
         if dt is None:
             return None
-        # subtract the EPOCH
-        td = (dt - datetime.datetime(1970, 1, 1, tzinfo=None))
-        ts = ((td.days * 24 * 3600 + td.seconds) * 10 ** 6 + td.microseconds) / 1e6
-        return ts
+        if dt.tzinfo is None or dt.tzinfo == datetime.UTC:
+            #assume UTC for naive
+            return dt.replace(tzinfo=datetime.UTC).timestamp()
+        else:
+            return dt.astimezone(tz=datetime.UTC).timestamp()
 
     # timedelta total_seconds that is not available in 2.6
     @classmethod
-    def total_seconds(cls, td):
+    def total_seconds(cls, td:datetime.timedelta):
         return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10 ** 6) / 10 ** 6
 
     # now timestamp in utc
     @classmethod
     def utcnow(cls):
-        return cls.datetimeToTsUTC(datetime.datetime.utcnow())
+        return time.time()
 
     @classmethod
     def utctomonotonic(cls, utcts):
@@ -479,83 +488,41 @@ class AVNUtil(object):
             rt = 360 + rt
         return rt
 
-    ais_converters = {
-        "mmsi": str,
-        "imo_id": int,
-        "shiptype": int,
-        "type": int,
-        "epfd": int,
-        "status": int,
-        "month": int,  # ETA
-        "day": int,  # ETA
-        "hour": int,  # ETA
-        "minute": int,  # ETA
-        "second": int,  # timestamp
-        "maneuver": int,
-        "accuracy": int,
-        "lat": lambda v: float(v) / 600000,
-        "lon": lambda v: float(v) / 600000,
-        "speed": lambda v: float(v) / 10 * AVNUtil.NM / 3600,
-        "course": lambda v: float(v) / 10,
-        "heading": int,
-        "turn": lambda v: round(copysign((float(v) / 4.733) ** 2, float(v)))
-        if abs(float(v)) < 128
-        else None,
-        "draught": lambda v: float(v) / 10,
-        "to_bow": int,  # A
-        "to_stern": int,  # B
-        "to_port": int,  # C
-        "to_starboard": int,  # D
-    }
-    @classmethod
-    def computeDim(cls,data,target,p1,p2):
-        p1r=data.get(p1)
-        p2r=data.get(p2)
-        if p1r is None and p2r is None:
-            return
-        if p1r is None and p2r is not None:
-            p1r=0
-        if p2r is None and p1r is not None:
-            p2r=0
-        data[target]=p1r+p2r
-
-    @classmethod
-    def convertAIS(cls, aisdata):
-        "convert ais raw values to real values"
-        rt = aisdata.copy()
-
-        for k, f in cls.ais_converters.items():
-            if k not in rt:  # only convert data that's actually present
-                continue
-            try:
-                rt[k] = f(rt[k])
-            except:
-                rt[k] = None  # explicitly map invalid data to none
-
-        try:
-            cls.computeDim(rt,"beam","to_port","to_starboard")
-            cls.computeDim(rt,"length","to_bow","to_stern")
-        except:
-            pass
-
-        return rt
 
     # parse an ISO8601 t8ime string
     # see http://stackoverflow.com/questions/127803/how-to-parse-iso-formatted-date-in-python
     # a bit limited to what we write into track files or what GPSD sends us
-    # returns a datetime object
+    # returns a datetime object with timezone UTC
     @classmethod
     def gt(cls, dt_str):
         dt, delim, us = dt_str.partition(".")
         if delim is None or delim == '':
             dt = dt.rstrip("Z")
         dt = datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")
+        dt= dt.replace(tzinfo=datetime.timezone.utc)
         if not us is None and us != "":
             us = int(us.rstrip("Z"), 10)
         else:
             us = 0
         return dt + datetime.timedelta(microseconds=us)
 
+    @classmethod
+    def timeToIso8601(cls, dt:datetime.datetime):
+        '''
+        convert datetime to iso8601 format in UTC
+        naive datetime objects are assumed to be UTC
+        others are converted to UTC
+        :param dt:
+        :return:
+        '''
+        if not dt:
+            return None
+        if dt.tzinfo is not None and dt.tzinfo != datetime.UTC:
+            dt=dt.astimezone(datetime.UTC)
+        ts=dt.replace(tzinfo=None).isoformat()
+        if not ts[-1:]=="Z":
+            ts+="Z"
+        return ts
     # return a regex to be used to check for NMEA data
     @classmethod
     def getNMEACheck(cls):
@@ -1426,8 +1393,6 @@ class AVNZipDownload(AVNDownload):
                         fp.write(buf)
                         if stream.hasData():
                             yield stream.readall()
-                        else:
-                            debug = 1
             zf.close()
         yield stream.readall()
 

@@ -29,7 +29,7 @@ import PropTypes from 'prop-types';
 import LayoutHandler, {ADD_MODES} from '../util/layouthandler.ts';
 import {DialogButtons, DialogFrame, DialogRow, showDialog} from './OverlayDialog.tsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
-import {Input, InputSelect} from './Inputs.tsx';
+import {Input, InputReadOnly, InputSelect} from './Inputs.tsx';
 import DB from './DialogButton.tsx';
 import cloneDeep from 'clone-deep';
 import Compare from "../util/compare";
@@ -48,6 +48,10 @@ export const getList = (list, current) => {
     }
     let idx = 0;
     let displayList = [];
+    let compare=current;
+    if (typeof current === "object") {
+        compare = current.value;
+    }
     list.forEach((el) => {
         let item = undefined;
         if (typeof (el) === 'object') {
@@ -57,6 +61,10 @@ export const getList = (list, current) => {
         }
         item.key = idx;
         if (!item.label) item.label = item.name;
+        if (!item.value) item.value = item.name;
+        if (compare != null && item.value == compare) {
+            item.selected=true;
+        }
         idx++;
         displayList.push(item);
     });
@@ -145,6 +153,20 @@ const EditWidgetDialog = (props) => {
             validData=false;
         }
     })
+    let panelValue={
+        label:panel,
+        value:panel
+    };
+    if (props.panelList){
+        for (const pe of props.panelList){
+            if (typeof pe == 'object') {
+                if (pe.value === panel && pe.label){
+                   panelValue.label = pe.label;
+                }
+            }
+        }
+    }
+    const showPanelList=props.panelList?.length>0;
     let description;
     const widgetData=WidgetFactory.findWidget(widget);
     if (widgetData){
@@ -153,15 +175,16 @@ const EditWidgetDialog = (props) => {
     const insertButton=props.useOk?ButtonDefs.DBOk:ButtonDefs.DBInsert;
     return (
         <DialogFrame className="selectDialog editWidgetDialog" title={props.title || 'Select Widget'}>
-            {(props.panelList !== undefined) && <InputSelect className={panelClass}
+            {showPanelList?<InputSelect className={panelClass}
                                                              dialogRow={true}
                                                              label="Panel"
-                                                             value={panel}
+                                                             value={panelValue}
                                                              list={(current) => getList(props.panelList, current)}
                                                              onChange={(selected) => {
-                                                                 setPanel(selected.name)
+                                                                 setPanel(selected.value)
                                                              }}
-            />
+            />:
+                <InputReadOnly value={panel} label={"Panel"}/>
             }
             {hasCurrent ?
                 <DialogRow className="info"><span className="inputLabel">Current</span>{props.current.name}</DialogRow>
@@ -241,8 +264,8 @@ const filterObject=(data)=>{
     return data;
 };
 
-export const EditWidgetDialogWithFunc=({widgetItem,pageWithOptions,panelname,opt_options})=>{
-    const panelList=[panelname];
+export const EditWidgetDialogWithFunc=({widgetItem,pageWithOptions,panelname,opt_options,panelList})=>{
+    const ipanelList=panelList||LayoutHandler.getPagePanels(pageWithOptions);
     if (! opt_options) opt_options={};
     let index=opt_options.beginning?-1:1;
     if (widgetItem){
@@ -252,7 +275,7 @@ export const EditWidgetDialogWithFunc=({widgetItem,pageWithOptions,panelname,opt
         title="Select Widget"
         panel={panelname}
         types={opt_options.types}
-        panelList={panelList}
+        panelList={ipanelList}
         current={widgetItem?widgetItem:{}}
         weight={opt_options.weight}
         insertCallback={(selected,before,newPanel)=>{

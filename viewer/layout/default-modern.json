@@ -1,7 +1,9 @@
 {
   "description": "A more modern layout with enlarged captions and no heading color",
   "layoutVersion": 1,
-  "properties": {},
+  "properties": {
+    "properties.mapFloat": true
+  },
   "widgets": {
     "gpspage1": {
       "left": [
@@ -371,5 +373,5 @@
     "gpspage4": {},
     "gpspage5": {}
   },
-  "css": "/*\n  CSS classes that can be used for widgets:\n  modern\n  half (together with modern)\n  center\n  \n  for documentation refer below\n*/\n/* a base value for the font-size of caption and unit\n   the em refer to a base value of 21px being scaled down \n   if height or width are lower 600px. \n   Additionally AvNav sets a factor from the head \n   font size to caption and unit.\n   */\n:root{\n  --head-base-fs: 2.6em;\n  --avnav-widget-head-color: rgba(36, 35, 35, 0);\n}\n.nightMode{\n  --avnav-widget-head-color: rgba(36, 35, 35, 0);\n}\n\n\n/* a \"modern\" CSS class for widgets on dashboard pages\n   that avoids the color and frame for the head\n   and has much larger caption and unit */\n.hfield .widgetContainer .widget .widgetHead {\n    height: unset ;\n    font-size: var(--head-base-fs);\n    font-weight: 600;\n}\n.hfield .widgetContainer .widget .widgetData {\n    font-weight: 600;\n}\n\n/* an additional CSS class \"half\" to be used for smaller caption and unit */\n.hfield .widgetContainer .widget.half .widgetHead {\n    font-size: calc(var(--head-base-fs) / 2);\n}\n"
+  "css": "/*\n  CSS classes that can be used for widgets:\n  modern\n  half (together with modern)\n  center\n  \n  for documentation refer below\n*/\n/* a base value for the font-size of caption and unit\n   the em refer to a base value of 21px being scaled down \n   if height or width are lower 600px. \n   Additionally AvNav sets a factor from the head \n   font size to caption and unit.\n   */\n:root{\n  --head-base-fs: 2.6em;\n  --avnav-widget-head-color: rgba(36, 35, 35, 0);\n  --avnav-nav-widget-rounded: 5px;\n  --avnav-nav-widgetContainer-back: rgba(0,0,0,0);\n  --avnav-nav-widget-gap: 5px;\n  --avnav-nav-widget-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.7);\n}\n.nightMode{\n  --avnav-widget-head-color: rgba(36, 35, 35, 0);\n}\n.editing{\n  --avnav-nav-widgetContainer-back: var(--avnav-main-color);\n}\n\n.mapPage .widget {\n  border-radius: var(--avnav-nav-widget-rounded);\n  box-shadow: var(--avnav-nav-widget-shadow);\n}\n.mapPage .widgetContainer{\n  background-color: var(--avnav-nav-widgetContainer-back);\n  gap: var(--avnav-nav-widget-gap);\n}\n.mapPage .bottomLeft{\n  margin-right: calc(0.8 * var(--avnav-nav-widget-gap));\n}\n.mapPage .bottomSection{\n  margin-top: var(--avnav-nav-widget-gap);\n  margin-right:var(--avnav-nav-widget-gap);\n}\n\n/* a \"modern\" CSS class for widgets on dashboard pages\n   that avoids the color and frame for the head\n   and has much larger caption and unit */\n.hfield .widgetContainer .widget .widgetHead {\n    height: unset ;\n    font-size: var(--head-base-fs);\n    font-weight: 600;\n}\n.hfield .widgetContainer .widget .widgetData {\n    font-weight: 600;\n}\n\n/* an additional CSS class \"half\" to be used for smaller caption and unit */\n.hfield .widgetContainer .widget.half .widgetHead {\n    font-size: calc(var(--head-base-fs) / 2);\n}\n"
 }

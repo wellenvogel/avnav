@@ -39,11 +39,12 @@ import UploadHandler from "./UploadHandler";
 import Button, {ButtonEvent, ButtonEventHandler, ButtonLongText, buttonVisibleAndDisabled} from "./Button";
 import keys from "../util/keys";
 import {getItemIconProperties, Item, ItemType, listItems} from "../util/itemFunctions";
-import {useStateRef, useTimer} from "../util/UiHelper";
+import {CustomSyntheticEvent, useStateRef, useTimer} from "../util/UiHelper";
 import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon,iconClasses} from "./Icons";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import ButtonDefs from "./ButtonDefs";
+import {useHistory} from "./HistoryProvider";
 
 interface SortProps{
     time?:number,
@@ -131,6 +132,8 @@ export const DownloadItemList = (
     const [items, setItems] = useState([]);
     const [vselectedName, setVselectedName,vSelectedNameRef] = useStateRef(selectedName);
     const lastSelectedName=useRef(undefined);
+    const history = useHistory();
+    const dialogContext= useDialogContext();
     const initialSelectedNameRef = useRef((immediateSelect && selectCallback)?selectedName:undefined);
     const readItems = useCallback(async () => {
         const items = await listItems(type);
@@ -140,7 +143,13 @@ export const DownloadItemList = (
                 for (const item of items){
                     if (item.name === initialSelectedNameRef.current){
                         initialSelectedNameRef.current=undefined;
-                        await selectCallback(setav(new Event('avnav'),{item:item}));
+                        await selectCallback(setav(new CustomSyntheticEvent('avnav'),
+                            {
+                                item:item,
+                                dialogContext:dialogContext,
+                                history:history,
+                            }
+                        ));
                     }
                 }
             }
@@ -156,7 +165,6 @@ export const DownloadItemList = (
         readItems().then(() => {
         }, (err) => Toast(err));
     }, [type,autoreload])
-    const dialogContext = useDialogContext();
     if (!itemActions) itemActions = createItemActions(type);
     const item=useCallback((props:Item)=>{
         return <DownloadItem {...props} infoMode={infoMode}

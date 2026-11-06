@@ -19,7 +19,7 @@ import {
     showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog';
-import Helper, {avitem, getav, injectav, valueof} from '../util/helper';
+import Helper, {avitem, getav, valueof} from '../util/helper';
 import {useStateRef} from '../util/UiHelper';
 // @ts-ignore
 import mapholder, {LOCK_MODES} from '../map/mapholder';
@@ -739,16 +739,16 @@ const EditRoutePage = (props:PageProps) => {
         })
     }
     const widgetClick = (ev:SyntheticEvent) => {
-        const av=injectav(ev);
-        const item=av.avnav.item||{};
-        const panel=av.avnav.panelName;
-        const invertEditDirection=av.avnav.invertEditDirection;
+        const av=getav(ev);
+        const item=av.item||{};
+        const panel=av.panelName;
+        const invertEditDirection=av.invertEditDirection;
         const currentEditor = getCurrentEditor();
         if (item.name === "EditRoute") {
             showRouteDialog();
         }
         if (item.name === 'RoutePoints') {
-            const point=av.avnav.point;
+            const point=av.point;
             if (LayoutHandler.isEditing()) return;
             if (point && point.idx !== undefined) {
                 const lastSelected = currentEditor.getIndex();

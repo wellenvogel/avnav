@@ -24,12 +24,17 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
 import gzip
+import os
+import time
+import traceback
 
 import avnav_handlerList
-from trackwriter import *
+from avnav_manager import AVNHandlerManager
+from avnav_util import AVNLog, AVNUtil
+from avnav_worker import AVNWorker, WorkerParameter, WorkerKind, WorkerStatus
 from avnqueue import Fetcher
+from trackwriter import AVNTrackWriter
 
 
 #a writer for our track
@@ -49,7 +54,7 @@ class AVNNmeaLogger(AVNWorker):
   def getConfigName(cls):
     return "AVNNmeaLogger"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, handlerManager=None, child=None):
     if child is not None:
       return None
     return [
@@ -80,12 +85,12 @@ class AVNNmeaLogger(AVNWorker):
       return WorkerKind.TRACK
 
   #write out the line
-  #timestamp is a datetime object
+  #timestamp is time seconds
   def writeLine(self,filehandle,data):
     filehandle.write(data)
     filehandle.flush()
-  def createFileName(self,dt):
-    fstr=str(dt.strftime("%Y-%m-%d")+".nmea")
+  def createFileName(self,ts):
+    fstr=str(AVNUtil.timeToDatetime(ts).strftime("%Y-%m-%d")+".nmea")
     return fstr
 
   def updateConfig(self, param, child=None):
@@ -98,7 +103,7 @@ class AVNNmeaLogger(AVNWorker):
     self._fetcher=Fetcher(self.queue,self,includeSource=False,returnErrors=False, nmeaFilter=self.P_FILTER.fromDict(self.param))
     trackdir=AVNHandlerManager.getDirWithDefault(self.param, self.P_TRACKDIR.name)
     if trackdir is None:
-      trackwriter=self.findHandlerByName(AVNTrackWriter.getConfigName())
+      trackwriter=self._handlerManager.findHandlerByName(AVNTrackWriter.getConfigName())
       if trackwriter is not None:
         trackdir=trackwriter.getTrackDir()
       if trackdir is None or not trackdir :
@@ -116,7 +121,7 @@ class AVNNmeaLogger(AVNWorker):
       if initial:
         AVNLog.info("starting logger with maxfiles = %d, filter=%s, interval=%ds",
                     self.maxfiles, self.P_FILTER.fromDict(self.param), interval)
-      currentUTC=datetime.datetime.utcnow()
+      currentUTC=AVNUtil.utcnow()
       currentM=time.monotonic()
       try:
         newFile=False
@@ -178,11 +183,10 @@ class AVNNmeaLogger(AVNWorker):
             last[key]=now
             self.writeLine(f,line)
       except Exception as e:
-        AVNLog.error("exception in nmea logger: %s",traceback.format_exc());
+        AVNLog.error("exception in nmea logger: %s",traceback.format_exc())
         time.sleep(1)
 
   def cleanup(self,currentname):
-    currentTime=datetime.datetime.utcnow()
     files=[]
     for f in os.listdir(self.trackdir):
       if not f.endswith(".nmea") and not f.endswith(".nmea.gz"):

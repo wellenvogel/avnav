@@ -25,33 +25,34 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
 
-import sys
 import os
-import socket
-import select
 import re
+import select
+import socket
+import sys
 import threading
-import datetime
+import time
+
 
 class CacheEntry(object):
   #age in seconds
-  age=2000
+  age=2
   def __init__(self,key,data):
     self.key=key
     self.data=data
-    self.time=datetime.datetime.utcnow() #info only
+    self.time=time.monotonic() #info only
     self.pending=self.time #started last update
   #return the cached value if still valid
   #otherwise return None and set the pending flag
   def getValue(self):
-    now=datetime.datetime.utcnow()
-    if now >= self.pending+datetime.timedelta(milliseconds=self.age):
+    now=time.monotonic()
+    if now >= (self.pending+self.age):
       #retry the query every 2*age
       self.pending=now
       return None
     return self.data
   def setValue(self,data):
-    self.time=datetime.datetime.utcnow()
+    self.time=time.monotonic()
     self.data=data
     self.pending=self.time
 

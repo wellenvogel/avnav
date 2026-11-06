@@ -5,7 +5,7 @@
 import ItemList from '../components/ItemList';
 import globalStore from '../util/globalstore';
 import keys, {KeyHelper, PropertyType} from '../util/keys';
-import React, {useRef, useState} from 'react';
+import React, {SyntheticEvent, useRef, useState} from 'react';
 import {PageBaseProps, PageFrame, PageLeft} from '../components/Page';
 import Toast from '../components/Toast';
 import {
@@ -56,7 +56,7 @@ const SectionItem=(props:SectionItemProps)=>{
 };
 
 interface SectionListProps{
-    onSelect:(ev:Event) => void;
+    onSelect:(ev:SyntheticEvent) => void;
 }
 const SectionList=(props:SectionListProps)=>{
     const flattenedKeys = useRef(undefined);
@@ -109,7 +109,7 @@ const SectionList=(props:SectionListProps)=>{
         className={'sectionList'}
         itemList={sectionItems}
         itemClass={SectionItem}
-        onItemClick={(ev:Event) =>{
+        onItemClick={(ev:SyntheticEvent) =>{
             const item=avitem(ev);
             props.onSelect(ev);
             setSelectedSection(item.name)
@@ -241,7 +241,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                     <MvHeadline
                     title={'Settings Groups'}
                     />
-                    <SectionList onSelect={(ev:Event) =>{
+                    <SectionList onSelect={(ev:SyntheticEvent) =>{
                         const item=avitem(ev);
                         showDialog(dialogContext,()=><EditSettingsCategory category={item.name}/>)
                     }
