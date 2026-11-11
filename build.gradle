@@ -286,6 +286,7 @@ def baseCfg= {
     requires('python3-imaging').or('python3-pil')
     requires('python3-netifaces')
     requires('python3-legacy-cgi').or('python3','3.13',Flags.LESS)
+    requires('python3-dateutil')
     user='root'
     getDelegate().with baseFiles
     postInstall file('linux/postinstall')

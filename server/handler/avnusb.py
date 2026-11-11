@@ -241,7 +241,8 @@ class AVNUsbSerialReader(AVNWorker):
       if not hasUdev:
           return False
       name=cls.getConfigName()
-      rt=minidom.Element(name)
+      doc=minidom.Document()
+      rt=doc.createElement(name)
       rt.setAttribute('enabled','false')
       return rt
 
