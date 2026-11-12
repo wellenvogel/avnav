@@ -370,7 +370,6 @@ const computeCourseVectors = (aisItem, boatCog, boatSog, options) => {
         aisItem.courseVector.startAngle=target_cog-target_rot_sgn*90;
         aisItem.courseVector.arc=target_rot_sgn*turn_angle;
     }
-    boatCog = correctedCourse(boatCog,boatSog.minAISspeed);
     if (boatCog == null || boatSog == null) return; //RMV only possible with own COG/SOG
     if (drawRMV && boatSog > options.minAISspeed) { // for boatSog==0 RMV==TMV, skip it
         aisItem.rmv=aisItem.courseVector.clone();
