@@ -591,6 +591,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new AisWorker(typeName,ctx);
         }
     };
+    private static final WorkerConfig WATTITUDE= new WorkerConfig("InternalAttitude",13) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) {
+            return new AndroidAttitudeHandler(typeName,ctx,queue);
+        }
+    };
 
     private static final WorkerConfig[] INTERNAL_WORKERS ={
             WDECODER,
@@ -604,7 +610,8 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             WPLUGINS,
             WOCHARTS,
             WPROXY,
-            WAIS
+            WAIS,
+            WATTITUDE
     };
 
     private synchronized int getNextWorkerId(){

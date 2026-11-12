@@ -775,6 +775,23 @@ NMEA-Logger
 
 The GPS of the device.
 
+### InternalAttitude
+
+An optional internal worker that reads the boat's attitude (roll and pitch)
+from the Android device's orientation sensors and emits them as NMEA XDR
+transducers (`$INXDR` with ROLL/PITCH in degrees). This makes the values
+available in the internal store as `nav.gps.transducers.ROLL` and
+`nav.gps.transducers.PITCH`. See [Attitude from the Android device](attitude.md)
+for details.
+
+| Parameter | Description | default |
+| --- | --- | --- |
+| enabled | The worker is opt-in: it must be activated explicitly (the rotation sensor costs battery, and a loosely carried device would produce meaningless values). | off |
+| priority | Priority of the generated data. Higher priority external sources (e.g. NMEA2000/SignalK) win over the internal source. | 40 |
+| screenFacing | The direction the device screen faces on the boat: aft (towards the cockpit), bow, port, starboard. The screen may be tilted up to 60° away from vertical - lying flat (screen facing up) is not supported. | aft |
+| calibrateMount | Set to true once while the boat is level and at rest. This measures the exact boat up axis for the actual mount (any device rotation in the screen plane, also tilted mounts) and stores it in *mountCalibration*. Resets automatically; fails if the screen is lying too flat. Without calibration no data is emitted. | off |
+| mountCalibration | Written by calibrateMount ("<screenFacing>,<ux>,<uy>,<uz>") and only used while *screenFacing* still matches. Recalibrate after changing the mount or screenFacing. | empty |
+
 ### MDNSResolver
 
 The handler for resolving and advertising "mDNS" (Bonjour/Avahi) services.
