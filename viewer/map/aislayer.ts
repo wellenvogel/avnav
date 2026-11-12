@@ -606,7 +606,6 @@ class AisLayer{
                         odir, odst);
                 } else {
                   const end = odst != 0 ? NavCompute.computeTarget(target.rmv.end, odir, odst, this.aisoptions.useRhumbLine) : target.rmv.end;
-                  console.log(odir, odst, target.rmv.end, '>', end);
                     drawing.drawLineToContext([this.pointToMap(target.rmv.start), this.pointToMap(end)], {
                         color: style.courseVectorColor,
                         width: this.displayOptions.courseVectorWidth,
