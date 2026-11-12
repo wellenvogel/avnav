@@ -336,16 +336,19 @@ const pow2=(x)=>{
  * @param boatSog {number}
  * @param options {object} keys are the same as in {@link AisOptionMappings}
  */
-const computeCourseVectors=(aisItem,boatPos,boatCog, boatSog, options)=>{
-    if (! options.useCourseVector) return;
+const computeCourseVectors = (aisItem, boatCog, boatSog, options) => {
+    if (!options.useCourseVector) return;
     let target_sog=aisItem.received.speed||0;
-    if (target_sog <=0) return;
-    if (boatCog == null || aisItem.received.course == null) return;
     let target_cog=correctedCourse(aisItem.received.course,target_sog,options.minAISspeed);
+    // skip if no valid data available, includes sog!=0 but cog==null
+    if (target_sog == null || target_cog == null) return;
+    const drawTMV = target_sog > 0; // true motion vector
+    const drawRMV = options.rmvRange != null && aisItem.distance != null && aisItem.distance < options.rmvRange; // relative motion vector
+    if (!drawTMV && !drawRMV) return;  // RMV needs TMV even if zero!
     let target_rot=Math.abs(aisItem.received.turn||0); // °/min
     const curved = options.curved && isFinite(target_rot) && target_rot>0.5;
     let cvstart=aisItem.fromEstimated?aisItem.estimated:aisItem.receivedPos
-    if (! curved){
+    if (!curved){
         aisItem.courseVector=new CourseVector();
         aisItem.courseVector.start=cvstart;
         aisItem.courseVector.end=NavCompute.computeTarget(
@@ -354,8 +357,7 @@ const computeCourseVectors=(aisItem,boatPos,boatCog, boatSog, options)=>{
             target_sog*options.courseVectorTime,
             options.useRhumbLine
         )
-    }
-    else{
+    } else{
         let target_rot_sgn=Math.sign(aisItem.received.turn||0);
         let turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
         let turn_center=Navcompute.computeTarget(cvstart,target_cog+target_rot_sgn*90,turn_radius);
@@ -368,21 +370,12 @@ const computeCourseVectors=(aisItem,boatPos,boatCog, boatSog, options)=>{
         aisItem.courseVector.startAngle=target_cog-target_rot_sgn*90;
         aisItem.courseVector.arc=target_rot_sgn*turn_angle;
     }
-    if (options.rmvRange > 0 && aisItem.distance != null && boatSog != null
-        && aisItem.distance < options.rmvRange &&
-        target_sog > options.minAISspeed &&
-        boatSog > options.minAISspeed){
-        if (! curved){
-            aisItem.rmv=new CourseVector();
-            aisItem.rmv.start=cvstart;
-            aisItem.rmv.end=NavCompute.computeTarget(aisItem.courseVector.end,
-                boatCog,-boatSog*options.courseVectorTime);
-        }
-        else{
-            aisItem.rmv=aisItem.courseVector.clone();
-            aisItem.rmv.offsetDir=boatCog;
-            aisItem.rmv.offsetDst=-boatSog*options.courseVectorTime;
-        }
+    boatCog = correctedCourse(boatCog,boatSog.minAISspeed);
+    if (boatCog == null || boatSog == null) return; //RMV only possible with own COG/SOG
+    if (drawRMV && boatSog > options.minAISspeed) { // for boatSog==0 RMV==TMV, skip it
+        aisItem.rmv=aisItem.courseVector.clone();
+        aisItem.rmv.offsetDir=boatCog;
+        aisItem.rmv.offsetDst=-boatSog*options.courseVectorTime;
     }
 }
 /**
@@ -491,7 +484,7 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
                 else aisItem.priority= pow2(aisItem.cpadata.tcpa/options.warningTime)+pow2(aisItem.cpadata.cpa/options.warningDist);
             }
         }
-        computeCourseVectors(aisItem, boatPos, boatCog, boatSpeed, options);
+        computeCourseVectors(aisItem, boatCog, boatSpeed, options);
     })
     if (aisWarningAis != null){
         aisWarningAis.nextWarning=true;

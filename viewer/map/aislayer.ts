@@ -588,7 +588,9 @@ class AisLayer{
                 drawing.drawLineToContext(points, style);
             };
 
-            if (target.rmv && style.courseVector !== false) { // relative motion vector
+          if (target.rmv && style.courseVector !== false) { // relative motion vector
+            const odir = target.rmv.offsetDir || 0;
+            const odst = target.rmv.offsetDst || 0;
                 if (target.rmv.type === CourseVector.T_ARC) {
                     drawArc(target.rmv.start,
                         target.rmv.center,
@@ -601,9 +603,11 @@ class AisLayer{
                             dashed: true,
                             alpha: style.alpha
                         },
-                        target.rmv.offsetDir, target.rmv.offsetDst);
+                        odir, odst);
                 } else {
-                    drawing.drawLineToContext([this.pointToMap(target.rmv.start), this.pointToMap(target.rmv.end)], {
+                  const end = odst != 0 ? NavCompute.computeTarget(target.rmv.end, odir, odst, this.aisoptions.useRhumbLine) : target.rmv.end;
+                  console.log(odir, odst, target.rmv.end, '>', end);
+                    drawing.drawLineToContext([this.pointToMap(target.rmv.start), this.pointToMap(end)], {
                         color: style.courseVectorColor,
                         width: this.displayOptions.courseVectorWidth,
                         dashed: true,
