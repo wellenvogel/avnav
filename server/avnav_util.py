@@ -532,12 +532,14 @@ class AVNUtil(object):
     # param - the command as to be given to subprocess.Popen
     @classmethod
     def runCommand(cls, param, threadName=None, timeout=None):
+        if threadName is None:
+            threadName = "runCommand"
         try:
-            cmd = subprocess.Popen(param, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-            reader = threading.Thread(target=cls.cmdOut, args=[cmd.stdout], daemon=True)
-            if threadName is not None:
-                reader.setName(threadName or '')
-            reader.start()
+            cmd = SafePopen(param,
+                            stdout_reader= lambda line: AVNLog.info("%s:%s",threadName,line),
+                            stderr_reader= lambda line: AVNLog.error("%s:%s",threadName,line),
+                            close_fds=True
+                            )
             start = time.monotonic()
             while True:
                 rt = cmd.poll()
@@ -548,7 +550,7 @@ class AVNUtil(object):
                     continue
                 if (start + timeout) < time.monotonic():
                     AVNLog.error("timeout %f reached for command %s", timeout, " ".join(param))
-                    cmd.kill()
+                    cmd.kill_all()
                     time.sleep(0.1)
                     cmd.poll()
                     return -255
@@ -556,15 +558,6 @@ class AVNUtil(object):
             AVNLog.error("unable to start command %s:%s", " ".join(param), str(e))
             return -255
 
-    @classmethod
-    def cmdOut(cls, stream):
-        AVNLog.debug("cmd reading started")
-        while True:
-            line = stream.readline()
-            if not line:
-                break
-            AVNLog.debug("[cmd]%s", line.strip())
-        AVNLog.debug("cmd reading finished")
 
     @classmethod
     def getHttpRequestParam(cls, requestparam, name, mantadory=False):
@@ -585,6 +578,14 @@ class AVNUtil(object):
         if flagString is None:
             return default
         return flagString.lower() == 'true'
+
+    @classmethod
+    def getUrlFromParam(cls,urlparam):
+        if urlparam is None:
+            return None
+        parsed = urllib.parse.urlparse(urlparam)
+        parsed = parsed._replace(path=urllib.parse.quote_plus(parsed.path, safe='/').replace('+', '%20'))
+        return urllib.parse.urlunparse(parsed)
 
     @classmethod
     def getReturnData(cls, error=None, **kwargs):
@@ -774,7 +775,8 @@ class PopenCallbackStream:
 
         # Wait for the background thread to flush remaining lines and exit
         if hasattr(self, '_thread') and self._thread and self._thread.is_alive():
-            self._thread.join()
+            if not threading.current_thread() is self._thread:
+                self._thread.join()
 
 
 

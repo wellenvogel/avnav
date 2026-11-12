@@ -73,9 +73,7 @@ class AVNProxy(AVNWorker):
         status=500
         constructed=url
         try:
-            parsed=urllib.parse.urlparse(url)
-            parsed=parsed._replace(path=urllib.parse.quote_plus(parsed.path,safe='/').replace('+','%20'))
-            constructed=urllib.parse.urlunparse(parsed)
+            constructed=AVNUtil.getUrlFromParam(url)
             request = urllib.request.Request(constructed)
             headers = handler.headers
             lcmap = set() #keep the lower case header names to avoid later override
