@@ -342,7 +342,7 @@ const computeCourseVectors = (aisItem, boatCog, boatSog, options) => {
     let target_cog=correctedCourse(aisItem.received.course,target_sog,options.minAISspeed);
     // skip if no valid data available, includes sog!=0 but cog==null
     if (target_sog == null || target_cog == null) return;
-    const drawTMV = target_sog > 0; // true motion vector
+    const drawTMV = target_sog > options.minAISspeed; // true motion vector
     const drawRMV = options.rmvRange != null && aisItem.distance != null && aisItem.distance < options.rmvRange; // relative motion vector
     if (!drawTMV && !drawRMV) return;  // RMV needs TMV even if zero!
     let target_rot=Math.abs(aisItem.received.turn||0); // °/min
