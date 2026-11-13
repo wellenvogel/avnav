@@ -27,7 +27,8 @@ export enum EventTypes {
     LOAD= 4,
     FEATURE= 5,
     SHOWMAP= 6,
-    HIDEMAP= 7
+    HIDEMAP= 7,
+    MAPBORDERS
 
 }
 
@@ -66,6 +67,7 @@ export interface MapHolder {
     minzoom: number;
     maxzoom: number;
     mapMinZoom: number;
+    mapBorders: any;
     referencePoint: number[];
     boatOffset: { x: number; y: number };
     zoom: number;
@@ -76,7 +78,6 @@ export interface MapHolder {
     drawing: any;
     northImage: HTMLImageElement;
     routingActive: boolean;
-    compassOffset: number;
     needsRedraw: boolean;
     storeKeys: string[];
     userKeys: Record<string, Record<string, string[]>>;
@@ -90,6 +91,7 @@ export interface MapHolder {
     
     subscribe(callback: MapEventCallback): number;
     unsubscribe(token: number): void;
+    setBorders(border: { left?: number; right?: number; top?: number; bottom?: number }): void;
     coordToPixel(point: number[]): number[];
     pixelToCoord(pixel: number[]): number[];
     pointToMap(point: number[]): number[];
@@ -99,48 +101,61 @@ export interface MapHolder {
     getZoom(): { required: number; current: number };
     getCenter(): any;
     setCenter(point: any, opt_noUserAction?: boolean, opt_offset?: { x: number; y: number }): void;
+    sendReference(point: any): void;
+    centerToGps(opt_noUserAction?: boolean): void;
+    moveCenterPercentKey(deltax: number, deltay: number): void;
+    changeZoom(number: number, opt_force?: boolean, opt_noUserAction?: boolean): void;
     setZoom(zoom: number, opt_force?: boolean): void;
+    setMapZoom(newZoom: number): void;
+    clampZoom(zoom: number): number;
+    checkAutoZoom(opt_force?: boolean): void;
     getGpsLock(): number;
-    setGpsLock(lockMode: number, notRemote?: boolean, saveIt?: boolean): void;
+    setGpsLock(lockMode: number, notRemote?: boolean, force?: boolean, keepOffset?: boolean): void;
     getCourseUp(): boolean;
-    setCourseUp(courseUp: boolean, notRemote?: boolean): void;
-    setBoatOffset(point: any): void;
-    setBoatOffsetXY(x: number, y: number): void;
+    setCourseUp(courseUp: boolean, notRemote?: boolean): boolean | void;
+    setBoatOffset(point?: any): boolean | void;
+    setBoatOffsetXY(xy?: { x?: number; y?: number }): void;
     getBoatOffset(): { x: number; y: number };
     getBaseChart(): any;
     getLastChartKey(): any;
-    setChartEntry(entry: ChartEntry, noQueryParams?: boolean): Promise<void>;
-    getCurrentChartEntry(): ChartEntry | null;
+    setChartEntry(entry: ChartEntry, noRemote?: boolean): void;
+    getCurrentChartEntry(): ChartEntry | undefined;
     findChartSourceForItem(item: any): any;
     getMapLayerNames(): string[];
     getBaseLayer(visible: boolean): any;
     getMapOutlineLayer(layers: any[], visible: boolean): any;
+    drawGrid(): void;
+    drawNorth(): void;
     getRoutingActive(): boolean;
     setRoutingActive(active: boolean): void;
-    setCompassOffset(offset: number): void;
+    showEditingRoute(on: boolean): void;
     setMapRotation(rotation: number, opt_anchor?: number[]): void;
     setRedraw(flag: boolean): void;
-    updateSize(opt_hide?: boolean): void;
-    renderTo(div: HTMLElement): void;
-    initMap(div: HTMLElement, options?: any): void;
+    updateStateControl(): void;
+    updateSize(): void;
+    renderTo(div?: HTMLElement | null): void;
+    initMap(): void;
     loadMap(): Promise<any>;
-    prepareSourcesAndCreate(newSources: any[]): Promise<boolean>;
+    prepareSourcesAndCreate(newSources?: any[]): Promise<boolean>;
     leavePageAction(): void;
     mapUserAction(): void;
+    timerFunction(): void;
     updateStoreKeys(newKeys?: any[], page?: string, name?: string): void;
     registerEventGuard(guard: any): void;
     registerKeyHandler(): void;
     deregisterKeyHandler(): void;
     saveCenter(force?: boolean): void;
+    postrender(evt: any): void;
     featureAction(pixel: number[], opt_fromButton?: boolean): boolean;
     onClick(evt: any): void;
     onPostCompose(evt: any): void;
     onZoomChange(evt: any): void;
-    isInUserActionGuard(): boolean;
+    isInUserActionGuard(opt_map?: boolean): boolean;
     showOverlays(): void;
     hideOverlays(): void;
     overlayStatus(): number[];
     findTargets(pixel: number[], points: any[], opt_tolerance?: number): number[];
+    sourceKey(source: any, index: number): string;
     pixelDistance(point1: any, point2: any): number;
     setImageStyles(styles: any): void;
     triggerRender(): void;
@@ -148,7 +163,7 @@ export interface MapHolder {
     unregisterPageWidgets(page: string): void;
     logError(key: string, ...error: any[]): void;
     navEvent(): void;
-    userAction(): void;
+    userAction(opt_map?: boolean): boolean;
 }
 
 export interface DrawingPositionConverter {
@@ -258,5 +273,4 @@ export interface Drawing {
     // lower level helper used internally
     arrow(x1: number, y1: number, x2: number, y2: number, w: number, l: number, pe: number, open: boolean): void;
 }
-
 

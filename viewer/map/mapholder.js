@@ -96,22 +96,37 @@ export const LOCK_MODES={
 }
 
 class MapBorders{
+    KEYS=['left', 'right','bottom','top','leftTop']; //leftTop is special as the left widget container grows from bottom
     constructor(options) {
         const {left,right,top,bottom}=options||{};
         this.reset();
         this.assign({left:left,right:right,top:top,bottom:bottom});
     }
-    reset(){
-        this.left=0;
-        this.right=0;
-        this.bottom=0;
-        this.top=0;
+    set(k,obj){
+        if (obj[k] == null) return false;
+        const equals=this[k]===obj[k];
+        if (equals) return false;
+        this[k]=obj[k];
+        return true;
     }
-    assign({left,right,top,bottom}){
-        if (left != null) this.left=left;
-        if (right != null) this.right=right;
-        if (bottom != null) this.bottom=bottom;
-        if (top != null) this.top=top;
+    reset(){
+        let changed=false;
+        const obj={};
+        for (const k of this.KEYS){
+            obj[k]=0;
+            if (this.set(k,obj)){ changed=true; }
+        }
+        return changed;
+    }
+    assign(values){
+        if (! values) return false;
+        let rt=false;
+        for (const k of this.KEYS){
+            if (this.set(k,values)){
+                rt=true;
+            }
+        }
+        return rt;
     }
 }
 /**
@@ -451,8 +466,18 @@ class MapHolder extends DrawingPositionConverter {
         globalStore.register(() => this.navEvent(), this.storeKeys.concat(addKeys));
     }
 
-    setBorders({left,right,top,bottom}){
-        this.mapBorders.assign({left,right,top,bottom});
+    setBorders(borders){
+        let changed=false;
+        if (! borders){
+            changed=this.mapBorders.reset();
+            changed=this.mapBorders.reset();
+        }
+        else {
+            changed = this.mapBorders.assign(borders);
+        }
+        if (changed) {
+            this._callHandlers({type:EventTypes.MAPBORDERS,values:{...this.mapBorders}})
+        }
     }
 
     /**
@@ -1456,9 +1481,14 @@ class MapHolder extends DrawingPositionConverter {
     drawNorth() {
         if (!globalStore.getData(keys.properties.layers.compass)) return;
         if (!this.olmap) return;
+        let fixX=45;
+        if (this.mapBorders.leftTop < 85){
+            //the left widget container is to high
+            fixX+=this.mapBorders.left;
+        }
         this.drawing.drawImageToContext([0, 0], this.northImage, {
-            fixX: 45, //this.drawing.getContext().canvas.width-120,
-            fixY: 45 + this.mapBorders.top, //this.drawing.getContext().canvas.height-120,
+            fixX: fixX, //for anchor point
+            fixY: 50 + this.mapBorders.top, //this.drawing.getContext().canvas.height-120,
             rotateWithView: true,
             size: [80, 80],
             anchor: [40, 40],

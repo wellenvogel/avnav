@@ -126,6 +126,18 @@ body{
   .iconFrame .icon{
     filter: var(--avnav-filter-redlight);
   }
+  &.titleIcons{
+    display: flex;
+    justify-content: right;
+    align-self: end;
+    position: unset;
+    .header &{
+      flex: 1;
+    }
+    &.absolute{
+      position: absolute;
+    }
+  }
 }
 
 

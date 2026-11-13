@@ -150,6 +150,7 @@ interface WidgetContainerProps{
     onItemClick:(ev:SyntheticEvent) => void,
     fontSize?:string,
     reverse?:boolean,
+    listRef?: (el:HTMLElement) => void
 }
 const WidgetContainer=(wcprops:WidgetContainerProps)=> {
     const {panel, mode, layoutPage, ...forward} = wcprops;
@@ -223,6 +224,8 @@ const MapPage =(iprops:MapPageProps)=>{
     const [buttonWidth,setButtonWidth]=useState(undefined);
     const buttonsHidden=useRef(false);
     const bottomRef=useRef<HTMLElement>();
+    const leftRef=useRef<HTMLElement>();
+    const topRef=useRef<HTMLElement>();
     const maxBottomHeightRef=useRef<number>(0);
     const dialogContext=useDialogContext();
     const layoutPage=getLayoutPage(sprops);
@@ -267,16 +270,30 @@ const MapPage =(iprops:MapPageProps)=>{
             }
         }
     }
-    const computeScalePosition=useCallback(()=>{
+    const computeMapBorders=useCallback(()=>{
         maxBottomHeightRef.current=0;
-        if (! sprops.mapFloat){
-            setBottom('0px');
+        const borders= {
+            left:0,
+            right:0,
+            bottom:0,
+            top:0,
+            leftTop:0
+        };
+        if (bottomRef.current && sprops.mapFloat) {
+            const rect = bottomRef.current.getBoundingClientRect();
+            borders.bottom = rect.height;
         }
-        else{
-            if (!bottomRef.current) return;
-            const rect=bottomRef.current.getBoundingClientRect();
-            setBottom(rect.height+"px");
+        if (leftRef.current) {
+            const rect = leftRef.current.getBoundingClientRect();
+            borders.left = rect.width;
+            borders.leftTop = rect.top;
         }
+        if (topRef.current && sprops.mapFloat) {
+            const rect = topRef.current.getBoundingClientRect();
+            borders.top = rect.height;
+        }
+        mapholder.setBorders(borders);
+        setBottom(borders.bottom+"px");
     },[sprops.mapFloat]);
     const showMap=useCallback((chartEntry:ChartEntry)=>{
         setLoadingError(null);
@@ -289,7 +306,7 @@ const MapPage =(iprops:MapPageProps)=>{
         }
         mapholder.loadMap().
         then(()=>{
-            computeScalePosition();
+            computeMapBorders();
             setLayerTypes(mapholder.getMapLayerNames());
             setLoading(null);
         }).
@@ -326,7 +343,7 @@ const MapPage =(iprops:MapPageProps)=>{
     useEffect(() => {
         mapholder.updateSize();
     }, [sprops.mapFloat,hasAddon]);
-    useEffect(()=>computeScalePosition());
+    useEffect(()=>computeMapBorders());
         const chartEntry=mapholder.getCurrentChartEntry()||{};
         const mapClass=concatsp("map",chartEntry.name?chartEntry.name.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
@@ -349,7 +366,6 @@ const MapPage =(iprops:MapPageProps)=>{
                 }}
                 editingChanged={()=>mapholder.updateSize()}
             >
-                {sprops.mapFloat && <DynamicTitleIcons rightOffset={buttonWidth}/> }
                 {sprops.mapFloat?<Map mapClass={mapClass} mapOpacity={mapOpacity} rightOffset={hasAddon?buttonWidth:undefined}/>:null}
                 <PageLeft id={sprops.id}>
                         <div className="leftSection" ref={(el)=>{
@@ -358,6 +374,7 @@ const MapPage =(iprops:MapPageProps)=>{
                             globalStore.storeData(keys.gui.global.fontFamily,ff);
                          }}>
                             <WidgetContainer
+                                listRef={(el)=>leftRef.current=el}
                                 fontSize={sprops.widgetFontSize + "px"}
                                 panel="left"
                                 mode="vertical"
@@ -365,6 +382,7 @@ const MapPage =(iprops:MapPageProps)=>{
                                 onItemClick={sprops.onItemClick}
                             />
                             <WidgetContainer
+                                listRef={(el)=>topRef.current=el}
                                 fontSize={sprops.widgetFontSize + "px"}
                                 panel="top"
                                 mode="horizontal"
@@ -372,20 +390,21 @@ const MapPage =(iprops:MapPageProps)=>{
                                 panelCreator={sprops.panelCreator}
                                 onItemClick={sprops.onItemClick}
                             />
+                            {sprops.mapFloat && <DynamicTitleIcons/> }
                             {(!!loading || !! loadingError) && <div className="loading">
                                 {!!loading && ! loadingError && <div className={"spinner"}></div>}
                                 <div className={"loadingName"}>{loading}</div>
                                 {!!loadingError && <div className={"error"}>{loadingError+""}</div>}
                             </div>}
                             <div className={'mapFrame'}>
-                            {!sprops.mapFloat && <DynamicTitleIcons /> }
+                            {!sprops.mapFloat && <DynamicTitleIcons className={"absolute"}/> }
                             {!sprops.mapFloat && <Map mapClass={mapClass} mapOpacity={mapOpacity}/>}
                             {overlay}
                             </div>
                         </div>
                         <div ref={(container)=>{
                             bottomRef.current=container;
-                            computeScalePosition();
+                            computeMapBorders();
                         }}
                             className={"bottomSection" + (globalStore.getData(keys.properties.allowTwoWidgetRows) ? " twoRows" : "")}>
                             <WidgetContainer
