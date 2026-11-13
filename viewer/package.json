@@ -72,7 +72,7 @@
     "geodesy": "^2.4.0",
     "htm": "^3.1.1",
     "js-yaml": "^4.1.1",
-    "maplibre-gl": "5.16.0",
+    "maplibre-gl": "6.4.1",
     "object-assign": "^4.1.1",
     "ol": "10.7.0",
     "pmtiles": "^4.3.2",
