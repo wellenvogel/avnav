@@ -339,7 +339,6 @@ const pow2=(x)=>{
 const computeCourseVectors = (aisItem, boatCog, boatSog, options) => {
     if (!options.useCourseVector) return;
     let target_sog=aisItem.received.speed||0;
-    if (target_sog <=0) return;
     let target_cog=correctedCourse(aisItem.received.course,target_sog,options.minAISspeed);
     // skip if no valid data available, includes sog!=0 but cog==null
     if (target_cog == null) return;
