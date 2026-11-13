@@ -347,16 +347,16 @@ const computeCourseVectors = (aisItem, boatCog, boatSog, options) => {
     if (!drawTMV && !drawRMV) return;  // RMV needs TMV even if zero!
     let target_rot=Math.abs(aisItem.received.turn||0); // °/min
     const curved = options.curved && isFinite(target_rot) && target_rot>0.5;
-    let cvstart=aisItem.fromEstimated?aisItem.estimated:aisItem.receivedPos
+    let cvstart = aisItem.fromEstimated ? aisItem.estimated : aisItem.receivedPos;
     if (!curved){
         aisItem.courseVector=new CourseVector();
         aisItem.courseVector.start=cvstart;
-        aisItem.courseVector.end=NavCompute.computeTarget(
-            cvstart,
-            target_cog,
-            target_sog*options.courseVectorTime,
-            options.useRhumbLine
-        )
+        aisItem.courseVector.end = NavCompute.computeTarget(
+          cvstart,
+          target_cog,
+          target_sog * options.courseVectorTime,
+          options.useRhumbLine
+        );
     } else{
         let target_rot_sgn=Math.sign(aisItem.received.turn||0);
         let turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
@@ -373,6 +373,14 @@ const computeCourseVectors = (aisItem, boatCog, boatSog, options) => {
     if (boatCog == null || boatSog == null) return; //RMV only possible with own COG/SOG
     if (drawRMV && boatSog > options.minAISspeed) { // for boatSog==0 RMV==TMV, skip it
         aisItem.rmv=aisItem.courseVector.clone();
+        if (!aisItem.fromEstimated) {
+          // adjust RMV for own movement when
+          const dir = boatCog;
+          const dst = boatSog * aisItem.age;
+          aisItem.rmv.start=NavCompute.computeTarget(aisItem.rmv.start, dir, dst, options.useRhumbLine);
+          if(curved) aisItem.rmv.center=NavCompute.computeTarget(aisItem.rmv.center, dir, dst, options.useRhumbLine);
+          else aisItem.rmv.end = NavCompute.computeTarget(aisItem.rmv.end, dir, dst, options.useRhumbLine);
+        }
         aisItem.rmv.offsetDir=boatCog;
         aisItem.rmv.offsetDst=-boatSog*options.courseVectorTime;
     }
@@ -435,7 +443,7 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
         if (aisSpeed >= options.minAISspeed && aisCourse != null) {
             aisItem.estimated = NavCompute.computeTarget(aisItem.receivedPos, aisCourse, aisItem.age * aisSpeed, options.useRhumbLine);
         }
-        aisItem.fromEstimated=(options.cpaEstimated && aisItem.estimated);
+        aisItem.fromEstimated=!!(options.cpaEstimated && aisItem.estimated);
         let targetPos=(aisItem.fromEstimated)?aisItem.estimated:aisItem.receivedPos;
         if (boatPos.lat != null && boatPos.lon != null && targetPos.lat != null && targetPos.lon != null) {
             let dst = NavCompute.computeDistance(boatPos, targetPos, options.useRhumbLine);
