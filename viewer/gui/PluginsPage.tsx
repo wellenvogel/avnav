@@ -28,7 +28,7 @@ import {InjectMainMenu, useInitialButton} from "./MainNav";
 import PluginsPageButtons from "./PluginsPageButtons";
 import ButtonList from "../components/ButtonList";
 import {DownloadItemList} from "../components/DownloadItemList";
-import {useUploadHelper} from "../components/UploadHandler";
+import {UploadProgress, useUploadHelper} from "../components/UploadHandler";
 import ItemList, {Item} from "../components/ItemList";
 import {ChildStatus, ChildStatusProps} from "../components/StatusItems";
 import {useTimer} from "../util/UiHelper";
@@ -109,9 +109,11 @@ const buildUpdateOptions=(catalogEntry:CatalogEntry,localEntry?:Item)=>{
         if (! localEntry){
             updateOptions.isNew=true;
             updateOptions.updater=hasAvailable;
+            updateOptions.can=hasAvailable;
         }
         else {
             updateOptions.updater=hasAvailable;
+            updateOptions.can=hasAvailable;
             updateOptions.should=versionCompare(catalogEntry.version,localEntry.version);
         }
     }
@@ -138,6 +140,7 @@ const CatalogItem = (props: CatalogEntry) => {
     if (props._localItem?.version != null){
         nv.push(["LocalVersion",props._localItem.version])
     }
+    const bt=updateState.isNew?ButtonDefs.DBPluginInstall: ButtonDefs.DBPluginUpdate
     return <ListItem className={'catalogItem'}>
         <ListMainSlot primary={props.name}>
         <dl>
@@ -146,11 +149,13 @@ const CatalogItem = (props: CatalogEntry) => {
             <dd>{el[1]}</dd>
         </Fragment>)}
         </dl>
-        {updateState.should && <DialogRow className={'right'}><DialogButton
-            {...ButtonDefs.DBPluginUpdate}
+        {updateState.can && (updateState.should || updateState.isNew)  && ! updateState.updater && <DialogRow className={'right'}>
+            <DialogButton
+            {...bt}
             close={false}
             onClick={async ()=>{
-                const txt=`Update ${props.name} with ${props._localItem?.version}?`;
+                const up=updateState.isNew?"Install":"Update";
+                const txt=`${up} ${props.name} with ${props.version}?`;
                 const rs=await showPromiseDialogTrue(dialogContext,(dp)=><ConfirmDialog text={txt} {...dp}/>);
                 if (rs){
                     dialogContext.closeDialog();
@@ -218,6 +223,58 @@ const PluginCatalog=(props:PluginCatalogProps)=>{
             DBCancel()
         }/>
     </DialogFrame>
+}
+interface DownloadProgressProps{
+    id?:number
+}
+interface ExternalDownloadStatus{
+    totalBytes?:number,
+    fetchedBytes?:number,
+    percent?:number,
+    error?:string,
+    done?:boolean,
+    info?:string,
+    id?:string|number,
+    phase?:string
+}
+const DownloadProgress=(props:DownloadProgressProps)=>{
+    const timeOut=(props.id != null)?500:1000
+    const [progress,setProgress]=useState<ExternalDownloadStatus|undefined>(undefined);
+    const timer=useTimer((seq)=>{
+        Requests.getJson({
+            type:'plugins',
+            command:'downloadStatus',
+            id:props.id
+        })
+            .then((rs)=>{
+                setProgress(rs.data);
+                if (rs.data == null) {
+                    timer.setTimeout(1000);
+                }
+                else{
+                    timer.setTimeout(500);
+                }
+                timer.startTimer(seq);
+            })
+            .catch((err)=>{
+                base.log(err);
+                timer.setTimeout(1000);
+                timer.startTimer(seq);
+            })
+    },timeOut,true,true)
+    if (! progress || progress.done) return null;
+    return <UploadProgress
+        loaded={progress.fetchedBytes||0}
+        total={progress.totalBytes||0}
+        percentComplete={progress.percent}
+        onCancel={async ()=>{
+            await Requests.getJson({
+                type:'plugins',
+                command:'cancelDownload',
+                id:progress.id,
+            })
+        }}
+    />
 }
 
 export const PluginsPage = (props:PageProps) => {
@@ -297,6 +354,7 @@ export const PluginsPage = (props:PageProps) => {
             >
 
             </DownloadItemList>
+            <DownloadProgress id={undefined}/>
         </PageLeft>
         <ButtonList page={props.id} itemList={currentButtons.current}/>
     </PageFrame>

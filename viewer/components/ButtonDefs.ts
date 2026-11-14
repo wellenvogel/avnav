@@ -43,6 +43,10 @@ const ButtonDefinitions= {
         name:btdef.Cancel,
         iconClass: iconClasses.Cancel,
     },
+    CancelOperation:{
+        name:btdef.CancelOperation,
+        iconClass: iconClasses.Cancel,
+    },
     //addonconfig
     AddonConfigAddOns:{
         name:btdef.AddonConfigAddOns,
@@ -736,6 +740,10 @@ const ButtonDefinitions= {
     DBPluginUpdate:{
         iconClass: iconClasses.Download,
         name:btdef.DBUpdate,
+    },
+    DBPluginInstall:{
+        iconClass: iconClasses.Download,
+        name:btdef.DBInstall,
     },
     //Lock Dialog
     DBCurrent:{
