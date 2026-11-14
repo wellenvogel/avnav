@@ -458,6 +458,11 @@ const ButtonDefinitions= {
         iconClass: iconClasses.NavMapWidgets,
         name: btdef.NavMapWidgets,
     },
+    //plugins
+    SyncPlugins:{
+        iconClass: iconClasses.Sync,
+        name:btdef.SyncPlugins
+    },
     //other
     Help:{
         iconClass: iconClasses.Help,
@@ -726,6 +731,11 @@ const ButtonDefinitions= {
     DBUserApp:{
         iconClass: iconClasses.AddOns,
         name:btdef.DBUserApp
+    },
+    //plugins
+    DBPluginUpdate:{
+        iconClass: iconClasses.Download,
+        name:btdef.DBUpdate,
     },
     //Lock Dialog
     DBCurrent:{

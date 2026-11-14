@@ -385,6 +385,7 @@ const keys:Record<string,KeyType>={
             "Type of information to be shown in the alarm widget:\nboth: show path and message\npath: show path\nmessage: show message"),
         readOnlyServer: new Property(false),
         silenceSound: new Property("sounds/1-minute-of-silence.mp3"),
+        pluginCatalog: new Property("https://raw.githubusercontent.com/wellenvogel/avnav-plugin-catalog/refs/heads/master/docs/_data/plugins.yml"),
         maxZoom: new Property(21),  //only allow upscaling up to this zom level
         courseAverageLength: new Property(10,"average interval for map course up",PropertyType.RANGE,[1,30],"how many values will be used to compute a moving average for course up"), //moving average for course up
         courseAverageTolerance: new Property(15, "Rotation Tolerance", PropertyType.RANGE, [1, 30],"for course changes below this value the map rotation will be delayed"), //tolerance for slow rotation

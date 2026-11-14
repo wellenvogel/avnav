@@ -787,6 +787,11 @@ body{
   overflow-x: hidden;
 }
 .listEntry{
+  dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 0.75rem;
+  }
   .rowBase();
   min-height: var(--avnav-min-listitem-height);
   flex-shrink: 0;
@@ -1473,6 +1478,15 @@ span.valuePrefix{
   padding-left: 0.8em;
 }
 
+//--- plugins ---
+.catalogItem {
+  .primary {
+    font-weight: bold;
+  }
+  dt {
+    .mdText2();
+  }
+}
 
   //------ type icons ------
 

@@ -21,7 +21,7 @@
  #
  */
  
-import React, {ReactElement, useCallback, useRef} from 'react';
+import React, {ReactElement, useCallback, useEffect, useRef, useState,Fragment} from 'react';
 import {PageFrame, PageLeft, PageProps} from "../components/Page";
 import {ButtonDef, updateButtons} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
@@ -29,7 +29,7 @@ import PluginsPageButtons from "./PluginsPageButtons";
 import ButtonList from "../components/ButtonList";
 import {DownloadItemList} from "../components/DownloadItemList";
 import {useUploadHelper} from "../components/UploadHandler";
-import {Item} from "../components/ItemList";
+import ItemList, {Item} from "../components/ItemList";
 import {ChildStatus, ChildStatusProps} from "../components/StatusItems";
 import {useTimer} from "../util/UiHelper";
 import Requests from "../util/requests";
@@ -37,12 +37,192 @@ import {shallowEqual} from "shallow-equal";
 import {useHistory} from "../components/HistoryProvider";
 import ButtonDefs from "../components/ButtonDefs";
 import {getPageTitle} from "../components/pagetitles";
+import globalstore from "../util/globalstore";
+import keys from "../util/keys";
+import Toast from "../components/Toast";
+import {load as yamlLoad} from 'js-yaml';
+import Helper from "../util/helper";
+import {ListItem, ListMainSlot, useDialogContext} from "../components/exports";
+import {DBCancel, DialogButtons, DialogFrame, DialogRow, showPromiseDialogTrue} from "../components/OverlayDialog";
+import {listItems} from "../util/itemFunctions";
+import DialogButton from "../components/DialogButton";
+import {ConfirmDialog} from "../components/BasicDialogs";
+import base from "../base";
 interface InfoCacheEntry{
     status:ChildStatusProps;
-    element: ReactElement
+    element: ReactElement,
+    item:Item
 }
+interface PluginCatalogProps{
+    url: string|URL
+}
+
+//those should be better move to the item actions
+const USER_PREFIX="user-";
+const SYS_PREFIX="system-";
+//const BUILTIN_PREFIX="builtin-";
+
+
+/**
+ * update options:
+ * found user - catalog zip : can update
+ * found nothing - catalog zip: can update
+ *
+ * found nothing - catalog package: if catalog available -> updater
+ * found package - catalog package: if catalog available -> updater
+ */
+
+interface UpdateOptions{
+    can?: boolean;
+    should?: boolean; //catalog version higher
+    updater?:boolean;
+    isNew?: boolean;
+}
+interface CatalogEntry extends Record<string, any> {
+    name:string;
+    version:string|number;
+    type?:string;
+    available?:Record<string, any>;
+    _localItem?:Item,
+    _updateOptions:UpdateOptions;
+}
+const versionCompare=(a:string|number,b:string|number)=>{
+    if (a == null || b == null) return false;
+    return a> b;
+}
+
+const buildUpdateOptions=(catalogEntry:CatalogEntry,localEntry?:Item)=>{
+    const updateOptions:UpdateOptions={};
+    if (catalogEntry.type == 'zip'){
+        if (! localEntry){
+            updateOptions.can=true;
+            updateOptions.isNew=true;
+        }
+        else {
+            updateOptions.can=true;
+            if (versionCompare(catalogEntry.version,localEntry.version)) updateOptions.should=true;
+        }
+    }
+    else{
+        //package
+        const hasAvailable=!!catalogEntry.available;
+        if (! localEntry){
+            updateOptions.isNew=true;
+            updateOptions.updater=hasAvailable;
+        }
+        else {
+            updateOptions.updater=hasAvailable;
+            updateOptions.should=versionCompare(catalogEntry.version,localEntry.version);
+        }
+    }
+    return updateOptions;
+}
+
+const startDownload= async (name:string,url:string)=>{
+    const rs=await Requests.getJson({
+        type:'plugins',
+        command:'externalDownload',
+        url:url,
+        name:name,
+        overwrite:true
+    });
+    return rs.id;
+}
+
+const CatalogItem = (props: CatalogEntry) => {
+    const dialogContext = useDialogContext();
+    const nv:[string,string|number][] = [];
+    if (props.version != null) nv.push(["CatalogVersion",props.version])
+    nv.push(["Type",props.type])
+    const updateState=buildUpdateOptions(props,props._localItem);
+    if (props._localItem?.version != null){
+        nv.push(["LocalVersion",props._localItem.version])
+    }
+    return <ListItem className={'catalogItem'}>
+        <ListMainSlot primary={props.name}>
+        <dl>
+        {nv.map((el)=><Fragment key={el[0]}>
+            <dt>{el[0]}</dt>
+            <dd>{el[1]}</dd>
+        </Fragment>)}
+        </dl>
+        {updateState.should && <DialogRow className={'right'}><DialogButton
+            {...ButtonDefs.DBPluginUpdate}
+            close={false}
+            onClick={async ()=>{
+                const txt=`Update ${props.name} with ${props._localItem?.version}?`;
+                const rs=await showPromiseDialogTrue(dialogContext,(dp)=><ConfirmDialog text={txt} {...dp}/>);
+                if (rs){
+                    dialogContext.closeDialog();
+                    try{
+                        const id=await startDownload(props.name,props.download_url);
+                        base.log("plugin download started",props.name,id);
+                    }catch (e){
+                        if (e) Toast(e);
+                    }
+
+                }
+            }}
+        /></DialogRow>}
+        </ListMainSlot>
+    </ListItem>
+}
+const PluginCatalog=(props:PluginCatalogProps)=>{
+    const LD_CAT=1;
+    const LD_PI=2;
+    //const dialogContext=useDialogContext();
+    const [loading,setLoading]=useState(LD_CAT|LD_PI);
+    const [catalog,setCatalog]=useState<CatalogEntry[]>([])
+    const [existing,setExisting]=useState<Record<string,Item>>({})
+    useEffect(()=>{
+        setLoading(LD_CAT | LD_PI);
+        const proxyUrl=Helper.proxyUrl(props.url);
+        Requests.getHtmlOrText(proxyUrl).then((data:string)=>{
+            const catalog=yamlLoad(data);
+            setLoading((old)=>old & ~LD_CAT);
+            console.log(catalog);
+            setCatalog(catalog as CatalogEntry[]);
+        })
+            .catch((err)=>{
+                setLoading((old)=>old & ~LD_CAT);
+                if (err) Toast(err)
+            })
+        listItems('plugins').then((plugins:Item[])=>{
+            setLoading((old)=>old & ~LD_PI);
+            const newExisting:Record<string,Item>={};
+            for (const item of plugins){
+                newExisting[item.name]=item;
+            }
+            setExisting(newExisting);
+        })
+            .catch((err)=>{
+                setLoading((old)=>old & ~LD_PI);
+                if (err) Toast(err)
+            })
+    },[props.url])
+    const displayItems=[...catalog];
+    for (const item of displayItems){
+        const prfx=(item.type == 'zip')?USER_PREFIX:SYS_PREFIX;
+        const localItem=existing[prfx+item.name];
+        if (localItem){
+                item._localItem=localItem;
+                item._updateOptions=buildUpdateOptions(item,localItem);
+        }
+    }
+    return <DialogFrame title={"Plugin Catalog"}>
+        {
+            loading?<div>Loading...</div>:
+                <ItemList itemList={catalog} itemClass={CatalogItem} scrollable={true}/>
+        }
+        <DialogButtons buttonList={
+            DBCancel()
+        }/>
+    </DialogFrame>
+}
+
 export const PluginsPage = (props:PageProps) => {
     const history=useHistory();
+    const dialogContext = useDialogContext();
     const currentButtons=useRef<ButtonDef[]>();
     const infoCache=useRef<Record<string,InfoCacheEntry>>({});
     const statusRef=useRef<ChildStatusProps[]>([]);
@@ -60,9 +240,16 @@ export const PluginsPage = (props:PageProps) => {
         })
     },1000,true,true)
     const [uploadProps,uploadAction]=useUploadHelper("plugins");
+    const syncAction=useCallback(()=>{
+        const url=globalstore.getData(keys.properties.pluginCatalog);
+        dialogContext.showDialog(()=><PluginCatalog url={url}/>)
+    },[])
     const buttonActions={
         [ButtonDefs.Upload.name]:{
             onClick:uploadAction,
+        },
+        [ButtonDefs.SyncPlugins.name]:{
+            onClick:syncAction,
         },
         Cancel:{
             onClick:()=>{history.pop()}
@@ -74,13 +261,22 @@ export const PluginsPage = (props:PageProps) => {
         for (const st of statusRef.current){
             if (st.name === item.name){
                 const current=infoCache.current[st.name];
-                if (current && shallowEqual(current.status,st)) {
+                if (current && shallowEqual(current.status,st) && shallowEqual(current.item,item)) {
                     return current.element;
                 }
-                const rt= <ChildStatus hideName={true} id={st.name} handlerId={-1} {...st}/>
+                const rt= <div>
+                    <ChildStatus hideName={true} id={st.name} handlerId={-1} {...st}/>
+                    {(item.version != null) &&
+                        <div className="childStatus">
+                        <span className="label">Version:&nbsp;</span>
+                            <span className="value">{item.version}</span>
+                        </div>
+                    }
+                </div>
                 infoCache.current[st.name]={
                     status:st,
-                    element:rt
+                    element:rt,
+                    item:item
                 }
                 return rt;
             }
