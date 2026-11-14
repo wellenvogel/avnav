@@ -26,10 +26,12 @@
 ###############################################################################
 import http.client
 import logging
+import os
 import socket
 import ssl
 import sys
 import threading
+import time
 import urllib.request
 from copy import copy
 from typing import Callable, Mapping, Optional
@@ -275,6 +277,7 @@ class CancelableRequest:
       data: Optional[bytes] = None,
       timeout: float = 30.0,
       on_progress: Optional[ProgressCallback] = None,
+      buffer_size=8192
   ) -> Optional[bytes]:
     req = urllib.request.Request(
         url=url,
@@ -294,12 +297,11 @@ class CancelableRequest:
                 on_progress(0, total_bytes, initial_percent)
 
             while not self.cancel_event.is_set():
-                chunk = response.read(8192)
+                chunk = response.read(buffer_size)
                 if not chunk:
                     break
                 out.write(chunk)
                 fetched_bytes += len(chunk)
-
                 if on_progress:
                     percent = (
                         min(100.0, (fetched_bytes / total_bytes) * 100.0)
@@ -307,13 +309,8 @@ class CancelableRequest:
                         else None
                     )
                     on_progress(fetched_bytes, total_bytes, percent)
-
-
-    except (OSError, InterruptedError) as e:
-      if self.cancel_event.is_set():
-        print("Request aborted cleanly.")
-        return None
-      raise e
+            if self.cancel_event.is_set():
+                raise InterruptedError("Request canceled")
     finally:
       self._reset_sock()
 
@@ -357,13 +354,27 @@ if __name__ == "__main__":
   worker.join()
 '''
 class DownloadProgress():
-    def __init__(self):
+    def __init__(self,info=None,id=None):
         self.totalBytes = 0
         self.fetchedBytes = 0
         self.percent=0
         self.error=None
+        self.done=False
+        self.info=info
+        self.id=id
+    def __str__(self):
+        return f"info={self.info} total={self.totalBytes},fetched={self.fetchedBytes},percent={self.percent},error={self.error},done={self.done}"
+
+class SizeExceededError(Exception):
+    def __init__(self, info):
+        super().__init__(info)
+
 class AVNDownloadJob:
-    def __init__(self,id, url:str,targetFile:str,method:str='GET',headers=None):
+    def __init__(self,id, url:str,targetFile:str,method:str='GET',headers=None,
+                 info=None,bufferSize=8192,timeout:float=30.0,
+                 maxBytes=None,
+                 doneCallback=None
+                 ):
         self._targetFile = targetFile
         self._thread=None
         self._lock=threading.Lock()
@@ -372,35 +383,60 @@ class AVNDownloadJob:
         self._method=method
         self._headers=headers
         self._controler=None
-        self._progress=DownloadProgress()
+        self._bufferSize=bufferSize
+        self._timeout=timeout
+        self._progress=DownloadProgress(info=info,id=id)
+        self._lastLogPercent=None
+        self._maxBytes=int(maxBytes) if maxBytes is not None else None
+        self._doneCallback=doneCallback
         self.id=id
 
     def start(self):
         with self._lock:
             if self._thread is not None:
                 return False
-            self._thread=threading.Thread(target=self._run)
+            self._thread=threading.Thread(target=self._run,daemon=True)
         self._thread.start()
 
     def _onProgress(self, fetched_bytes, total_bytes, percent):
-        AVNLog.debug(f"{self._url} Fetched {fetched_bytes} / {total_bytes} Bytes")
+        if self._maxBytes is not None:
+            if fetched_bytes > self._maxBytes:
+                raise SizeExceededError(f"download {self._url} exceeds max {self._maxBytes}")
+        mustPrint=False
         with self._lock:
             self._progress.fetchedBytes = fetched_bytes
             self._progress.totalBytes = total_bytes
             self._progress.percent = percent
+            if percent is None:
+                mustPrint=True
+            else:
+                if self._lastLogPercent is None or (percent - self._lastLogPercent > 1):
+                    mustPrint=True
+                    self._lastLogPercent = percent
+        if mustPrint:
+            AVNLog.debug(f"{self._url} Fetched {fetched_bytes} / {total_bytes} Bytes {percent}%")
     def _run(self):
         AVNLog.info("download started for %d: %s",self.id,self._url)
         try:
             with self._lock:
                 self._controler=CancelableRequest()
-            self._controler.fetch(self._url,self._targetFile, method=self._method,headers=self._headers,on_progress=self._onProgress)
+            self._controler.fetch(self._url,self._targetFile, method=self._method,
+                                  headers=self._headers,
+                                  buffer_size=self._bufferSize,
+                                  timeout=self._timeout,
+                                  on_progress=self._onProgress)
             AVNLog.info("download complete for %d: %s",self.id,self._url)
         except Exception as e:
             AVNLog.error("download %d: %s error %s",self.id,self._url,str(e))
             with self._lock:
                 self._progress.error=str(e)
         with self._lock:
+            self._progress.done=True
             self._controler=None
+        if os.path.isfile(self._targetFile):
+            os.unlink(self._targetFile)
+        if self._doneCallback is not None:
+            self._doneCallback(copy(self._progress))
 
     def isRunning(self):
         with self._lock:
@@ -408,14 +444,15 @@ class AVNDownloadJob:
                 return self._thread.is_alive()
             return False
 
-    def stop(self):
+    def cancel(self):
         controler=None
         with self._lock:
             controler=self._controler
         if controler is not None:
             controler.cancel()
+            return True
 
-    def getProgress(self):
+    def getProgress(self)->DownloadProgress:
         with self._lock:
             return copy(self._progress)
 
@@ -430,7 +467,7 @@ class AVNDownloadManager:
         self._id = self._id+1
         return self._id
 
-    def start(self,url:str,filename:str,method='GET',header=None):
+    def start(self,url:str,filename:str,method='GET',headers=None,info=None,maxBytes=None,doneCallback=None):
         id=None
         with self._lock:
            if self._running is not None:
@@ -438,20 +475,53 @@ class AVNDownloadManager:
                     raise Exception(f"unable to start download for {url}: Already running")
                self._running=None
            id=self._getId()
-           self._running = AVNDownloadJob(id,url,filename,method,header)
+           self._running = AVNDownloadJob(id,url,filename,method=method,
+                                          headers=headers,info=info,maxBytes=maxBytes,
+                                          doneCallback=doneCallback)
         self._running.start()
         return id
 
-    def status(self,id):
+    def isRunning(self,id=None):
         with self._lock:
-            if self._running is not None and self._running.id == id:
-                if self._running.isRunning():
-                    return self._running.getProgress()
-                self._running=None
-                return None
+            if self._running is not None and ( self._running.id==id or id is None):
+                return self._running.isRunning()
+        return False
+    def status(self,id=None)->DownloadProgress:
+        with self._lock:
+            if self._running is not None and ( self._running.id == id or id is None):
+                return self._running.getProgress()
+
+    def cancel(self,id)->None:
+        running=None
+        with self._lock:
+            if self._running is not None and self._running.id == id :
+                running=self._running
+        if running:
+            running.cancel()
 
 
 if __name__ == '__main__':
     AVNLog.initLoggingInitial(logging.DEBUG)
     avn=AVNDownloadManager()
-    avn.start(sys.argv[1],sys.argv[2])
+    maxSize = None
+    if len(sys.argv) > 4:
+        maxSize = int(sys.argv[4])
+    id=avn.start(sys.argv[1],sys.argv[2],info=sys.argv[2],maxBytes=maxSize,
+                 doneCallback=lambda result: print(f"Done: {result}"))
+    st = avn.status(id=id)
+    start=time.monotonic()
+    while st is not None and not st.done:
+        print(f"###INFO: {st}")
+        if len(sys.argv)>3:
+            stop=int(sys.argv[3])
+            now=time.monotonic()
+            if now > (start+stop):
+                print("cancel download")
+                avn.cancel(id)
+        time.sleep(1)
+        st = avn.status(id=id)
+    st=avn.status(id=id)
+    if st is not None:
+        print(f"final result: {st}")
+    else:
+        print("No result after finish")
