@@ -647,17 +647,19 @@ class AisLayer{
                     ], {
                         color: style.courseVectorColor,
                         width: this.displayOptions.courseVectorWidth,
-                        alpha: style.alpha
+                        alpha: (style.alpha || 1) * estimatedImageOpacity()
                     })
                 }
             }
 
-            if (symbol.ghostImage && target.estimated) { // DR position of target
-                const curpix = drawing.drawImageToContext(this.pointToMap(target.estimated), symbol.ghostImage, style);
+            if (target.estimated && (symbol.ghostImage || target.fromEstimated)) { // DR position of target
+                const img = !target.fromEstimated && symbol.ghostImage || symbol.image;
+                const curpix = drawing.drawImageToContext(this.pointToMap(target.estimated), img, style);
                 this.pixel.push({pixel: curpix, ais: target});
             }
         }
-        const curpix = drawing.drawImageToContext(this.pointToMap(target.receivedPos), symbol.image, style);
+        const img = target.fromEstimated && symbol.ghostImage || symbol.image;
+        const curpix = drawing.drawImageToContext(this.pointToMap(target.receivedPos), img, style);
         this.pixel.push({pixel: curpix, ais: target});
         return {scale: scale, style: style, rot: target_hdg};
     }
@@ -709,8 +711,9 @@ class AisLayer{
         const thirdLabel = globalStore.getData(keys.properties.aisThirdLabel, '');
         for (i in aisList) {
             const current = aisproxy(aisList[i]);
-            const alpha = {alpha: current.hidden ? 0.2 : undefined};
-            const pos = this.pointToMap(current.receivedPos);
+            const alpha = { alpha: current.hidden ? 0.2 : undefined };
+            const pos = (current.fromEstimated && !current.hidden) && current.estimated || current.receivedPos;
+            const posxy = this.pointToMap(pos);
             const drawn = this.drawTargetSymbol(drawing, current);
             if (!drawn) continue;
             const textOffsetScale = drawn.scale;
@@ -723,7 +726,7 @@ class AisLayer{
             if (text3) aisLables.push(text3);
             const numLabels=aisLables.length;
             for (let i=0;i<numLabels;i++){
-                drawing.drawTextToContext(pos, aisLables[i], {...this.textStyle,
+                drawing.drawTextToContext(posxy, aisLables[i], {...this.textStyle,
                     ...this.computeTextOffsets(drawing, drawn.rot, i, numLabels,drawn.style.textOffset, textOffsetScale),
                     ...alpha});
             }
