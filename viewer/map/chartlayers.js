@@ -662,7 +662,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
                 let styleUrl = new URL(style, this.overviewUrl || window.location.href);
                 this.baseUrl = styleUrl.toString();
                 if (this.useProxy && styleUrl.origin !== window.location.origin) {
-                    styleUrl = new URL("/proxy/" + encodeURIComponent(styleUrl.toString()), window.location.href);
+                    styleUrl = Helper.proxyUrl(styleUrl);
                 }
                 const result = await fetchWithTimeout(styleUrl,
                     {timeout: parseInt(globalStore.getData(keys.properties.networkTimeout))})
