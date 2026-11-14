@@ -42,7 +42,7 @@ import keys from "../util/keys";
 import Toast from "../components/Toast";
 import {load as yamlLoad} from 'js-yaml';
 import Helper from "../util/helper";
-import {ListItem, ListMainSlot, useDialogContext} from "../components/exports";
+import {ListItem, ListMainSlot, ListSlot, useDialogContext} from "../components/exports";
 import {DBCancel, DialogButtons, DialogFrame, DialogRow, showPromiseDialogTrue} from "../components/OverlayDialog";
 import {listItems} from "../util/itemFunctions";
 import DialogButton from "../components/DialogButton";
@@ -137,8 +137,8 @@ const CatalogItem = (props: CatalogEntry) => {
     if (props.version != null) nv.push(["CatalogVersion",props.version])
     nv.push(["Type",props.type])
     const updateState=buildUpdateOptions(props,props._localItem);
-    if (props._localItem?.version != null){
-        nv.push(["LocalVersion",props._localItem.version])
+    if (props._localItem != null){
+        nv.push(["LocalVersion",(props._localItem.version != null)?props._localItem.version:"[installed]"])
     }
     const bt=updateState.isNew?ButtonDefs.DBPluginInstall: ButtonDefs.DBPluginUpdate
     return <ListItem className={'catalogItem'}>
@@ -149,7 +149,8 @@ const CatalogItem = (props: CatalogEntry) => {
             <dd>{el[1]}</dd>
         </Fragment>)}
         </dl>
-        {updateState.can && (updateState.should || updateState.isNew)  && ! updateState.updater && <DialogRow className={'right'}>
+        </ListMainSlot>
+        {updateState.can && (updateState.should || updateState.isNew)  && ! updateState.updater && <ListSlot>
             <DialogButton
             {...bt}
             close={false}
@@ -168,8 +169,8 @@ const CatalogItem = (props: CatalogEntry) => {
 
                 }
             }}
-        /></DialogRow>}
-        </ListMainSlot>
+        />
+        </ListSlot>}
     </ListItem>
 }
 const PluginCatalog=(props:PluginCatalogProps)=>{
