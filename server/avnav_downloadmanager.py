@@ -354,6 +354,10 @@ if __name__ == "__main__":
   worker.join()
 '''
 class DownloadProgress():
+    P_INIT='initialized'
+    P_DOWNLOAD='downloading'
+    P_POST='postprocessing'
+    P_DONE='done'
     def __init__(self,info=None,id=None):
         self.totalBytes = 0
         self.fetchedBytes = 0
@@ -362,8 +366,11 @@ class DownloadProgress():
         self.done=False
         self.info=info
         self.id=id
+        self.phase=self.P_INIT
     def __str__(self):
         return f"info={self.info} total={self.totalBytes},fetched={self.fetchedBytes},percent={self.percent},error={self.error},done={self.done}"
+    def serialize(self):
+        return self.__dict__
 
 class SizeExceededError(Exception):
     def __init__(self, info):
@@ -390,12 +397,13 @@ class AVNDownloadJob:
         self._maxBytes=int(maxBytes) if maxBytes is not None else None
         self._doneCallback=doneCallback
         self.id=id
+        self._event=threading.Event()
 
     def start(self):
         with self._lock:
             if self._thread is not None:
                 return False
-            self._thread=threading.Thread(target=self._run,daemon=True)
+            self._thread=threading.Thread(target=self._run,daemon=True,name='downloader')
         self._thread.start()
 
     def _onProgress(self, fetched_bytes, total_bytes, percent):
@@ -420,6 +428,7 @@ class AVNDownloadJob:
         try:
             with self._lock:
                 self._controler=CancelableRequest()
+                self._progress.phase=DownloadProgress.P_DOWNLOAD
             self._controler.fetch(self._url,self._targetFile, method=self._method,
                                   headers=self._headers,
                                   buffer_size=self._bufferSize,
@@ -430,14 +439,21 @@ class AVNDownloadJob:
             AVNLog.error("download %d: %s error %s",self.id,self._url,str(e))
             with self._lock:
                 self._progress.error=str(e)
+            if os.path.isfile(self._targetFile):
+                os.unlink(self._targetFile)
+        with self._lock:
+            self._progress.phase=DownloadProgress.P_POST
+        if self._doneCallback is not None:
+            try:
+                self._doneCallback(copy(self._progress),self._event)
+            except Exception as e:
+                AVNLog.error("download %s done callback failed: %s",self._url,(e))
+                with self._lock:
+                    self._progress.error=str(e)
         with self._lock:
             self._progress.done=True
+            self._progress.phase=DownloadProgress.P_DONE
             self._controler=None
-        if os.path.isfile(self._targetFile):
-            os.unlink(self._targetFile)
-        if self._doneCallback is not None:
-            self._doneCallback(copy(self._progress))
-
     def isRunning(self):
         with self._lock:
             if self._thread is not None:
@@ -446,6 +462,7 @@ class AVNDownloadJob:
 
     def cancel(self):
         controler=None
+        self._event.set()
         with self._lock:
             controler=self._controler
         if controler is not None:
@@ -491,13 +508,14 @@ class AVNDownloadManager:
             if self._running is not None and ( self._running.id == id or id is None):
                 return self._running.getProgress()
 
-    def cancel(self,id)->None:
+    def cancel(self,id)->bool:
         running=None
         with self._lock:
             if self._running is not None and self._running.id == id :
                 running=self._running
         if running:
-            running.cancel()
+            return running.cancel()
+        return False
 
 
 if __name__ == '__main__':

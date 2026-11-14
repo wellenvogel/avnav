@@ -563,7 +563,7 @@ class AVNUtil(object):
 
     @classmethod
     def getHttpRequestParam(cls, requestparam, name, mantadory=False):
-        if not requestparam:
+        if requestparam is None:
             return None
         rt = requestparam.get(name)
         if rt is None:
