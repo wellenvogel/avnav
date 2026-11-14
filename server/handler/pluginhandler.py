@@ -1330,23 +1330,30 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             entry.version = api.version
             return True
 
-        dlist = [entry for entry in super().listDirectory(True,
+        def injectVersion(entry):
+            api=self.getApi(entry.name)
+            entry.active = False if api is None or not api.isActive() else True
+            if api is not None:
+                entry.version=api.version
+            return entry
+
+        dlist = list(map(injectVersion,[entry for entry in super().listDirectory(True,
                                                           baseDir,
                                                           scope=self.SCOPE_USER,
-                                                          entryCallback=noSize) if entry.isDirectory]
-        blist = [entry for entry in
+                                                          entryCallback=noSize) if entry.isDirectory]))
+        blist = map(injectVersion,[entry for entry in
                  super().listDirectory(True,
                                        self.getPluginBaseDir(AVNPluginHandler.D_BUILTIN),
                                        scope=AVNPluginHandler.D_BUILTIN + "-",
                                        entryCallback=noDownload
                                        ) if
-                 entry.isDirectory]
-        slist = [entry for entry in
+                 entry.isDirectory])
+        slist = map(injectVersion,[entry for entry in
                  super().listDirectory(True,
                                        self.getPluginBaseDir(AVNPluginHandler.D_SYSTEM),
                                        scope=AVNPluginHandler.D_SYSTEM + "-",
                                        entryCallback=noDownload) if
-                 entry.isDirectory]
+                 entry.isDirectory])
         dlist.extend(blist)
         dlist.extend(slist)
         return dlist
