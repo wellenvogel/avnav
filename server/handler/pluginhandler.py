@@ -28,8 +28,10 @@ import importlib.util
 import inspect
 import json
 import os
+import platform
 import re
 import shutil
+import sys
 import threading
 import time
 import traceback
@@ -1303,6 +1305,12 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             id=AVNUtil.getHttpRequestParam(requestparam,"id",mantadory=True)
             rt=self._downloadManager.cancel(int(id))
             return AVNUtil.getReturnData(cancelled=rt)
+        if command == 'getPlatform':
+            ep=os.environ.get('AVNAV_PLATFORM')
+            if ep is None:
+                ep=platform.system().lower()
+            return AVNUtil.getReturnData(platform=ep)
+
         return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
 
     def listDirectory(self, includeDirs=False, baseDir=None, extension=None, scope=None, **kwargs):
