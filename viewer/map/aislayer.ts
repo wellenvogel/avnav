@@ -588,7 +588,9 @@ class AisLayer{
                 drawing.drawLineToContext(points, style);
             };
 
-          if (target.rmv && style.courseVector !== false) { // relative motion vector
+          const drawRMV = !!(target.rmv && this.mapholder.getGpsLock());
+
+          if (drawRMV && style.courseVector !== false) { // relative motion vector
             const odir = target.rmv.offsetDir || 0;
             const odst = target.rmv.offsetDst || 0;
                 if (target.rmv.type === CourseVector.T_ARC) {
@@ -616,7 +618,7 @@ class AisLayer{
             }
 
 
-            if (useCourseVector && style.courseVector !== false) {
+            if (!drawRMV && useCourseVector && style.courseVector !== false) {
                 if (target.courseVector.type === CourseVector.T_ARC) { // curved TMV
                     //drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
                     drawArc(
