@@ -43,7 +43,13 @@ import Toast from "../components/Toast";
 import {load as yamlLoad} from 'js-yaml';
 import Helper from "../util/helper";
 import {ListItem, ListMainSlot, ListSlot, useDialogContext} from "../components/exports";
-import {DBCancel, DialogButtons, DialogFrame, showPromiseDialogTrue} from "../components/OverlayDialog";
+import {
+    DBCancel,
+    DialogButtons,
+    DialogFrame,
+    DialogRow,
+    showPromiseDialogTrue
+} from "../components/OverlayDialog";
 import {listItems} from "../util/itemFunctions";
 import DialogButton from "../components/DialogButton";
 import {ConfirmDialog} from "../components/BasicDialogs";
@@ -54,7 +60,7 @@ interface InfoCacheEntry{
     item:Item
 }
 interface PluginCatalogProps{
-    url: string|URL
+    url: string|URL,
     selectCallback?:(name:string)=>void
 }
 
@@ -79,17 +85,24 @@ interface UpdateOptions{
     updater?:boolean;
     isNew?: boolean;
 }
+const sortPrio=(u:UpdateOptions):number=>{
+    if (! u) return 0;
+    if (! u.can) return 1;
+    return 2+(u.should?2:0)+(u.isNew?1:0);
+}
 interface CatalogEntry extends Record<string, any> {
     name:string;
     version:string|number;
     type?:string;
+    platform?:string[];
     available?:Record<string, any>;
     _localItem?:Item,
     _updateOptions:UpdateOptions;
     _selectCallback?:(name:string)=>void;
 }
 const versionCompare=(a:string|number,b:string|number)=>{
-    if (a == null || b == null) return false;
+    if (a == null ) return false;
+    if (b == null ) return true;
     return a> b;
 }
 
@@ -136,15 +149,26 @@ const startDownload= async (name:string,url:string)=>{
 const CatalogItem = (props: CatalogEntry) => {
     const dialogContext = useDialogContext();
     const nv:[string,string|number][] = [];
+    let platform="unknown";
+    if (props.platform){
+        if (props.platform instanceof Array){
+            platform=props.platform.join(",")
+        }
+        else{
+            platform=`${props.platform}`;
+        }
+    }
     if (props.version != null) nv.push(["CatalogVersion",props.version])
     nv.push(["Type",props.type])
+    nv.push(["Platform",platform])
     const updateState=buildUpdateOptions(props,props._localItem);
     if (props._localItem != null){
         nv.push(["LocalVersion",(props._localItem.version != null)?props._localItem.version:"[installed]"])
     }
     const bt=updateState.isNew?ButtonDefs.DBPluginInstall: ButtonDefs.DBPluginUpdate
+    const prfx=(props.type == 'zip')?USER_PREFIX:SYS_PREFIX;
     return <ListItem className={'catalogItem'}>
-        <ListMainSlot primary={props.name}>
+        <ListMainSlot primary={prfx+props.name}>
         <dl>
         {nv.map((el)=><Fragment key={el[0]}>
             <dt>{el[0]}</dt>
@@ -179,12 +203,14 @@ const CatalogItem = (props: CatalogEntry) => {
 const PluginCatalog=(props:PluginCatalogProps)=>{
     const LD_CAT=1;
     const LD_PI=2;
+    const LD_PF=4;
     //const dialogContext=useDialogContext();
     const [loading,setLoading]=useState(LD_CAT|LD_PI);
     const [catalog,setCatalog]=useState<CatalogEntry[]>([])
     const [existing,setExisting]=useState<Record<string,Item>>({})
+    const [platform,setPlatform]=useState<string>('unknown')
     useEffect(()=>{
-        setLoading(LD_CAT | LD_PI);
+        setLoading(LD_CAT | LD_PI|LD_PF);
         const proxyUrl=Helper.proxyUrl(props.url);
         Requests.getHtmlOrText(proxyUrl).then((data:string)=>{
             const catalog=yamlLoad(data);
@@ -195,6 +221,18 @@ const PluginCatalog=(props:PluginCatalogProps)=>{
             .catch((err)=>{
                 setLoading((old)=>old & ~LD_CAT);
                 if (err) Toast(err)
+            })
+        Requests.getJson({
+            type:'plugins',
+            command:'getPlatform',
+        })
+            .then((data)=>{
+                setPlatform(data.platform);
+                setLoading((old)=>old & ~LD_PF);
+            })
+            .catch((err)=>{
+                setLoading((old)=>old & ~LD_PF);
+                if (err) Toast(err);
             })
         listItems('plugins').then((plugins:Item[])=>{
             setLoading((old)=>old & ~LD_PI);
@@ -209,20 +247,43 @@ const PluginCatalog=(props:PluginCatalogProps)=>{
                 if (err) Toast(err)
             })
     },[props.url])
-    const displayItems=[...catalog];
-    for (const item of displayItems){
+    const displayItems:Item[]=[];
+    for (const citem of catalog){
+        const cplatform=citem.platform;
+        if (!cplatform) continue;
+        if (cplatform instanceof Array){
+            if (cplatform.indexOf(platform) < 0 && cplatform.indexOf('all') <0) continue;
+        }
+        else{
+            if (cplatform != platform && cplatform != "all") continue;
+        }
+        const item={...citem};
         const prfx=(item.type == 'zip')?USER_PREFIX:SYS_PREFIX;
         const localItem=existing[prfx+item.name];
         if (localItem){
                 item._localItem=localItem;
-                item._updateOptions=buildUpdateOptions(item,localItem);
         }
+        item._updateOptions=buildUpdateOptions(item,localItem);
         item._selectCallback=props.selectCallback;
+        displayItems.push(item);
     }
+    displayItems.sort((a,b)=>{
+        const ma=sortPrio(a._updateOptions);
+        const mb=sortPrio(b._updateOptions);
+        return mb-ma;
+    })
     return <DialogFrame title={"Plugin Catalog"}>
         {
             loading?<div>Loading...</div>:
-                <ItemList itemList={catalog} itemClass={CatalogItem} scrollable={true}/>
+                <Fragment>
+                <DialogRow className="catalogItem">
+                    <dl>
+                    <dt className={'label'}>Platform</dt>
+                    <dd className={'value'}>{platform}</dd>
+                    </dl>
+                </DialogRow>
+                <ItemList itemList={displayItems} itemClass={CatalogItem} scrollable={true}/>
+                </Fragment>
         }
         <DialogButtons buttonList={
             DBCancel()
