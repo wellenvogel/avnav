@@ -654,8 +654,11 @@ class AisLayer{
 
             if (target.estimated && (symbol.ghostImage || target.fromEstimated)) { // DR position of target
                 const img = !target.fromEstimated && symbol.ghostImage || symbol.image;
+                const rotation = style.rotation; // save
+                if (style.rotation != null) style.rotation += Helper.radians(target.rotation ?? 0); // apply estimated rotation
                 const curpix = drawing.drawImageToContext(this.pointToMap(target.estimated), img, style);
                 this.pixel.push({pixel: curpix, ais: target});
+                style.rotation = rotation; // restore
             }
         }
         const img = target.fromEstimated && symbol.ghostImage || symbol.image;
