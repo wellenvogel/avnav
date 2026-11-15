@@ -329,11 +329,10 @@ const pow2=(x)=>{
     return x*x;
 }
 function turnParams(start, rot, cog, sog, dt, options) {
-    const rot_abs = Math.abs(rot);
-    if (rot_abs == 0) return { rot, rot_abs };
-    const rot_sgn = Math.sign(rot);
+    const rot_abs = Math.abs(rot), rot_sgn = Math.sign(rot);
+    if (rot_abs == 0) return { rot, rot_abs, rot_sgn };
     const radius = sog / Helper.radians(rot_abs) * 60; // m, SOG=[m/s]
-    const center = NavCompute.computeTarget(start, cog + rot_sgn + 90, radius, options?.useRhumbLine ?? true);
+    const center = NavCompute.computeTarget(start, cog + rot_sgn * 90, radius, options?.useRhumbLine ?? true);
     const arc = rot / 60 * dt; // = rot_sgn * Helper.degrees(sog * dt / radius);
     const startAngle = cog - rot_sgn * 90;
     return { rot, rot_abs, rot_sgn, start, radius, center, arc, startAngle };
