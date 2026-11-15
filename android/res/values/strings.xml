@@ -60,6 +60,9 @@
     <string name="firstStartMessage">You are starting for the first time. Please choose some initial settings. Later you can go to the settings screen via the settings page, android button.</string>
     <string name="endApplication">Really exit AvNav?</string>
     <string name="labelSettingsNmeaFilter">an NMEA filter, use e.g. $RMC or ^$RMC, !AIVDM</string>
+    <string name="labelSettingsAttitudeScreenFacing">direction the device screen faces on the boat</string>
+    <string name="labelSettingsAttitudeCalibrateMount">required before first use and after changing the mount: set to true with the boat level and at rest, roll and pitch then read 0 (any device rotation, also tilted mounts); flag resets automatically</string>
+    <string name="labelSettingsAttitudeMountCalibration">mount calibration written by calibrateMount (only used for the same screenFacing); without it no data is sent</string>
     <string name="labelSettingsNmeaOutFilter">an NMEA filter for outgoing data, use e.g. $RMC or ^$RMC, !AIVDM</string>
     <string name="labelSettingsSendData">send out NMEA on this connection</string>
     <string name="labelSettingsBtDevice">select the bluetooth device</string>
