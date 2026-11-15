@@ -327,7 +327,7 @@ class AVNUtil(object):
     def timeToDatetime(cls, ts=None,localTime=False):
         if ts is None:
             ts=time.time()
-        rt=datetime.datetime.fromtimestamp(ts,tz=datetime.UTC)
+        rt=datetime.datetime.fromtimestamp(ts,tz=datetime.timezone.utc)
         if localTime:
             rt.astimezone(tz= tz.tzlocal())
         return rt
@@ -336,11 +336,11 @@ class AVNUtil(object):
     def datetimeToTsUTC(cls, dt):
         if dt is None:
             return None
-        if dt.tzinfo is None or dt.tzinfo == datetime.UTC:
+        if dt.tzinfo is None or dt.tzinfo == datetime.timezone.utc:
             #assume UTC for naive
-            return dt.replace(tzinfo=datetime.UTC).timestamp()
+            return dt.replace(tzinfo=datetime.timezone.utc).timestamp()
         else:
-            return dt.astimezone(tz=datetime.UTC).timestamp()
+            return dt.astimezone(tz=datetime.timezone.utc).timestamp()
 
     # timedelta total_seconds that is not available in 2.6
     @classmethod
@@ -519,8 +519,8 @@ class AVNUtil(object):
         '''
         if not dt:
             return None
-        if dt.tzinfo is not None and dt.tzinfo != datetime.UTC:
-            dt=dt.astimezone(datetime.UTC)
+        if dt.tzinfo is not None and dt.tzinfo != datetime.timezone.utc:
+            dt=dt.astimezone(datetime.timezone.utc)
         ts=dt.replace(tzinfo=None).isoformat()
         if not ts[-1:]=="Z":
             ts+="Z"

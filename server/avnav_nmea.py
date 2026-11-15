@@ -264,7 +264,7 @@ class NMEAParser(object):
   @classmethod
   def gpsTimeToTime(cls,gpstime,gpsdate=None):
     #we take day/month/year from our system and add everything else from the GPS
-    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'),tzinfo=datetime.UTC)
+    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'),tzinfo=datetime.timezone.utc)
     AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
     if gpsdate is None:
       curdt=AVNUtil.timeToDatetime()
