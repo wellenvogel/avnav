@@ -328,9 +328,12 @@ const computeCpa = (src, dst, options) => {
 const pow2=(x)=>{
     return x*x;
 }
+function hasROT(aisItem) {
+  const rot = Math.abs(aisItem.received.turn || 0); // °/min
+  return isFinite(rot) && rot > 0.5;
+}
 function turnParams(start, rot, cog, sog, dt, options) {
     const rot_abs = Math.abs(rot), rot_sgn = Math.sign(rot);
-    if (rot_abs == 0) return { rot, rot_abs, rot_sgn };
     const radius = sog / Helper.radians(rot_abs) * 60; // m, SOG=[m/s]
     const center = NavCompute.computeTarget(start, cog + rot_sgn * 90, radius, options?.useRhumbLine ?? true);
     const arc = rot / 60 * dt; // = rot_sgn * Helper.degrees(sog * dt / radius);
@@ -357,14 +360,14 @@ const computeCourseVectors = (aisItem, boatCog, boatSog, options) => {
     if (!drawTMV && !drawRMV) return;  // RMV needs TMV even if zero!
     const dt = options.courseVectorTime;
     const cvstart = aisItem.fromEstimated ? aisItem.estimated : aisItem.receivedPos;
-    const turn = turnParams(cvstart, aisItem.received.turn || 0, target_cog, target_sog, dt, options);
-    const curved = options.curved && isFinite(turn.rot_abs) && turn.rot_abs > 0.5;
+    const curved = options.curved && hasROT(aisItem);
     const tmv = new CourseVector();
     const shiftPosition = (pos, dir, dist) => NavCompute.computeTarget(pos, dir, dist, options.useRhumbLine);
     if (!curved){
         tmv.start = cvstart;
         tmv.end = shiftPosition(cvstart, target_cog, target_sog * dt);
     } else{
+        const turn = turnParams(cvstart, aisItem.received.turn || 0, target_cog, target_sog, dt, options);
         tmv.type = CourseVector.T_ARC;
         tmv.start = cvstart;
         tmv.center = turn.center;
@@ -442,8 +445,7 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
         aisItem.receivedPos = new navobjects.Point(parseFloat(ais.lon || 0), parseFloat(ais.lat || 0));
         let aisCourse = (ais.course != null)?parseFloat(ais.course || 0):undefined;
         if (aisSpeed >= options.minAISspeed && aisCourse != null) {
-          const rot = Math.abs(aisItem.received.turn || 0); // °/min
-          const curved = options.curved && isFinite(rot) && rot > 0.5;
+          const curved = options.curved && hasROT(aisItem);
           if (curved) { // estimate rotation and position using ROT
             const turn = turnParams(aisItem.receivedPos, aisItem.received.turn || 0, aisCourse, aisItem.received.speed || 0, aisItem.age, options);
             aisItem.rotation = turn.arc;
