@@ -113,6 +113,7 @@ export interface UploadProgressProps{
     userData?:any;
     percentComplete?:number;
     onCancel?: (userData:UploadProgressProps) => void;
+    heading?:string|React.ReactElement;
 }
 export const UploadProgress=(props:UploadProgressProps) => {
     const doneStyle = {
@@ -120,6 +121,7 @@ export const UploadProgress=(props:UploadProgressProps) => {
     };
     return <div className="downloadProgress">
         <div className="progressContainer">
+            {props.heading && <div className="title">{props.heading}</div>}
             <div className="progressInfo">{(props.loaded || 0) + "/" + (props.total || 0)}</div>
             <div className="progressDisplay">
                 <div className="progressDone" style={doneStyle}></div>

@@ -43,7 +43,7 @@ import Toast from "../components/Toast";
 import {load as yamlLoad} from 'js-yaml';
 import Helper from "../util/helper";
 import {ListItem, ListMainSlot, ListSlot, useDialogContext} from "../components/exports";
-import {DBCancel, DialogButtons, DialogFrame, DialogRow, showPromiseDialogTrue} from "../components/OverlayDialog";
+import {DBCancel, DialogButtons, DialogFrame, showPromiseDialogTrue} from "../components/OverlayDialog";
 import {listItems} from "../util/itemFunctions";
 import DialogButton from "../components/DialogButton";
 import {ConfirmDialog} from "../components/BasicDialogs";
@@ -55,6 +55,7 @@ interface InfoCacheEntry{
 }
 interface PluginCatalogProps{
     url: string|URL
+    selectCallback?:(name:string)=>void
 }
 
 //those should be better move to the item actions
@@ -85,6 +86,7 @@ interface CatalogEntry extends Record<string, any> {
     available?:Record<string, any>;
     _localItem?:Item,
     _updateOptions:UpdateOptions;
+    _selectCallback?:(name:string)=>void;
 }
 const versionCompare=(a:string|number,b:string|number)=>{
     if (a == null || b == null) return false;
@@ -160,6 +162,7 @@ const CatalogItem = (props: CatalogEntry) => {
                 const rs=await showPromiseDialogTrue(dialogContext,(dp)=><ConfirmDialog text={txt} {...dp}/>);
                 if (rs){
                     dialogContext.closeDialog();
+                    if (props._selectCallback) props._selectCallback(USER_PREFIX+props.name)
                     try{
                         const id=await startDownload(props.name,props.download_url);
                         base.log("plugin download started",props.name,id);
@@ -214,6 +217,7 @@ const PluginCatalog=(props:PluginCatalogProps)=>{
                 item._localItem=localItem;
                 item._updateOptions=buildUpdateOptions(item,localItem);
         }
+        item._selectCallback=props.selectCallback;
     }
     return <DialogFrame title={"Plugin Catalog"}>
         {
@@ -265,9 +269,10 @@ const DownloadProgress=(props:DownloadProgressProps)=>{
     },timeOut,true,true)
     if (! progress || progress.done) return null;
     return <UploadProgress
-        loaded={progress.fetchedBytes||0}
-        total={progress.totalBytes||0}
-        percentComplete={progress.percent}
+        heading={"plugin "+progress?.info}
+        loaded={progress?.fetchedBytes||0}
+        total={progress?.totalBytes||0}
+        percentComplete={progress?.percent}
         onCancel={async ()=>{
             await Requests.getJson({
                 type:'plugins',
@@ -281,6 +286,8 @@ const DownloadProgress=(props:DownloadProgressProps)=>{
 export const PluginsPage = (props:PageProps) => {
     const history=useHistory();
     const dialogContext = useDialogContext();
+    const [selectedName, setSelectedName] = useState<string>();
+    const [selectSequence,setSelectSequence]=useState<number>(1);
     const currentButtons=useRef<ButtonDef[]>();
     const infoCache=useRef<Record<string,InfoCacheEntry>>({});
     const statusRef=useRef<ChildStatusProps[]>([]);
@@ -300,7 +307,12 @@ export const PluginsPage = (props:PageProps) => {
     const [uploadProps,uploadAction]=useUploadHelper("plugins");
     const syncAction=useCallback(()=>{
         const url=globalstore.getData(keys.properties.pluginCatalog);
-        dialogContext.showDialog(()=><PluginCatalog url={url}/>)
+        dialogContext.showDialog(()=><PluginCatalog url={url} selectCallback={
+            (name:string)=>{
+                setSelectedName(name);
+                setSelectSequence((old)=>old+1)
+                }
+        }/>)
     },[])
     const buttonActions={
         [ButtonDefs.Upload.name]:{
@@ -346,12 +358,13 @@ export const PluginsPage = (props:PageProps) => {
     return <PageFrame id={props.id}>
         <PageLeft id={props.id} title={getPageTitle(props.id)} >
             <DownloadItemList
+                selectedName={selectedName}
                 className={'StatusView'}
                 itemInfoFunction={ItemStatus}
                 {...uploadProps}
                 type={'plugins'}
                 autoreload={3000}
-                scrollSelected={1}
+                scrollSelected={selectSequence}
             >
 
             </DownloadItemList>
