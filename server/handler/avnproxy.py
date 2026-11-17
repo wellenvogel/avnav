@@ -30,6 +30,7 @@ import urllib.request
 from urllib.error import HTTPError
 
 import avnav_handlerList
+from avnav_downloadmanager import createNoCheckTimeSSLContext
 from avnav_util import AVNUtil, AVNLog, AVNProxyDownload, AVNDownloadError
 from avnav_worker import AVNWorker, WorkerStatus
 from httphandler import AVNHTTPHandler
@@ -72,6 +73,7 @@ class AVNProxy(AVNWorker):
     def handleProxyRequest(self,url,handler:AVNHTTPHandler,requestparam=None):
         status=500
         constructed=url
+        skip_cert_time_check=False
         try:
             constructed=AVNUtil.getUrlFromParam(url)
             request = urllib.request.Request(constructed)
@@ -81,6 +83,8 @@ class AVNProxy(AVNWorker):
                 for k,v in requestparam.items():
                     lk=k.lower()
                     if not lk.startswith("h:"):
+                        if lk == 'a:notime':
+                            skip_cert_time_check=True
                         continue
                     lk=lk[2:]
                     k=k[2:]
@@ -95,7 +99,10 @@ class AVNProxy(AVNWorker):
                 request.add_header(k, v)
             request.method = handler.command
             try:
-                response = urllib.request.urlopen(request)
+                sslcontext=None
+                if skip_cert_time_check:
+                    sslcontext=createNoCheckTimeSSLContext()
+                response = urllib.request.urlopen(request,context=sslcontext)
             except HTTPError as httpError:
                 if httpError.code in self.OK_STATS:
                     response=httpError.file

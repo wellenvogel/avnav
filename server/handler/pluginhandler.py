@@ -1247,7 +1247,8 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         id=self._downloadManager.start(url,filename,
                                        info=name,
                                        maxBytes=maxBytes,
-                                       doneCallback=done)
+                                       doneCallback=done,
+                                       skipTimeCheck=True)
         return AVNUtil.getReturnData(id=id)
 
     def handleSpecialApiRequest(self, command, requestparam, handler):
