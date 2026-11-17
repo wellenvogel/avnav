@@ -49,7 +49,6 @@ from typing import Any
 from typing import Callable
 
 from dateutil.tz import tz
-from sympy import catalan
 
 
 class Enum(set):
