@@ -95,7 +95,7 @@ export const prepareUrl=(url:UrlType, options?:RequestOptions)=>{
 
 };
 
-export const buildProxyUrl=(url:URL|string, baseUrl:URL|string,headers:HeaderType,parameters:Record<string,any>)=>{
+export const buildProxyUrl=(url:URL|string, baseUrl?:URL|string,headers?:HeaderType,parameters?:Record<string,any>)=>{
     if (! (url instanceof URL)){
         url=new URL(url,baseUrl||window.location.href);
     }

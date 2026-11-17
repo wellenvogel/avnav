@@ -32,7 +32,7 @@ import {UploadProgress, useUploadHelper} from "../components/UploadHandler";
 import ItemList, {Item} from "../components/ItemList";
 import {ChildStatus, ChildStatusProps} from "../components/StatusItems";
 import {useTimer} from "../util/UiHelper";
-import Requests from "../util/requests";
+import Requests, {buildProxyUrl} from "../util/requests";
 import {shallowEqual} from "shallow-equal";
 import {useHistory} from "../components/HistoryProvider";
 import ButtonDefs from "../components/ButtonDefs";
@@ -41,7 +41,6 @@ import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import Toast from "../components/Toast";
 import {load as yamlLoad} from 'js-yaml';
-import Helper from "../util/helper";
 import {ListItem, ListMainSlot, ListSlot, useDialogContext} from "../components/exports";
 import {
     DBCancel,
@@ -211,7 +210,7 @@ const PluginCatalog=(props:PluginCatalogProps)=>{
     const [platform,setPlatform]=useState<string>('unknown')
     useEffect(()=>{
         setLoading(LD_CAT | LD_PI|LD_PF);
-        const proxyUrl=Helper.proxyUrl(props.url);
+        const proxyUrl=buildProxyUrl(props.url,undefined,undefined,{'a:notime':true});
         Requests.getHtmlOrText(proxyUrl).then((data:string)=>{
             const catalog=yamlLoad(data);
             setLoading((old)=>old & ~LD_CAT);

@@ -457,12 +457,6 @@ export const getColor=(element:HTMLElement,
     return cv.toRgbString();
 }
 
-export const proxyUrl=(url:string|URL)=>{
-    const urlstr:string=(typeof url == "string") ?url:url.toString();
-    if (urlstr == null) return urlstr
-    return new URL("/proxy/" + encodeURIComponent(urlstr), window.location.href);
-}
-
 Helper.concat=concat;
 Helper.concatsp=concatsp;
 Helper.unsetorTrue=unsetOrTrue;
@@ -479,7 +473,7 @@ Helper.urlToString=urlToString;
 Helper.avNavVersion=avNavVersion;
 Helper.toBoolean=toBoolean;
 Helper.getColor=getColor;
-Helper.proxyUrl=proxyUrl;
+
 
 export default Helper;
 

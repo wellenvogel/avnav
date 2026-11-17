@@ -46,7 +46,7 @@ import navobjects from "../nav/navobjects";
 import olDataTile,{asImageLike} from "ol/DataTile";
 import {PMTiles} from 'pmtiles';
 import {unByKey} from "ol/Observable.js";
-import {fetchWithTimeout} from "../util/requests";
+import {buildProxyUrl, fetchWithTimeout} from "../util/requests";
 import {load as yamlLoad} from 'js-yaml';
 
 
@@ -662,7 +662,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
                 let styleUrl = new URL(style, this.overviewUrl || window.location.href);
                 this.baseUrl = styleUrl.toString();
                 if (this.useProxy && styleUrl.origin !== window.location.origin) {
-                    styleUrl = Helper.proxyUrl(styleUrl);
+                    styleUrl = buildProxyUrl(styleUrl);
                 }
                 const result = await fetchWithTimeout(styleUrl,
                     {timeout: parseInt(globalStore.getData(keys.properties.networkTimeout))})
