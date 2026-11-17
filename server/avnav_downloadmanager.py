@@ -112,6 +112,21 @@ class CancelableHTTPConnection(http.client.HTTPConnection):
       self._tunnel()
 
 
+def createNoCheckTimeSSLContext(host=''):
+    # OpenSSL's X509_V_FLAG_NO_CHECK_TIME (not exposed by name in Python's ssl module)
+    OPENSSL_NO_CHECK_TIME = 0x200000
+    context = ssl.create_default_context()
+    # Check that we are on Python 3.10+ and backed by genuine OpenSSL (not LibreSSL)
+    is_openssl = ssl.OPENSSL_VERSION.startswith("OpenSSL")
+    if sys.version_info >= (3, 10) and is_openssl:
+        try:
+            context.verify_flags |= OPENSSL_NO_CHECK_TIME
+            AVNLog.info("creating SSL context without time check for %s", str(host))
+        except (ssl.SSLError, ValueError, OSError):
+            pass
+    return context
+
+
 class CancelableHTTPSConnection(
     CancelableHTTPConnection, http.client.HTTPSConnection
 ):
@@ -125,9 +140,12 @@ class CancelableHTTPSConnection(
       source_address: Optional[tuple[str, int]] = None,
       context: Optional[ssl.SSLContext] = None,
       blocksize: int = 8192,
+      skip_time_check: bool = False, #do not verify cert validity
       cancel_event: Optional[threading.Event] = None,
       sock_callback: Optional[Callable[[socket.socket], None]] = None,
   ) -> None:
+    if context is None and skip_time_check:
+        context=createNoCheckTimeSSLContext(host)
     http.client.HTTPSConnection.__init__(
         self,
         host,
@@ -178,10 +196,12 @@ class CancelableHTTPSHandler(urllib.request.HTTPSHandler):
       self,
       cancel_event: threading.Event,
       sock_callback: Callable[[socket.socket], None],
+      skip_time_check: bool = False,
   ) -> None:
     super().__init__()
     self.cancel_event = cancel_event
     self.sock_callback = sock_callback
+    self.skip_time_check = skip_time_check
 
   def https_open(self, req: urllib.request.Request) -> http.client.HTTPResponse:
     return self.do_open(
@@ -189,6 +209,7 @@ class CancelableHTTPSHandler(urllib.request.HTTPSHandler):
             host,
             cancel_event=self.cancel_event,
             sock_callback=self.sock_callback,
+            skip_time_check=self.skip_time_check,
             **kw,
         ),
         req,
@@ -226,13 +247,13 @@ class CancelableRedirectHandler(urllib.request.HTTPRedirectHandler):
 
 class CancelableRequest:
 
-  def __init__(self) -> None:
+  def __init__(self,skip_time_check:bool=False) -> None:
     self.cancel_event = threading.Event()
     self._sock: Optional[socket.socket] = None
     self._lock = threading.Lock()
     self.opener = urllib.request.build_opener(
         CancelableHTTPHandler(self.cancel_event, self._set_sock),
-        CancelableHTTPSHandler(self.cancel_event, self._set_sock),
+        CancelableHTTPSHandler(self.cancel_event, self._set_sock,skip_time_check=skip_time_check),
         CancelableRedirectHandler(self.cancel_event, self._reset_sock),
     )
 
@@ -380,7 +401,8 @@ class AVNDownloadJob:
     def __init__(self,id, url:str,targetFile:str,method:str='GET',headers=None,
                  info=None,bufferSize=8192,timeout:float=30.0,
                  maxBytes=None,
-                 doneCallback=None
+                 doneCallback=None,
+                 skipTimeCheck=False
                  ):
         self._targetFile = targetFile
         self._thread=None
@@ -398,6 +420,7 @@ class AVNDownloadJob:
         self._doneCallback=doneCallback
         self.id=id
         self._event=threading.Event()
+        self._skipTimeCheck=skipTimeCheck
 
     def start(self):
         with self._lock:
@@ -427,7 +450,7 @@ class AVNDownloadJob:
         AVNLog.info("download started for %d: %s",self.id,self._url)
         try:
             with self._lock:
-                self._controler=CancelableRequest()
+                self._controler=CancelableRequest(skip_time_check=self._skipTimeCheck)
                 self._progress.phase=DownloadProgress.P_DOWNLOAD
             self._controler.fetch(self._url,self._targetFile, method=self._method,
                                   headers=self._headers,
@@ -484,7 +507,9 @@ class AVNDownloadManager:
         self._id = self._id+1
         return self._id
 
-    def start(self,url:str,filename:str,method='GET',headers=None,info=None,maxBytes=None,doneCallback=None):
+    def start(self,url:str,filename:str,method='GET',headers=None,info=None,
+              maxBytes=None,doneCallback=None,
+              skipTimeCheck=False):
         id=None
         with self._lock:
            if self._running is not None:
@@ -494,7 +519,7 @@ class AVNDownloadManager:
            id=self._getId()
            self._running = AVNDownloadJob(id,url,filename,method=method,
                                           headers=headers,info=info,maxBytes=maxBytes,
-                                          doneCallback=doneCallback)
+                                          doneCallback=doneCallback, skipTimeCheck=skipTimeCheck)
         self._running.start()
         return id
 
