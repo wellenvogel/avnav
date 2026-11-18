@@ -47,6 +47,7 @@ import java.util.Map;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
@@ -136,17 +137,23 @@ public class Proxy extends Worker implements INavRequestHandler {
         throw new Exception("no api requests for proxy");
     }
 
-    ExtendedWebResourceResponse handleProxy(String url,String method,Map<String,String> headers, boolean skipTimeCheck) throws IOException, HttpException, NoSuchAlgorithmException, URISyntaxException {
+    ExtendedWebResourceResponse handleProxy(String url,String method,Map<String,String> headers,
+                                            boolean skipTimeCheck,int timeout) throws IOException, HttpException, NoSuchAlgorithmException, URISyntaxException {
         HttpRequestExecutor httpexecutor = new HttpRequestExecutor();
 
         HttpContext context = new BasicHttpContext(null);
         URL parsed=new URL(url);
 
         DefaultHttpClientConnection conn = new DefaultHttpClientConnection();
-        ConnectionReuseStrategy connStrategy = new DefaultConnectionReuseStrategy();
         context.setAttribute(ExecutionContext.HTTP_CONNECTION, conn);
         HttpHost host;
         if (!conn.isOpen()) {
+            int port=parsed.getPort();
+            if (port < 0) port=443;
+            host=new HttpHost(parsed.getHost(),port);
+            Socket socket = new Socket();
+            socket.setSoTimeout(timeout);
+            socket.connect(new java.net.InetSocketAddress(parsed.getHost(), port), timeout);
             if (parsed.getProtocol().toLowerCase().equals("https")){
                 SSLContext sslcontext = SSLContext.getInstance(IgnoreExpiredTrustmanager.getSSlContextProtocol());
                 if (skipTimeCheck) {
@@ -157,24 +164,16 @@ public class Proxy extends Worker implements INavRequestHandler {
                         AvnLog.e("cannot create trustmanager",e);
                     }
                 }
-                SocketFactory sf = sslcontext.getSocketFactory();
-                int port=parsed.getPort();
-                if (port < 0) port=443;
-                host=new HttpHost(parsed.getHost(),port);
-                SSLSocket socket = (SSLSocket) sf.createSocket(parsed.getHost(), port);
-                IgnoreExpiredTrustmanager.ensureTls12Enabled(socket);
-                conn.bind(socket, params);
+                SSLSocketFactory sf = sslcontext.getSocketFactory();
+                SSLSocket sslSocket = (SSLSocket) sf.createSocket(socket, parsed.getHost(), port, true);
+                IgnoreExpiredTrustmanager.ensureTls12Enabled(sslSocket);
+                conn.bind(sslSocket, params);
             }
             else {
-                int port=parsed.getPort();
-                if (port < 0) port=80;
-                host=new HttpHost(parsed.getHost(),port);
-                Socket socket = new Socket(parsed.getHost(), port);
                 conn.bind(socket, params);
             }
             context.setAttribute(ExecutionContext.HTTP_TARGET_HOST, host);
         }
-        String path=parsed.getPath();
         BasicHttpRequest request = new BasicHttpRequest(method,
                 AvnUtil.encodeUrlForClient(parsed));
         request.setParams(params);
@@ -244,11 +243,19 @@ public class Proxy extends Worker implements INavRequestHandler {
             existingHeaders.put(k.toLowerCase(),k);
         }
         boolean skipTimeCheck=false;
+        int timeout=30000;
         for (String s: uri.getQueryParameterNames()) {
             String sk=s.toLowerCase();
             if (! sk.startsWith("h:")) {
                 if ("a:notime".equals(sk)) {
                     skipTimeCheck=true;
+                }
+                if ("a:timeout".equals(sk)) {
+                    try {
+                        timeout=Integer.parseInt(uri.getQueryParameter(s))*1000;
+                    } catch (Throwable e) {
+                        AvnLog.e("invalid timeout "+uri.getQueryParameter(s));
+                    }
                 }
                 continue;
             }
@@ -261,7 +268,7 @@ public class Proxy extends Worker implements INavRequestHandler {
                 headers.put(key, v);
             }
         }
-        return handleProxy(path,method,headers,skipTimeCheck);
+        return handleProxy(path,method,headers,skipTimeCheck,timeout);
     }
 
     @Override
