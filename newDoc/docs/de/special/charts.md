@@ -136,16 +136,29 @@ Um eine Karte zu nutzen, benötigt AvNav eine sogenannte Kartendefinition. Für 
 
 Eine solche Definition beschreibt, aus welchen Schichten (Layern) diese Karte besteht, welchen Typ diese Layer haben und wo die Daten dafür herkommen. Siehe auch [Technischer Hintergrund](#background).
 
+Das Format hängt davon ab, wo die Definition angegeben wird:
+
+| Ort der Definition | Erforderliches Format |
+| --- | --- |
+| Upload auf der Kartenseite | Eine `.xml`-Datei mit einem oder mehreren `TileMap`-Elementen. Eine JSON-Datei kann hier nicht als Kartendefinition hochgeladen werden. |
+| `plugin.json` eines Plugins | Ein JSON-Objekt mit einem `charts`-Array. Jede Karte hat einen `name` und entweder ein `layers`-Array oder eine XML-Übersichts-URL (siehe unten). |
+| Callback eines Python-Kartenproviders | Eine Liste von Kartenobjekten mit der gleichen Struktur wie die Einträge im `charts`-Array der `plugin.json`. |
+| `overviewUrl` oder die automatisch angeforderte `avnav.xml` | XML mit den Layerdefinitionen, keine JSON-Layerliste. |
+
+Eine JSON-Layerliste ist die entsprechende *Datendarstellung* der XML-Layer, aber kein austauschbares Upload-Dateiformat. In einem Plugin gehört diese Liste in die Eigenschaft `layers` einer Karte, wie unten gezeigt.
+
 Der einfachste Fall einer solchen Definition in Form einer XML-Datei für den Online-Zugriff auf [OpenStreetMap Karten](https://www.openstreetmap.de/) kann z.B. so aussehen:
 {: #exampledef }
 
 ``` xml
 <?xml version="1.0" encoding="UTF-8" ?>
+ <!-- Ein Rasterlayer; profile bestimmt den Layertyp, href den Kachelserver. -->
  <TileMap 
-    type="zxy"
+    profile="zxy"
     href="http://a.tile.openstreetmap.org"
     minzoom="4"
     maxzoom="20">
+    <!-- Geografische Grenzen in Grad: West, Süd, Ost, Nord. -->
     <BoundingBox minlon="-20" minlat="10" maxlon="30" maxlat="70"/>
  </TileMap>
 ```
@@ -231,13 +244,13 @@ Der dort übergebene Callback wird gerufen, wenn AvNav die Liste seiner Karten e
     Wenn die Kartendefinition einen Parameter `overviewUrl` enthält, wird diese genutzt, sonst wird der Parameter `url` genutzt und `/avnav.xml` angefügt.
     Eine solche zweistufige Kartendefinition kann z.B. so aussehen:
 
-    ```
+    ``` json
     {
         "charts": [
           {
             "name": "test-chart",
-            "icon": "compass.svg"
-            "url": "http://$HOST:8002/charts/testchart"
+            "icon": "compass.svg",
+            "url": "http://$HOST:8082/charts/testchart"
           }
         ]
     }    

@@ -134,16 +134,29 @@ To use a chart, AvNav needs a so-called chart definition. For the [own chart typ
 
 Such a definition describes which layers this chart consists of, what type these layers have, and where the data for them comes from. See also [Technical background](#background).
 
+Choose the format according to where you supply the definition:
+
+| Where the definition is supplied | Required format |
+| --- | --- |
+| Upload on the Charts page | An `.xml` file containing one or more `TileMap` elements. A JSON file cannot be uploaded as a chart definition here. |
+| A plugin's `plugin.json` | A JSON object with a `charts` array. Each chart has a `name` and either a `layers` array or an XML overview URL (see below). |
+| A Python chart-provider callback | A list of chart objects, with the same structure as the entries in `plugin.json`'s `charts` array. |
+| An `overviewUrl`, or the automatically requested `avnav.xml` | XML containing the layer definitions, not a JSON layer list. |
+
+A JSON layer list is the equivalent *data representation* of the XML layers; it is not an interchangeable upload-file format. For a plugin, put that list inside a chart's `layers` property, as shown below.
+
 The simplest case of such a definition in the form of an XML file for online access to [OpenStreetMap charts](https://www.openstreetmap.org/) can, for example, look like this:
 {: #exampledef }
 
 ``` xml
 <?xml version="1.0" encoding="UTF-8" ?>
+ <!-- One raster layer; profile selects the layer type, href its tile server. -->
  <TileMap 
-    type="zxy"
+    profile="zxy"
     href="http://a.tile.openstreetmap.org"
     minzoom="4"
     maxzoom="20">
+    <!-- Geographic bounds in degrees: west, south, east, north. -->
     <BoundingBox minlon="-20" minlat="10" maxlon="30" maxlat="70"/>
  </TileMap>
 ```
@@ -229,13 +242,13 @@ The callback passed there is called when AvNav wants to determine the list of it
     If the chart definition contains an `overviewUrl` parameter, this is used; otherwise, the `url` parameter is used and `/avnav.xml` is appended.
     Such a two-step chart definition can, for example, look like this:
 
-    ```
+    ``` json
     {
         "charts": [
           {
             "name": "test-chart",
-            "icon": "compass.svg"
-            "url": "http://$HOST:8002/charts/testchart"
+            "icon": "compass.svg",
+            "url": "http://$HOST:8082/charts/testchart"
           }
         ]
     }    
