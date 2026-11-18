@@ -56,6 +56,7 @@ import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.DownloadManager;
 import de.wellenvogel.avnav.util.IgnoreExpiredTrustmanager;
 
 /*
@@ -139,53 +140,8 @@ public class Proxy extends Worker implements INavRequestHandler {
 
     ExtendedWebResourceResponse handleProxy(String url,String method,Map<String,String> headers,
                                             boolean skipTimeCheck,int timeout) throws IOException, HttpException, NoSuchAlgorithmException, URISyntaxException {
-        HttpRequestExecutor httpexecutor = new HttpRequestExecutor();
-
-        HttpContext context = new BasicHttpContext(null);
         URL parsed=new URL(url);
-
-        DefaultHttpClientConnection conn = new DefaultHttpClientConnection();
-        context.setAttribute(ExecutionContext.HTTP_CONNECTION, conn);
-        HttpHost host;
-        if (!conn.isOpen()) {
-            int port=parsed.getPort();
-            if (port < 0) port=443;
-            host=new HttpHost(parsed.getHost(),port);
-            Socket socket = new Socket();
-            socket.setSoTimeout(timeout);
-            socket.connect(new java.net.InetSocketAddress(parsed.getHost(), port), timeout);
-            if (parsed.getProtocol().toLowerCase().equals("https")){
-                SSLContext sslcontext = SSLContext.getInstance(IgnoreExpiredTrustmanager.getSSlContextProtocol());
-                if (skipTimeCheck) {
-                    try {
-                        TrustManager [] trustManagers=IgnoreExpiredTrustmanager.getDefaultTrustManagers();
-                        sslcontext.init(null, trustManagers, null);
-                    } catch (Exception e) {
-                        AvnLog.e("cannot create trustmanager",e);
-                    }
-                }
-                SSLSocketFactory sf = sslcontext.getSocketFactory();
-                SSLSocket sslSocket = (SSLSocket) sf.createSocket(socket, parsed.getHost(), port, true);
-                IgnoreExpiredTrustmanager.ensureTls12Enabled(sslSocket);
-                conn.bind(sslSocket, params);
-            }
-            else {
-                conn.bind(socket, params);
-            }
-            context.setAttribute(ExecutionContext.HTTP_TARGET_HOST, host);
-        }
-        BasicHttpRequest request = new BasicHttpRequest(method,
-                AvnUtil.encodeUrlForClient(parsed));
-        request.setParams(params);
-        for (String k:headers.keySet()) {
-            if (k.toLowerCase().equals("host")) continue;
-            Header h=new BasicHeader(k,headers.get(k));
-            request.setHeader(h);
-        }
-        httpexecutor.preProcess(request, httpproc, context);
-        HttpResponse response = httpexecutor.execute(request, conn, context);
-        response.setParams(params);
-        httpexecutor.postProcess(response, httpproc, context);
+        HttpResponse response= DownloadManager.clientRequest(parsed,method,headers,skipTimeCheck,timeout);
         int status=response.getStatusLine().getStatusCode();
         if ( status < 200 || status > 399){
             return new ExtendedWebResourceResponse(status,response.getStatusLine().getReasonPhrase());
@@ -267,6 +223,7 @@ public class Proxy extends Worker implements INavRequestHandler {
                 if (key == null) key=sk;
                 headers.put(key, v);
             }
+            headers.remove("host");
         }
         return handleProxy(path,method,headers,skipTimeCheck,timeout);
     }
