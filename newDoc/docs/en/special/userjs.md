@@ -192,10 +192,30 @@ For a self-written widget, the following functions/properties can be implemented
 | unit | String (optional) | all | A default unit |
 | formatter | Function (optional) | defaultWidget, radialGauge, linearGauge | A formatter for the value. For the defaultWidget, this function must be specified. |
 | translateFunction | Function (optional) | all except map | This function is called with the current values as parameters (as specified in storeKeys) and must return the values calculated from them. If no custom renderXXX function is to be used, a conversion of values can occur here before rendering. |
-| initFunction { #initfunction } | Function (optional) | userWidget, map | If present, this function is called once when the widget is created. The widget context is available as a parameter (and as this). This object has an eventHandler property – the handlers used in renderHTML must be registered here. With the triggerRedraw function on the widget context, a re-call of the renderXXX functions can be forced. The 2nd parameter contains the properties of the widget. These include, in particular, all editable widget parameters that have been defined. |
+| initFunction { #initfunction } | Function (optional) | userWidget, map | If present, this function is called once for each widget instance when it is created (see [lifetime](#widget-lifetime)). The widget context is available as a parameter (and as this). This object has an eventHandler property – the handlers used in renderHTML must be registered here. With the triggerRedraw function on the widget context, a re-call of the renderXXX functions can be forced. The 2nd parameter contains the properties of the widget. These include, in particular, all editable widget parameters that have been defined. |
 | finalizeFunction | Function (optional) | userWidget, map | If present, this function is called before the widget is no longer used. The "this" variable again points to the widget context. Additionally, the context is also available as the first parameter – as with the initFunction. |
 
 After the definition, the widget must be made known to AvNav (api.registerWidget).
+
+### Widget lifetime { #widget-lifetime }
+
+A widget can be destroyed and recreated while the viewer is running, for example
+when resizing the display, changing pages or opening a dialog. `initFunction` is
+therefore not a once-per-session callback. `finalizeFunction` runs when the old
+instance is removed; the replacement receives a new context and its own
+`initFunction` call. Data stored on `this` does not survive that replacement.
+
+Use the context for instance-local data and resources. Stop timers and remove
+listeners created for that instance in `finalizeFunction`.
+
+For data that should survive widget recreation, a variable in your JavaScript
+module can hold it. That variable is shared by instances of the widget, so decide
+explicitly whether sharing is appropriate. It survives recreation, not a browser
+reload. Avoid putting such data on `window`, where names can collide with other
+plugins. A module-level timer needs module-level cleanup: return a cleanup
+function from the module initialization function to stop it when the module is
+reloaded. Browser timers may pause in background tabs or while a device sleeps;
+this is not a substitute for continuous server-side collection.
 
 ### Widget Context { #widgetcontext }
 
@@ -220,6 +240,7 @@ let userWidget={
 ```
 
 User data can be stored in the WidgetContext that is needed in successive calls.  
+The context belongs to one widget instance; see [lifetime](#widget-lifetime) before using it for persistent data.
 Furthermore, it contains some functions that can be called by the widget code.
 
 | Name | Widget | Parameter | Description |
