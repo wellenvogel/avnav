@@ -228,14 +228,13 @@ export const getTemplate=(name:string)=>{
         return JSON.stringify({});
     }
     if (ext === 'gpx'){
-        return `
-<?xml version="1.0" encoding="UTF-8"?>
+        return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx>
 <!--<rte>
     <name>default</name>
     <rtept lon="13.540864957547065" lat="54.29884367794568">
     <name>WP 1</name>
-    </rte
+    </rtept>
 </rte> -->
 <!--<trk>
     <name>avnav-track-2025-04-08</name>
