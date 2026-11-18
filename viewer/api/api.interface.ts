@@ -378,6 +378,7 @@ export interface LayerOptionsBase extends Record<string, any> {
 }
 export interface VectorLayerOptions extends LayerOptionsBase {
     useproxy?:boolean;         //use a proxy to avoid cors issues
+    useProxy?:boolean;         //alias for useproxy
     maplibre: MapLibreOptions; //the options as provided to the MapLibre map
                                //must include a "style" property
 }

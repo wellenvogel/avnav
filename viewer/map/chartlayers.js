@@ -651,7 +651,10 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     }
 
     async prepare(options, source) {
-        this.useProxy=!!options.useproxy;
+        // XML attributes are lower-cased strings; JSON can use the documented alias.
+        const useProxy=options.useproxy ?? options.useProxy;
+        this.useProxy=typeof useProxy === 'string'
+            ? useProxy.toLowerCase() === 'true' : !!useProxy;
         const maplibreCfg=options.maplibre||{};
         this.baseUrl = this.overviewUrl || window.location.href;
         const style=maplibreCfg.style||options.style||options.styleUrl||
