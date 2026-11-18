@@ -442,7 +442,7 @@ const keys:Record<string,KeyType>={
         aisIconScale: new Property(1,"Icon Scale",PropertyType.RANGE, [0.5,5,0.1],"the relative size of the AIS target icons"),
         aisClassbShrink: new Property(0.6,"Class B rel size",PropertyType.RANGE, [0.1,2,0.1],"relative size for AIS class B targets compared to class A targets"),
         aisMinDisplaySpeed: new Property(0.2,"boat/target below (kn) not moving",PropertyType.RANGE,[0.05,40],"If an AIS target or the boat is below this speed (SOG) it is considered to not moving for the AIS computations"),
-        aisOnlyShowMoving: new Property(false,"only show moving targets",PropertyType.CHECKBOX,undefined,"if set only show AIS targets that are moving"),
+        aisOnlyShowMoving: new Property(false,"hide moored targets",PropertyType.CHECKBOX,undefined,"Hide slow class A targets reporting moored and slow class B targets. Keep anchored vessels and navigation aids visible. The speed threshold below still applies."),
         aisListUpdateTime: new Property(5,"update time(s) for list",PropertyType.RANGE,[1,20],"time in seconds between two updates of the list of AIS targets"),
         aisReducedList: new Property(false,"reduce details in list",PropertyType.CHECKBOX,undefined,"if set show less information for each target in the list of AIS targets"),
         aisHideTime: new Property(15,"hide time(s)",PropertyType.RANGE,[1,3600],"If you hide an AIS target from the info dialog it will remain hidden for this time (in seconds)"),
