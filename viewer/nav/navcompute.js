@@ -197,7 +197,7 @@ NavCompute.computeLegInfo=function(target,gps,opt_start){
                 let targetTime = rt.markerDistance / rt.markerVmg;
                 rt.markerTtgVmg=targetTime;
                 if (gps.epochms != null) {
-                    let targetDate = new Date(Math.round((gps.epochms+targetTime)*1000));
+                    let targetDate = new Date(Math.round(gps.epochms+targetTime*1000));
                     rt.markerEta = targetDate;
                 }
             }
