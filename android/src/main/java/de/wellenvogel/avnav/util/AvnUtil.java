@@ -24,6 +24,9 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -473,20 +476,51 @@ public class AvnUtil {
         result = result && fileOrFolder.delete();
         return result;
     }
-
-    public static String encodeUrlPath(String path) throws UnsupportedEncodingException {
-        String [] segments=path.split("/");
-        StringBuilder res=new StringBuilder();
-        boolean first=true;
-        for (String segment:segments){
-            String encoded= URLEncoder.encode(segment,"UTF-8").replace("+","%20");
-            if (first) {
-                first=false;
-                res.append(encoded);
+    private static String encodeRawQuery(String rawQuery, String charset)
+            throws UnsupportedEncodingException {
+        StringBuilder sb = new StringBuilder();
+        for (String pair : rawQuery.split("&")) {
+            if (sb.length() > 0) {
+                sb.append('&');
             }
-            else res.append('/').append(encoded);
+            int eqIdx = pair.indexOf('=');
+            if (eqIdx >= 0) {
+                String key = pair.substring(0, eqIdx);
+                String value = pair.substring(eqIdx + 1);
+                sb.append(URLEncoder.encode(key, charset))
+                        .append('=')
+                        .append(URLEncoder.encode(value, charset));
+            } else {
+                sb.append(URLEncoder.encode(pair, charset));
+            }
         }
-        return res.toString();
+        return sb.toString();
+    }
+    public static String encodeUrlForClient(URL url) throws UnsupportedEncodingException, URISyntaxException {
+        String encodedQuery = null;
+        if (url.getQuery() != null && !url.getQuery().isEmpty()) {
+            encodedQuery = encodeRawQuery(url.getQuery(), "UTF-8");
+        }
+        URI uri = new URI(
+                url.getProtocol(),
+                url.getUserInfo(),
+                url.getHost(),
+                url.getPort(),
+                url.getPath(),
+                null,
+                url.getRef()
+        );
+        StringBuilder requestUri = new StringBuilder(uri.toASCIIString());
+        if (encodedQuery != null) {
+            // Insert query before any fragment (#) if present
+            int hashIndex = requestUri.indexOf("#");
+            if (hashIndex != -1) {
+                requestUri.insert(hashIndex, "?" + encodedQuery);
+            } else {
+                requestUri.append("?").append(encodedQuery);
+            }
+        }
+        return requestUri.toString();
     }
 
 }

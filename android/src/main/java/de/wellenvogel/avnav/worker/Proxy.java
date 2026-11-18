@@ -2,6 +2,7 @@ package de.wellenvogel.avnav.worker;
 
 import android.net.Uri;
 import android.os.Build;
+import android.util.Base64;
 
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.Header;
@@ -34,8 +35,11 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
@@ -130,7 +134,7 @@ public class Proxy extends Worker implements INavRequestHandler {
         throw new Exception("no api requests for proxy");
     }
 
-    ExtendedWebResourceResponse handleProxy(String url,String method,Map<String,String> headers) throws IOException, HttpException, NoSuchAlgorithmException {
+    ExtendedWebResourceResponse handleProxy(String url,String method,Map<String,String> headers) throws IOException, HttpException, NoSuchAlgorithmException, URISyntaxException {
         HttpRequestExecutor httpexecutor = new HttpRequestExecutor();
 
         HttpContext context = new BasicHttpContext(null);
@@ -161,8 +165,7 @@ public class Proxy extends Worker implements INavRequestHandler {
         }
         String path=parsed.getPath();
         BasicHttpRequest request = new BasicHttpRequest(method,
-                AvnUtil.encodeUrlPath(path)+
-                        "?"+parsed.getQuery());
+                AvnUtil.encodeUrlForClient(parsed));
         request.setParams(params);
         for (String k:headers.keySet()) {
             if (k.toLowerCase().equals("host")) continue;
@@ -209,6 +212,12 @@ public class Proxy extends Worker implements INavRequestHandler {
         return rt;
     }
 
+    public static String decodeUrlFromPath(String encoded) {
+        // Base64.URL_SAFE handles '-' and '_' and tolerates missing '=' padding
+        byte[] decodedBytes = Base64.decode(encoded, Base64.URL_SAFE);
+        return new String(decodedBytes, StandardCharsets.UTF_8);
+    }
+
     @Override
     public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
         if (!isEnabled()) throw new Exception("proxy disabled");
@@ -218,7 +227,7 @@ public class Proxy extends Worker implements INavRequestHandler {
         if (path.startsWith("/")) path = path.substring(1);
         if (!path.startsWith(getPrefix())) return null;
         path = path.substring((getPrefix().length() + 1));
-        path= URLDecoder.decode(path, "UTF-8");
+        path= decodeUrlFromPath(path);
         HashMap<String,String> existingHeaders=new HashMap<>();
         for (String k:headers.keySet()){
             existingHeaders.put(k.toLowerCase(),k);

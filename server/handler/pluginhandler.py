@@ -1293,7 +1293,6 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             name=AVNUtil.getHttpRequestParam(requestparam,"name",mantadory=True)
             url=AVNUtil.getHttpRequestParam(requestparam,"url",mantadory=True)
             overwrite=AVNUtil.getHttpRequestFlag(requestparam,"overwrite",mantadory=False)
-            url=AVNUtil.getUrlFromParam(url)
             AVNLog.info(f"request external download for plugin {name} from {url}")
             return self._handleExternalDownload(name,url,overwrite=overwrite)
         if command == 'downloadStatus':

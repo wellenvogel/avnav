@@ -24,6 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import base64
 import datetime
 import glob
 import io
@@ -581,12 +582,17 @@ class AVNUtil(object):
         return flagString.lower() == 'true'
 
     @classmethod
-    def getUrlFromParam(cls,urlparam):
-        if urlparam is None:
+    def getUrlFromPath(cls,urlpath):
+        if urlpath is None:
             return None
-        parsed = urllib.parse.urlparse(urlparam)
-        parsed = parsed._replace(path=urllib.parse.quote_plus(parsed.path, safe='/').replace('+', '%20'))
-        return urllib.parse.urlunparse(parsed)
+        # Restore stripped '=' padding to make length a multiple of 4
+        padding_needed = (4 - len(urlpath) % 4) % 4
+        padded = urlpath + ("=" * padding_needed)
+
+        # Decode URL-safe Base64 bytes and convert back to UTF-8 string
+        decoded_bytes = base64.urlsafe_b64decode(padded)
+        return decoded_bytes.decode("utf-8")
+
 
     @classmethod
     def getReturnData(cls, error=None, **kwargs):

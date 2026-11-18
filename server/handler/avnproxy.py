@@ -75,7 +75,7 @@ class AVNProxy(AVNWorker):
         constructed=url
         skip_cert_time_check=False
         try:
-            constructed=AVNUtil.getUrlFromParam(url)
+            constructed=url
             request = urllib.request.Request(constructed)
             headers = handler.headers
             lcmap = set() #keep the lower case header names to avoid later override
@@ -131,7 +131,7 @@ class AVNProxy(AVNWorker):
         raise Exception(f"invalid proxy command: {command}")
 
     def handlePathRequest(self, path, requestparam, server=None, handler=None):
-        return self.handleProxyRequest(path, handler,requestparam)
+        return self.handleProxyRequest(AVNUtil.getUrlFromPath(path), handler,requestparam)
 
     def getHandledPath(self):
         return "/"+self.ATYPE
