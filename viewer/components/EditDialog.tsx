@@ -41,6 +41,7 @@ export const EditDialog = ({data, title, language, resolveFunction,
     const flask = useRef<typeof CodeFlask>();
     const editElement = useRef();
     const [changed, setChanged] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
     const everChanged=useRef(false);
     if (changed)everChanged.current=true;
@@ -93,20 +94,24 @@ export const EditDialog = ({data, title, language, resolveFunction,
             ...ButtonDefs.DBSave,
             close: false,
             onClick: () => {
+                const savedText = flask.current.getCode();
+                setSaving(true);
                 setChanged(false);
                 setCollapsed(false);
                 promiseResolveHelper({
                     ok: ()=>{
-                        setChanged(false);
+                        setSaving(false);
+                        setChanged(flask.current.getCode() !== savedText);
                     },
                     err: (e) => {
+                        setSaving(false);
                         if (e) Toast(e);
                         setChanged(true)
                     }
-                }, saveFunction, flask.current.getCode())
+                }, saveFunction, savedText)
             },
             visible: !!saveFunction,
-            disabled: !changed
+            disabled: saving || !changed
         },
         DBCancel(),
         DBOk(() => {
