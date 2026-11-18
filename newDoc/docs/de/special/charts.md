@@ -422,6 +422,11 @@ Parameter
 | maplibre | ja | ein Objekt, das direkt als Eigenschaften an die [MapLibre Map](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/) übergeben wird |
 | useProxy | ja | Wenn Vektordaten von einem Server geladen werden, erfordert das korrekte [CORS](https://developer.mozilla.org/de/docs/Web/HTTP/Guides/CORS) Einstellungen auf diesem Server. Sonst verweigert der Browser das Laden der Daten. Da man diese Server nicht immer unter Kontrolle hat, gibt es die Möglichkeiten, die Anfragen über den AvNav Server zu leiten. Da die AvNav-Webseite ja auch von diesem Server kam, tritt dabei das CORS Problem nicht auf. Das funktioniert natürlich nur, wenn der AvNav Server den Kartenserver auch direkt erreichen kann |
 
+Mit `useProxy: true` wird der Proxy aktiviert, mit `false` deaktiviert
+(Standard). Der kleingeschriebene Alias `useproxy` wird ebenfalls akzeptiert
+und hat Vorrang, wenn beide angegeben sind. In XML werden die Attribute
+`useProxy="true"` oder `useProxy="false"` verwendet.
+
 Der **style** Parameter kann auf verschiedene Arten angegeben werden:
 {: #styleparameter }
 
