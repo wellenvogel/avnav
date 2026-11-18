@@ -1,9 +1,5 @@
 package de.wellenvogel.avnav.util;
 
-import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpsConfigurator;
-import com.sun.net.httpserver.HttpsServer;
-
 import org.apache.http.HttpResponse;
 import org.junit.After;
 import org.junit.Before;
@@ -11,13 +7,24 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,31 +34,119 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
 import static org.junit.Assert.*;
 
 public class DownloadManagerTest {
-    private HttpServer server;
+    private TestServer server;
     private File directory;
     private URL base;
 
     @Before
     public void setUp() throws Exception {
-        directory = Files.createTempDirectory("download-manager-test").toFile();
-        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.start();
-        base = new URL("http://127.0.0.1:" + server.getAddress().getPort() + "/");
+        directory = Files.createTempDirectory(Paths.get("."), "download-manager-test-").toFile();
+        server = new TestServer(null);
+        base = new URL("http://127.0.0.1:" + server.port() + "/");
     }
 
     @After
-    public void tearDown() {
-        server.stop(0);
-        File[] files = directory.listFiles();
-        if (files != null) {
-            for (File file : files) assertTrue(file.delete());
+    public void tearDown() throws Exception {
+        try {
+            if (server != null) server.close();
+        } finally {
+            if (directory != null) {
+                File[] files = directory.listFiles();
+                if (files != null) {
+                    for (File file : files) assertTrue(file.delete());
+                }
+                assertTrue(directory.delete());
+            }
         }
-        assertTrue(directory.delete());
+    }
+
+    @FunctionalInterface
+    private interface Handler {
+        void handle(Map<String, String> headers, OutputStream output) throws Exception;
+    }
+
+    private static class TestServer implements AutoCloseable {
+        private final ServerSocket listener;
+        private final Thread thread;
+        private final boolean tls;
+        private final Map<String, Handler> handlers = new ConcurrentHashMap<>();
+        private final AtomicReference<Throwable> failure = new AtomicReference<>();
+        private volatile Socket current;
+
+        TestServer(SSLContext context) throws IOException {
+            tls = context != null;
+            listener = context == null ? new ServerSocket() :
+                    context.getServerSocketFactory().createServerSocket();
+            listener.bind(new InetSocketAddress("127.0.0.1", 0));
+            thread = new Thread(this::serve, "download-test-server");
+            thread.setDaemon(true);
+            thread.start();
+        }
+
+        int port() {
+            return listener.getLocalPort();
+        }
+
+        void on(String path, Handler handler) {
+            handlers.put(path, handler);
+        }
+
+        private void serve() {
+            while (!listener.isClosed()) {
+                boolean requestReceived = false;
+                try (Socket socket = listener.accept()) {
+                    current = socket;
+                    socket.setSoTimeout(5000);
+                    BufferedReader input = new BufferedReader(new InputStreamReader(
+                            socket.getInputStream(), StandardCharsets.US_ASCII));
+                    String request = input.readLine();
+                    if (request == null) continue;
+                    requestReceived = true;
+                    String[] parts = request.split(" ");
+                    if (parts.length < 2) throw new IOException("invalid request: " + request);
+                    Map<String, String> headers = new HashMap<>();
+                    String line;
+                    while ((line = input.readLine()) != null && !line.isEmpty()) {
+                        int colon = line.indexOf(':');
+                        if (colon < 0) throw new IOException("invalid header: " + line);
+                        headers.put(line.substring(0, colon).toLowerCase(Locale.ROOT),
+                                line.substring(colon + 1).trim());
+                    }
+                    Handler handler = handlers.get(new URI(parts[1]).getRawPath());
+                    if (handler == null) throw new IOException("unexpected path: " + parts[1]);
+                    handler.handle(headers, socket.getOutputStream());
+                } catch (SSLException e) {
+                    if ((!tls || requestReceived) && !listener.isClosed()) {
+                        failure.compareAndSet(null, e);
+                    }
+                } catch (Exception | AssertionError e) {
+                    if (!listener.isClosed()) failure.compareAndSet(null, e);
+                } finally {
+                    current = null;
+                }
+            }
+        }
+
+        @Override
+        public void close() throws Exception {
+            listener.close();
+            Socket socket = current;
+            if (socket != null) socket.close();
+            thread.join(6000);
+            assertFalse("server did not stop", thread.isAlive());
+            if (failure.get() != null) throw new AssertionError("test server failed", failure.get());
+        }
+    }
+
+    private static void write(OutputStream output, String text) throws IOException {
+        output.write(text.getBytes(StandardCharsets.US_ASCII));
+        output.flush();
     }
 
     private DownloadManager.Status waitFor(DownloadManager manager) throws Exception {
@@ -104,15 +199,12 @@ public class DownloadManagerTest {
         keys.init(store, password.toCharArray());
         SSLContext serverContext = SSLContext.getInstance("TLS");
         serverContext.init(keys.getKeyManagers(), null, null);
-        HttpsServer tlsServer = HttpsServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        tlsServer.setHttpsConfigurator(new HttpsConfigurator(serverContext));
+        TestServer tlsServer = new TestServer(serverContext);
         AtomicInteger received = new AtomicInteger();
-        tlsServer.createContext("/", exchange -> {
+        tlsServer.on("/", (headers, output) -> {
             received.incrementAndGet();
-            exchange.sendResponseHeaders(200, -1);
-            exchange.close();
+            write(output, "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
         });
-        tlsServer.start();
         String previousStore = System.getProperty("javax.net.ssl.trustStore");
         String previousPassword = System.getProperty("javax.net.ssl.trustStorePassword");
         String previousType = System.getProperty("javax.net.ssl.trustStoreType");
@@ -131,7 +223,7 @@ public class DownloadManagerTest {
                     throw new AssertionError(e);
                 }
             });
-            int port = tlsServer.getAddress().getPort();
+            int port = tlsServer.port();
             int expectedRequests = 0;
             for (boolean skipTimeCheck : new boolean[]{false, true}) {
                 try {
@@ -156,7 +248,7 @@ public class DownloadManagerTest {
             restoreProperty("javax.net.ssl.trustStore", previousStore);
             restoreProperty("javax.net.ssl.trustStorePassword", previousPassword);
             restoreProperty("javax.net.ssl.trustStoreType", previousType);
-            tlsServer.stop(0);
+            tlsServer.close();
         }
     }
 
@@ -167,17 +259,14 @@ public class DownloadManagerTest {
 
     @Test
     public void downloadsRedirectAndReportsCallback() throws Exception {
-        server.createContext("/redirect", exchange -> {
-            exchange.getResponseHeaders().add("Location", "/data");
-            exchange.sendResponseHeaders(302, -1);
-            exchange.close();
+        server.on("/redirect", (headers, output) -> {
+            write(output, "HTTP/1.1 302 Found\r\nLocation: /data\r\n" +
+                    "Content-Length: 0\r\nConnection: close\r\n\r\n");
         });
-        server.createContext("/data", exchange -> {
-            assertEquals("custom", exchange.getRequestHeaders().getFirst("X-Test"));
-            byte[] data = "hello".getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(200, data.length);
-            exchange.getResponseBody().write(data);
-            exchange.close();
+        server.on("/data", (headers, output) -> {
+            assertEquals("custom", headers.get("x-test"));
+            write(output, "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n" +
+                    "Connection: close\r\n\r\nhello");
         });
         DownloadManager manager = new DownloadManager();
         File target = new File(directory, "download");
@@ -202,10 +291,9 @@ public class DownloadManagerTest {
 
     @Test
     public void unknownLengthAndMaximumSize() throws Exception {
-        server.createContext("/stream", exchange -> {
-            exchange.sendResponseHeaders(200, 0);
-            exchange.getResponseBody().write("hello".getBytes(StandardCharsets.UTF_8));
-            exchange.close();
+        server.on("/stream", (headers, output) -> {
+            write(output, "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n" +
+                    "Connection: close\r\n\r\n5\r\nhello\r\n0\r\n\r\n");
         });
         DownloadManager manager = new DownloadManager();
         File target = new File(directory, "download");
@@ -224,9 +312,9 @@ public class DownloadManagerTest {
 
     @Test
     public void errorsReachCallbackAndCallbackErrorsReplaceThem() throws Exception {
-        server.createContext("/missing", exchange -> {
-            exchange.sendResponseHeaders(404, -1);
-            exchange.close();
+        server.on("/missing", (headers, output) -> {
+            write(output, "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n" +
+                    "Connection: close\r\n\r\n");
         });
         DownloadManager manager = new DownloadManager();
         File target = new File(directory, "download");
@@ -247,17 +335,16 @@ public class DownloadManagerTest {
     public void cancellationAndSingleJob() throws Exception {
         CountDownLatch connected = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
-        server.createContext("/slow", exchange -> {
-            exchange.sendResponseHeaders(200, 100);
-            exchange.getResponseBody().write(1);
-            exchange.getResponseBody().flush();
+        server.on("/slow", (headers, output) -> {
+            write(output, "HTTP/1.1 200 OK\r\nContent-Length: 100\r\n" +
+                    "Connection: close\r\n\r\n");
+            output.write(1);
+            output.flush();
             connected.countDown();
             try {
                 release.await(5, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-            } finally {
-                exchange.close();
             }
         });
         DownloadManager manager = new DownloadManager();
