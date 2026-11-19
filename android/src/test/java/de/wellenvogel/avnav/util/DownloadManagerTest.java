@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.util;
 
 import org.apache.http.HttpResponse;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -304,6 +306,15 @@ public class DownloadManagerTest {
         assertNull(status.totalBytes);
         assertNull(status.percent);
         assertEquals(5, status.fetchedBytes);
+        JSONObject json = status.toJson();
+        assertEquals(status.id, json.getInt("id"));
+        assertEquals(5, json.getLong("fetchedBytes"));
+        assertTrue(json.has("totalBytes") && json.isNull("totalBytes"));
+        assertTrue(json.has("percent") && json.isNull("percent"));
+        assertTrue(json.has("info") && json.isNull("info"));
+        assertTrue(json.has("error") && json.isNull("error"));
+        assertTrue(json.getBoolean("done"));
+        assertEquals("done", json.getString("phase"));
         manager.start(url, target, "GET", null, null, 2L, null, false);
         status = waitFor(manager);
         assertTrue(status.error.contains("exceeds max 2"));
@@ -329,6 +340,47 @@ public class DownloadManagerTest {
         assertEquals("callback failed", status.error);
         assertTrue(status.done);
         assertFalse(target.exists());
+    }
+
+    @Test
+    public void jobProgressAndCallbackDoNotRequireManagerLock() throws Exception {
+        server.on("/data", (headers, output) ->
+                write(output, "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n" +
+                        "Connection: close\r\n\r\nhello"));
+        DownloadManager manager = new DownloadManager();
+        File target = new File(directory, "download");
+        CountDownLatch callbackStarted = new CountDownLatch(1);
+        CountDownLatch releaseCallback = new CountDownLatch(1);
+        AtomicReference<DownloadManager.Status> callbackStatus = new AtomicReference<>();
+        AtomicReference<AtomicBoolean> cancellation = new AtomicReference<>();
+        try {
+            synchronized (manager) {
+                int id = manager.start(new URL(base, "data"), target, "GET", null, null, null,
+                        (status, cancelled) -> {
+                            callbackStatus.set(status);
+                            cancellation.set(cancelled);
+                            callbackStarted.countDown();
+                            if (!releaseCallback.await(5, TimeUnit.SECONDS)) {
+                                throw new IOException("timed out waiting for callback release");
+                            }
+                        }, false);
+                assertTrue("job was blocked by manager lock", callbackStarted.await(5, TimeUnit.SECONDS));
+                DownloadManager.Status status = manager.status(id);
+                assertEquals("postprocessing", status.phase);
+                assertEquals(5, status.fetchedBytes);
+                assertFalse(status.done);
+                assertTrue(manager.cancel(id));
+                assertTrue(cancellation.get().get());
+            }
+        } finally {
+            releaseCallback.countDown();
+        }
+        DownloadManager.Status finished = waitFor(manager);
+        assertTrue(finished.done);
+        assertNull(finished.error);
+        assertEquals("done", finished.phase);
+        assertEquals("postprocessing", callbackStatus.get().phase);
+        assertFalse(callbackStatus.get().done);
     }
 
     @Test

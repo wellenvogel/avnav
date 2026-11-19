@@ -22,6 +22,8 @@ import org.apache.http.protocol.RequestContent;
 import org.apache.http.protocol.RequestExpectContinue;
 import org.apache.http.protocol.RequestTargetHost;
 import org.apache.http.protocol.RequestUserAgent;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -68,7 +70,7 @@ import javax.net.ssl.TrustManager;
 */
 public class DownloadManager {
     /** Immutable snapshot of the current download. Unknown totals and percentages are null. */
-    public static final class Status {
+    public static final class Status implements AvnUtil.IJsonObect {
         public final int id;
         public final Object info;
         public final Long totalBytes;
@@ -88,6 +90,20 @@ public class DownloadManager {
             done = job.done;
             phase = job.phase;
         }
+
+        @Override
+        public JSONObject toJson() throws JSONException {
+            JSONObject data = new JSONObject();
+            data.put("id", id);
+            data.put("info", info == null ? JSONObject.NULL : info);
+            data.put("totalBytes", totalBytes == null ? JSONObject.NULL : totalBytes);
+            data.put("fetchedBytes", fetchedBytes);
+            data.put("percent", percent == null ? JSONObject.NULL : percent);
+            data.put("error", error == null ? JSONObject.NULL : error);
+            data.put("done", done);
+            data.put("phase", phase);
+            return data;
+        }
     }
 
     /** Called on the download thread, including after transfer failures. */
@@ -100,7 +116,7 @@ public class DownloadManager {
     private int nextId = 1;
     private Job current;
 
-    private final class Job implements Runnable {
+    private static final class Job implements Runnable {
         final int id;
         final URL url;
         final File filename;
@@ -135,11 +151,18 @@ public class DownloadManager {
             this.thread.setDaemon(true);
         }
 
-        void setSocket(Socket next) {
-            synchronized (DownloadManager.this) {
-                socket = next;
-                if (cancelled.get()) closeSocket(next);
-            }
+        synchronized Status snapshot() {
+            return new Status(this);
+        }
+
+        synchronized void setSocket(Socket next) {
+            socket = next;
+            if (cancelled.get()) closeSocket(next);
+        }
+
+        synchronized void cancel() {
+            cancelled.set(true);
+            closeSocket(socket);
         }
 
         void checkCancelled() throws IOException {
@@ -189,7 +212,7 @@ public class DownloadManager {
                     }
                     HttpEntity entity = response.getEntity();
                     long length = entity == null ? 0 : entity.getContentLength();
-                    synchronized (DownloadManager.this) {
+                    synchronized (this) {
                         totalBytes = length > 0 ? length : null;
                         percent = length > 0 ? 0.0 : null;
                     }
@@ -205,7 +228,7 @@ public class DownloadManager {
                             if (maxBytes != null && fetched > maxBytes) {
                                 throw new IOException("download " + url + " exceeds max " + maxBytes);
                             }
-                            synchronized (DownloadManager.this) {
+                            synchronized (this) {
                                 fetchedBytes = fetched;
                                 percent = totalBytes == null ? null :
                                         Math.min(100.0, fetched * 100.0 / totalBytes);
@@ -218,7 +241,7 @@ public class DownloadManager {
                     }
                     return;
                 } finally {
-                    synchronized (DownloadManager.this) {
+                    synchronized (this) {
                         closeSocket(socket);
                         socket = null;
                     }
@@ -228,42 +251,38 @@ public class DownloadManager {
 
         @Override
         public void run() {
-            synchronized (DownloadManager.this) {
+            synchronized (this) {
                 phase = "downloading";
             }
             try {
                 download();
             } catch (Exception e) {
-                synchronized (DownloadManager.this) {
+                synchronized (this) {
                     error = e.getMessage() == null ? e.toString() : e.getMessage();
                 }
                 if (filename.isFile() && !filename.delete()) {
-                    synchronized (DownloadManager.this) {
+                    synchronized (this) {
                         error += "; unable to delete " + filename;
                     }
                 }
             }
-            synchronized (DownloadManager.this) {
+            synchronized (this) {
                 phase = "postprocessing";
             }
             if (callback != null) {
                 try {
-                    callback.onDone(snapshot(this), cancelled);
+                    callback.onDone(snapshot(), cancelled);
                 } catch (Exception e) {
-                    synchronized (DownloadManager.this) {
+                    synchronized (this) {
                         error = e.getMessage() == null ? e.toString() : e.getMessage();
                     }
                 }
             }
-            synchronized (DownloadManager.this) {
+            synchronized (this) {
                 phase = "done";
                 done = true;
             }
         }
-    }
-
-    private synchronized Status snapshot(Job job) {
-        return new Status(job);
     }
 
     /**
@@ -290,12 +309,21 @@ public class DownloadManager {
         return start(url, filename, "GET", null, null, null, null, false);
     }
 
-    public synchronized Status status() {
-        return current == null ? null : new Status(current);
+    public Status status() {
+        Job job;
+        synchronized (this) {
+            job = current;
+        }
+        return job == null ? null : job.snapshot();
     }
 
-    public synchronized Status status(int id) {
-        return current == null || current.id != id ? null : new Status(current);
+    public Status status(int id) {
+        Job job;
+        synchronized (this) {
+            job = current;
+            if (job == null || job.id != id) return null;
+        }
+        return job.snapshot();
     }
 
     public synchronized boolean isRunning() {
@@ -303,10 +331,13 @@ public class DownloadManager {
     }
 
     /** Signals cancellation and closes the active socket, if one has been created. */
-    public synchronized boolean cancel(int id) {
-        if (current == null || current.id != id) return false;
-        current.cancelled.set(true);
-        closeSocket(current.socket);
+    public boolean cancel(int id) {
+        Job job;
+        synchronized (this) {
+            job = current;
+            if (job == null || job.id != id) return false;
+        }
+        job.cancel();
         return true;
     }
 

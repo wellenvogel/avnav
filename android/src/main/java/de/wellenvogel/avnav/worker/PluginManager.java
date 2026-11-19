@@ -34,16 +34,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -57,6 +60,7 @@ import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.DownloadManager;
 
 public class PluginManager extends DirectoryRequestHandler {
 
@@ -77,6 +81,7 @@ public class PluginManager extends DirectoryRequestHandler {
         String pluginUrlBase;
         PluginHandlerBase phBase=null;
         String error=null;
+        String version=null;
         public Plugin(String name,File dir,WorkerStatus status,String urlPrefix){
             this.name=name;
             this.dir=dir;
@@ -107,6 +112,7 @@ public class PluginManager extends DirectoryRequestHandler {
             File cfgFile=new File(dir,cfgName);
             if (cfgFile.exists() && cfgFile.canRead()){
                 config=AvnUtil.readJsonFile(cfgFile,MAX_CFG);
+                if (config.has("version")) version=config.getString("version");
             }
             prepared=true;
         }
@@ -233,6 +239,8 @@ public class PluginManager extends DirectoryRequestHandler {
             rt.put("downloadName",dir.getName()+".zip");
             rt.put("checkPrefix", IPluginHandler.USER_PREFIX);
             rt.put("canDelete",true);
+            if (version != null)
+                rt.put("version", version);
             rt.put(IPluginHandler.IK_CHILD,name);
             rt.put(IPluginHandler.IK_ID,status.id);
             rt.put(IPluginHandler.IK_ACTIVE,enabled());
@@ -278,6 +286,8 @@ public class PluginManager extends DirectoryRequestHandler {
     HashMap<String,Plugin> plugins=new HashMap<>();
     JSONObject childParameterValues=new JSONObject();
     private final Object createLock=new Object();
+
+    private DownloadManager downloadManager=new DownloadManager();
     public PluginManager(String type, GpsService ctx, File workDir, String urlPrefrix) throws IOException {
         super(type, ctx, workDir, urlPrefrix, null);
         kind=Kind.PLUGINS;
@@ -573,6 +583,83 @@ public class PluginManager extends DirectoryRequestHandler {
             stream.reset();
         }
     }
+
+    private void createOrUpdatePlugin(String name,File uploaded, File existing) throws Exception {
+        createOrUpdatePlugin(name, uploaded, existing, true, null);
+    }
+
+    private void checkDownloadCancelled(AtomicBoolean cancelled) throws InterruptedIOException {
+        if (cancelled != null && cancelled.get()) {
+            throw new InterruptedIOException("plugin download cancelled");
+        }
+    }
+
+    private void createOrUpdatePlugin(String name, File uploaded, File existing,
+                                      boolean overwrite, AtomicBoolean cancelled) throws Exception {
+        Exception failure = null;
+        try {
+            if (existing.exists() && !overwrite) {
+                throw new IOException("plugin " + name + " already exists");
+            }
+            if (existing.isFile()) {
+                throw new IOException("a file with name " + name + " exists in plugins directory");
+            }
+            boolean hasFiles = false;
+            try (ZipInputStream zis = new ZipInputStream(new FileInputStream(uploaded))) {
+                ZipEntry e;
+                while ((e = zis.getNextEntry()) != null) {
+                    checkDownloadCancelled(cancelled);
+                    checkEntryPath(e, name);
+                    if (!e.isDirectory()) hasFiles = true;
+                }
+            }
+            if (!hasFiles) throw new IOException("no files in zip " + name);
+            String pluginPath = existing.getCanonicalPath();
+            String basePath = workDir.getCanonicalPath() + File.separator;
+            if (!pluginPath.equals(basePath + name)) throw new IOException("invalid plugin directory " + existing);
+            try (ZipInputStream zis = new ZipInputStream(new FileInputStream(uploaded))) {
+                ZipEntry e;
+                while ((e = zis.getNextEntry()) != null) {
+                    checkDownloadCancelled(cancelled);
+                    File of = new File(workDir, checkEntryPath(e, name));
+                    String entryPath = of.getCanonicalPath();
+                    if (!entryPath.equals(pluginPath) && !entryPath.startsWith(pluginPath + File.separator)) {
+                        throw new IOException("invalid plugin entry " + e.getName());
+                    }
+                    File dir = e.isDirectory() ? of : of.getParentFile();
+                    if (dir.exists() && !dir.isDirectory()) {
+                        AvnUtil.deleteRecursive(dir);
+                    }
+                    if (!dir.exists()) {
+                        dir.mkdirs();
+                    }
+                    if (!dir.isDirectory()) {
+                        throw new Exception("unable to create directory " + dir.getAbsolutePath());
+                    }
+                    if (!e.isDirectory()) {
+                        writeAtomic(of, new NoCloseWrapper(zis), true, e.getSize());
+                    }
+                }
+            }
+            checkDownloadCancelled(cancelled);
+            existing.setLastModified(System.currentTimeMillis()); //ensure the plugin is considered to be new
+        } catch (Exception t) {
+            failure = t;
+            AvnLog.e("exception in plugin upload for "+name,t);
+            throw t;
+        }
+        finally {
+            if (uploaded.exists() && !uploaded.delete()) {
+                IOException cleanupError = new IOException("unable to delete temporary plugin archive " + uploaded);
+                if (failure != null) failure.addSuppressed(cleanupError);
+                else throw cleanupError;
+            }
+        }
+        Plugin newPlugin=createPlugin(existing);
+        updatePlugin(newPlugin);
+        gpsService.updateConfigSequence();
+        AvnLog.i("plugin "+name+" updated/created");
+    }
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         name=safeName(name,true);
@@ -587,50 +674,14 @@ public class PluginManager extends DirectoryRequestHandler {
         //we first upload everything before we unpack
         //the chance that something goes wrong during upload is bigger then during unpacking
         //so we try to keep the plugin intact if it already exists but the upload gets interrupted
-        String uploadName= UPLOAD_BASE +Thread.currentThread().getId();
+        File uploaded = File.createTempFile(UPLOAD_BASE, ".zip", workDir);
+        uploaded.deleteOnExit();
+        String uploadName= uploaded.getName();
         boolean rt= super.handleUpload(postData, uploadName, true, true);
         if (! rt){
             throw new Error("unable to upload to "+uploadName);
         }
-        File uploaded=new File(workDir,uploadName);
-        try {
-            ZipInputStream zis = new ZipInputStream(new FileInputStream(uploaded));
-            //do some analysis of the zip
-            ZipEntry e = zis.getNextEntry();
-            while (e != null) {
-                checkEntryPath(e, name);
-                e = zis.getNextEntry();
-            }
-            zis.close();
-            zis = new ZipInputStream(new FileInputStream(uploaded));
-            e = zis.getNextEntry();
-            while (e != null) {
-                File of = new File(workDir, checkEntryPath(e, name));
-                File dir = e.isDirectory() ? of : of.getParentFile();
-                if (dir.exists() && !dir.isDirectory()) {
-                    AvnUtil.deleteRecursive(dir);
-                }
-                if (!dir.exists()) {
-                    dir.mkdirs();
-                }
-                if (!dir.isDirectory()) {
-                    throw new Exception("unable to create directory " + dir.getAbsolutePath());
-                }
-                if (!e.isDirectory()) {
-                    writeAtomic(of, new NoCloseWrapper(zis), true, e.getSize());
-                }
-                e = zis.getNextEntry();
-            }
-            zis.close();
-            existing.setLastModified(System.currentTimeMillis()); //ensure the plugin is considered to be new
-        }catch (Throwable t){
-            AvnLog.e("exception in plugin upload for "+name,t);
-            throw new Exception(t);
-        }
-        uploaded.delete();
-        Plugin newPlugin=createPlugin(existing);
-        updatePlugin(newPlugin);
-        gpsService.updateConfigSequence();
+        this.createOrUpdatePlugin(name,uploaded,existing);
         return true;
     }
 
@@ -685,6 +736,48 @@ public class PluginManager extends DirectoryRequestHandler {
 
     @Override
     protected JSONObject handleSpecialApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if ("externalDownload".equals(command)) {
+            String name = safeName(AvnUtil.getMandatoryParameter(uri, "name"), true);
+            if (name.isEmpty() || name.startsWith(UPLOAD_BASE)) {
+                throw new Exception("invalid plugin name " + name);
+            }
+            URL url = new URL(AvnUtil.getMandatoryParameter(uri, "url"));
+            boolean overwrite = AvnUtil.getFlagParameter(uri, "overwrite", false);
+            File existing = new File(workDir, name);
+            if (existing.exists() && !overwrite) throw new Exception("plugin " + name + " already exists");
+            if (existing.isFile()) throw new Exception("a file with name " + name + " exists in plugins directory");
+            File uploaded = File.createTempFile(UPLOAD_BASE, ".zip", workDir);
+            uploaded.deleteOnExit();
+            int id;
+            try {
+                id = downloadManager.start(url, uploaded, "GET", null, name, null,
+                        (downloadStatus, cancelled) -> {
+                            if (downloadStatus.error == null) {
+                                createOrUpdatePlugin(name, uploaded, existing, overwrite, cancelled);
+                            }
+                        }, true);
+            } catch (Exception e) {
+                if (!uploaded.delete()) e.addSuppressed(new IOException("unable to delete " + uploaded));
+                throw e;
+            }
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<Integer>("id", id));
+        }
+        if ("downloadStatus".equals(command)) {
+            String id = uri.getQueryParameter("id");
+            DownloadManager.Status progress = id == null ?
+                    downloadManager.status() : downloadManager.status(Integer.parseInt(id));
+            if (progress == null) {
+                return RequestHandler.getReturn(new AvnUtil.KeyValue<String>("info", "no download running"));
+            }
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data", progress.toJson()));
+        }
+        if ("cancelDownload".equals(command)) {
+            int id = Integer.parseInt(AvnUtil.getMandatoryParameter(uri, "id"));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<Boolean>("cancelled", downloadManager.cancel(id)));
+        }
+        if ("getPlatform".equals(command)) {
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<String>("platform", "android"));
+        }
         if ("pluginInfo".equals(command)){
             ChartHandler chartHandler = gpsService.getChartHandler();
             String rname=uri.getQueryParameter("name");
