@@ -61,6 +61,7 @@ interface InfoCacheEntry{
 interface PluginCatalogProps{
     url: string|URL,
     selectCallback?:(name:string)=>void
+    startDownloadCallback?:(name:string,id:number) => void
 }
 
 //those should be better move to the item actions
@@ -98,6 +99,7 @@ interface CatalogEntry extends Record<string, any> {
     _localItem?:Item,
     _updateOptions:UpdateOptions;
     _selectCallback?:(name:string)=>void;
+    _startDownloadCallback?:(name:string,id:number)=>void;
 }
 const versionCompare=(a:string|number,b:string|number)=>{
     if (a == null ) return false;
@@ -132,6 +134,14 @@ const buildUpdateOptions=(catalogEntry:CatalogEntry,localEntry?:Item)=>{
         }
     }
     return updateOptions;
+}
+
+const canUsePlatform=(local: string, catalog: string)=>{
+    if (catalog === 'all') return true;
+    if (catalog === 'linux'){
+        if (local === 'linux' || local === 'raspberry') return true;
+    }
+    return local === catalog;
 }
 
 const startDownload= async (name:string,url:string)=>{
@@ -187,7 +197,9 @@ const CatalogItem = (props: CatalogEntry) => {
                     dialogContext.closeDialog();
                     if (props._selectCallback) props._selectCallback(USER_PREFIX+props.name)
                     try{
-                        const id=await startDownload(props.name,props.download_url);
+                        const url=props.download_url?.replaceAll('$version',props.version)
+                        const id=await startDownload(props.name,url);
+                        if (props._startDownloadCallback){props._startDownloadCallback(props.name,id)}
                         base.log("plugin download started",props.name,id);
                     }catch (e){
                         if (e) Toast(e);
@@ -250,12 +262,19 @@ const PluginCatalog=(props:PluginCatalogProps)=>{
     for (const citem of catalog){
         const cplatform=citem.platform;
         if (!cplatform) continue;
+        let canUse=false;
         if (cplatform instanceof Array){
-            if (cplatform.indexOf(platform) < 0 && cplatform.indexOf('all') <0) continue;
+            for (const cat of cplatform){
+                if (canUsePlatform(platform,cat)){
+                    canUse=true;
+                    break;
+                }
+            }
         }
         else{
-            if (cplatform != platform && cplatform != "all") continue;
+            if (canUsePlatform(platform,cplatform)) canUse=true;
         }
+        if (!canUse)continue;
         const item={...citem};
         const prfx=(item.type == 'zip')?USER_PREFIX:SYS_PREFIX;
         const localItem=existing[prfx+item.name];
@@ -264,6 +283,9 @@ const PluginCatalog=(props:PluginCatalogProps)=>{
         }
         item._updateOptions=buildUpdateOptions(item,localItem);
         item._selectCallback=props.selectCallback;
+        item._startDownloadCallback=(name,id)=>{
+            if (props.startDownloadCallback)props.startDownloadCallback(name,id);
+        }
         displayItems.push(item);
     }
     displayItems.sort((a,b)=>{
@@ -290,7 +312,7 @@ const PluginCatalog=(props:PluginCatalogProps)=>{
     </DialogFrame>
 }
 interface DownloadProgressProps{
-    id?:number
+    id?:number //if set and we can get a status with this id, report any error once
 }
 interface ExternalDownloadStatus{
     totalBytes?:number,
@@ -305,11 +327,11 @@ interface ExternalDownloadStatus{
 const DownloadProgress=(props:DownloadProgressProps)=>{
     const timeOut=(props.id != null)?500:1000
     const [progress,setProgress]=useState<ExternalDownloadStatus|undefined>(undefined);
+    const lastReported=useRef<number>(undefined);
     const timer=useTimer((seq)=>{
         Requests.getJson({
             type:'plugins',
-            command:'downloadStatus',
-            id:props.id
+            command:'downloadStatus'
         })
             .then((rs)=>{
                 setProgress(rs.data);
@@ -327,6 +349,13 @@ const DownloadProgress=(props:DownloadProgressProps)=>{
                 timer.startTimer(seq);
             })
     },timeOut,true,true)
+    useEffect(() => {
+        if (props.id !== undefined && progress && progress.done && progress.id === props.id && lastReported.current !== props.id){
+            //report an error at least once if lastId is set
+            if (progress.error) Toast(progress.error);
+            lastReported.current = props.id;
+        }
+    }, [props.id,progress]);
     if (! progress || progress.done) return null;
     return <UploadProgress
         heading={"plugin "+progress?.info}
@@ -346,6 +375,7 @@ const DownloadProgress=(props:DownloadProgressProps)=>{
 export const PluginsPage = (props:PageProps) => {
     const history=useHistory();
     const dialogContext = useDialogContext();
+    const [downloadId,setDownloadId]=useState<number>(undefined);
     const [selectedName, setSelectedName] = useState<string>();
     const [selectSequence,setSelectSequence]=useState<number>(1);
     const currentButtons=useRef<ButtonDef[]>();
@@ -372,7 +402,11 @@ export const PluginsPage = (props:PageProps) => {
                 setSelectedName(name);
                 setSelectSequence((old)=>old+1)
                 }
-        }/>)
+            }
+            startDownloadCallback={(_:string,id:number)=>{
+                setDownloadId(id);
+            }}
+        />)
     },[])
     const buttonActions={
         [ButtonDefs.Upload.name]:{
@@ -428,7 +462,7 @@ export const PluginsPage = (props:PageProps) => {
             >
 
             </DownloadItemList>
-            <DownloadProgress id={undefined}/>
+            <DownloadProgress id={downloadId}/>
         </PageLeft>
         <ButtonList page={props.id} itemList={currentButtons.current}/>
     </PageFrame>
