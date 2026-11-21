@@ -351,7 +351,7 @@ function turnParams(start, rot, cog, sog, dt, options) {
 const computeCourseVectors = (aisItem, boatCog, boatSog, options) => {
     if (!options.useCourseVector) return;
     const target_sog = aisItem.received.speed || 0;
-    if (target_sog < options.minAISspeed) return; // no TMV/RMV on stationary targets
+    if (target_sog < options.minAISspeed) return; // no TMV/RMV on stationary targets TODO make configurable
     let target_cog = correctedCourse(aisItem.received.course, target_sog, options.minAISspeed);
     // skip if no valid data available, includes sog!=0 but cog==null
     if (target_cog == null) return;

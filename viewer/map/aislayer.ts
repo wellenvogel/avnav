@@ -588,7 +588,9 @@ class AisLayer{
                 drawing.drawLineToContext(points, style);
             };
 
-          const drawRMV = !!(target.rmv && this.mapholder.getGpsLock());
+          const isFollowing = !!this.mapholder.getGpsLock();
+          const isHeadUp = this.mapholder.getCourseUp();
+          const drawRMV = !!(target.rmv && (isFollowing && isHeadUp)); // TODO added matching settings
 
           if (drawRMV && style.courseVector !== false) { // relative motion vector
             const odir = target.rmv.offsetDir || 0;
