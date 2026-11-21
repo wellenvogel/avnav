@@ -644,16 +644,19 @@ class AisLayer{
                         alpha: style.alpha
                     });
                 }
-                if (target.fromEstimated) {
-                    drawing.drawLineToContext([
-                        this.pointToMap(target.receivedPos),
-                        this.pointToMap(target.courseVector.start)
-                    ], {
-                        color: style.courseVectorColor,
-                        width: this.displayOptions.courseVectorWidth,
-                        alpha: (style.alpha || 1) * estimatedImageOpacity()
-                    })
-                }
+            }
+
+            if (target.fromEstimated) {
+                // connect received and esitmated positions visually
+                // to show they belong together
+                drawing.drawLineToContext([
+                    this.pointToMap(target.receivedPos),
+                    this.pointToMap(target.courseVector.start)
+                ], {
+                    color: style.courseVectorColor,
+                    width: this.displayOptions.courseVectorWidth,
+                    alpha: (style.alpha || 1) * estimatedImageOpacity()
+                })
             }
 
             if (target.estimated && (symbol.ghostImage || target.fromEstimated)) { // DR position of target
