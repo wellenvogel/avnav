@@ -224,11 +224,35 @@ Funktionen/Eigenschaften implementiert werden:
 | unit | String  (optional) | alle | Eine default Einheit |
 | formatter | Funktion  (optional) | defaultWidget,  radialGauge, linearGauge | Ein Formatierer für den Wert. Für das defaultWidget muss diese Funktion angegeben werden. |
 | translateFunction | Funktion  (optional) | alle ausser map | Diese Funktion wird mit den aktuellen Werten als Parameter aufgerufen (so wie bei storeKeys angegeben) und muss die daraus berechneten Werte zurückgeben.  Falls keine eigene renderXXX Funktion genutzt werden soll, kann hier vor dem Rendern eine Umrechnung von Werten erfolgen |
-| initFunction { #initfunction } | Funktion  (optional) | userWidget,  map | Falls vorhanden, wird diese Funktion einmalig aufgerufen, wenn das Widget erzeugt wird. Als Parameter (und als this) ist der Widget Context vorhanden.  Dieses Objekt hat eine eventHandler Eigenschaft - hier müssen die im renderHTML genutzten eventHandler eingetragen werden.  Mit der Funktion triggerRedraw am Widget Kontext kann ein erneuter Aufruf der renderXXX Funktionen erzwungen werden. Der  2. Parameter enthält die Eigenschaften des Widgets. Das sind insbesondere auch alle editierbaren Widget Parameter, die definiert wurden. |
-| finalizeFunktion | Funktion  (optional) | userWidget,  map | Falls vorhanden, wird diese Funktion aufgerufen, bevor das Widget nicht mehr genutzt wird. Die "this" Variable zeigt wieder auf den Widget Kontext.  Ausserdem ist der Kontext auch als erster Parameter vorhanden - wie bei der initFunction. |
+| initFunction { #initfunction } | Funktion  (optional) | userWidget,  map | Falls vorhanden, wird diese Funktion einmal pro Widget-Instanz aufgerufen, wenn sie erzeugt wird (siehe [Lebensdauer](#widget-lifetime)). Als Parameter (und als this) ist der Widget Context vorhanden.  Dieses Objekt hat eine eventHandler Eigenschaft - hier müssen die im renderHTML genutzten eventHandler eingetragen werden.  Mit der Funktion triggerRedraw am Widget Kontext kann ein erneuter Aufruf der renderXXX Funktionen erzwungen werden. Der  2. Parameter enthält die Eigenschaften des Widgets. Das sind insbesondere auch alle editierbaren Widget Parameter, die definiert wurden. |
+| finalizeFunction | Funktion  (optional) | userWidget,  map | Falls vorhanden, wird diese Funktion aufgerufen, bevor das Widget nicht mehr genutzt wird. Die "this" Variable zeigt wieder auf den Widget Kontext.  Ausserdem ist der Kontext auch als erster Parameter vorhanden - wie bei der initFunction. |
 
 Nach der Definition muss das Widget bei AvNav bekannt gemacht werden
 (api.registerWidget).
+
+### Lebensdauer eines Widgets { #widget-lifetime }
+
+Ein Widget kann während der Nutzung des Viewers entfernt und neu erzeugt werden,
+zum Beispiel beim Ändern der Fenstergröße, beim Seitenwechsel oder beim Öffnen
+eines Dialogs. `initFunction` wird deshalb nicht nur einmal pro Sitzung
+aufgerufen. Beim Entfernen der alten Instanz wird `finalizeFunction` aufgerufen.
+Die neue Instanz bekommt einen neuen Kontext und einen eigenen Aufruf von
+`initFunction`. Auf `this` gespeicherte Daten überleben diesen Wechsel nicht.
+
+Der Kontext eignet sich für instanzbezogene Daten und Ressourcen. Timer und
+Listener, die für eine Instanz angelegt wurden, sollten in `finalizeFunction`
+beendet beziehungsweise entfernt werden.
+
+Daten, die eine Neuerzeugung überleben sollen, können in einer Variablen des
+JavaScript-Moduls gespeichert werden. Diese Variable wird von den Instanzen des
+Widgets gemeinsam genutzt; ob dies sinnvoll ist, muss ausdrücklich entschieden
+werden. Ein Neuladen des Browsers löscht diese Daten. Globale Variablen auf
+`window` sollten vermieden werden, da ihre Namen mit anderen Plugins kollidieren
+können. Ein Timer auf Modulebene braucht auch eine Bereinigung auf Modulebene:
+Die Initialisierungsfunktion des Moduls kann eine Bereinigungsfunktion
+zurückgeben, die den Timer beim Neuladen des Moduls beendet. Browser-Timer können
+im Hintergrund oder im Ruhezustand pausieren. Sie ersetzen keine kontinuierliche
+Datenerfassung auf dem Server.
 
 ### Widget Context { #widgetcontext }
 
