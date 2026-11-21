@@ -328,6 +328,18 @@ const computeCpa = (src, dst, options) => {
 const pow2=(x)=>{
     return x*x;
 }
+function hasROT(aisItem) {
+  const rot = Math.abs(aisItem.received.turn || 0); // °/min
+  return isFinite(rot) && rot > 0.5;
+}
+function turnParams(start, rot, cog, sog, dt, options) {
+    const rot_abs = Math.abs(rot), rot_sgn = Math.sign(rot);
+    const radius = sog / Helper.radians(rot_abs) * 60; // m, SOG=[m/s]
+    const center = NavCompute.computeTarget(start, cog + rot_sgn * 90, radius, options?.useRhumbLine ?? true);
+    const arc = rot / 60 * dt; // = rot_sgn * Helper.degrees(sog * dt / radius);
+    const startAngle = cog - rot_sgn * 90;
+    return { rot, rot_abs, rot_sgn, start, radius, center, arc, startAngle };
+}
 /**
  *
  * @param aisItem {AISItem}
@@ -338,43 +350,44 @@ const pow2=(x)=>{
  */
 const computeCourseVectors = (aisItem, boatCog, boatSog, options) => {
     if (!options.useCourseVector) return;
-    let target_sog=aisItem.received.speed||0;
-    let target_cog=correctedCourse(aisItem.received.course,target_sog,options.minAISspeed);
+    const target_sog = aisItem.received.speed || 0;
+    if (target_sog < options.minAISspeed) return; // no TMV/RMV on stationary targets TODO make configurable
+    let target_cog = correctedCourse(aisItem.received.course, target_sog, options.minAISspeed);
     // skip if no valid data available, includes sog!=0 but cog==null
     if (target_cog == null) return;
+    if (aisItem.fromEstimated) target_cog += aisItem.rotation ?? 0; // add esitmated rotation
     const drawTMV = target_sog > options.minAISspeed; // true motion vector
     const drawRMV = options.rmvRange != null && aisItem.distance != null && aisItem.distance < options.rmvRange; // relative motion vector
     if (!drawTMV && !drawRMV) return;  // RMV needs TMV even if zero!
-    let target_rot=Math.abs(aisItem.received.turn||0); // °/min
-    const curved = options.curved && isFinite(target_rot) && target_rot>0.5;
-    let cvstart=aisItem.fromEstimated?aisItem.estimated:aisItem.receivedPos
+    const dt = options.courseVectorTime;
+    const cvstart = aisItem.fromEstimated ? aisItem.estimated : aisItem.receivedPos;
+    const curved = options.curved && hasROT(aisItem);
+    const tmv = new CourseVector();
+    const shiftPosition = (pos, dir, dist) => NavCompute.computeTarget(pos, dir, dist, options.useRhumbLine);
     if (!curved){
-        aisItem.courseVector=new CourseVector();
-        aisItem.courseVector.start=cvstart;
-        aisItem.courseVector.end=NavCompute.computeTarget(
-            cvstart,
-            target_cog,
-            target_sog*options.courseVectorTime,
-            options.useRhumbLine
-        )
+        tmv.start = cvstart;
+        tmv.end = shiftPosition(cvstart, target_cog, target_sog * dt);
     } else{
-        let target_rot_sgn=Math.sign(aisItem.received.turn||0);
-        let turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
-        let turn_center=Navcompute.computeTarget(cvstart,target_cog+target_rot_sgn*90,turn_radius);
-        let turn_angle=Helper.degrees(target_sog*options.courseVectorTime/turn_radius);
-        aisItem.courseVector=new CourseVector();
-        aisItem.courseVector.type=CourseVector.T_ARC;
-        aisItem.courseVector.start=cvstart;
-        aisItem.courseVector.center=turn_center;
-        aisItem.courseVector.radius=turn_radius;
-        aisItem.courseVector.startAngle=target_cog-target_rot_sgn*90;
-        aisItem.courseVector.arc=target_rot_sgn*turn_angle;
+        const turn = turnParams(cvstart, aisItem.received.turn || 0, target_cog, target_sog, dt, options);
+        tmv.type = CourseVector.T_ARC;
+        tmv.start = cvstart;
+        tmv.center = turn.center;
+        tmv.radius = turn.radius;
+        tmv.startAngle = turn.startAngle;
+        tmv.arc = turn.arc;
     }
+    if (drawTMV) aisItem.courseVector = tmv;
     if (boatCog == null || boatSog == null) return; //RMV only possible with own COG/SOG
     if (drawRMV && boatSog > options.minAISspeed) { // for boatSog==0 RMV==TMV, skip it
-        aisItem.rmv=aisItem.courseVector.clone();
-        aisItem.rmv.offsetDir=boatCog;
-        aisItem.rmv.offsetDst=-boatSog*options.courseVectorTime;
+        aisItem.rmv = tmv.clone();
+        // if (!aisItem.fromEstimated) { // keep this deactivated to preserve the old behaviour
+        //   const dir = boatCog, dst = boatSog * aisItem.age; // adjust RMV for own movement
+        //   aisItem.rmv.start = shiftPosition(aisItem.rmv.start, dir, dst);
+        //   if (curved) aisItem.rmv.center = shiftPosition(aisItem.rmv.center, dir, dst);
+        //   else aisItem.rmv.end = shiftPosition(aisItem.rmv.end, dir, dst);
+        // }
+        aisItem.rmv.offsetDir = boatCog;
+        aisItem.rmv.offsetDst = -boatSog * dt;
     }
 }
 /**
@@ -433,10 +446,18 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
         aisItem.receivedPos = new navobjects.Point(parseFloat(ais.lon || 0), parseFloat(ais.lat || 0));
         let aisCourse = (ais.course != null)?parseFloat(ais.course || 0):undefined;
         if (aisSpeed >= options.minAISspeed && aisCourse != null) {
+          const curved = options.curved && hasROT(aisItem);
+          if (curved) { // estimate rotation and position using ROT
+            const turn = turnParams(aisItem.receivedPos, aisItem.received.turn || 0, aisCourse, aisItem.received.speed || 0, aisItem.age, options);
+            aisItem.rotation = turn.arc;
+            aisItem.estimated = NavCompute.computeTarget(turn.center, turn.startAngle + turn.arc, turn.radius, options.useRhumbLine);
+          } else {
             aisItem.estimated = NavCompute.computeTarget(aisItem.receivedPos, aisCourse, aisItem.age * aisSpeed, options.useRhumbLine);
+          }
         }
-        aisItem.fromEstimated=(options.cpaEstimated && aisItem.estimated);
+        aisItem.fromEstimated=!!(options.cpaEstimated && aisItem.estimated);
         let targetPos=(aisItem.fromEstimated)?aisItem.estimated:aisItem.receivedPos;
+        if (aisItem.fromEstimated) aisCourse += aisItem.rotation ?? 0; // add estimated rotation
         if (boatPos.lat != null && boatPos.lon != null && targetPos.lat != null && targetPos.lon != null) {
             let dst = NavCompute.computeDistance(boatPos, targetPos, options.useRhumbLine);
             aisItem.distance = dst.dts;

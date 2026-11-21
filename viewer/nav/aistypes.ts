@@ -298,6 +298,7 @@ export interface AisProxyItem extends Omit<AISItem,'received'|'cpadata'>,Cpa{
     mmsi?:string,
     distance?:number,
     heading?:number,
+    rotation?:number,
     turn?:number,
     speed?:number,
     course?:number,

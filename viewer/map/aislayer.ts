@@ -588,7 +588,11 @@ class AisLayer{
                 drawing.drawLineToContext(points, style);
             };
 
-          if (target.rmv && style.courseVector !== false) { // relative motion vector
+          const isFollowing = !!this.mapholder.getGpsLock();
+          const isHeadUp = this.mapholder.getCourseUp();
+          const drawRMV = !!(target.rmv && (isFollowing && isHeadUp)); // TODO added matching settings
+
+          if (drawRMV && style.courseVector !== false) { // relative motion vector
             const odir = target.rmv.offsetDir || 0;
             const odst = target.rmv.offsetDst || 0;
                 if (target.rmv.type === CourseVector.T_ARC) {
@@ -616,7 +620,7 @@ class AisLayer{
             }
 
 
-            if (useCourseVector && style.courseVector !== false) {
+            if (!drawRMV && useCourseVector && style.courseVector !== false) {
                 if (target.courseVector.type === CourseVector.T_ARC) { // curved TMV
                     //drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
                     drawArc(
@@ -640,24 +644,32 @@ class AisLayer{
                         alpha: style.alpha
                     });
                 }
-                if (target.fromEstimated) {
-                    drawing.drawLineToContext([
-                        this.pointToMap(target.receivedPos),
-                        this.pointToMap(target.courseVector.start)
-                    ], {
-                        color: style.courseVectorColor,
-                        width: this.displayOptions.courseVectorWidth,
-                        alpha: style.alpha
-                    })
-                }
             }
 
-            if (symbol.ghostImage && target.estimated) { // DR position of target
-                const curpix = drawing.drawImageToContext(this.pointToMap(target.estimated), symbol.ghostImage, style);
+            if (target.fromEstimated) {
+                // connect received and esitmated positions visually
+                // to show they belong together
+                drawing.drawLineToContext([
+                    this.pointToMap(target.receivedPos),
+                    this.pointToMap(target.courseVector.start)
+                ], {
+                    color: style.courseVectorColor,
+                    width: this.displayOptions.courseVectorWidth,
+                    alpha: (style.alpha || 1) * estimatedImageOpacity()
+                })
+            }
+
+            if (target.estimated && (symbol.ghostImage || target.fromEstimated)) { // DR position of target
+                const img = !target.fromEstimated && symbol.ghostImage || symbol.image;
+                const rotation = style.rotation; // save
+                if (style.rotation != null) style.rotation += Helper.radians(target.rotation ?? 0); // apply estimated rotation
+                const curpix = drawing.drawImageToContext(this.pointToMap(target.estimated), img, style);
                 this.pixel.push({pixel: curpix, ais: target});
+                style.rotation = rotation; // restore
             }
         }
-        const curpix = drawing.drawImageToContext(this.pointToMap(target.receivedPos), symbol.image, style);
+        const img = target.fromEstimated && symbol.ghostImage || symbol.image;
+        const curpix = drawing.drawImageToContext(this.pointToMap(target.receivedPos), img, style);
         this.pixel.push({pixel: curpix, ais: target});
         return {scale: scale, style: style, rot: target_hdg};
     }
@@ -709,8 +721,9 @@ class AisLayer{
         const thirdLabel = globalStore.getData(keys.properties.aisThirdLabel, '');
         for (i in aisList) {
             const current = aisproxy(aisList[i]);
-            const alpha = {alpha: current.hidden ? 0.2 : undefined};
-            const pos = this.pointToMap(current.receivedPos);
+            const alpha = { alpha: current.hidden ? 0.2 : undefined };
+            const pos = (current.fromEstimated && !current.hidden) && current.estimated || current.receivedPos;
+            const posxy = this.pointToMap(pos);
             const drawn = this.drawTargetSymbol(drawing, current);
             if (!drawn) continue;
             const textOffsetScale = drawn.scale;
@@ -723,7 +736,7 @@ class AisLayer{
             if (text3) aisLables.push(text3);
             const numLabels=aisLables.length;
             for (let i=0;i<numLabels;i++){
-                drawing.drawTextToContext(pos, aisLables[i], {...this.textStyle,
+                drawing.drawTextToContext(posxy, aisLables[i], {...this.textStyle,
                     ...this.computeTextOffsets(drawing, drawn.rot, i, numLabels,drawn.style.textOffset, textOffsetScale),
                     ...alpha});
             }
