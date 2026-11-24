@@ -715,7 +715,9 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
             const style=mapLibreOptions.style;
             //replace URLs
             if (style.sprite) {
-                style.sprite=this._translateUrl(style.sprite);
+                style.sprite=Array.isArray(style.sprite)
+                    ? style.sprite.map(sprite=>({...sprite,url:this._translateUrl(sprite.url)}))
+                    : this._translateUrl(style.sprite);
             }
             if (style.glyphs) {
                 style.glyphs = this._translateUrl(style.glyphs);
