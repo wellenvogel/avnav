@@ -3,7 +3,7 @@
  * 2d context drawing functions
  * as all the ol3 stuff is hard to use or broken...
  */
-import {apply as olapply} from "ol/transform";
+import {apply as olapply, create as olcreate, makeInverse as olmakeInverse} from "ol/transform";
 import {add as oladd} from 'ol/coordinate';
 
 /**
@@ -463,6 +463,15 @@ Drawing.prototype.pixelToDevice=function(pixel) {
 };
 
 
+/** Convert canvas/device pixels back to CSS pixels (inverse of pixelToDevice). */
+Drawing.prototype.deviceToPixel=function(pixel) {
+    if (this.inversePixelTransform){
+        return olapply(this.inversePixelTransform,pixel.slice());
+    }
+    return [pixel[0]/this.devPixelRatio,pixel[1]/this.devPixelRatio];
+};
+
+
 /**
  * set the current devPixelRatio
  * @param {number} ratio
@@ -473,6 +482,7 @@ Drawing.prototype.setDevPixelRatio=function(ratio){
 
 Drawing.prototype.setPixelTransform=function(pixelTransform) {
     this.pixelTransform=pixelTransform;
+    this.inversePixelTransform=pixelTransform?olmakeInverse(olcreate(),pixelTransform):undefined;
 }
 
 /**

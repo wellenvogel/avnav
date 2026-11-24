@@ -254,6 +254,7 @@ export interface Drawing {
     // coordinate helpers
     pointToCssPixel(coord: number[]): number[];
     pixelToDevice(pixel: number[]): number[];
+    deviceToPixel(pixel: number[]): number[];
     cssPixelToCoord(xy: number[]): number[];
     pointToMap(lonlat: number[]): number[];
     pointFromMap(coord: number[]): number[];
