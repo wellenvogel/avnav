@@ -46,7 +46,7 @@ import navobjects from "../nav/navobjects";
 import olDataTile,{asImageLike} from "ol/DataTile";
 import {PMTiles} from 'pmtiles';
 import {unByKey} from "ol/Observable.js";
-import {fetchWithTimeout} from "../util/requests";
+import {buildProxyUrl, fetchWithTimeout} from "../util/requests";
 import {load as yamlLoad} from 'js-yaml';
 
 
@@ -651,7 +651,10 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     }
 
     async prepare(options, source) {
-        this.useProxy=!!options.useproxy;
+        // XML attributes are lower-cased strings; JSON can use the documented alias.
+        const useProxy=options.useproxy ?? options.useProxy;
+        this.useProxy=typeof useProxy === 'string'
+            ? useProxy.toLowerCase() === 'true' : !!useProxy;
         const maplibreCfg=options.maplibre||{};
         this.baseUrl = this.overviewUrl || window.location.href;
         const style=maplibreCfg.style||options.style||options.styleUrl||
@@ -662,7 +665,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
                 let styleUrl = new URL(style, this.overviewUrl || window.location.href);
                 this.baseUrl = styleUrl.toString();
                 if (this.useProxy && styleUrl.origin !== window.location.origin) {
-                    styleUrl = new URL("/proxy/" + encodeURIComponent(styleUrl.toString()), window.location.href);
+                    styleUrl = buildProxyUrl(styleUrl);
                 }
                 const result = await fetchWithTimeout(styleUrl,
                     {timeout: parseInt(globalStore.getData(keys.properties.networkTimeout))})
@@ -712,7 +715,9 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
             const style=mapLibreOptions.style;
             //replace URLs
             if (style.sprite) {
-                style.sprite=this._translateUrl(style.sprite);
+                style.sprite=Array.isArray(style.sprite)
+                    ? style.sprite.map(sprite=>({...sprite,url:this._translateUrl(sprite.url)}))
+                    : this._translateUrl(style.sprite);
             }
             if (style.glyphs) {
                 style.glyphs = this._translateUrl(style.glyphs);

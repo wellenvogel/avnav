@@ -179,9 +179,10 @@ class AVNIconHandler(AVNDirectoryHandlerBase):
   def __init__(self,param):
     AVNDirectoryHandlerBase.__init__(self, param, "icons")
 
-  def startInstance(self, navdata):
-    super().startInstance(navdata)
-    self.baseDir=os.path.join(self.httpServer.handlePathmapping(AVNHttpServer.PATH_VIEWER),'images')
+  def run(self):
+      self.baseDir = os.path.join(self.httpServer.handlePathmapping(AVNHttpServer.PATH_VIEWER), 'images')
+      super().run()
+
 
   def handlePathRequest(self, path:str, requestparam, server=None, handler=None):
       try:

@@ -126,6 +126,18 @@ body{
   .iconFrame .icon{
     filter: var(--avnav-filter-redlight);
   }
+  &.titleIcons{
+    display: flex;
+    justify-content: right;
+    align-self: end;
+    position: unset;
+    .header &{
+      flex: 1;
+    }
+    &.absolute{
+      position: absolute;
+    }
+  }
 }
 
 
@@ -799,6 +811,9 @@ body{
   }
   display: flex;
   flex-direction: row;
+  &.vertical{
+    flex-direction: column;
+  }
   &.listMain{
     flex-direction: column;
     flex: 1;
@@ -1461,6 +1476,15 @@ span.valuePrefix{
   padding-left: 0.8em;
 }
 
+//--- plugins ---
+.catalogItem {
+  .primary {
+    font-weight: bold;
+  }
+  dt {
+    .mdText2();
+  }
+}
 
   //------ type icons ------
 
@@ -1488,7 +1512,7 @@ span.valuePrefix{
       margin-bottom: 1em;
       margin-right: 1em;
     }
-    .progressInfo{
+    .progressInfo, .title{
       display: block;
       text-align: center;
     }

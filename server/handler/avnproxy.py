@@ -30,6 +30,7 @@ import urllib.request
 from urllib.error import HTTPError
 
 import avnav_handlerList
+from avnav_downloadmanager import createNoCheckTimeSSLContext
 from avnav_util import AVNUtil, AVNLog, AVNProxyDownload, AVNDownloadError
 from avnav_worker import AVNWorker, WorkerStatus
 from httphandler import AVNHTTPHandler
@@ -72,10 +73,9 @@ class AVNProxy(AVNWorker):
     def handleProxyRequest(self,url,handler:AVNHTTPHandler,requestparam=None):
         status=500
         constructed=url
+        skip_cert_time_check=False
         try:
-            parsed=urllib.parse.urlparse(url)
-            parsed=parsed._replace(path=urllib.parse.quote_plus(parsed.path,safe='/').replace('+','%20'))
-            constructed=urllib.parse.urlunparse(parsed)
+            constructed=url
             request = urllib.request.Request(constructed)
             headers = handler.headers
             lcmap = set() #keep the lower case header names to avoid later override
@@ -83,6 +83,8 @@ class AVNProxy(AVNWorker):
                 for k,v in requestparam.items():
                     lk=k.lower()
                     if not lk.startswith("h:"):
+                        if lk == 'a:notime':
+                            skip_cert_time_check=True
                         continue
                     lk=lk[2:]
                     k=k[2:]
@@ -97,7 +99,10 @@ class AVNProxy(AVNWorker):
                 request.add_header(k, v)
             request.method = handler.command
             try:
-                response = urllib.request.urlopen(request)
+                sslcontext=None
+                if skip_cert_time_check:
+                    sslcontext=createNoCheckTimeSSLContext()
+                response = urllib.request.urlopen(request,context=sslcontext)
             except HTTPError as httpError:
                 if httpError.code in self.OK_STATS:
                     response=httpError.file
@@ -111,7 +116,7 @@ class AVNProxy(AVNWorker):
                 if k.lower() == 'location' and status == 301:
                     v="http://"+self.getRequestIp(handler)+":"+handler.server.server_address[1]+self.getHandledPath()+"/"+urllib.parse.quote(v)
                 headers[k]=v
-            return AVNProxyDownload(status,headers,response.fp,userData=response)
+            return AVNProxyDownload(status,headers,response,userData=response)
         except Exception as e:
             traceback.print_exc()
             AVNLog.debug("proxy request for %s failed: %s", constructed,str(e))
@@ -126,7 +131,7 @@ class AVNProxy(AVNWorker):
         raise Exception(f"invalid proxy command: {command}")
 
     def handlePathRequest(self, path, requestparam, server=None, handler=None):
-        return self.handleProxyRequest(path, handler,requestparam)
+        return self.handleProxyRequest(AVNUtil.getUrlFromPath(path), handler,requestparam)
 
     def getHandledPath(self):
         return "/"+self.ATYPE

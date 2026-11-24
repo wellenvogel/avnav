@@ -24,7 +24,6 @@
 import React, {useRef} from 'react';
 import Helper, {concatsp} from "../util/helper";
 import {Icon, IconProps} from "./Icons";
-// @ts-ignore
 import {useAvNavSortable} from "../hoc/Sortable";
 import {ScrollExeMode, scrollInContainer} from "../util/UiHelper";
 
@@ -76,11 +75,12 @@ export interface ListSlotProps{
     text?: string|React.ReactNode;
     children?: React.ReactNode;
     onClick?: (ev:any) => void;
+    vertical?: boolean;
 }
-export const ListSlot=({className,icon,text,children,onClick}: ListSlotProps) => {
+export const ListSlot=({vertical,className,icon,text,children,onClick}: ListSlotProps) => {
     if (! icon && (text == null) && !children) return null;
     return <div
-        className={concatsp("listSlot",className)}
+        className={concatsp("listSlot",className,vertical?"vertical":undefined)}
         onClick={onClick}
         >
         {icon && <Icon {...icon}/>}

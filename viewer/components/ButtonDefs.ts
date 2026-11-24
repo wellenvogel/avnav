@@ -43,6 +43,10 @@ const ButtonDefinitions= {
         name:btdef.Cancel,
         iconClass: iconClasses.Cancel,
     },
+    CancelOperation:{
+        name:btdef.CancelOperation,
+        iconClass: iconClasses.Cancel,
+    },
     //addonconfig
     AddonConfigAddOns:{
         name:btdef.AddonConfigAddOns,
@@ -458,6 +462,15 @@ const ButtonDefinitions= {
         iconClass: iconClasses.NavMapWidgets,
         name: btdef.NavMapWidgets,
     },
+    //plugins
+    PluginCatalog:{
+        iconClass: iconClasses.PluginCatalog,
+        name:btdef.PluginCatalog
+    },
+    PluginWeb:{
+        iconClass: iconClasses.PluginWeb,
+        name:btdef.PluginWeb
+    },
     //other
     Help:{
         iconClass: iconClasses.Help,
@@ -726,6 +739,19 @@ const ButtonDefinitions= {
     DBUserApp:{
         iconClass: iconClasses.AddOns,
         name:btdef.DBUserApp
+    },
+    //plugins
+    DBPluginUpdate:{
+        iconClass: iconClasses.PluginUpdate,
+        name:btdef.DBUpdate,
+    },
+    DBPluginInstall:{
+        iconClass: iconClasses.PluginInstall,
+        name:btdef.DBInstall,
+    },
+    DBPluginInfo:{
+        iconClass: iconClasses.PluginWeb,
+        name:btdef.DBInfo
     },
     //Lock Dialog
     DBCurrent:{

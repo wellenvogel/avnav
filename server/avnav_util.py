@@ -24,6 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import base64
 import datetime
 import glob
 import io
@@ -42,6 +43,7 @@ import sys
 import threading
 import time
 import urllib.parse
+import urllib.request
 import zipfile
 from http.server import SimpleHTTPRequestHandler
 from typing import Any
@@ -325,7 +327,7 @@ class AVNUtil(object):
     def timeToDatetime(cls, ts=None,localTime=False):
         if ts is None:
             ts=time.time()
-        rt=datetime.datetime.fromtimestamp(ts,tz=datetime.UTC)
+        rt=datetime.datetime.fromtimestamp(ts,tz=datetime.timezone.utc)
         if localTime:
             rt.astimezone(tz= tz.tzlocal())
         return rt
@@ -334,11 +336,11 @@ class AVNUtil(object):
     def datetimeToTsUTC(cls, dt):
         if dt is None:
             return None
-        if dt.tzinfo is None or dt.tzinfo == datetime.UTC:
+        if dt.tzinfo is None or dt.tzinfo == datetime.timezone.utc:
             #assume UTC for naive
-            return dt.replace(tzinfo=datetime.UTC).timestamp()
+            return dt.replace(tzinfo=datetime.timezone.utc).timestamp()
         else:
-            return dt.astimezone(tz=datetime.UTC).timestamp()
+            return dt.astimezone(tz=datetime.timezone.utc).timestamp()
 
     # timedelta total_seconds that is not available in 2.6
     @classmethod
@@ -517,8 +519,8 @@ class AVNUtil(object):
         '''
         if not dt:
             return None
-        if dt.tzinfo is not None and dt.tzinfo != datetime.UTC:
-            dt=dt.astimezone(datetime.UTC)
+        if dt.tzinfo is not None and dt.tzinfo != datetime.timezone.utc:
+            dt=dt.astimezone(datetime.timezone.utc)
         ts=dt.replace(tzinfo=None).isoformat()
         if not ts[-1:]=="Z":
             ts+="Z"
@@ -532,12 +534,14 @@ class AVNUtil(object):
     # param - the command as to be given to subprocess.Popen
     @classmethod
     def runCommand(cls, param, threadName=None, timeout=None):
+        if threadName is None:
+            threadName = "runCommand"
         try:
-            cmd = subprocess.Popen(param, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-            reader = threading.Thread(target=cls.cmdOut, args=[cmd.stdout], daemon=True)
-            if threadName is not None:
-                reader.setName(threadName or '')
-            reader.start()
+            cmd = SafePopen(param,
+                            stdout_reader= lambda line: AVNLog.info("%s:%s",threadName,line),
+                            stderr_reader= lambda line: AVNLog.error("%s:%s",threadName,line),
+                            close_fds=True
+                            )
             start = time.monotonic()
             while True:
                 rt = cmd.poll()
@@ -548,7 +552,7 @@ class AVNUtil(object):
                     continue
                 if (start + timeout) < time.monotonic():
                     AVNLog.error("timeout %f reached for command %s", timeout, " ".join(param))
-                    cmd.kill()
+                    cmd.kill_all()
                     time.sleep(0.1)
                     cmd.poll()
                     return -255
@@ -556,19 +560,10 @@ class AVNUtil(object):
             AVNLog.error("unable to start command %s:%s", " ".join(param), str(e))
             return -255
 
-    @classmethod
-    def cmdOut(cls, stream):
-        AVNLog.debug("cmd reading started")
-        while True:
-            line = stream.readline()
-            if not line:
-                break
-            AVNLog.debug("[cmd]%s", line.strip())
-        AVNLog.debug("cmd reading finished")
 
     @classmethod
     def getHttpRequestParam(cls, requestparam, name, mantadory=False):
-        if not requestparam:
+        if requestparam is None:
             return None
         rt = requestparam.get(name)
         if rt is None:
@@ -585,6 +580,19 @@ class AVNUtil(object):
         if flagString is None:
             return default
         return flagString.lower() == 'true'
+
+    @classmethod
+    def getUrlFromPath(cls,urlpath):
+        if urlpath is None:
+            return None
+        # Restore stripped '=' padding to make length a multiple of 4
+        padding_needed = (4 - len(urlpath) % 4) % 4
+        padded = urlpath + ("=" * padding_needed)
+
+        # Decode URL-safe Base64 bytes and convert back to UTF-8 string
+        decoded_bytes = base64.urlsafe_b64decode(padded)
+        return decoded_bytes.decode("utf-8")
+
 
     @classmethod
     def getReturnData(cls, error=None, **kwargs):
@@ -774,7 +782,8 @@ class PopenCallbackStream:
 
         # Wait for the background thread to flush remaining lines and exit
         if hasattr(self, '_thread') and self._thread and self._thread.is_alive():
-            self._thread.join()
+            if not threading.current_thread() is self._thread:
+                self._thread.join()
 
 
 
@@ -1101,6 +1110,7 @@ class AVNDownload(object):
         stream=self.getStream(noopen=not sendbody)
         if sendbody and stream is None:
             self.setError(500,"no data in response")
+            stream=self.stream
         addHeaders = None
         if (start is not None or end is not None) and not self.passThru():
             try:

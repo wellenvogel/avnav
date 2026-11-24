@@ -40,6 +40,34 @@ export default GeneralButtons.concat(propsToDefs([
                 upload: undefined
             }
         }
+    },
+    {
+        ...ButtonDefs.PluginCatalog,
+        localOnly:true,
+        storeKeys:{
+            visible: keys.gui.global.connectedMode,
+            upload: keys.gui.capabilities.uploadPlugins
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                visible: state.visible && state.upload,
+                upload: undefined
+            }
+        }
+    },
+    {
+        ...ButtonDefs.PluginWeb,
+        localOnly:true,
+        storeKeys:{
+            visible: keys.gui.global.connectedMode,
+            upload: keys.gui.capabilities.uploadPlugins
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                visible: state.visible && state.upload,
+                upload: undefined
+            }
+        }
     }
 ]))
 

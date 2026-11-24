@@ -32,7 +32,7 @@ import globalstore from "../util/globalstore";
 import {showDialog, showPromiseDialog} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import {ConfirmDialog} from "./BasicDialogs";
-import {reloadPage} from "../util/helper";
+import Helper, {reloadPage} from "../util/helper";
 // @ts-ignore
 import LeaveHandler from "../util/leavehandler"
 import {useDialogContext} from "./DialogContext";
@@ -41,9 +41,13 @@ import propertyhandler from "../util/propertyhandler";
 import {Icon,iconClasses} from "./Icons";
 import ButtonDefs from "./ButtonDefs";
 
-export const DynamicTitleIcons=({rightOffset}:{rightOffset?:number})=>{
+export interface TitleIconsProps {
+    rightOffset?: number;
+    className?: string;
+}
+export const DynamicTitleIcons=(iprops:TitleIconsProps)=>{
     const dialogContext=useDialogContext();
-    const sprops=useStore({rightOffset},{storeKeys:
+    const sprops=useStore(iprops,{storeKeys:
             {...AnchorWatchKeys,
                 show:keys.properties.titleIcons,
                 measure: keys.map.activeMeasure,
@@ -52,14 +56,13 @@ export const DynamicTitleIcons=({rightOffset}:{rightOffset?:number})=>{
                 settingsChanged:keys.gui.global.settingsChanged
             }})
     if (! sprops.show) return null;
-    let cl="iconContainer ";
-    if (sprops.className) cl+=sprops.className;
+    const cl=Helper.concatsp("iconContainer","titleIcons",sprops.className);
     const anchorWatch=sprops.watchDistance !== undefined;
     const jsChange=sprops.mjsUpdates|| sprops.unloadedJs;
     const settingsChanged=sprops.settingsChanged && globalstore.getData(keys.gui.capabilities.uploadSettings);
     const style:Record<string, any> = {};
-    if (rightOffset){
-        style.marginRight=rightOffset+"px";
+    if (iprops.rightOffset){
+        style.marginRight=iprops.rightOffset+"px";
     }
     return <div className={cl} style={style} onClick={(ev)=>ev.stopPropagation()}>
         {sprops.measure && <Icon className={iconClasses.Measure} onClick={()=>{

@@ -31,10 +31,21 @@
     background-image: url("@{iconBaseLegacy}/@{legacy}");
   }
 }
+.dlBase{
+  dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 0.75rem;
+  }
+}
 
 .rowBase{
+  .dlBase();
   display: flex;
   flex-direction: row;
   align-items: center;
   flex-wrap: wrap;
+  &.right{
+    justify-content: flex-end;
+  }
 }

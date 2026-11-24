@@ -34,7 +34,7 @@ import traceback
 
 import avnav_handlerList
 from avnav_manager import AVNHandlerManager
-from avnav_util import AVNLog, AVNUtil
+from avnav_util import AVNLog, AVNUtil, SafePopen
 from avnav_worker import AVNWorker, WorkerStatus
 
 
@@ -50,6 +50,7 @@ class Handler(object):
     self.stop=False
     self.repeat=int(repeat) if repeat is not None else 1
     self.subprocess=None
+    self.waiter=threading.Condition()
 
   def getCommandStr(self):
     return self.command.get('command')
@@ -62,11 +63,12 @@ class Handler(object):
         args.extend(self.parameters)
       else:
         args.extend(re.split("[ \t]+",self.parameters))
-    if hasattr(os,'setsid'):
-      self.subprocess = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-                                       preexec_fn=os.setsid)
-    else:
-      self.subprocess = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    self.subprocess = SafePopen(args,
+                                close_fds=True,
+                                stdout_reader=lambda  line: AVNLog.info("%s:%s",self.name,line),
+                                stderr_reader=lambda line: AVNLog.error("%s:%s", self.name, line),
+                                stdin=subprocess.PIPE,
+                                )
     self.subprocess.stdin.close()
   def start(self):
     self._startCmd()
@@ -79,10 +81,10 @@ class Handler(object):
     try:
       self.stop=True
       self.repeat=0
-      if hasattr(os,'killpg'):
-        os.killpg(os.getpgid(self.subprocess.pid), signal.SIGTERM)
-      else:
-        os.kill(self.subprocess.pid,signal.SIGTERM)
+      if self.subprocess is not None:
+          self.subprocess.kill_all()
+      with self.waiter:
+          self.waiter.notify_all()
       self.thread.join(10)
     except :
       AVNLog.error("unable to stop command %s:%s",self.name,traceback.format_exc())
@@ -94,17 +96,12 @@ class Handler(object):
       status=None
       try:
         while True and not self.stop:
-          line = self.subprocess.stdout.readline()
-          if not line:
-            break
-          AVNLog.info("[cmd]%s", line.strip())
-        status=None
-        wt=30
-        while wt >0 and status is None:
           status=self.subprocess.poll()
           if status is None:
-            time.sleep(0.1)
-          wt-=1
+            with self.waiter:
+                self.waiter.wait(0.1)
+          else:
+              break
       except :
         pass
       self.repeat -= 1

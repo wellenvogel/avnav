@@ -394,7 +394,7 @@ const GpsPage = (props:Partial<PageProps>) => {
             hideCallback={()=>setHideSequence((old:number)=>old+1)}
         >
             <PageLeft id={props.id} >
-                {titleIcons && <DynamicTitleIcons/>}
+                {titleIcons && <DynamicTitleIcons className={"absolute"}/>}
                 <MultiView
                     {...scrollProps}
                     views={views}

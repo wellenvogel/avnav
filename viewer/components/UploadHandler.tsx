@@ -107,6 +107,36 @@ export interface UploadHandlerProps{
    local?:boolean;
    file?:File
 }
+export interface UploadProgressProps{
+    loaded?:number;
+    total?:number;
+    userData?:any;
+    percentComplete?:number;
+    onCancel?: (userData:UploadProgressProps) => void;
+    heading?:string|React.ReactElement;
+}
+export const UploadProgress=(props:UploadProgressProps) => {
+    const doneStyle = {
+        width: props.percentComplete + "%"
+    };
+    return <div className="downloadProgress">
+        <div className="progressContainer">
+            {props.heading && <div className="title">{props.heading}</div>}
+            <div className="progressInfo">{(props.loaded || 0) + "/" + (props.total || 0)}</div>
+            <div className="progressDisplay">
+                <div className="progressDone" style={doneStyle}></div>
+            </div>
+        </div>
+        <Button
+            {...ButtonDefs.CancelOperation}
+            onClick={() => {
+                if (props.onCancel) {
+                    props.onCancel(props);
+                }
+            }}
+        />
+    </div>
+}
 
 const UploadHandler = (props:UploadHandlerProps) => {
     const dialogContext=useDialogContext();
@@ -297,27 +327,19 @@ const UploadHandler = (props:UploadHandlerProps) => {
         percentComplete = stateHelper.loaded || 0;
         loaded = (stateHelper.loaded * stateHelper.total) / 100;
     }
-    const doneStyle = {
-        width: percentComplete + "%"
-    };
     return (
         <React.Fragment>
-            {loaded !== undefined && <div className="downloadProgress">
-                <div className="progressContainer">
-                    <div className="progressInfo">{(loaded || 0) + "/" + (stateHelper.total || 0)}</div>
-                    <div className="progressDisplay">
-                        <div className="progressDone" style={doneStyle}></div>
-                    </div>
-                </div>
-                <Button
-                    {...ButtonDefs.Cancel}
-                    onClick={() => {
-                    if (xhdrRef.current) xhdrRef.current.abort();
-                    setStateHelper({});
-                    error("cancelled");
-                }}
-                />
-            </div>}
+            {loaded !== undefined &&
+                <UploadProgress
+                    loaded={loaded}
+                    total={stateHelper.total}
+                    percentComplete={percentComplete}
+                    onCancel={() => {
+                        if (xhdrRef.current) xhdrRef.current.abort();
+                        setStateHelper({});
+                        error("cancelled");
+                    }}/>
+                }
         </React.Fragment>
     );
 }

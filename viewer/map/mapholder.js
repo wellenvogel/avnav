@@ -14,8 +14,7 @@ import keys, {KeyHelper} from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 import base from '../base.ts';
 import northImage from '../images/nadel_mit.png';
-import KeyHandler, {KeyComponents} from '../util/keyhandler.ts';
-import assign from 'object-assign';
+import {KeyComponents} from '../util/keyhandler.ts';
 import AvNavChartSource from './avnavchartsource.js';
 import GpxChartSource from './gpxchartsource.js';
 import CryptHandler from './crypthandler.js';
@@ -53,14 +52,12 @@ import {
 } from "./featureInfo";
 import Leavehandler from "../util/leavehandler";
 import {createItemActions} from "../components/FileDialog";
-import Helper, {avitem, getav, setav} from "../util/helper";
+import {avitem, getav, setav} from "../util/helper";
 import {checkZoomBounds, PMTILESPROTO} from "./chartlayers";
 import {addProtocol} from "maplibre-gl";
 import {Protocol} from "pmtiles";
 import {EventTypes} from "./maptypes";
 import keyhandler from "../util/keyhandler.ts";
-import propertyhandler from "../util/propertyhandler";
-import view from "ol/View";
 
 
 const AV_SOURCEIDX='sourceIndex'; //avitem being set at each layer
@@ -96,6 +93,41 @@ export const LOCK_MODES={
     off:0,
     current: 1,
     center: 2
+}
+
+class MapBorders{
+    KEYS=['left', 'right','bottom','top','leftTop']; //leftTop is special as the left widget container grows from bottom
+    constructor(options) {
+        const {left,right,top,bottom}=options||{};
+        this.reset();
+        this.assign({left:left,right:right,top:top,bottom:bottom});
+    }
+    set(k,obj){
+        if (obj[k] == null) return false;
+        const equals=this[k]===obj[k];
+        if (equals) return false;
+        this[k]=obj[k];
+        return true;
+    }
+    reset(){
+        let changed=false;
+        const obj={};
+        for (const k of this.KEYS){
+            obj[k]=0;
+            if (this.set(k,obj)){ changed=true; }
+        }
+        return changed;
+    }
+    assign(values){
+        if (! values) return false;
+        let rt=false;
+        for (const k of this.KEYS){
+            if (this.set(k,values)){
+                rt=true;
+            }
+        }
+        return rt;
+    }
 }
 /**
  * the holder for our olmap
@@ -138,6 +170,7 @@ class MapHolder extends DrawingPositionConverter {
         this.minzoom = 32;
         this.mapMinZoom = 32; //for checking in autozoom - differs from minzoom if the baselayer is active
         this.maxzoom = 0;
+        this.mapBorders=new MapBorders();
         /**
          * the point we use to center the map
          * we always use the boatOffset to set the center
@@ -187,8 +220,6 @@ class MapHolder extends DrawingPositionConverter {
          * @type {boolean}
          */
         this.routingActive = false;
-
-        this.compassOffset = 0;
 
         this.needsRedraw = false;
         this.storeKeys = KeyHelper.flattenedKeys(keys.nav.gps).concat(
@@ -433,6 +464,20 @@ class MapHolder extends DrawingPositionConverter {
             }
         }
         globalStore.register(() => this.navEvent(), this.storeKeys.concat(addKeys));
+    }
+
+    setBorders(borders){
+        let changed=false;
+        if (! borders){
+            changed=this.mapBorders.reset();
+            changed=this.mapBorders.reset();
+        }
+        else {
+            changed = this.mapBorders.assign(borders);
+        }
+        if (changed) {
+            this._callHandlers({type:EventTypes.MAPBORDERS,values:{...this.mapBorders}})
+        }
     }
 
     /**
@@ -1381,27 +1426,32 @@ class MapHolder extends DrawingPositionConverter {
         };
         let ctx = this.drawing.getContext();
         if (!ctx) return;
-        let pw = ctx.canvas.width;
-        let ph = ctx.canvas.height;
-        //TODO: css pixel?
-        let ul = this.pointFromMap(this.olmap.getCoordinateFromPixel([0, 0]));
-        let ur = this.pointFromMap(this.olmap.getCoordinateFromPixel([pw, 0]));
-        let ll = this.pointFromMap(this.olmap.getCoordinateFromPixel([0, ph]));
-        let lr = this.pointFromMap(this.olmap.getCoordinateFromPixel([pw, ph]));
+        const size=this.olmap.getSize();
+        const extent = this.olmap.getView().calculateExtent();
+        const coords=this.transformFromMap(extent);
+        const lonMin=coords[0];
+        const latMin=coords[1];
+        const lonMax=coords[2];
+        const latMax=coords[3];
+        const ll=[lonMin,latMin];
+        const lr=[lonMax,latMin];
+        const ur=[lonMax,latMax];
+        const ul=[lonMin,latMax];
+
         let xrange = [Math.min(ul[0], ur[0], ll[0], lr[0]), Math.max(ul[0], ur[0], ll[0], lr[0])];
         let yrange = [Math.min(ul[1], ur[1], ll[1], lr[1]), Math.max(ul[1], ur[1], ll[1], lr[1])];
         let xdiff = xrange[1] - xrange[0];
         let ydiff = yrange[1] - yrange[0];
         let raster = 5 / 60; //we draw in 5' raster
-        if (xdiff / raster > pw / 60) return; //at most every 50px
-        if (ydiff / raster > ph / 60) return; //at most every 50px
+        if (xdiff / raster > size[1] / 60) return; //at most every 60px
+        if (ydiff / raster > size[1] / 60) return; //at most every 60px
         let drawText = this.drawing.getRotation() ? false : true;
         let textStyle = {
             color: 'grey',
             fontSize: 12,
             fontBase: globalStore.getData(keys.gui.global.fontFamily),
             offsetY: 7, //should compute this from the font...
-            fixY: 0
+            fixY: 0 + this.mapBorders.top
         };
         for (let x = Math.floor(xrange[0]); x <= xrange[1]; x += raster) {
             this.drawing.drawLineToContext([this.pointToMap([x, yrange[0]]), this.pointToMap([x, yrange[1]])], style);
@@ -1413,7 +1463,7 @@ class MapHolder extends DrawingPositionConverter {
         textStyle.offsetY = -7;
         textStyle.offsetX = 30; //should compute from font...
         textStyle.fixY = undefined;
-        textStyle.fixX = 0;
+        textStyle.fixX = 0 + this.mapBorders.left;
         for (let y = Math.floor(yrange[0]); y <= yrange[1]; y += raster) {
             this.drawing.drawLineToContext([this.pointToMap([xrange[0], y]), this.pointToMap([xrange[1], y])], style);
             if (drawText) {
@@ -1431,9 +1481,14 @@ class MapHolder extends DrawingPositionConverter {
     drawNorth() {
         if (!globalStore.getData(keys.properties.layers.compass)) return;
         if (!this.olmap) return;
+        let fixX=45;
+        if (this.mapBorders.leftTop < 85){
+            //the left widget container is to high
+            fixX+=this.mapBorders.left;
+        }
         this.drawing.drawImageToContext([0, 0], this.northImage, {
-            fixX: 45, //this.drawing.getContext().canvas.width-120,
-            fixY: 45 + this.compassOffset, //this.drawing.getContext().canvas.height-120,
+            fixX: fixX, //for anchor point
+            fixY: 50 + this.mapBorders.top, //this.drawing.getContext().canvas.height-120,
             rotateWithView: true,
             size: [80, 80],
             anchor: [40, 40],
@@ -2083,11 +2138,6 @@ class MapHolder extends DrawingPositionConverter {
      */
     showEditingRoute(on) {
         this.routinglayer.showEditingRoute(on);
-    }
-
-
-    setCompassOffset(y) {
-        this.compassOffset = y;
     }
 
     getCurrentChartEntry() {

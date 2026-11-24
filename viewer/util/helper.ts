@@ -456,6 +456,7 @@ export const getColor=(element:HTMLElement,
     if (newAlpha == 1) return cv.toHexString();
     return cv.toRgbString();
 }
+
 Helper.concat=concat;
 Helper.concatsp=concatsp;
 Helper.unsetorTrue=unsetOrTrue;
@@ -472,6 +473,7 @@ Helper.urlToString=urlToString;
 Helper.avNavVersion=avNavVersion;
 Helper.toBoolean=toBoolean;
 Helper.getColor=getColor;
+
 
 export default Helper;
 
