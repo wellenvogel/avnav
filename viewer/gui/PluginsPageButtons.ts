@@ -42,7 +42,7 @@ export default GeneralButtons.concat(propsToDefs([
         }
     },
     {
-        ...ButtonDefs.SyncPlugins,
+        ...ButtonDefs.PluginCatalog,
         localOnly:true,
         storeKeys:{
             visible: keys.gui.global.connectedMode,

@@ -463,8 +463,8 @@ const ButtonDefinitions= {
         name: btdef.NavMapWidgets,
     },
     //plugins
-    SyncPlugins:{
-        iconClass: iconClasses.Sync,
+    PluginCatalog:{
+        iconClass: iconClasses.PluginCatalog,
         name:btdef.SyncPlugins
     },
     //other
@@ -738,11 +738,11 @@ const ButtonDefinitions= {
     },
     //plugins
     DBPluginUpdate:{
-        iconClass: iconClasses.Download,
+        iconClass: iconClasses.PluginUpdate,
         name:btdef.DBUpdate,
     },
     DBPluginInstall:{
-        iconClass: iconClasses.Download,
+        iconClass: iconClasses.PluginInstall,
         name:btdef.DBInstall,
     },
     //Lock Dialog

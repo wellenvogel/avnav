@@ -40,6 +40,7 @@ import {getPageTitle} from "../components/pagetitles";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import Toast from "../components/Toast";
+// @ts-ignore
 import {load as yamlLoad} from 'js-yaml';
 import {ListItem, ListMainSlot, ListSlot, useDialogContext} from "../components/exports";
 import {
@@ -53,6 +54,7 @@ import {listItems} from "../util/itemFunctions";
 import DialogButton from "../components/DialogButton";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import base from "../base";
+import {injectDateIntoUrl} from "../util/helper";
 interface InfoCacheEntry{
     status:ChildStatusProps;
     element: ReactElement,
@@ -396,7 +398,7 @@ export const PluginsPage = (props:PageProps) => {
     },1000,true,true)
     const [uploadProps,uploadAction]=useUploadHelper("plugins");
     const syncAction=useCallback(()=>{
-        const url=globalstore.getData(keys.properties.pluginCatalog);
+        const url=injectDateIntoUrl(new URL(globalstore.getData(keys.properties.pluginCatalog),window.location.href));
         dialogContext.showDialog(()=><PluginCatalog url={url} selectCallback={
             (name:string)=>{
                 setSelectedName(name);
@@ -412,7 +414,7 @@ export const PluginsPage = (props:PageProps) => {
         [ButtonDefs.Upload.name]:{
             onClick:uploadAction,
         },
-        [ButtonDefs.SyncPlugins.name]:{
+        [ButtonDefs.PluginCatalog.name]:{
             onClick:syncAction,
         },
         Cancel:{
