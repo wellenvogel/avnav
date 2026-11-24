@@ -55,6 +55,8 @@ import DialogButton from "../components/DialogButton";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import base from "../base";
 import {injectDateIntoUrl} from "../util/helper";
+import buttonDefs from "../components/ButtonDefs";
+const PLUGINSTAB="plugins";
 interface InfoCacheEntry{
     status:ChildStatusProps;
     element: ReactElement,
@@ -97,6 +99,10 @@ interface CatalogEntry extends Record<string, any> {
     version:string|number;
     type?:string;
     platform?:string[];
+    description?:{
+        de?:string,
+        en?:string,
+    };
     available?:Record<string, any>;
     _localItem?:Item,
     _updateOptions:UpdateOptions;
@@ -169,6 +175,7 @@ const CatalogItem = (props: CatalogEntry) => {
             platform=`${props.platform}`;
         }
     }
+    if (props.description?.en != null) nv.push(["Description",props.description?.en]);
     if (props.version != null) nv.push(["CatalogVersion",props.version])
     nv.push(["Type",props.type])
     nv.push(["Platform",platform])
@@ -176,8 +183,13 @@ const CatalogItem = (props: CatalogEntry) => {
     if (props._localItem != null){
         nv.push(["LocalVersion",(props._localItem.version != null)?props._localItem.version:"[installed]"])
     }
-    const bt=updateState.isNew?ButtonDefs.DBPluginInstall: ButtonDefs.DBPluginUpdate
+    let bt;
+    if (updateState.can && (updateState.should || updateState.isNew)  && ! updateState.updater) {
+        bt = updateState.isNew ? ButtonDefs.DBPluginInstall : ButtonDefs.DBPluginUpdate
+    }
     const prfx=(props.type == 'zip')?USER_PREFIX:SYS_PREFIX;
+    const documentation=new URL(globalstore.getData(keys.properties.pluginCatalogUi),window.location.href);
+    documentation.searchParams.set("name",props.name);
     return <ListItem className={'catalogItem'}>
         <ListMainSlot primary={prfx+props.name}>
         <dl>
@@ -187,8 +199,15 @@ const CatalogItem = (props: CatalogEntry) => {
         </Fragment>)}
         </dl>
         </ListMainSlot>
-        {updateState.can && (updateState.should || updateState.isNew)  && ! updateState.updater && <ListSlot>
-            <DialogButton
+        <ListSlot vertical={true}>
+            <DialogButton {...buttonDefs.DBPluginInfo}
+                          close={false}
+                          onClick={()=>{
+                              window.open(documentation,PLUGINSTAB);
+                          }}
+            >
+            </DialogButton>
+            { !!bt && <DialogButton
             {...bt}
             close={false}
             onClick={async ()=>{
@@ -209,8 +228,8 @@ const CatalogItem = (props: CatalogEntry) => {
 
                 }
             }}
-        />
-        </ListSlot>}
+        />}
+        </ListSlot>
     </ListItem>
 }
 const PluginCatalog=(props:PluginCatalogProps)=>{
@@ -416,6 +435,11 @@ export const PluginsPage = (props:PageProps) => {
         },
         [ButtonDefs.PluginCatalog.name]:{
             onClick:syncAction,
+        },
+        [ButtonDefs.PluginWeb.name]:{
+            onClick:()=>{
+                window.open(globalstore.getData(keys.properties.pluginCatalogUi),PLUGINSTAB);
+            },
         },
         Cancel:{
             onClick:()=>{history.pop()}

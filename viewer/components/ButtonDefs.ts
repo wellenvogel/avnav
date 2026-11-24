@@ -465,7 +465,11 @@ const ButtonDefinitions= {
     //plugins
     PluginCatalog:{
         iconClass: iconClasses.PluginCatalog,
-        name:btdef.SyncPlugins
+        name:btdef.PluginCatalog
+    },
+    PluginWeb:{
+        iconClass: iconClasses.PluginWeb,
+        name:btdef.PluginWeb
     },
     //other
     Help:{
@@ -744,6 +748,10 @@ const ButtonDefinitions= {
     DBPluginInstall:{
         iconClass: iconClasses.PluginInstall,
         name:btdef.DBInstall,
+    },
+    DBPluginInfo:{
+        iconClass: iconClasses.PluginWeb,
+        name:btdef.DBInfo
     },
     //Lock Dialog
     DBCurrent:{
