@@ -870,6 +870,22 @@ NMEA-Logger
 
 Das GPS des Gerätes.
 
+### InternalAttitude
+
+Ein optionaler interner Worker, der die Lage des Bootes (Roll und Pitch) aus
+den Orientierungssensoren des Android-Gerätes liest und als NMEA-XDR-Transducer
+(`$INXDR` mit ROLL/PITCH in Grad) ausgibt. Damit stehen die Werte im internen
+Speicher als `nav.gps.transducers.ROLL` bzw. `nav.gps.transducers.PITCH` zur
+Verfügung. Details siehe [Lage/Neigung aus dem Android-Gerät](attitude.md).
+
+| Parameter | Beschreibung | default |
+| --- | --- | --- |
+| enabled | Der Worker ist opt-in: er muss explizit aktiviert werden (der Rotationssensor verbraucht Batterie, und ein lose mitgeführtes Gerät würde sinnlose Werte liefern). | aus |
+| priority | Priorität der erzeugten Daten. Höher priorisierte externe Quellen (z.B. NMEA2000/SignalK) gewinnen gegen die interne Quelle. | 40 |
+| screenFacing | Richtung, in die der Bildschirm des Gerätes auf dem Boot zeigt: aft (zum Cockpit/Heck), bow (zum Bug), port, starboard. Der Bildschirm darf bis zu 60° aus der Senkrechten gekippt sein - flach aufgelegt (Bildschirm nach oben) wird nicht unterstützt. | aft |
+| calibrateMount | Einmalig auf true setzen, während das Boot waagerecht und in Ruhe liegt. Misst dann die exakte "Oben"-Achse des Bootes für die aktuelle Befestigung (jede Drehung des Gerätes in der Bildschirmebene, auch schräge Befestigungen) und speichert sie in *mountCalibration*. Setzt sich automatisch zurück; schlägt fehl, wenn der Bildschirm zu flach liegt. Ohne Kalibrierung werden keine Daten ausgegeben. | aus |
+| mountCalibration | Wird von calibrateMount geschrieben ("<screenFacing>,<ux>,<uy>,<uz>") und nur verwendet, solange *screenFacing* übereinstimmt. Nach einem Wechsel der Befestigung oder von screenFacing muss neu kalibriert werden. | leer |
+
 ### MDNSResolver
 
 Der Handler für die Auflösung und das Bekanntmachen von "mDNS"
