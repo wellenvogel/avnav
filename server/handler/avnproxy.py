@@ -116,7 +116,7 @@ class AVNProxy(AVNWorker):
                 if k.lower() == 'location' and status == 301:
                     v="http://"+self.getRequestIp(handler)+":"+handler.server.server_address[1]+self.getHandledPath()+"/"+urllib.parse.quote(v)
                 headers[k]=v
-            return AVNProxyDownload(status,headers,response.fp,userData=response)
+            return AVNProxyDownload(status,headers,response,userData=response)
         except Exception as e:
             traceback.print_exc()
             AVNLog.debug("proxy request for %s failed: %s", constructed,str(e))

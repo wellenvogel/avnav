@@ -1110,6 +1110,7 @@ class AVNDownload(object):
         stream=self.getStream(noopen=not sendbody)
         if sendbody and stream is None:
             self.setError(500,"no data in response")
+            stream=self.stream
         addHeaders = None
         if (start is not None or end is not None) and not self.passThru():
             try:
