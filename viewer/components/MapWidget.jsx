@@ -35,9 +35,8 @@ const MapWidget=(props)=>{
          */
         pixelToLonLat:(x,y)=>{
             if (! drawing.current) return [0,0];
-            x=x/drawing.current.getDevPixelRatio();
-            y=y/drawing.current.getDevPixelRatio();
-            return drawing.current.pointFromMap(drawing.current.cssPixelToCoord([x,y]));
+            const pixel=drawing.current.deviceToPixel([x,y]);
+            return drawing.current.pointFromMap(drawing.current.cssPixelToCoord(pixel));
         },
         /**
          * get the scale factor for high dpi displays
@@ -71,7 +70,7 @@ const MapWidget=(props)=>{
         getDimensions:()=>{
             if (! drawing.current) return [0,0];
             let cv=drawing.current.getContext().canvas;
-            return [cv.width*drawing.current.getDevPixelRatio(),cv.height*drawing.current.getDevPixelRatio()];
+            return [cv.width,cv.height];
         },
         /**
          * function to trigger a new render of the map

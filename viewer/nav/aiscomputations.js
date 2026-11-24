@@ -414,9 +414,12 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
         let ais=aisItem.received;
         if (ais.lat == null || ais.lon == null) return;
         let aisSpeed = parseFloat(ais.speed || 0);
-        aisItem.shouldHandle=!options.onlyShowMoving || aisSpeed >= options.minAISspeed;
+        const clazz=aisformatter.format('clazz',aisItem);
+        // Keep navigation aids and anchored/distressed class A vessels visible.
+        // Class B reports do not carry a navigational status.
+        const hideStationary=clazz === 'B' || (clazz === 'A' && parseInt(ais.status) === 5);
+        aisItem.shouldHandle=!options.onlyShowMoving || !hideStationary || aisSpeed >= options.minAISspeed;
         if (aisItem.shouldHandle){
-            let clazz=aisformatter.format('clazz',aisItem);
             if (clazz === 'A') aisItem.shouldHandle=options.showA;
             else if (clazz === 'B') aisItem.shouldHandle=options.showB;
             else aisItem.shouldHandle=options.showOther;

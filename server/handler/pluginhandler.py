@@ -121,6 +121,7 @@ class ApiImpl(AVNApi):
         self.converters = set()
         self.settingsFiles = []
         self.jsCssOnly = False
+        self.initializationError = None
         self.internal = internal
         self.directory = directory
         self.thread = None #type: WorkerThread|None
@@ -746,6 +747,9 @@ class ApiImpl(AVNApi):
             self.setStatus(WorkerStatus.INACTIVE, "disabled by config")
             return
         self.stopped=False
+        if self.initializationError is not None:
+            self.setStatus(WorkerStatus.ERROR, self.initializationError)
+            return
         try:
             self.handlePluginJson()
         except Exception as e:
@@ -913,15 +917,20 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             AVNLog.info("module %s is hidden by environment")
             return
         module = None
+        loadError = None
         try:
             module = self.loadPluginFromDir(dir, moduleName)
-        except:
+        except Exception as e:
+            loadError = "unable to load plugin: %s" % str(e)
             AVNLog.error("error loading plugin from %s:%s", dir, traceback.format_exc())
         api = ApiImpl(self, self.navdata, self.queue, moduleName,
                       inspect.getfile(module) if module is not None else module, internal=(dirtype == self.D_BUILTIN),
                       directory=dir, dirtype=dirtype)
         api.readVersion()
-        if module is not None:
+        if loadError is not None:
+            api.initializationError = loadError
+            self.setInfo(moduleName, loadError, WorkerStatus.ERROR)
+        elif module is not None:
             self.instantiateHandlersFromModule(moduleName, module, api)
         else:
             hasClientFiles = False
@@ -1035,7 +1044,8 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                     api.plugin = pluginInstance
                     self.setInfo(modulename, "created", WorkerStatus.STARTED)
                 except Exception as e:
-                    self.setInfo(modulename, "unable to create plugin: %s" % str(e), WorkerStatus.ERROR)
+                    api.initializationError = "unable to create plugin: %s" % str(e)
+                    self.setInfo(modulename, api.initializationError, WorkerStatus.ERROR)
                     AVNLog.error("cannot start %s:%s" % (modulename, traceback.format_exc()))
 
     def loadPluginFromDir(self, dir, name):
@@ -1048,15 +1058,11 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         moduleFile = os.path.join(dir, "plugin.py")
         if not os.path.exists(moduleFile):
             return None
-        try:
-            spec = importlib.util.spec_from_file_location(name, moduleFile)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            AVNLog.info("loaded %s as %s", moduleFile, name)
-            return module
-        except:
-            AVNLog.error("unable to load %s:%s", moduleFile, traceback.format_exc())
-        return None
+        spec = importlib.util.spec_from_file_location(name, moduleFile)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        AVNLog.info("loaded %s as %s", moduleFile, name)
+        return module
 
     def changeChildConfigDict(self, childName, configDict):
         with self.configLock:
