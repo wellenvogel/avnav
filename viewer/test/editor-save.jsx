@@ -1,0 +1,35 @@
+import '../avnav_viewer';
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import {EditDialog} from '../components/EditDialog';
+const tick=()=>new Promise(resolve=>setTimeout(resolve,20));
+window.runRegressionTests=async()=>{
+    const host=document.createElement('div');document.body.appendChild(host);
+    const root=createRoot(host);
+    const saves=[];
+    root.render(<EditDialog data="initial" fileName="example.txt" resolveFunction={()=>{}}
+        saveFunction={text=>new Promise((resolve,reject)=>saves.push({text,resolve,reject}))}/>);
+    for(let i=0;i<100&&!host.querySelector('textarea');i++)await tick();
+    const input=host.querySelector('textarea');
+    const save=()=>host.querySelector('.dialogButton.DBSave');
+    if(!input||!save())throw Error('editor failed to mount');
+    const edit=async text=>{input.value=text;input.dispatchEvent(new Event('input',{bubbles:true}));await tick();};
+    const disabled=()=>save().hasAttribute('disabled');
+    await edit('first');save().click();await tick();
+    if(saves[0]?.text!=='first')throw Error('wrong saved content');
+    await edit('second');
+    if(!disabled())throw Error('do not overlap save requests');
+    save().click();await tick();
+    if(saves.length!==1)throw Error('overlapping save request');
+    saves[0].resolve();await tick();
+    if(disabled())throw Error('save completion hid newer unsaved edits');
+    save().click();await tick();
+    if(saves[1]?.text!=='second')throw Error('newer content not saved');
+    saves[1].resolve();await tick();
+    if(!disabled())throw Error('successful unchanged save should become clean');
+    await edit('third');save().click();await tick();
+    saves[2].reject();await tick();
+    if(disabled())throw Error('failed save must remain retryable');
+    root.unmount();host.remove();
+    return {pendingEditsPreserved:true,normalSave:true,retryAfterFailure:true};
+};
