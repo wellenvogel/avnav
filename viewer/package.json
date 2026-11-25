@@ -28,6 +28,7 @@
     "@eslint/js": "^8.57.0",
     "@types/geodesy": "^2.2.8",
     "@types/js-yaml": "^4.0.9",
+    "@types/prop-types": "^15.7.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/tinycolor2": "^1.4.6",
