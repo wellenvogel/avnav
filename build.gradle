@@ -360,7 +360,7 @@ task buildChangeList(type: Exec){
     def version=project.avnavVersion
     def of=file("$buildDir/distributions/changes-${version}.md")
     outputs.file(of)
-    commandLine("tools/buildChangeList.sh","-v",version)
+    commandLine("tools/buildChangeList.sh","-v",version,"-i",version)
 }
 
 task release{
