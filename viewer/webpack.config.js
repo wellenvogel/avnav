@@ -213,6 +213,13 @@ module.exports = (env, argv) => {
                 },
 
                 {
+                    test: /maplibre-gl-worker\.mjs$/,
+                    type: 'asset/resource',
+                    generator: {
+                        filename: 'maplibre-gl-worker.[contenthash:8].mjs'
+                    }
+                },
+                {
                     test: /images\/.*\.png$|images\/.*\.svg$/,
                     type: 'asset/resource',
                     generator: {
