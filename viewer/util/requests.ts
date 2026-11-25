@@ -95,14 +95,36 @@ export const prepareUrl=(url:UrlType, options?:RequestOptions)=>{
 
 };
 
-export const buildProxyUrl=(url:URL|string, baseUrl:URL|string,headers:HeaderType,parameters:Record<string,any>)=>{
+// Encode a full URL (including query strings) into a path-safe string
+export const encodeUrlForPath=(targetUrl:string)=> {
+    const bytes = new TextEncoder().encode(targetUrl);
+    const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join("");
+    return btoa(binString)
+        .replace(/\+/g, "-") // Replace '+' with '-'
+        .replace(/\//g, "_") // Replace '/' with '_'
+        .replace(/=+$/, ""); // Remove trailing '=' padding
+}
+
+// Decode it back to the original URL
+export const decodeUrlFromPath=(encoded:string)=> {
+    let base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+    while (base64.length % 4) {
+        base64 += "="; // Restore padding
+    }
+    const binString = atob(base64);
+    const bytes = Uint8Array.from(binString, (m) => m.codePointAt(0));
+    return new TextDecoder().decode(bytes);
+}
+
+
+export const buildProxyUrl=(url:URL|string, baseUrl?:URL|string,headers?:HeaderType,parameters?:Record<string,any>)=>{
     if (! (url instanceof URL)){
         url=new URL(url,baseUrl||window.location.href);
     }
     if (url.origin === window.location.origin){
         return url.toString();
     }
-    const proxyUrl=new URL("/proxy/"+encodeURIComponent(url.toString()),window.location.href);
+    const proxyUrl=new URL("/proxy/"+encodeUrlForPath(url.toString()),window.location.href);
     if (headers){
         for (const k in headers){
             proxyUrl.searchParams.append("h:"+k, headers[k]);

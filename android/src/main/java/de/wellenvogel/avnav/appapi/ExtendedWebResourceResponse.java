@@ -3,6 +3,8 @@ package de.wellenvogel.avnav.appapi;
 import android.os.Build;
 import android.webkit.WebResourceResponse;
 
+import androidx.annotation.NonNull;
+
 import org.apache.http.Header;
 
 import java.io.ByteArrayInputStream;
@@ -96,6 +98,13 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
     public void setProxy(boolean proxy) {
         isProxy = proxy;
     }
+
+    @Override
+    public void setStatusCodeAndReasonPhrase(int statusCode, @NonNull String reasonPhrase) {
+        this.statusCode = statusCode;
+        this.reason = reasonPhrase;
+    }
+
 
     static final String BYTES="bytes=";
     public static final String RANGE_HDR="range";

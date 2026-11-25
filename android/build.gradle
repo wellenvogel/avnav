@@ -42,8 +42,8 @@ dependencies {
     implementation group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.0'
     implementation 'androidx.documentfile:documentfile:1.0.1'
     testImplementation 'junit:junit:4.12'
-    //to run tests we need to enable this - but it only compiles in debug mode due to androidx stuff
-    //testImplementation 'org.robolectric:robolectric:4.4'
+    testImplementation 'com.vaadin.external.google:android-json:0.0.20131108.vaadin1'
+    testImplementation 'org.mockito:mockito-core:5.14.2'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.10") {
@@ -320,6 +320,5 @@ androidComponents {
 
 //clean.delete.add "assets/viewer"
 clean.dependsOn cleanViewer
-
 
 

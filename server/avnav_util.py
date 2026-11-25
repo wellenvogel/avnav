@@ -24,6 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import base64
 import datetime
 import glob
 import io
@@ -49,7 +50,6 @@ from typing import Any
 from typing import Callable
 
 from dateutil.tz import tz
-from sympy import catalan
 
 
 class Enum(set):
@@ -327,7 +327,7 @@ class AVNUtil(object):
     def timeToDatetime(cls, ts=None,localTime=False):
         if ts is None:
             ts=time.time()
-        rt=datetime.datetime.fromtimestamp(ts,tz=datetime.UTC)
+        rt=datetime.datetime.fromtimestamp(ts,tz=datetime.timezone.utc)
         if localTime:
             rt.astimezone(tz= tz.tzlocal())
         return rt
@@ -336,11 +336,11 @@ class AVNUtil(object):
     def datetimeToTsUTC(cls, dt):
         if dt is None:
             return None
-        if dt.tzinfo is None or dt.tzinfo == datetime.UTC:
+        if dt.tzinfo is None or dt.tzinfo == datetime.timezone.utc:
             #assume UTC for naive
-            return dt.replace(tzinfo=datetime.UTC).timestamp()
+            return dt.replace(tzinfo=datetime.timezone.utc).timestamp()
         else:
-            return dt.astimezone(tz=datetime.UTC).timestamp()
+            return dt.astimezone(tz=datetime.timezone.utc).timestamp()
 
     # timedelta total_seconds that is not available in 2.6
     @classmethod
@@ -519,8 +519,8 @@ class AVNUtil(object):
         '''
         if not dt:
             return None
-        if dt.tzinfo is not None and dt.tzinfo != datetime.UTC:
-            dt=dt.astimezone(datetime.UTC)
+        if dt.tzinfo is not None and dt.tzinfo != datetime.timezone.utc:
+            dt=dt.astimezone(datetime.timezone.utc)
         ts=dt.replace(tzinfo=None).isoformat()
         if not ts[-1:]=="Z":
             ts+="Z"
@@ -563,7 +563,7 @@ class AVNUtil(object):
 
     @classmethod
     def getHttpRequestParam(cls, requestparam, name, mantadory=False):
-        if not requestparam:
+        if requestparam is None:
             return None
         rt = requestparam.get(name)
         if rt is None:
@@ -582,12 +582,17 @@ class AVNUtil(object):
         return flagString.lower() == 'true'
 
     @classmethod
-    def getUrlFromParam(cls,urlparam):
-        if urlparam is None:
+    def getUrlFromPath(cls,urlpath):
+        if urlpath is None:
             return None
-        parsed = urllib.parse.urlparse(urlparam)
-        parsed = parsed._replace(path=urllib.parse.quote_plus(parsed.path, safe='/').replace('+', '%20'))
-        return urllib.parse.urlunparse(parsed)
+        # Restore stripped '=' padding to make length a multiple of 4
+        padding_needed = (4 - len(urlpath) % 4) % 4
+        padded = urlpath + ("=" * padding_needed)
+
+        # Decode URL-safe Base64 bytes and convert back to UTF-8 string
+        decoded_bytes = base64.urlsafe_b64decode(padded)
+        return decoded_bytes.decode("utf-8")
+
 
     @classmethod
     def getReturnData(cls, error=None, **kwargs):
@@ -1105,6 +1110,7 @@ class AVNDownload(object):
         stream=self.getStream(noopen=not sendbody)
         if sendbody and stream is None:
             self.setError(500,"no data in response")
+            stream=self.stream
         addHeaders = None
         if (start is not None or end is not None) and not self.passThru():
             try:

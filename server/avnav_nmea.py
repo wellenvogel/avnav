@@ -264,7 +264,7 @@ class NMEAParser(object):
   @classmethod
   def gpsTimeToTime(cls,gpstime,gpsdate=None):
     #we take day/month/year from our system and add everything else from the GPS
-    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'),tzinfo=datetime.UTC)
+    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'),tzinfo=datetime.timezone.utc)
     AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
     if gpsdate is None:
       curdt=AVNUtil.timeToDatetime()
@@ -708,7 +708,7 @@ class NMEAParser(object):
         if darray[1] and darray[2]=="T":
           rt[self.K_SET.key] = float(darray[1])
         if darray[5] and darray[6]=="N":
-          rt[self.K_DFT.key] = float(darray[5])
+          rt[self.K_DFT.key] = float(darray[5]) * self.NM / 3600.0
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
 

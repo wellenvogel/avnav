@@ -884,7 +884,7 @@ public class Decoder extends Worker  implements INavRequestHandler {
                                     }catch (DataNotAvailableException v1){}
                                     try{
                                         double drift=vdr.getSpeed();
-                                        addNmeaData(K_DFT,drift,entry,posAge);
+                                        addNmeaData(K_DFT,knToMs(drift),entry,posAge);
                                     }catch (DataNotAvailableException v2){}
                                     continue;
                                 }

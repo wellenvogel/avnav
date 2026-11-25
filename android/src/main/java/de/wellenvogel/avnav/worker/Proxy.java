@@ -2,6 +2,7 @@ package de.wellenvogel.avnav.worker;
 
 import android.net.Uri;
 import android.os.Build;
+import android.util.Base64;
 
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.Header;
@@ -34,8 +35,11 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +47,8 @@ import java.util.Map;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.INavRequestHandler;
@@ -50,6 +56,8 @@ import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.DownloadManager;
+import de.wellenvogel.avnav.util.IgnoreExpiredTrustmanager;
 
 /*
 # Copyright (c) 2022,2026 Andreas Vogel andreas@wellenvogel.net
@@ -130,49 +138,10 @@ public class Proxy extends Worker implements INavRequestHandler {
         throw new Exception("no api requests for proxy");
     }
 
-    ExtendedWebResourceResponse handleProxy(String url,String method,Map<String,String> headers) throws IOException, HttpException, NoSuchAlgorithmException {
-        HttpRequestExecutor httpexecutor = new HttpRequestExecutor();
-
-        HttpContext context = new BasicHttpContext(null);
+    ExtendedWebResourceResponse handleProxy(String url,String method,Map<String,String> headers,
+                                            boolean skipTimeCheck,int timeout) throws IOException, HttpException, NoSuchAlgorithmException, URISyntaxException {
         URL parsed=new URL(url);
-
-        DefaultHttpClientConnection conn = new DefaultHttpClientConnection();
-        ConnectionReuseStrategy connStrategy = new DefaultConnectionReuseStrategy();
-        context.setAttribute(ExecutionContext.HTTP_CONNECTION, conn);
-        HttpHost host;
-        if (!conn.isOpen()) {
-            if (parsed.getProtocol().toLowerCase().equals("https")){
-                SSLContext sslcontext = SSLContext.getDefault();
-                SocketFactory sf = sslcontext.getSocketFactory();
-                int port=parsed.getPort();
-                if (port < 0) port=443;
-                host=new HttpHost(parsed.getHost(),port);
-                SSLSocket socket = (SSLSocket) sf.createSocket(parsed.getHost(), port);
-                conn.bind(socket, params);
-            }
-            else {
-                int port=parsed.getPort();
-                if (port < 0) port=80;
-                host=new HttpHost(parsed.getHost(),port);
-                Socket socket = new Socket(parsed.getHost(), port);
-                conn.bind(socket, params);
-            }
-            context.setAttribute(ExecutionContext.HTTP_TARGET_HOST, host);
-        }
-        String path=parsed.getPath();
-        BasicHttpRequest request = new BasicHttpRequest(method,
-                AvnUtil.encodeUrlPath(path)+
-                        "?"+parsed.getQuery());
-        request.setParams(params);
-        for (String k:headers.keySet()) {
-            if (k.toLowerCase().equals("host")) continue;
-            Header h=new BasicHeader(k,headers.get(k));
-            request.setHeader(h);
-        }
-        httpexecutor.preProcess(request, httpproc, context);
-        HttpResponse response = httpexecutor.execute(request, conn, context);
-        response.setParams(params);
-        httpexecutor.postProcess(response, httpproc, context);
+        HttpResponse response= DownloadManager.clientRequest(parsed,method,headers,skipTimeCheck,timeout);
         int status=response.getStatusLine().getStatusCode();
         if ( status < 200 || status > 399){
             return new ExtendedWebResourceResponse(status,response.getStatusLine().getReasonPhrase());
@@ -209,6 +178,12 @@ public class Proxy extends Worker implements INavRequestHandler {
         return rt;
     }
 
+    public static String decodeUrlFromPath(String encoded) {
+        // Base64.URL_SAFE handles '-' and '_' and tolerates missing '=' padding
+        byte[] decodedBytes = Base64.decode(encoded, Base64.URL_SAFE);
+        return new String(decodedBytes, StandardCharsets.UTF_8);
+    }
+
     @Override
     public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
         if (!isEnabled()) throw new Exception("proxy disabled");
@@ -218,14 +193,28 @@ public class Proxy extends Worker implements INavRequestHandler {
         if (path.startsWith("/")) path = path.substring(1);
         if (!path.startsWith(getPrefix())) return null;
         path = path.substring((getPrefix().length() + 1));
-        path= URLDecoder.decode(path, "UTF-8");
+        path= decodeUrlFromPath(path);
         HashMap<String,String> existingHeaders=new HashMap<>();
         for (String k:headers.keySet()){
             existingHeaders.put(k.toLowerCase(),k);
         }
+        boolean skipTimeCheck=false;
+        int timeout=30000;
         for (String s: uri.getQueryParameterNames()) {
             String sk=s.toLowerCase();
-            if (! sk.startsWith("h:")) continue;
+            if (! sk.startsWith("h:")) {
+                if ("a:notime".equals(sk)) {
+                    skipTimeCheck=true;
+                }
+                if ("a:timeout".equals(sk)) {
+                    try {
+                        timeout=Integer.parseInt(uri.getQueryParameter(s))*1000;
+                    } catch (Throwable e) {
+                        AvnLog.e("invalid timeout "+uri.getQueryParameter(s));
+                    }
+                }
+                continue;
+            }
             sk=sk.substring(2);
             String v=uri.getQueryParameter(s);
             if (v != null){
@@ -234,8 +223,9 @@ public class Proxy extends Worker implements INavRequestHandler {
                 if (key == null) key=sk;
                 headers.put(key, v);
             }
+            headers.remove("host");
         }
-        return handleProxy(path,method,headers);
+        return handleProxy(path,method,headers,skipTimeCheck,timeout);
     }
 
     @Override

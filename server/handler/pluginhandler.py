@@ -28,8 +28,10 @@ import importlib.util
 import inspect
 import json
 import os
+import platform
 import re
 import shutil
+import sys
 import threading
 import time
 import traceback
@@ -40,6 +42,7 @@ from zipfile import ZipFile
 import avnav_handlerList
 from alarmhandler import AVNAlarmHandler, AlarmConfig, AlarmInfo
 from avnav_api import AVNApi, ConverterApi
+from avnav_downloadmanager import AVNDownloadManager
 from avnav_manager import AVNHandlerManager
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
@@ -870,6 +873,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         self.createdApis = {}  # type: Dict[str, ApiImpl]
         self.configLock = threading.Lock()
         self.baseDir = self.getPluginBaseDir(self.D_USER)
+        self._downloadManager=AVNDownloadManager()
 
     @classmethod
     def getConfigParam(cls, handlerManager=None, child=None):
@@ -1204,6 +1208,55 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         # use AVNDownload as return to prevent caching
         return AVNFileDownload(fname)
 
+    def _checkAndExtractZip(self,name,filename,overwrite=False,cancelHandle:threading.Event=None):
+        plugindir = os.path.join(self.baseDir, name)
+        if os.path.exists(plugindir) and not overwrite:
+            raise Exception(f"plugin {plugindir} already exists")
+        zip = ZipFile(filename)
+        hasEntries = False
+        members=zip.infolist()
+        for entry in members:
+            if cancelHandle is not None and cancelHandle.is_set():
+                raise InterruptedError()
+            AVNLog.debug(f"zip entry {entry}")
+            self.checkPath(entry.filename, name, isdir=entry.is_dir())
+            if not entry.is_dir():
+                hasEntries = True
+        if not hasEntries:
+            raise Exception(f"no files in zip {name}")
+        for member in members:
+            if cancelHandle is not None and cancelHandle.is_set():
+                raise InterruptedError()
+            zip.extract(member,self.baseDir)
+        zip.close()
+        now = time.time()
+        os.utime(plugindir, (now, now))
+        self.updatePlugin(name)
+
+    def _handleExternalDownload(self,name,url,overwrite=False,maxBytes=None):
+        plugindir = os.path.join(self.baseDir, name)
+        if os.path.exists(plugindir) and not overwrite:
+            raise Exception(f"plugin {plugindir} already exists")
+        [filename,uploadName]=self._prepareTempFile()
+        def done(status,cancelHandle:threading.Event):
+            if not status.error:
+                AVNLog.info("Plugin download for %s from %s finished",name,url)
+                try:
+                    self._checkAndExtractZip(name,filename,overwrite,cancelHandle)
+                except Exception as e:
+                    AVNLog.error("Plugin unpack for %s failed: %s",name,str(e))
+                    raise e
+                finally:
+                    os.unlink(filename)
+            else:
+                AVNLog.error("Plugin downlod error for %s from %s: %s",name,url,status.error)
+        id=self._downloadManager.start(url,filename,
+                                       info=name,
+                                       maxBytes=maxBytes,
+                                       doneCallback=done,
+                                       skipTimeCheck=True)
+        return AVNUtil.getReturnData(id=id)
+
     def handleSpecialApiRequest(self, command, requestparam, handler):
         if command == 'pluginInfo':
             name=AVNUtil.getHttpRequestParam(requestparam,"name",mantadory=False)
@@ -1242,6 +1295,28 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             if items is None:
                 return AVNUtil.getReturnData(error="no items for plugin status")
             return AVNUtil.getReturnData(data=items)
+        if command == 'externalDownload':
+            name=AVNUtil.getHttpRequestParam(requestparam,"name",mantadory=True)
+            url=AVNUtil.getHttpRequestParam(requestparam,"url",mantadory=True)
+            overwrite=AVNUtil.getHttpRequestFlag(requestparam,"overwrite",mantadory=False)
+            AVNLog.info(f"request external download for plugin {name} from {url}")
+            return self._handleExternalDownload(name,url,overwrite=overwrite)
+        if command == 'downloadStatus':
+            id=AVNUtil.getHttpRequestParam(requestparam,"id",mantadory=False)
+            status=self._downloadManager.status(id)
+            if status is None:
+                return AVNUtil.getReturnData(info="no download running")
+            return AVNUtil.getReturnData(data=status)
+        if command == 'cancelDownload':
+            id=AVNUtil.getHttpRequestParam(requestparam,"id",mantadory=True)
+            rt=self._downloadManager.cancel(int(id))
+            return AVNUtil.getReturnData(cancelled=rt)
+        if command == 'getPlatform':
+            ep=os.environ.get('AVNAV_PLATFORM')
+            if ep is None:
+                ep=platform.system().lower()
+            return AVNUtil.getReturnData(platform=ep)
+
         return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
 
     def listDirectory(self, includeDirs=False, baseDir=None, extension=None, scope=None, **kwargs):
@@ -1269,23 +1344,30 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             entry.version = api.version
             return True
 
-        dlist = [entry for entry in super().listDirectory(True,
+        def injectVersion(entry):
+            api=self.getApi(entry.name)
+            entry.active = False if api is None or not api.isActive() else True
+            if api is not None:
+                entry.version=api.version
+            return entry
+
+        dlist = list(map(injectVersion,[entry for entry in super().listDirectory(True,
                                                           baseDir,
                                                           scope=self.SCOPE_USER,
-                                                          entryCallback=noSize) if entry.isDirectory]
-        blist = [entry for entry in
+                                                          entryCallback=noSize) if entry.isDirectory]))
+        blist = map(injectVersion,[entry for entry in
                  super().listDirectory(True,
                                        self.getPluginBaseDir(AVNPluginHandler.D_BUILTIN),
                                        scope=AVNPluginHandler.D_BUILTIN + "-",
                                        entryCallback=noDownload
                                        ) if
-                 entry.isDirectory]
-        slist = [entry for entry in
+                 entry.isDirectory])
+        slist = map(injectVersion,[entry for entry in
                  super().listDirectory(True,
                                        self.getPluginBaseDir(AVNPluginHandler.D_SYSTEM),
                                        scope=AVNPluginHandler.D_SYSTEM + "-",
                                        entryCallback=noDownload) if
-                 entry.isDirectory]
+                 entry.isDirectory])
         dlist.extend(blist)
         dlist.extend(slist)
         return dlist
@@ -1342,36 +1424,24 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             if clean != fn:
                 raise Exception(f"plugin: [{path}] invalid part in path {fn}")
 
+    def _prepareTempFile(self):
+        uploadName = f"{self.UPLOAD_NAME}-{threading.get_ident()}{self.EXT}"
+        filename = os.path.join(self.baseDir, uploadName)
+        if os.path.exists(filename):
+            os.unlink(filename)
+        return [filename,uploadName]
+
     def handleUpload(self, name, handler, requestparam):
         self.checkName(name)
         if name.lower().endswith(self.EXT):
             name = name[0:-len(self.EXT)]
         overwrite = AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
-        plugindir = os.path.join(self.baseDir, name)
-        if os.path.exists(plugindir) and not overwrite:
-            raise Exception(f"plugin {plugindir} already exists")
-        uploadName = f"{self.UPLOAD_NAME}-{threading.get_ident()}{self.EXT}"
-        filename = os.path.join(self.baseDir, uploadName)
-        if os.path.exists(filename):
-            os.unlink(filename)
+        [filename,uploadName]=self._prepareTempFile()
         try:
             rt = super().handleUpload(uploadName, handler, requestparam)
             if not os.path.exists(filename):
                 raise Exception(f"file {filename} not found after upload")
-            zip = ZipFile(filename)
-            hasEntries = False
-            for entry in zip.infolist():
-                AVNLog.debug(f"zip entry {entry}")
-                self.checkPath(entry.filename, name, isdir=entry.is_dir())
-                if not entry.is_dir():
-                    hasEntries = True
-            if not hasEntries:
-                raise Exception(f"no files in zip {name}")
-            zip.extractall(self.baseDir)
-            zip.close()
-            now = time.time()
-            os.utime(plugindir, (now, now))
-            self.updatePlugin(name)
+            self._checkAndExtractZip(name, filename, overwrite)
         finally:
             os.unlink(filename)
         return rt

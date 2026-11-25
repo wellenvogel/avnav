@@ -3,8 +3,6 @@ package de.wellenvogel.avnav.worker;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,7 +10,6 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-@RunWith(RobolectricTestRunner.class)
 public class WorkerTest {
     @Test
     public void toJson() throws JSONException {
@@ -47,7 +44,7 @@ public class WorkerTest {
         String testName="name";
         class TWorker extends Worker{
             protected TWorker(String typeName) {
-                super(typeName);
+                super(typeName, null);
             }
             @Override
             protected void run(int startSequence) throws JSONException, IOException {
@@ -57,16 +54,20 @@ public class WorkerTest {
             }
         }
         TWorker tw=new TWorker("test");
-        tw.testAddClaim();
-        List<String> tlist=new ArrayList<String>();
-        tlist.add(testName);
-        tlist.add("test2");
-        List<String> filtered=tw.filterByClaims(testKind,tlist,false);
-        assertEquals(1,filtered.size());
-        assertEquals("test2",filtered.get(0));
-        tw.stop();
-        filtered=tw.filterByClaims(testKind,tlist,false);
-        assertEquals(2,filtered.size());
-        assertEquals(testName,filtered.get(0));
+        try {
+            tw.testAddClaim();
+            List<String> tlist=new ArrayList<String>();
+            tlist.add(testName);
+            tlist.add("test2");
+            List<String> filtered=tw.filterByClaims(testKind,tlist,false);
+            assertEquals(1,filtered.size());
+            assertEquals("test2",filtered.get(0));
+            tw.stop();
+            filtered=tw.filterByClaims(testKind,tlist,false);
+            assertEquals(2,filtered.size());
+            assertEquals(testName,filtered.get(0));
+        } finally {
+            tw.stop();
+        }
     }
 }

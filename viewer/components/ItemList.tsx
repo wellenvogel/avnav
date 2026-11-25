@@ -139,6 +139,7 @@ const ItemList = (props:ItemListProps) => {
     const outerRef=useRef<HTMLDivElement>();
     const itemList:any[] = [];
     const existingKeys:Record<string,boolean> = {};
+    let selectedIndex=props.selectedIndex;
     let idx = 0;
     const allitems = props.itemList || [];
     allitems.forEach((entry) => {
@@ -168,6 +169,7 @@ const ItemList = (props:ItemListProps) => {
         }
         else if (props.selectedKey !== undefined) {
             itemProps.selected = isSelectedKey;
+            selectedIndex = idx;
         }
         idx++;
         itemList.push(itemProps);
@@ -184,21 +186,21 @@ const ItemList = (props:ItemListProps) => {
         style.fontSize = props.fontSize;
     }
     useEffect(() => {
-        if (! props.scrollSelected || props.selectedIndex === undefined) {
+        if (! props.scrollSelected || selectedIndex === undefined) {
             lastSelectedIndex.current = undefined;
             lastScrollSelected.current = undefined;
             return;
         }
-        if (props.selectedIndex === lastSelectedIndex.current &&
+        if (selectedIndex === lastSelectedIndex.current &&
             props.scrollSelected === lastScrollSelected.current
         ) return;
         if (! outerRef.current) return;
-        lastSelectedIndex.current=props.selectedIndex;
+        lastSelectedIndex.current=selectedIndex;
         lastScrollSelected.current=props.scrollSelected;
         const selectedItem=outerRef.current.querySelector('.'+SELECTED_CLASS);
         if (!selectedItem) return;
         selectedItem.scrollIntoView({behavior: "smooth",block:"nearest",inline:"nearest"});
-    },[props.selectedIndex,props.scrollSelected]);
+    },[selectedIndex,props.scrollSelected]);
     if (props.scrollable) {
         return (
             <div onClick={props.onClick} className={className} style={style} ref={(el) => {
