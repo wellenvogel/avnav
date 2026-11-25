@@ -75,6 +75,7 @@ jobs:
           ANDROID_KEYSTORE_BETA: ${{ github.workspace}}/keystore.jks
           ANDROID_KEYALIAS: "wellenvogel"
           ANDROID_KEYPASS: ${{ secrets.ANDROID_KEYPASS }}
+          GH_TOKEN: ${{ github.token }}
         run: ./gradlew upload
       
       - name: gradle repo upload
@@ -83,6 +84,7 @@ jobs:
           AVNAV_REPO_PASSWD: ${{ secrets.AVNAV_REPO_PASSWD }}
           AVNAV_REPO_KEY: ${{ secrets.AVNAV_REPO_KEY }}
           AVNAV_REPO_BASE: ""
+          GH_TOKEN: ${{ github.token }}
         run: ./gradlew uploadRepoDaily
 
 
