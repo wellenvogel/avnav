@@ -356,6 +356,13 @@ task releaseDeb(type: Deb){
     requires('python3-gdal')
 }
 
+task buildChangeList(type: Exec){
+    def version=project.avnavVersion
+    def of=file("$buildDir/distributions/changes-${version}.md")
+    outputs.file(of)
+    commandLine("tools/buildChangeList.sh","-v",version)
+}
+
 task release{
     group taskgroup
     description "build all avnav release stuff"
@@ -440,6 +447,11 @@ task uploadRepoRelease(type: UploadSftp){
         assert System.getenv('AVNAV_REPO_KEY')
     }
     dependsOn 'release'
+}
+task uploadChangeList(type: UploadTask){
+    inputFile=buildChangeList.outputs.files.singleFile
+    baseDir="daily/${project.avnavVersion}"
+    dependsOn buildChangeList
 }
 
 def ks=System.getenv("ANDROID_KEYSTORE")
@@ -1027,7 +1039,7 @@ task upload{
     doLast {
         println "###uploaded artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn uploadDeb,uploadRpm,uploadViewer, uploadZip
+    dependsOn uploadDeb,uploadRpm,uploadViewer, uploadZip, uploadChangeList
     dependsOn uploadWindowsNet
     if (buildAndroid){
         dependsOn uploadAndroidBeta
