@@ -708,7 +708,7 @@ class NMEAParser(object):
         if darray[1] and darray[2]=="T":
           rt[self.K_SET.key] = float(darray[1])
         if darray[5] and darray[6]=="N":
-          rt[self.K_DFT.key] = float(darray[5])
+          rt[self.K_DFT.key] = float(darray[5]) * self.NM / 3600.0
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
 
