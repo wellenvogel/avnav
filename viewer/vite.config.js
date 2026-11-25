@@ -38,9 +38,32 @@ module.exports = defineConfig(({command, mode}) => {
         }
     };
 
+    // Vite only enables CSS modules for .module.less; keep the shared source
+    // filenames and let LESS track the imported files for hot updates.
+    const styleModules = new Map(
+        ["icons", "button_text"].map(name => [
+            path.resolve(__dirname, "style", `${name}.less`),
+            path.resolve(__dirname, "style", `${name}.module.less`)
+        ])
+    );
+    const styleModuleSources = new Map([...styleModules].map(([source, module]) => [module, source]));
+    const styleModulesPlugin = {
+        name: "avnav-style-modules",
+        enforce: "pre",
+        resolveId(source, importer) {
+            if (!importer || !source.startsWith(".")) return null;
+            return styleModules.get(path.resolve(path.dirname(importer), source)) || null;
+        },
+        load(id) {
+            const source = styleModuleSources.get(id);
+            if (!source) return null;
+            return `@import "./${path.basename(source)}";`;
+        }
+    };
+
     return {
         base: command === "serve" ? devRoot : "./",
-        plugins: [jsxInJsPlugin, react({
+        plugins: [styleModulesPlugin, jsxInJsPlugin, react({
             include: /\.(js|jsx|ts|tsx)$/
         })],
         publicDir: "static",
@@ -54,6 +77,9 @@ module.exports = defineConfig(({command, mode}) => {
             ]
         },
         css: {
+            modules: {
+                generateScopedName: "[local]"
+            },
             preprocessorOptions: {
                 less: {
                     javascriptEnabled: true

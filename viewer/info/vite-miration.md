@@ -33,9 +33,13 @@
 ## 4. Align style and asset handling
 
 - Reproduce LESS and CSS-module behavior.
-- Specifically validate imports from:
-  - `style/icons.less`
-  - `style/button_text.less`
+- `style/icons.less` and `style/button_text.less` now export class-name maps in
+  both Vite and webpack, with the original unscoped class names. Vite wraps
+  these two existing files as CSS modules without renaming them.
+- `test/style-exports.ts` checks the button definitions, icon exports, text
+  styles, and default/legacy icon assets. In Vite dev mode, run
+  `import('/viewer/test/style-exports.ts').then(m => m.runStyleExportTests())`
+  in the browser console.
 - Check image/icon output paths (`images/default`, `images/legacy`, etc.).
 
 ## 5. Cut over main build scripts

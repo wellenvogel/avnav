@@ -199,7 +199,8 @@ module.exports = (env, argv) => {
                                 modules: {
                                     auto: /icons.less$|button_text.less$/,
                                     localIdentName: '[local]',
-                                    namedExport: true
+                                    namedExport: false,
+                                    exportLocalsConvention: 'as-is'
                                 }
                             }
                         },
@@ -250,5 +251,4 @@ module.exports = (env, argv) => {
     }
     return config;
 };
-
 

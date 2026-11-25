@@ -21,7 +21,7 @@
  #
  */
 // @ts-ignore
-import * as btdef from '../style/button_text.less';
+import btdef from '../style/button_text.less';
 import {iconClasses} from './Icons';
 import {PAGEIDS} from "../util/pageids";
 

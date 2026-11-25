@@ -32,7 +32,7 @@ import {SelectListEntry} from "./EditableParameter";
 import Helper, {urlToString} from "./helper";
 import base from "../base";
 // @ts-ignore
-import * as iconClasses from '../style/icons.less';
+import iconClasses from '../style/icons.less';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 export type ItemType='chart'|'track'|'route'|'layout'|'settings'|'overlay'|'images'|'user'|'plugins';
@@ -201,5 +201,4 @@ export const getItemIconProperties=(item:Record<string, any>)=>{
         className: Helper.concatsp('icon',iconClass),
     }
 }
-
 

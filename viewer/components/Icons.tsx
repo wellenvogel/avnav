@@ -23,7 +23,8 @@
 import React, {SyntheticEvent, useEffect, useRef} from 'react';
 import Helper, {concatsp} from "../util/helper";
 // @ts-ignore
-export  * as iconClasses from '../style/icons.less';
+import iconClasses from '../style/icons.less';
+export {iconClasses};
 export interface IconProps{
     className?: string;
     icon?:string|URL;

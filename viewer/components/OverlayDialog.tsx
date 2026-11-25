@@ -25,7 +25,7 @@ import Headline from "./Headline";
 import base from "../base";
 import ButtonDefs from "./ButtonDefs";
 // @ts-ignore
-import * as btdef from '../style/button_text.less';
+import btdef from '../style/button_text.less';
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import Store from "../util/store";
@@ -368,5 +368,4 @@ export const DBCancel=(props?:Partial<DialogButtonProps>)=>{
 export const DBOk=(onClick?:(ev:SyntheticEvent)=>void,props?:Partial<DialogButtonProps>)=>{
     return {close: true,...ButtonDefs.DBOk ,onClick:onClick,...props};
 }
-
 
