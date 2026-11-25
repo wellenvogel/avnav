@@ -7,6 +7,7 @@ usage() {
 usage: $0 [-s] [-c comment] [-t] [-m model] [-p promptfile] [-l label] [-r repo] [-e end] [-P] start
   list issues with the label (default: ready) for commits in start..end
   start and end are tags or commits; end defaults to the repository's default branch
+  for diverged histories, use their common ancestor as the start boundary
   -e end    include commits up to and including this tag or commit
   -P        list merged pull requests instead of issues
   -s        silent: no progress info on stderr
@@ -97,11 +98,24 @@ since=$(jq -r .date <<< "$start_commit")
 until=$(jq -r .date <<< "$end_commit")
 
 # GitHub's compare API is paginated: do not rely on its unpaginated 250-commit limit.
-comparison=$(gh api --paginate --slurp \
-  "repos/$repo/compare/$start_sha...$end_sha?per_page=100")
+compare() {
+  gh api --paginate --slurp "repos/$repo/compare/$1...$2?per_page=100"
+}
+comparison=$(compare "$start_sha" "$end_sha")
 status=$(jq -r '.[0].status' <<< "$comparison")
+if [ "$status" = diverged ]; then
+  # GitHub selects a merge base even when Git has multiple common ancestors.
+  # Use it consistently for both the commit range and the label-date fallback.
+  base=$(jq -ce '.[0].merge_base_commit | select(.sha != null and .commit.committer.date != null) | {sha, date: .commit.committer.date}' <<< "$comparison") ||
+    { echo "cannot determine common ancestor of $start and $end" >&2; exit 1; }
+  start_sha=$(jq -r .sha <<< "$base")
+  since=$(jq -r .date <<< "$base")
+  log "diverged histories: using common ancestor $start_sha ($since) as start"
+  comparison=$(compare "$start_sha" "$end_sha")
+  status=$(jq -r '.[0].status' <<< "$comparison")
+fi
 if [ "$status" != ahead ] && [ "$status" != identical ]; then
-  echo "start $start is not an ancestor of end $end ($status)" >&2
+  echo "cannot use start $start with end $end ($status)" >&2
   exit 1
 fi
 range=$(jq -c '[.[] | .commits[].sha] | unique' <<< "$comparison")
@@ -111,7 +125,7 @@ if [ "$actual" -ne "$expected" ]; then
   echo "incomplete commit comparison: got $actual of $expected commits" >&2
   exit 1
 fi
-log "commit range $repo: $start..$end ($actual commits)"
+log "commit range $repo: $start_sha..$end_sha ($actual commits)"
 
 declare -A titles
 order=()
@@ -201,7 +215,7 @@ if [ "$pull_mode" = 1 ]; then
     order+=("$n")
   done < <(jq -c 'unique_by(.number) | sort_by(.number) | .[]' <<< "$pulls")
 else
-  log "finding issues currently labeled \"$label\" since $start ($since)"
+  log "finding issues currently labeled \"$label\" since $start_sha ($since)"
   encoded_label=$(jq -rn --arg label "$label" '$label | @uri')
   candidates=$(gh api --paginate --slurp \
     "repos/$repo/issues?state=all&labels=$encoded_label&since=$since&per_page=100" |
