@@ -22,6 +22,7 @@
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.24.7",
+    "@maplibre/geojson-vt": "^6.3.0",
     "@babel/preset-env": "^7.24.7",
     "@babel/preset-react": "^7.24.7",
     "@eslint/eslintrc": "^3.1.0",
