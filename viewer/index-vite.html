@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+    <meta name="apple-mobile-web-app-title" content="avNav"/>
+    <link rel="manifest" href="/manifest.json"/>
+    <link rel="icon" sizes="512x512" href="/images/WebIcon-512.png"/>
+    <link rel="apple-touch-icon" sizes="128x128" href="/images/WebIcon-128.png"/>
+    <title>AvNav (Vite)</title>
+    <style type="text/css">
+        #splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999;
+            background-color: #546e7a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #splash .loading {
+            font-weight: bold;
+            display: inline-block;
+            font-family: monospace;
+            font-size: 30px;
+            clip-path: inset(0 3ch 0 0);
+            animation: l 1s steps(4, jump-none) infinite;
+        }
+
+        @keyframes l {
+            to {
+                clip-path: inset(0);
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="splash">
+    <div class="loading">AvNav is loading ...</div>
+</div>
+<div id="new_pages"></div>
+<script type="module" src="/vite-main.js"></script>
+</body>
+</html>
