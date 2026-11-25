@@ -7,9 +7,9 @@
     <meta name="mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
     <meta name="apple-mobile-web-app-title" content="avNav"/>
-    <link rel="manifest" href="/manifest.json"/>
-    <link rel="icon" sizes="512x512" href="/images/WebIcon-512.png"/>
-    <link rel="apple-touch-icon" sizes="128x128" href="/images/WebIcon-128.png"/>
+    <link rel="manifest" href="manifest.json"/>
+    <link rel="icon" sizes="512x512" href="images/WebIcon-512.png"/>
+    <link rel="apple-touch-icon" sizes="128x128" href="images/WebIcon-128.png"/>
     <title>AvNav (Vite)</title>
     <style type="text/css">
         #splash {
@@ -42,6 +42,24 @@
                 clip-path: inset(0);
             }
         }
+        .splashHidden{
+            animation: fadeOut 0.5s linear forwards;
+        }
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            50%{
+                opacity: 0;
+                transform: scale3d(0.3, 0.3, 0.3);
+            }
+            to{
+                opacity:0;
+                bottom:unset;
+                height:0;
+                z-index:-1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -49,6 +67,6 @@
     <div class="loading">AvNav is loading ...</div>
 </div>
 <div id="new_pages"></div>
-<script type="module" src="/vite-main.js"></script>
+<script type="module" src="vite-main.js"></script>
 </body>
 </html>

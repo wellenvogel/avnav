@@ -229,7 +229,7 @@ class AvnavChartSource extends ChartSourceBase{
         for (let layer of layers){
             const creator=getav(layer).creator;
             if (creator && creator.getSequenceFunction()){
-                const add=await creator.getSequenceFunction()();
+                let add=await creator.getSequenceFunction()();
                 if (add == undefined) add="";
                 sequence+="#"+add;
             }

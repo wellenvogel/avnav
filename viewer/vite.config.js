@@ -1,5 +1,5 @@
 const path = require("node:path");
-const {defineConfig, transformWithEsbuild} = require("vite");
+const {defineConfig, loadEnv, transformWithEsbuild} = require("vite");
 const react = require("@vitejs/plugin-react");
 
 const formatDate = (date) => {
@@ -16,9 +16,14 @@ const createVersion = (mode) => {
     return (mode === "production" ? "" : "dev-") + formatDate(new Date());
 };
 
-module.exports = defineConfig(({mode}) => {
+module.exports = defineConfig(({command, mode}) => {
+    const env = loadEnv(mode, process.cwd(), "");
     const avnavVersion = createVersion(mode);
     const outDir = mode === "production" ? "build/release-vite" : "build/debug-vite";
+    const devRoot = "/viewer/";
+    const devApiTarget = env.VITE_API_TARGET || "http://localhost:8080";
+    const devHost = env.VITE_DEV_HOST || "0.0.0.0";
+    const devPort = Number.parseInt(env.VITE_DEV_PORT || "5173", 10);
 
     const jsxInJsPlugin = {
         name: "jsx-in-js",
@@ -34,6 +39,7 @@ module.exports = defineConfig(({mode}) => {
     };
 
     return {
+        base: command === "serve" ? devRoot : "./",
         plugins: [jsxInJsPlugin, react({
             include: /\.(js|jsx|ts|tsx)$/
         })],
@@ -51,6 +57,24 @@ module.exports = defineConfig(({mode}) => {
             preprocessorOptions: {
                 less: {
                     javascriptEnabled: true
+                }
+            }
+        },
+        optimizeDeps: {
+            esbuildOptions: {
+                loader: {
+                    ".js": "jsx"
+                }
+            }
+        },
+        server: {
+            host: devHost,
+            port: Number.isNaN(devPort) ? 5173 : devPort,
+            proxy: {
+                "^/(?!viewer/|@vite/|@fs/|src/|node_modules/|__vite_ping).*": {
+                    target: devApiTarget,
+                    changeOrigin: true,
+                    ws: true
                 }
             }
         },
