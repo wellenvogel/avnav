@@ -30,6 +30,7 @@
 import 'core-js'; //babel polyfills
 import 'regenerator-runtime/runtime'; //for babel-plugin-transform-regenerator
 import './util/polyfill';
+import './util/maplibreWorker';
 import main from './avnav_viewer.js'
 //we do some lazy loading of modules...
 (function () {
