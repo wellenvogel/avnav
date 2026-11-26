@@ -55,6 +55,7 @@ const nameToModule=(name: string,url:boolean=true)=>{
 }
 
 export default async ()=>{
+    return;
     for (const name of Object.keys(modules)){
         const murl=nameToModule(name)
         try {

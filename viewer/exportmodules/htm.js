@@ -20,10 +20,5 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-let module={};
-export const __init=(mvalue)=> {
-    module = mvalue;
-    Htm=mvalue;
-}
-export let Htm;
-export {module as default};
+export {default as htm} from 'htm';
+export {default as default} from 'htm';

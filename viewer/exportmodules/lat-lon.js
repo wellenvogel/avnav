@@ -20,12 +20,10 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-let module={};
-export const __init=(mvalue)=> {
-    module = mvalue;
-    LatLonSpherical=mvalue.LatLonSpherical;
-    Dms=mvalue.Dms
+
+export {default as LatLonSpherical,Dms} from 'geodesy/latlon-spherical';
+import {Dms, default as LatLonSpherical} from 'geodesy/latlon-spherical';
+export default {
+    Dms: Dms,
+    LatLonSpherical:LatLonSpherical
 }
-export let Dms;
-export let LatLonSpherical;
-export {module as default};

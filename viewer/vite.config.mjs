@@ -1,8 +1,9 @@
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-import {defineConfig, loadEnv, transformWithEsbuild,normalizePath} from "vite";
+import {defineConfig, loadEnv, transformWithEsbuild, normalizePath, transformWithOxc} from "vite";
 import react from "@vitejs/plugin-react";
-import {resolve} from "path";
+import {resolve,relative,parse} from "path";
+import {existsSync,readdirSync} from "fs";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,17 +22,87 @@ const createVersion = (mode) => {
     if (process.env.AVNAV_VERSION) return process.env.AVNAV_VERSION;
     return (mode === "production" ? "" : "dev-") + formatDate(new Date());
 };
+// 1. Central Constants
+const API_SRC_DIR = 'exportmodules'; // Source folder containing .ts / .js API entry modules
+const API_OUT_DIR = 'modules';     // Output folder in dist/ and public URL prefix (/api/...)
 
-const userEntryPoints = {
-    'avnavui': resolve(__dirname, 'exportmodules/avnavui-direct.js'),
-    'ol': resolve(__dirname, 'exportmodules/ol.js'),
-    'htm': resolve(__dirname, 'exportmodules/htm.js'),
-    'lat-lon': resolve(__dirname, 'exportmodules/lat-lon.js'),
-    'react': resolve(__dirname, 'exportmodules/react.js'),
-    'react-dom': resolve(__dirname, 'exportmodules/react-dom.js'),
-};
-const userEntryPaths = new Set(Object.values(userEntryPoints));
+// Auto-discover all .ts / .js entry modules in API_SRC_DIR
+const apiSrcAbsDir = resolve(__dirname, API_SRC_DIR);
+const apiEntries = existsSync(apiSrcAbsDir)
+    ? Object.fromEntries(
+        readdirSync(apiSrcAbsDir)
+            .filter((file) => /\.(ts|js)$/.test(file) && !file.endsWith('.d.ts'))
+            .map((file) => [parse(file).name, resolve(apiSrcAbsDir, file)])
+    )
+    : {};
 
+const apiEntryPaths = new Set(
+    Object.values(apiEntries).map((p) => normalizePath(p))
+);
+
+const handleApiPlugin=(command)=>({
+    name: 'user-api-entries',
+    enforce: 'post',
+
+    // Inject Import Map in BOTH dev and production:
+    // - Dev:  '/api/<name>.js' -> './src/api/<name>.ts' (Vite compiles TS on the fly)
+    // - Prod: '/api/'          -> './api/' (resolves relative to /viewer/ or /viewer/abc/)
+    transformIndexHtml() {
+        const rawImports =
+            command === 'serve'
+                ? Object.fromEntries(
+                    Object.entries(apiEntries).map(([name, absPath]) => [
+                        `/${API_OUT_DIR}/${name}.js`,
+                        `./${normalizePath(relative(__dirname, absPath))}`,
+                    ])
+                )
+                : {
+                    [`/${API_OUT_DIR}/`]: `./${API_OUT_DIR}/`,
+                };
+
+        return [
+            {
+                tag: 'script',
+                children: `
+              const imports = Object.fromEntries(
+                Object.entries(${JSON.stringify(rawImports)}).map(([k, v]) => [k, new URL(v, document.baseURI).href])
+              );
+              const el = document.createElement('script');
+              el.type = 'importmap';
+              el.textContent = JSON.stringify({ imports });
+              document.currentScript.after(el);
+            `,
+                injectTo: 'head-prepend',
+            },
+        ];
+    },
+
+    // PROD BUILD: Disable tree-shaking on API entry points while keeping it active for `main`
+    transform(code, id) {
+        if (apiEntryPaths.has(normalizePath(id))) {
+            return { code, moduleSideEffects: 'no-treeshake' };
+        }
+    },
+
+    moduleParsed(moduleInfo) {
+        if (apiEntryPaths.has(normalizePath(moduleInfo.id))) {
+            moduleInfo.moduleSideEffects = 'no-treeshake';
+        }
+    },
+
+    async resolveId(source, importer, options) {
+        if (importer && apiEntryPaths.has(normalizePath(importer))) {
+            const resolved = await this.resolve(source, importer, {
+                ...options,
+                skipSelf: true,
+            });
+            if (resolved && !resolved.external) {
+                return { ...resolved, moduleSideEffects: 'no-treeshake' };
+            }
+        }
+        return null;
+    },
+})
 
 const jsxInJsPlugin = {
     name: "jsx-in-js",
@@ -39,77 +110,13 @@ const jsxInJsPlugin = {
     async transform(code, id) {
         if (!id.endsWith(".js")) return null;
         if (id.includes("/node_modules/")) return null;
-        return transformWithEsbuild(code, id, {
-            loader: "jsx",
-            jsx: "automatic"
+        return transformWithOxc(code, id, {
+            lang: 'jsx',
+            runtime: 'automatic'
         });
     }
 };
-let normalizedBase;
-const preserveUserEntries={
-    name: 'preserve-user-entries-only',
-    enforce: 'post',
-    // Capture Vite's resolved config so `base` works whether set to '/', '/my-app/', or './'
-    configResolved(config) {
-        // Normalize relative base ('./' or '') to '/' for dev server URL matching
-        const resolvedBase =
-            config.base === './' || config.base === '' ? '/' : config.base;
 
-        // Ensure trailing slash (e.g., '/my-app/')
-        normalizedBase = resolvedBase.endsWith('/')
-            ? resolvedBase
-            : `${resolvedBase}/`;
-    },
-    // 1. DEV SERVER: Rewrite `/api/<name>.js` -> `/@fs/<absolute-path>`
-    configureServer(server) {
-        server.middlewares.use((req, res, next) => {
-            if (!req.url) return next();
-
-            // Strip query params (e.g., ?t=12345 from HMR) before matching
-            const [pathname, query] = req.url.split('?');
-            const match = pathname.match(/^\/modules\/([^/]+)\.[jt]s$/);
-            if (match && match[1] in userEntryPoints) {
-                const targetPath = normalizePath(userEntryPoints[match[1]]);
-                console.log("devserver",pathname, match,targetPath);
-                // Rewrite to Vite's /@fs/ prefix so Vite transforms and serves the source file directly
-                req.url = `${normalizedBase}/@fs/${targetPath}${query ? `?${query}` : ''}`;
-            }
-
-            next();
-        });
-    },
-    // Run during build to prevent tree-shaking only on userEntryPoints
-    transform(code, id) {
-        if (userEntryPaths.has(id)) {
-            return {
-                code,
-                moduleSideEffects: 'no-treeshake',
-            };
-        }
-    },
-    // Ensure Rollup emits all exports for these specific modules
-    moduleParsed(moduleInfo) {
-        if (userEntryPaths.has(moduleInfo.id)) {
-            moduleInfo.moduleSideEffects = 'no-treeshake';
-        }
-    },
-    // Also disable tree-shaking for modules directly re-exported via `export *`
-    async resolveId(source, importer, options) {
-        if (importer && userEntryPaths.has(normalizePath(importer))) {
-            const resolved = await this.resolve(source, importer, {
-                ...options,
-                skipSelf: true,
-            });
-            if (resolved && !resolved.external) {
-                return {
-                    ...resolved,
-                    moduleSideEffects: 'no-treeshake',
-                };
-            }
-        }
-        return null;
-    },
-}
 export default defineConfig(({command, mode}) => {
     const env = loadEnv(mode, process.cwd(), "");
     const avnavVersion = createVersion(mode);
@@ -146,7 +153,7 @@ export default defineConfig(({command, mode}) => {
     return {
         base: command === "serve" ? devRoot : "./",
         plugins: [
-            preserveUserEntries,
+            handleApiPlugin(command),
             styleModulesPlugin,
             jsxInJsPlugin,
             react({
@@ -196,15 +203,15 @@ export default defineConfig(({command, mode}) => {
             rollupOptions: {
                 input: {
                     main: path.resolve(__dirname, "index-vite.html"),
-                    ...userEntryPoints
+                    ...apiEntries
                 },
                 preserveEntrySignatures: 'allow-extension',
                 output: {
-                    entryFileNames: (chunkInfo) => {
-                        return chunkInfo.name in userEntryPoints
-                            ? 'modules/[name].js'
-                            : 'assets/[name]-[hash].js';
-                    },
+                    entryFileNames: (chunkInfo) =>
+                        chunkInfo.name in apiEntries
+                            ? `${API_OUT_DIR}/[name].js`
+                            : 'assets/[name]-[hash].js',
+
                 chunkFileNames: 'assets/[name]-[hash].js',
                 assetFileNames: 'assets/[name]-[hash][extname]',
                 },

@@ -20,82 +20,42 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-let mvar={};
-export const __init=(module)=>{
-    mvar=module;
-    Children = module.Children;
-    Component = module.Component;
-    Fragment = module.Fragment;
-    Profiler = module.Profiler;
-    PureComponent = module.PureComponent;
-    StrictMode = module.StrictMode;
-    Suspense = module.Suspense;
-    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = module.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-    act = module.act;
-    cloneElement = module.cloneElement;
-    createContext = module.createContext;
-    createElement = module.createElement;
-    createFactory = module.createFactory;
-    createRef = module.createRef;
-    forwardRef = module.forwardRef;
-    isValidElement = module.isValidElement;
-    lazy = module.lazy;
-    memo = module.memo;
-    startTransition = module.startTransition;
-    unstable_act = module.unstable_act;
-    useCallback = module.useCallback;
-    useContext = module.useContext;
-    useDebugValue = module.useDebugValue;
-    useDeferredValue = module.useDeferredValue;
-    useEffect = module.useEffect;
-    useId = module.useId;
-    useImperativeHandle = module.useImperativeHandle;
-    useInsertionEffect = module.useInsertionEffect;
-    useLayoutEffect = module.useLayoutEffect;
-    useMemo = module.useMemo;
-    useReducer = module.useReducer;
-    useRef = module.useRef;
-    useState = module.useState;
-    useSyncExternalStore = module.useSyncExternalStore;
-    useTransition = module.useTransition;
-    version = module.version;
+import * as react from 'react';
+export { default } from 'react';
 
-
-}
-export {mvar as default };
-export let Children;
-export let Component;
-export let Fragment;
-export let Profiler;
-export let PureComponent;
-export let StrictMode;
-export let Suspense;
-export let __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-export let act;
-export let cloneElement;
-export let createContext;
-export let createElement;
-export let createFactory;
-export let createRef;
-export let forwardRef;
-export let isValidElement;
-export let lazy;
-export let memo;
-export let startTransition;
-export let unstable_act;
-export let useCallback;
-export let useContext;
-export let useDebugValue;
-export let useDeferredValue;
-export let useEffect;
-export let useId;
-export let useImperativeHandle;
-export let useInsertionEffect;
-export let useLayoutEffect;
-export let useMemo;
-export let useReducer;
-export let useRef;
-export let useState;
-export let useSyncExternalStore;
-export let useTransition;
-export let version;
+ export const {Children,
+Component,
+Fragment,
+Profiler,
+PureComponent,
+StrictMode,
+Suspense,
+__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+act,
+cloneElement,
+createContext,
+createElement,
+createFactory,
+createRef,
+forwardRef,
+isValidElement,
+lazy,
+memo,
+startTransition,
+unstable_act,
+useCallback,
+useContext,
+useDebugValue,
+useDeferredValue,
+useEffect,
+useId,
+useImperativeHandle,
+useInsertionEffect,
+useLayoutEffect,
+useMemo,
+useReducer,
+useRef,
+useState,
+useSyncExternalStore,
+useTransition,
+version} = react;

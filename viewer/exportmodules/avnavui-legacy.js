@@ -20,7 +20,22 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-export {ListItem,ListFrame,ListSlot,ListMainSlot} from "../components/ListItems";
-export {Icon} from '../components/Icons';
-export {useDialogContext} from '../components/DialogContext';
-export {useStoreState} from '../hoc/Dynamic';
+let modvar;
+export const __init=(module)=> {
+    modvar=module;
+    Icon = module.Icon;
+    ListFrame = module.ListFrame;
+    ListItem = module.ListItem;
+    ListMainSlot = module.ListMainSlot;
+    ListSlot = module.ListSlot;
+    useDialogContext = module.useDialogContext;
+    useStoreState = module.useStoreState;
+}
+export let Icon;
+export let ListFrame;
+export let ListItem;
+export let ListMainSlot;
+export let ListSlot;
+export let useDialogContext;
+export let useStoreState;
+export {modvar as default};
