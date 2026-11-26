@@ -240,7 +240,7 @@ class Plugin extends ApiV2{
             base.log(`importing ${url} for ${this.name}`);
             url=this.baseUrl+url;
             // @ts-ignore
-            const module = await import(/* webpackIgnore: true */ url);
+            const module = await import(/* @vite-ignore */ url);
             let shutdown = undefined;
             this.module=module;
             this.moduleTs=timestamp;

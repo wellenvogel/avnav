@@ -75,3 +75,17 @@
 6. **Type-check blind spot** if CI relies on Vite build alone.
 7. **Output path/name compatibility** may affect downstream consumers expecting current filenames.
 8. **No 1:1 plugin mapping** for some webpack plugins; custom Vite plugins/scripts will be needed.
+
+
+## Current Browser compatibility
+{
+"android": "142",
+"chrome": "109",
+"edge": "140",
+"firefox": "143",
+"ios": "11",
+"opera": "122",
+"opera_mobile": "80",
+"safari": "12",
+"samsung": "28"
+}
