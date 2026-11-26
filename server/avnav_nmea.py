@@ -530,9 +530,9 @@ class NMEAParser(object):
         if darray[3]:
           windspeed=float(darray[3])*self.NM/3600
         elif darray[5]:
-          windspeed=float(darray[5])/3.6
+          windspeed=float(darray[5])
         elif darray[7]:
-          windspeed=float(darray[7])
+          windspeed=float(darray[7])/3.6
         if windspeed is not None:
           rt[self.K_AWS.key]=windspeed
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
