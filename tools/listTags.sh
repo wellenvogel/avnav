@@ -43,7 +43,7 @@ gh-tags() {
         }
       }
     }' --jq ' .data.repository.refs.nodes[] | "\(.name),\(.target.tagger.date // .target.committedDate)" ' \
-    | { [[ "$ignore" != "" ]] && grep -v "$ignore" || cat; } | { [[ "$limit" -gt 0 ]] && head -n "$limit" || cat; }
+    | { [[ "$ignore" != "" ]] && grep -v -E "$ignore" || cat; } | { [[ "$limit" -gt 0 ]] && head -n "$limit" || cat; }
 }
 
 prefix=""
