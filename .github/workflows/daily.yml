@@ -33,14 +33,14 @@ jobs:
           node-version: '16'
 
       #set a date parameter
-      - name: Get current date
+      - name: Get current tag
         id: date
-        run: echo "::set-output name=date::$(date +'%Y%m%d')"
+        run: echo "::set-output name=date::daily-$(date +'%Y%m%d')"
       
       - name: generate tag
         uses: actions/github-script@v3
         env: 
-          TAG_NAME: daily-${{ steps.date.outputs.date}}
+          TAG_NAME: ${{ steps.date.outputs.date}}
         with:
           github-token: ${{ github.token }}
           script: |
@@ -76,7 +76,7 @@ jobs:
           ANDROID_KEYALIAS: "wellenvogel"
           ANDROID_KEYPASS: ${{ secrets.ANDROID_KEYPASS }}
           GH_TOKEN: ${{ github.token }}
-        run: ./gradlew upload
+        run: ./gradlew -PpackageVersion=${{ steps.date.outputs.date }} upload
       
       - name: gradle repo upload
         env:  
@@ -85,7 +85,7 @@ jobs:
           AVNAV_REPO_KEY: ${{ secrets.AVNAV_REPO_KEY }}
           AVNAV_REPO_BASE: ""
           GH_TOKEN: ${{ github.token }}
-        run: ./gradlew uploadRepoDaily
+        run: ./gradlew -PpackageVersion=${{ steps.date.outputs.date }} uploadRepoDaily
 
 
         

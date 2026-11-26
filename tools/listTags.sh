@@ -3,6 +3,7 @@
 gh-tags() {
   local prefix="${1:-}"    # e.g. 'release-' (empty = all tags)
   local limit="${2:-0}"    # e.g. 250 (0 or empty = no limit)
+  local ignore="${3:-}"    # ignore
   local page_size=100
 
   # Fetch fewer items per page if limit is small
@@ -42,11 +43,12 @@ gh-tags() {
         }
       }
     }' --jq ' .data.repository.refs.nodes[] | "\(.name),\(.target.tagger.date // .target.committedDate)" ' \
-    | { [[ "$limit" -gt 0 ]] && head -n "$limit" || cat; }
+    | { [[ "$ignore" != "" ]] && grep -v "$ignore" || cat; } | { [[ "$limit" -gt 0 ]] && head -n "$limit" || cat; }
 }
 
 prefix=""
 limit=1
+ignore=""
 time=0
 if [ "$1" = "-t" ] ; then
   time=1
@@ -54,10 +56,12 @@ if [ "$1" = "-t" ] ; then
 fi
 [ "$1" != "" ] && prefix="$1"
 [ "$2" != "" ] && limit="$2"
+[ "$3" != "" ] && ignore="$3"
+
 
 if [ $time = 1 ] ; then
-  gh-tags "$prefix" "$limit"
+  gh-tags "$prefix" "$limit" "$ignore"
 else
-  gh-tags "$prefix" "$limit" | cut -d , -f 1
+  gh-tags "$prefix" "$limit" "$ignore" | cut -d , -f 1
 fi
 
