@@ -7,7 +7,12 @@
     "watch": "webpack --progress --stats-error-details --watch",
     "watch-aistest": "webpack --config ./test/webpack.aistest.js --progress --watch",
     "debug": "webpack",
-    "production": "webpack --mode=production"
+    "production": "webpack --mode=production",
+    "compat:targets": "browserslist",
+    "compat:lint": "eslint --config eslint.compat.config.mjs components gui map nav util hoc api App.jsx avnav_viewer.js webpack-main.js --max-warnings=0",
+    "compat:syntax:debug": "es-check --module es2018 'build/debug/**/*.js'",
+    "compat:syntax:release": "es-check --module es2018 'build/release/**/*.js'",
+    "compat:check:debug": "npm run debug && npm run compat:syntax:debug"
   },
   "repository": {
     "type": "git",
@@ -38,8 +43,10 @@
     "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^7.1.2",
     "eslint": "^8.57.0",
+    "eslint-plugin-compat": "^6.0.2",
     "eslint-plugin-react": "^7.34.3",
     "eslint-plugin-react-hooks": "^4.6.2",
+    "es-check": "^8.0.2",
     "file-loader": "^6.2.0",
     "generate-file-webpack-plugin": "^1.0.1",
     "globals": "^15.6.0",
