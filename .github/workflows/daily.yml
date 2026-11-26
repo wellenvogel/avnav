@@ -35,12 +35,12 @@ jobs:
       #set a date parameter
       - name: Get current tag
         id: date
-        run: echo "::set-output name=date::daily-$(date +'%Y%m%d')"
+        run: echo "::set-output name=date::$(date +'%Y%m%d')"
       
       - name: generate tag
         uses: actions/github-script@v3
         env: 
-          TAG_NAME: ${{ steps.date.outputs.date}}
+          TAG_NAME: daily-${{ steps.date.outputs.date}}
         with:
           github-token: ${{ github.token }}
           script: |
