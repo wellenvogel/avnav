@@ -76,7 +76,7 @@ jobs:
           ANDROID_KEYALIAS: "wellenvogel"
           ANDROID_KEYPASS: ${{ secrets.ANDROID_KEYPASS }}
           GH_TOKEN: ${{ github.token }}
-        run: ./gradlew -PavnavVersion=${{ steps.date.outputs.date }} upload
+        run: ./gradlew -PpackageVersion=${{ steps.date.outputs.date }} upload
       
       - name: gradle repo upload
         env:  
@@ -85,7 +85,7 @@ jobs:
           AVNAV_REPO_KEY: ${{ secrets.AVNAV_REPO_KEY }}
           AVNAV_REPO_BASE: ""
           GH_TOKEN: ${{ github.token }}
-        run: ./gradlew -PavnavVersion=${{ steps.date.outputs.date }}uploadRepoDaily
+        run: ./gradlew -PpackageVersion=${{ steps.date.outputs.date }} uploadRepoDaily
 
 
         

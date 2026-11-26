@@ -5,6 +5,7 @@ repositories {
 dependencies{
     implementation 'commons-net:commons-net:3.3'
     implementation 'com.github.mwiede:jsch:0.1.61'
+    implementation 'org.commonmark:commonmark:0.33.0'
 }
 
 apply plugin: "groovy"
