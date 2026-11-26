@@ -1,6 +1,10 @@
-const path = require("node:path");
-const {defineConfig, loadEnv, transformWithEsbuild} = require("vite");
-const react = require("@vitejs/plugin-react");
+import path from "node:path";
+import {fileURLToPath} from "node:url";
+import {defineConfig, loadEnv, transformWithEsbuild} from "vite";
+import react from "@vitejs/plugin-react";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const formatDate = (date) => {
     const yyyy = date.getFullYear();
@@ -16,7 +20,7 @@ const createVersion = (mode) => {
     return (mode === "production" ? "" : "dev-") + formatDate(new Date());
 };
 
-module.exports = defineConfig(({command, mode}) => {
+export default defineConfig(({command, mode}) => {
     const env = loadEnv(mode, process.cwd(), "");
     const avnavVersion = createVersion(mode);
     const outDir = mode === "production" ? "build/release-vite" : "build/debug-vite";
@@ -72,8 +76,8 @@ module.exports = defineConfig(({command, mode}) => {
         },
         resolve: {
             alias: [
-                {find: "React", replacement: "react"}
-                ,{find: /^(?:\.\.\/|\.\/)?version(?:\.js)?$/, replacement: path.resolve(__dirname, "version.vite.js")}
+                {find: "React", replacement: "react"},
+                {find: /^(?:\.\.\/|\.\/)?version(?:\.js)?$/, replacement: path.resolve(__dirname, "version.vite.js")}
             ]
         },
         css: {
@@ -113,3 +117,4 @@ module.exports = defineConfig(({command, mode}) => {
         }
     };
 });
+

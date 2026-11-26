@@ -8,10 +8,10 @@
     "watch-aistest": "webpack --config ./test/webpack.aistest.js --progress --watch",
     "debug": "webpack",
     "production": "webpack --mode=production",
-    "vite:dev": "vite --config vite.config.js --open /viewer/index-vite.html",
-    "vite:def": "vite --config vite.config.js --open /viewer/index-vite.html",
-    "vite:build": "vite build --config vite.config.js --mode development",
-    "vite:preview": "vite preview --config vite.config.js"
+    "vite:dev": "vite --config vite.config.mjs --open /viewer/index-vite.html",
+    "vite:def": "vite --config vite.config.mjs --open /viewer/index-vite.html",
+    "vite:build": "vite build --config vite.config.mjs --mode development",
+    "vite:preview": "vite preview --config vite.config.mjs"
   },
   "repository": {
     "type": "git",
