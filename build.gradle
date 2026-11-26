@@ -363,6 +363,12 @@ task buildChangeList(type: Exec){
     commandLine("tools/buildChangeList.sh","-v",version,"-i",version)
 }
 
+task changeListHtml(type: MarkdownToHtmlTask){
+    def bt=tasks.named('buildChangeList')
+    inputFile = layout.file(bt.map { it.outputs.files.singleFile })
+    outputFile = file("$buildDir/distributions/changes-${project.avnavVersion}.html")
+}
+
 task release{
     group taskgroup
     description "build all avnav release stuff"
@@ -449,9 +455,9 @@ task uploadRepoRelease(type: UploadSftp){
     dependsOn 'release'
 }
 task uploadChangeList(type: UploadTask){
-    inputFile=buildChangeList.outputs.files.singleFile
+    inputFiles=files(buildChangeList.outputs.files,changeListHtml.outputs.files).asFileTree
     baseDir="daily/${project.avnavVersion}"
-    dependsOn buildChangeList
+    dependsOn buildChangeList, changeListHtml
 }
 
 def ks=System.getenv("ANDROID_KEYSTORE")
