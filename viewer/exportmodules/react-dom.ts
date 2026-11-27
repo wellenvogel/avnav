@@ -23,15 +23,14 @@
 
 export {default as default} from 'react-dom';
 import * as reactDom from 'react-dom';
-export const {__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-createPortal,
-createRoot,
+export const {createPortal,
 findDOMNode,
 flushSync,
 hydrate,
-hydrateRoot,
 render,
 unmountComponentAtNode,
 unstable_batchedUpdates,
 unstable_renderSubtreeIntoContainer,
 version}=reactDom;
+
+export {createRoot,hydrateRoot} from 'react-dom/client';

@@ -22,3 +22,4 @@
  */
 
 export * from 'ol';
+export default {};

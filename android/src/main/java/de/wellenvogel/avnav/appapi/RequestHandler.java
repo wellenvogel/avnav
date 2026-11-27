@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 
@@ -93,6 +92,85 @@ public class RequestHandler {
             new AvnUtil.KeyValue<File>(Constants.TYPE_PLUGINS,new File("plugins"))
 
     );
+
+    static class ExportModulesRequestHandler implements INavRequestHandler{
+        private final String pathPrefix;
+        private final int plen;
+        String prefix;
+        String redirectUrl;
+        ExportModulesRequestHandler(String prefix, String redirectUrl){
+            this.prefix=prefix;
+            this.redirectUrl=redirectUrl;
+            this.pathPrefix=prefix+"/";
+            this.plen=this.pathPrefix.length();
+        }
+
+        @Override
+        public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+            return null;
+        }
+
+        @Override
+        public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
+            return false;
+        }
+
+        @Override
+        public JSONArray handleList(Uri uri, ServerInfo serverInfo) throws Exception {
+            return null;
+        }
+
+        @Override
+        public JSONObject handleInfo(String name, Uri uri, ServerInfo serverInfo) throws Exception {
+            return null;
+        }
+
+        @Override
+        public boolean handleDelete(String name, Uri uri) throws Exception {
+            return false;
+        }
+
+        @Override
+        public boolean handleRename(String oldName, String newName) throws Exception {
+            return false;
+        }
+
+        @Override
+        public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, ServerInfo serverInfo) throws Exception {
+            return null;
+        }
+
+        @Override
+        public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
+            String path=uri.getPath();
+            if (path == null) return null;
+            if (path.startsWith("/")) path = path.substring(1);
+            if (! path.startsWith(pathPrefix)) return null;
+            path=path.substring(plen);
+            Uri.Builder builder=new Uri.Builder();
+            builder.scheme(uri.getScheme());
+            builder.encodedAuthority(uri.getEncodedAuthority());
+            builder.path(redirectUrl+"/"+path);
+            builder.encodedQuery(uri.getEncodedQuery());
+            builder.fragment(uri.getFragment());
+            String location=builder.build().toString();
+            String response="export * from \""+location+"\";"+
+                    "export {default} from \""+location+"\";";
+            ExtendedWebResourceResponse rt=new ExtendedWebResourceResponse(-1,"text/javascript",
+                    "UTF-8",new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)));
+            return rt;
+        }
+
+        @Override
+        public String getPrefix() {
+            return prefix;
+        }
+
+        @Override
+        public String getType() {
+            return null;
+        }
+    }
 
     static class AssetsRequestHandler implements INavRequestHandler{
         Context context;
@@ -286,7 +364,7 @@ public class RequestHandler {
         AvnLog.i(LOGPRFX,"Construct");
         this.service = service;
         addHandler(this.service);
-        addHandler(new AssetsRequestHandler(service,"modules","viewer/modules"));
+        addHandler(new ExportModulesRequestHandler("modules","/viewer/modules"));
         this.chartHandler =new ChartHandler(service,this);
         addHandler(chartHandler);
         this.addonHandler= new AddonHandler(service,this);
