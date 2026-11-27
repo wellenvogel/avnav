@@ -124,7 +124,7 @@ class AisData {
 
         this.aisOptions=fillOptions();
         this.workerSequence = 0;
-        this.worker = new Worker(new URL("./aisworker.js", import.meta.url));
+        this.worker = new Worker(new URL("./aisworker.mjs", import.meta.url), {type: "module"});
         this.worker.onmessage = ({data}) => {
             this.lastReceived=Helper.now();
             //console.log("Aisdata: ", data);
@@ -165,9 +165,9 @@ class AisData {
         this.workerErrors=new WorkerErrorHistory();
         this.worker.onerror=(error)=>{
             base.log("aisworker error:",error);
-            let finfo=error.filename.replace(/.*\//,'')+':'+error.lineno;
+            let finfo=error?.filename?.replace(/.*\//,'')+':'+error.lineno;
             this.workerErrors.add(
-                {message: error.message,
+                {message: error?.message,
                  details:finfo
                 }
             );
