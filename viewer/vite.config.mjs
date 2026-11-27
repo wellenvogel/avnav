@@ -3,7 +3,7 @@ import {fileURLToPath} from "node:url";
 import {defineConfig, loadEnv, normalizePath, transformWithOxc} from "vite";
 import react from "@vitejs/plugin-react";
 import generateLicense from "./collectLicense.mjs";
-import {resolve,relative,parse} from "path";
+import {resolve,parse} from "path";
 import {existsSync,readdirSync} from "fs";
 import {cp, mkdir, readFile, readdir, stat, writeFile} from "node:fs/promises";
 
@@ -46,35 +46,20 @@ const handleApiPlugin=(command)=>({
     name: 'user-api-entries',
     enforce: 'post',
 
-    // Inject Import Map in BOTH dev and production:
-    // - Dev:  '/api/<name>.js' -> './src/api/<name>.ts' (Vite compiles TS on the fly)
-    // - Prod: '/api/'          -> './api/' (resolves relative to /viewer/ or /viewer/abc/)
+    // Inject import map in both dev and production:
+    // - Dev:  '/modules/' -> './exportmodules/'
+    // - Prod: '/modules/' -> './modules/'
     transformIndexHtml() {
-        const rawImports =
-            command === 'serve'
-                ? Object.fromEntries(
-                    Object.entries(apiEntries).map(([name, absPath]) => [
-                        `/${API_OUT_DIR}/${name}.js`,
-                        `./${normalizePath(relative(__dirname, absPath))}`,
-                    ])
-                )
-                : {
-                    [`/${API_OUT_DIR}/`]: `./${API_OUT_DIR}/`,
-                };
+        const rawImports = {
+            [`/${API_OUT_DIR}/`]: command === "serve" ? "./exportmodules/" : `./${API_OUT_DIR}/`
+        };
 
         return [
             {
-                tag: 'script',
-                children: `
-              const imports = Object.fromEntries(
-                Object.entries(${JSON.stringify(rawImports)}).map(([k, v]) => [k, new URL(v, document.baseURI).href])
-              );
-              const el = document.createElement('script');
-              el.type = 'importmap';
-              el.textContent = JSON.stringify({ imports });
-              document.currentScript.after(el);
-            `,
-                injectTo: 'head-prepend',
+                tag: "script",
+                attrs: {type: "importmap"},
+                children: JSON.stringify({imports: rawImports}),
+                injectTo: "head-prepend",
             },
         ];
     },
@@ -171,12 +156,9 @@ const buildParityPlugin = (isProduction, avnavVersion) => ({
         await copyIfExists(path.resolve(__dirname, "settings"), path.join(outDir, "settings"));
         await copyIfExists(path.resolve(__dirname, "../sounds/1-minute-of-silence.mp3"), path.join(outDir, "sounds/1-minute-of-silence.mp3"));
         await copyByRegex(path.resolve(__dirname, "demo"), path.join(outDir, "demo"), /\.xml$/i);
-        await copyByRegex(path.resolve(__dirname, "images"), path.join(outDir, "images"), /^ais-default.*\.png$/i);
-        await copyByRegex(path.resolve(__dirname, "images"), path.join(outDir, "images"), /^ais-aton.*\.png$/i);
-        await copyByRegex(path.resolve(__dirname, "images"), path.join(outDir, "images"), /^rpi.*$/i);
-        await copyIfExists(path.resolve(__dirname, "images/WebIcon-512.png"), path.join(outDir, "images/WebIcon-512.png"));
-        await copyIfExists(path.resolve(__dirname, "images/SailBoatRed96.png"), path.join(outDir, "images/SailBoatRed96.png"));
-        await copyIfExists(path.resolve(__dirname, "images/signalk.svg"), path.join(outDir, "images/signalk.svg"));
+        await copyByRegex(path.resolve(__dirname, "images"), path.join(outDir, "images"), /\.(png|svg)$/i);
+        await copyByRegex(path.resolve(__dirname, "images/icons-new/default"), path.join(outDir, "images/default"), /\.(png|svg)$/i);
+        await copyByRegex(path.resolve(__dirname, "images/icons-new/legacy"), path.join(outDir, "images/legacy"), /\.(png|svg)$/i);
         if (!isProduction) {
             await copyIfExists(path.resolve(__dirname, "test/static"), path.join(outDir, "test"));
         }
@@ -231,7 +213,7 @@ export default defineConfig(({command, mode}) => {
             react({
             include: /\.(js|jsx|ts|tsx)$/
         })],
-        publicDir: "static",
+        publicDir: command === "serve" ? false : "static",
         define: {
             __AVNAV_VERSION__: JSON.stringify(avnavVersion)
         },
@@ -272,6 +254,7 @@ export default defineConfig(({command, mode}) => {
         build: {
             outDir,
             emptyOutDir: true,
+            assetsInlineLimit: 0,
             rollupOptions: {
                 input: {
                     main: path.resolve(__dirname, "avnav_viewer.html"),
@@ -285,7 +268,17 @@ export default defineConfig(({command, mode}) => {
                             : 'assets/[name]-[hash].js',
 
                 chunkFileNames: 'assets/[name]-[hash].js',
-                assetFileNames: 'assets/[name]-[hash][extname]',
+                assetFileNames: (assetInfo) => {
+                    const sources = [
+                        ...(assetInfo.originalFileNames || []),
+                        ...(assetInfo.names || []),
+                        assetInfo.name || ""
+                    ].map((entry) => entry.replaceAll("\\", "/"));
+                    if (sources.some((entry) => /(^|\/)images\/icons-new\/default\/[^/]+\.(png|svg)$/i.test(entry))) return "images/default/[name][extname]";
+                    if (sources.some((entry) => /(^|\/)images\/icons-new\/legacy\/[^/]+\.(png|svg)$/i.test(entry))) return "images/legacy/[name][extname]";
+                    if (sources.some((entry) => /(^|\/)images\/[^/]+\.(png|svg)$/i.test(entry))) return "images/[name][extname]";
+                    return "assets/[name]-[hash][extname]";
+                },
                 },
             }
         }
