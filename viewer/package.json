@@ -11,6 +11,7 @@
     "vite:dev": "vite --config vite.config.mjs --open /viewer/avnav_viewer.html",
     "vite:def": "vite --config vite.config.mjs --open /viewer/avnav_viewer.html",
     "vite:build": "vite build --config vite.config.mjs --mode development",
+    "vite:build:nomin": "vite build --config vite.config.mjs --mode development-unminified",
     "vite:preview": "vite preview --config vite.config.mjs",
     "compat:targets": "browserslist",
     "compat:lint": "eslint --config eslint.compat.config.mjs components gui map nav util hoc api App.jsx avnav_viewer.js webpack-main.js --max-warnings=0",

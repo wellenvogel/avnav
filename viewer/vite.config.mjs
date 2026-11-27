@@ -108,19 +108,19 @@ const replaceSuffix = (content, suffix) => content
     .replace(/SUFFIX=1/g, `SUFFIX='${suffix}'`)
     .replace(/_SFX=1/g, `_SFX=${suffix}`);
 
-const copyIfExists = async (src, dst) => {
+const copyEntries = async (src, dst, options = {}) => {
     if (!existsSync(src)) return;
-    await mkdir(path.dirname(dst), {recursive: true});
-    await cp(src, dst, {recursive: true});
-};
-
-const copyByRegex = async (srcDir, dstDir, regex) => {
-    if (!existsSync(srcDir)) return;
-    await mkdir(dstDir, {recursive: true});
-    const entries = await readdir(srcDir);
+    const srcInfo = await stat(src);
+    if (!srcInfo.isDirectory()) {
+        await mkdir(path.dirname(dst), {recursive: true});
+        await cp(src, dst, {recursive: true});
+        return;
+    }
+    await mkdir(dst, {recursive: true});
+    const entries = await readdir(src);
     for (const entry of entries) {
-        if (!regex.test(entry)) continue;
-        await cp(path.join(srcDir, entry), path.join(dstDir, entry), {recursive: true});
+        if (options.match && !options.match(entry)) continue;
+        await cp(path.join(src, entry), path.join(dst, entry), {recursive: true});
     }
 };
 
@@ -144,23 +144,22 @@ const transformStaticFiles = async (srcDir, dstDir, suffix) => {
     }
 };
 
-const buildParityPlugin = (isProduction, avnavVersion) => ({
+const buildParityPlugin = (outDir, isProduction, avnavVersion) => ({
     name: "avnav-build-parity",
     apply: "build",
     async closeBundle() {
-        const outDir = path.resolve(__dirname, isProduction ? "build/release-vite" : "build/debug-vite");
         const staticDir = path.resolve(__dirname, "static");
 
         await transformStaticFiles(staticDir, outDir, avnavVersion);
-        await copyIfExists(path.resolve(__dirname, "layout"), path.join(outDir, "layout"));
-        await copyIfExists(path.resolve(__dirname, "settings"), path.join(outDir, "settings"));
-        await copyIfExists(path.resolve(__dirname, "../sounds/1-minute-of-silence.mp3"), path.join(outDir, "sounds/1-minute-of-silence.mp3"));
-        await copyByRegex(path.resolve(__dirname, "demo"), path.join(outDir, "demo"), /\.xml$/i);
-        await copyByRegex(path.resolve(__dirname, "images"), path.join(outDir, "images"), /\.(png|svg)$/i);
-        await copyByRegex(path.resolve(__dirname, "images/icons-new/default"), path.join(outDir, "images/default"), /\.(png|svg)$/i);
-        await copyByRegex(path.resolve(__dirname, "images/icons-new/legacy"), path.join(outDir, "images/legacy"), /\.(png|svg)$/i);
+        await copyEntries(path.resolve(__dirname, "layout"), path.join(outDir, "layout"));
+        await copyEntries(path.resolve(__dirname, "settings"), path.join(outDir, "settings"));
+        await copyEntries(path.resolve(__dirname, "../sounds/1-minute-of-silence.mp3"), path.join(outDir, "sounds/1-minute-of-silence.mp3"));
+        await copyEntries(path.resolve(__dirname, "demo"), path.join(outDir, "demo"), {match: (entry) => /\.xml$/i.test(entry)});
+        await copyEntries(path.resolve(__dirname, "images"), path.join(outDir, "images"), {match: (entry) => /\.(png|svg)$/i.test(entry)});
+        await copyEntries(path.resolve(__dirname, "images/icons-new/default"), path.join(outDir, "images/default"), {match: (entry) => /\.(png|svg)$/i.test(entry)});
+        await copyEntries(path.resolve(__dirname, "images/icons-new/legacy"), path.join(outDir, "images/legacy"), {match: (entry) => /\.(png|svg)$/i.test(entry)});
         if (!isProduction) {
-            await copyIfExists(path.resolve(__dirname, "test/static"), path.join(outDir, "test"));
+            await copyEntries(path.resolve(__dirname, "test/static"), path.join(outDir, "test"));
         }
 
         const license = await generateLicense();
@@ -172,12 +171,14 @@ const buildParityPlugin = (isProduction, avnavVersion) => ({
 export default defineConfig(({command, mode}) => {
     const env = loadEnv(mode, process.cwd(), "");
     const avnavVersion = createVersion(mode);
-    const outDir = mode === "production" ? "build/release-vite" : "build/debug-vite";
+    const isProduction = mode === "production";
+    const isUnminified = mode === "development-unminified";
+    const outDir = isProduction ? "build/release-vite" : (isUnminified ? "build/debug-vite-unminified" : "build/debug-vite");
     const devRoot = "/viewer/";
     const devApiTarget = env.VITE_API_TARGET || "http://localhost:8080";
     const devHost = env.VITE_DEV_HOST || "0.0.0.0";
     const devPort = Number.parseInt(env.VITE_DEV_PORT || "5173", 10);
-    const isProduction = mode === "production";
+    const outDirAbs = path.resolve(__dirname, outDir);
 
 
     // Vite only enables CSS modules for .module.less; keep the shared source
@@ -207,7 +208,7 @@ export default defineConfig(({command, mode}) => {
         base: command === "serve" ? devRoot : "./",
         plugins: [
             handleApiPlugin(command),
-            buildParityPlugin(isProduction, avnavVersion),
+            buildParityPlugin(outDirAbs, isProduction, avnavVersion),
             styleModulesPlugin,
             jsxInJsPlugin,
             react({
@@ -254,6 +255,8 @@ export default defineConfig(({command, mode}) => {
         build: {
             outDir,
             emptyOutDir: true,
+            minify: isUnminified ? false : undefined,
+            cssMinify: isUnminified ? false : undefined,
             assetsInlineLimit: 0,
             rollupOptions: {
                 input: {
