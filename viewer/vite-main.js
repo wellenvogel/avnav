@@ -1,4 +1,3 @@
-import "regenerator-runtime/runtime";
 import "./util/maplibreWorker";
 import "./style/avnav_viewer_new.less";
 import main from "./avnav_viewer.js";

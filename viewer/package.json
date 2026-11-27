@@ -80,7 +80,6 @@
     "react-dnd": "^16.0.1",
     "react-dnd-touch-backend": "^16.0.1",
     "react-html-parser": "git+https://github.com/wellenvogel/react-html-parser.git#av-20240619",
-    "regenerator-runtime": "^0.14.1",
     "shallow-equal": "^3.1.0",
     "tinycolor2": "^1.6.0",
     "xml-utils": "^1.10.1",
