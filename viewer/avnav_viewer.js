@@ -40,7 +40,6 @@ import Requests from './util/requests';
 import Toast from './components/Toast.tsx';
 import Api from './util/api.impl.ts';
 import registerRadial from './components/CanvasGaugeDefinitions.js';
-import assign from 'object-assign';
 import LeaveHandler from './util/leavehandler';
 import isIosSafari from '@braintree/browser-detection/is-ios-safari';
 import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
@@ -49,7 +48,6 @@ import {loadJs, loadOrUpdateCss} from "./util/helper";
 import pluginmanager from "./util/pluginmanager";
 import {layoutLoader} from "./util/layouthandler";
 import {showParameterDialog} from "./components/ParameterDialog";
-import createExports from './exportmodules/provider';
 
 if (! window.avnav){
     window.avnav={};
@@ -187,7 +185,6 @@ export default function() {
         loadScripts(addList);
     }
     const doLateLoads = async () => {
-        await createExports();
         createRoot(document.getElementById('new_pages')).render(<App/>);
         //ios browser sometimes has issues with less...
         setTimeout(function () {

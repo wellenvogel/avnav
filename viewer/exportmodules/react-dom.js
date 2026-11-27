@@ -20,32 +20,18 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-let module={};
-export const __init = (mvalue) => {
-    module = mvalue;
-    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = module.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-    createPortal = module.createPortal;
-    createRoot = module.createRoot;
-    findDOMNode = module.findDOMNode;
-    flushSync = module.flushSync;
-    hydrate = module.hydrate;
-    hydrateRoot = module.hydrateRoot;
-    render = module.render;
-    unmountComponentAtNode = module.unmountComponentAtNode;
-    unstable_batchedUpdates = module.unstable_batchedUpdates;
-    unstable_renderSubtreeIntoContainer = module.unstable_renderSubtreeIntoContainer;
-    version = module.version;
-}
-export {module as default};
-export let __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-export let createPortal;
-export let createRoot;
-export let findDOMNode;
-export let flushSync;
-export let hydrate;
-export let hydrateRoot;
-export let render;
-export let unmountComponentAtNode;
-export let unstable_batchedUpdates;
-export let unstable_renderSubtreeIntoContainer;
-export let version;
+
+export {default as default} from 'react-dom';
+import * as reactDom from 'react-dom';
+export const {__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+createPortal,
+createRoot,
+findDOMNode,
+flushSync,
+hydrate,
+hydrateRoot,
+render,
+unmountComponentAtNode,
+unstable_batchedUpdates,
+unstable_renderSubtreeIntoContainer,
+version}=reactDom;
