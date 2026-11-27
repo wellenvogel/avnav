@@ -33,6 +33,8 @@ import time
 import traceback
 import urllib.request, urllib.parse, urllib.error
 import urllib.parse
+from http import HTTPStatus
+from http.server import SimpleHTTPRequestHandler
 from typing import Dict
 import avnav_handlerList
 from avnav_manager import AVNHandlerManager
@@ -68,6 +70,25 @@ class StaticPathHandler:
             return AVNFileDownload(file)
         else:
             return AVNDownloadError(404,f"{file} is not a file")
+
+class RedirectHandler:
+    def __init__(self,basePath,redirect):
+        self.basePath = basePath
+        self.redirect = redirect
+    def isDisabled(self)->bool:
+        return False
+    def getPrefix(self)->str:
+        return self.basePath
+    def handlePathRequest(self,path, requestParam, server=None,handler:SimpleHTTPRequestHandler=None):
+        npath=self.redirect+"/"+path
+        parts = urllib.parse.urlsplit(handler.path)
+        handler.send_response(HTTPStatus.FOUND)
+        new_parts = (parts[0], parts[1], npath,
+                         parts[3], parts[4])
+        new_url = urllib.parse.urlunsplit(new_parts)
+        handler.send_header("Location", new_url)
+        handler.send_header("Content-Length", "0")
+        handler.end_headers()
 
 
 #a HTTP server with threads for each request
@@ -168,7 +189,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     self.interfaceReader=None
     self.addresslist=[]
     self.handlerMap={}
-    self.externalHandlers={} #type: dict[str,AVNWorker | StaticPathHandler] #prefixes that will be handled externally
+    self.externalHandlers={} #type: dict[str,AVNWorker | StaticPathHandler|RedirectHandler] #prefixes that will be handled externally
     self.webSocketHandlers={} #type: dict[str,AVNWorker]
     self.requestHandler=RequestHandlerClass
     self.isStopping=False
@@ -194,8 +215,8 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
   def run(self):
     self.freeAllUsedResources()
     self.externalHandlers["/" + self.PATH_VIEWER] = StaticPathHandler(self.PATH_VIEWER, self.pathmappings[self.PATH_VIEWER])
-    self.externalHandlers["/" + self.PATH_MODULES] = StaticPathHandler(self.PATH_MODULES,
-                                                                      os.path.join(self.pathmappings[self.PATH_VIEWER],'modules'))
+    self.externalHandlers["/" + self.PATH_MODULES] = RedirectHandler(self.PATH_MODULES,
+                                                                      "/"+self.PATH_VIEWER+'/modules')
     self.externalHandlers["/" + self.PATH_USER + "/icons"] = StaticPathHandler(self.PATH_USER + "/icons", os.path.join(
         self.pathmappings[self.PATH_USER], "icons"))
     server_address=(self.param['httpHost'],int(self.param[self.PORT_CONFIG]))
