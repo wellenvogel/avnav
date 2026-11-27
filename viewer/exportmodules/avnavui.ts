@@ -20,6 +20,4 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-export {default as htm} from 'htm';
-export {default as default} from 'htm';
-
+export * from '../components/exports';

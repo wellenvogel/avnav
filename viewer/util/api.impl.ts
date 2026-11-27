@@ -200,7 +200,7 @@ export const UserButtonProps: Required<UserButton>= {
     shortText: undefined,
 }
 
-export const modules: Modules={
+const modules: Modules={
     React: React,
     ReactDom: ReactDOM,
     Htm: Htm.bind(React.createElement),
