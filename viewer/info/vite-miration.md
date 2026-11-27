@@ -90,3 +90,5 @@
 "safari": "12",
 "samsung": "28"
 }
+
+Vite syntax target is configured as a single floor: `build.target = "es2018"`.

@@ -255,6 +255,7 @@ export default defineConfig(({command, mode}) => {
         build: {
             outDir,
             emptyOutDir: true,
+            target: "es2018",
             minify: isUnminified ? false : undefined,
             cssMinify: isUnminified ? false : undefined,
             assetsInlineLimit: 0,

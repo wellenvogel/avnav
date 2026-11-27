@@ -9,7 +9,8 @@ These checks cover:
 1. **Web API compatibility in source code** (e.g. unsupported browser APIs)
 2. **ECMAScript syntax compatibility in generated bundles**
 
-The target browser floor is taken from `viewer/package.json` `browserslist`.
+The browser/API floor is taken from `viewer/package.json` `browserslist`.
+The Vite JS syntax floor is a single target: `es2018` (`build.target` in `vite.config.mjs`).
 
 ## Commands
 
@@ -47,7 +48,7 @@ Convenience command: runs webpack debug build, then syntax check.
 
 ## Typical workflow
 
-1. `npm run compat:targets` (confirm target floor)
+1. `npm run compat:targets` (confirm browser/API floor)
 2. `npm run compat:lint` (source API compatibility)
 3. `npm run compat:check:debug` (built output syntax compatibility)
 4. Optionally run release syntax check:
@@ -66,7 +67,7 @@ Convenience command: runs webpack debug build, then syntax check.
 ## Notes
 
 - `compat:lint` is intentionally isolated in `eslint.compat.config.mjs` so normal lint config is not affected.
-- `es-check` currently uses `es2018`. Adjust in `package.json` scripts if you want a different syntax floor.
+- `es-check` currently uses `es2018`, matching Vite `build.target`.
 
 ## OS mapping for browser targets
 
