@@ -1069,7 +1069,7 @@ class AVNDownload(object):
         while True:
             toread = maxread
             if maxlen is not None:
-                if (maxlen - numread) > maxread:
+                if (maxlen - numread) < maxread:
                     toread = maxlen - numread
             buf = fh.read(toread) if toread else None
             if buf is None or len(buf) == 0:
