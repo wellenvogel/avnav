@@ -11,24 +11,25 @@
 
 ## 2. Introduce Vite in parallel ✅
 
-- Added `vite.config.js` without removing webpack.
+- Added `vite.config.mjs` without removing webpack.
 - Add scripts:
   - `vite:dev`
   - `vite:build`
   - `vite:preview`
 - First target output: `build/debug-vite` to compare artifacts safely.
 - Added parallel entry files:
-  - `index-vite.html`
+  - `avnav_viewer.html` (Vite entry, replacing temporary `index-vite.html`)
   - `vite-main.js`
   - `version.vite.js`
 
-## 3. Port webpack-specific build logic
+## 3. Port webpack-specific build logic ✅
 
-- Replace `CopyWebpackPlugin` rules, including transformed copy from `static/`.
-- Replace `GenerateFilePlugin` + `collectLicense.js` for `license.html`.
-- Replace `val-loader` (`version.js`) with Vite define/plugin or prebuild-generated module.
-- Ensure `avnav_viewer.html` template behavior remains equivalent.
-- Verify maplibre worker bundling/URL handling.
+- Added Vite build parity plugin that:
+  - copies webpack parity artifacts (`layout`, `settings`, `demo/*.xml`, `sounds`, icon subsets, optional `test/static` in debug builds)
+  - applies `SUFFIX/_SFX` replacement to copied static text files (except `avnav_viewer.html`, which is now Vite's direct entry)
+  - generates `license.html` via `collectLicense.mjs`
+- Version replacement is handled by `version.vite.js` + `__AVNAV_VERSION__` define.
+- Verified maplibre worker code path remains bundled and referenced by output.
 
 ## 4. Align style and asset handling
 

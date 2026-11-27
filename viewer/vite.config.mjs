@@ -1,9 +1,11 @@
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-import {defineConfig, loadEnv, transformWithEsbuild, normalizePath, transformWithOxc} from "vite";
+import {defineConfig, loadEnv, normalizePath, transformWithOxc} from "vite";
 import react from "@vitejs/plugin-react";
+import generateLicense from "./collectLicense.mjs";
 import {resolve,relative,parse} from "path";
 import {existsSync,readdirSync} from "fs";
+import {cp, mkdir, readFile, readdir, stat, writeFile} from "node:fs/promises";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -117,6 +119,74 @@ const jsxInJsPlugin = {
     }
 };
 
+const replaceSuffix = (content, suffix) => content
+    .replace(/SUFFIX=1/g, `SUFFIX='${suffix}'`)
+    .replace(/_SFX=1/g, `_SFX=${suffix}`);
+
+const copyIfExists = async (src, dst) => {
+    if (!existsSync(src)) return;
+    await mkdir(path.dirname(dst), {recursive: true});
+    await cp(src, dst, {recursive: true});
+};
+
+const copyByRegex = async (srcDir, dstDir, regex) => {
+    if (!existsSync(srcDir)) return;
+    await mkdir(dstDir, {recursive: true});
+    const entries = await readdir(srcDir);
+    for (const entry of entries) {
+        if (!regex.test(entry)) continue;
+        await cp(path.join(srcDir, entry), path.join(dstDir, entry), {recursive: true});
+    }
+};
+
+const transformStaticFiles = async (srcDir, dstDir, suffix) => {
+    if (!existsSync(srcDir)) return;
+    const entries = await readdir(srcDir, {withFileTypes: true});
+    for (const entry of entries) {
+        const src = path.join(srcDir, entry.name);
+        const dst = path.join(dstDir, entry.name);
+        if (entry.isDirectory()) {
+            await mkdir(dst, {recursive: true});
+            await transformStaticFiles(src, dst, suffix);
+            continue;
+        }
+        if (entry.name === "avnav_viewer.html") continue;
+        const info = await stat(src);
+        if (!info.isFile()) continue;
+        const content = await readFile(src, "utf-8");
+        await mkdir(path.dirname(dst), {recursive: true});
+        await writeFile(dst, replaceSuffix(content, suffix));
+    }
+};
+
+const buildParityPlugin = (isProduction, avnavVersion) => ({
+    name: "avnav-build-parity",
+    apply: "build",
+    async closeBundle() {
+        const outDir = path.resolve(__dirname, isProduction ? "build/release-vite" : "build/debug-vite");
+        const staticDir = path.resolve(__dirname, "static");
+
+        await transformStaticFiles(staticDir, outDir, avnavVersion);
+        await copyIfExists(path.resolve(__dirname, "layout"), path.join(outDir, "layout"));
+        await copyIfExists(path.resolve(__dirname, "settings"), path.join(outDir, "settings"));
+        await copyIfExists(path.resolve(__dirname, "../sounds/1-minute-of-silence.mp3"), path.join(outDir, "sounds/1-minute-of-silence.mp3"));
+        await copyByRegex(path.resolve(__dirname, "demo"), path.join(outDir, "demo"), /\.xml$/i);
+        await copyByRegex(path.resolve(__dirname, "images"), path.join(outDir, "images"), /^ais-default.*\.png$/i);
+        await copyByRegex(path.resolve(__dirname, "images"), path.join(outDir, "images"), /^ais-aton.*\.png$/i);
+        await copyByRegex(path.resolve(__dirname, "images"), path.join(outDir, "images"), /^rpi.*$/i);
+        await copyIfExists(path.resolve(__dirname, "images/WebIcon-512.png"), path.join(outDir, "images/WebIcon-512.png"));
+        await copyIfExists(path.resolve(__dirname, "images/SailBoatRed96.png"), path.join(outDir, "images/SailBoatRed96.png"));
+        await copyIfExists(path.resolve(__dirname, "images/signalk.svg"), path.join(outDir, "images/signalk.svg"));
+        if (!isProduction) {
+            await copyIfExists(path.resolve(__dirname, "test/static"), path.join(outDir, "test"));
+        }
+
+        const license = await generateLicense();
+        await writeFile(path.join(outDir, "license.html"), license);
+
+    }
+});
+
 export default defineConfig(({command, mode}) => {
     const env = loadEnv(mode, process.cwd(), "");
     const avnavVersion = createVersion(mode);
@@ -125,6 +195,7 @@ export default defineConfig(({command, mode}) => {
     const devApiTarget = env.VITE_API_TARGET || "http://localhost:8080";
     const devHost = env.VITE_DEV_HOST || "0.0.0.0";
     const devPort = Number.parseInt(env.VITE_DEV_PORT || "5173", 10);
+    const isProduction = mode === "production";
 
 
     // Vite only enables CSS modules for .module.less; keep the shared source
@@ -154,6 +225,7 @@ export default defineConfig(({command, mode}) => {
         base: command === "serve" ? devRoot : "./",
         plugins: [
             handleApiPlugin(command),
+            buildParityPlugin(isProduction, avnavVersion),
             styleModulesPlugin,
             jsxInJsPlugin,
             react({
@@ -202,7 +274,7 @@ export default defineConfig(({command, mode}) => {
             emptyOutDir: true,
             rollupOptions: {
                 input: {
-                    main: path.resolve(__dirname, "index-vite.html"),
+                    main: path.resolve(__dirname, "avnav_viewer.html"),
                     ...apiEntries
                 },
                 preserveEntrySignatures: 'allow-extension',
@@ -219,4 +291,3 @@ export default defineConfig(({command, mode}) => {
         }
     };
 });
-
