@@ -44,7 +44,7 @@ Checks syntax level of JS files in `build/release/**` with `es-check` (currently
 npm run compat:check:debug
 ```
 
-Convenience command: runs webpack debug build, then syntax check.
+Convenience command: runs debug build (`npm run debug`), then syntax check.
 
 ## Typical workflow
 

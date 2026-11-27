@@ -8,7 +8,6 @@ export default [
     files: [
       "App.jsx",
       "avnav_viewer.js",
-      "webpack-main.js",
       "api/**/*.{js,jsx,ts,tsx}",
       "components/**/*.{js,jsx,ts,tsx}",
       "gui/**/*.{js,jsx,ts,tsx}",

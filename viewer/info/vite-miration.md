@@ -16,7 +16,7 @@
   - `vite:dev`
   - `vite:build`
   - `vite:preview`
-- First target output: `build/debug-vite` to compare artifacts safely.
+- First target output was `build/debug-vite` to compare artifacts safely.
 - Added parallel entry files:
   - `avnav_viewer.html` (Vite entry, replacing temporary `index-vite.html`)
   - `vite-main.js`
@@ -43,10 +43,12 @@
   in the browser console.
 - Check image/icon output paths (`images/default`, `images/legacy`, etc.).
 
-## 5. Cut over main build scripts
+## 5. Cut over main build scripts ✅
 
-- Switch `watch`, `debug`, `production` scripts to Vite after parity is confirmed.
-- Keep webpack scripts temporarily as fallback for one stabilization cycle.
+- Switched `watch`, `debug`, `production` scripts to Vite.
+- Current folders now match legacy paths:
+  - debug/non-minified: `build/debug`
+  - production/minified: `build/release`
 
 ## 6. Introduce Vitest in parallel
 

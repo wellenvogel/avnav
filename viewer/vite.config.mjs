@@ -173,7 +173,7 @@ export default defineConfig(({command, mode}) => {
     const avnavVersion = createVersion(mode);
     const isProduction = mode === "production";
     const isUnminified = mode === "development-unminified";
-    const outDir = isProduction ? "build/release-vite" : (isUnminified ? "build/debug-vite-unminified" : "build/debug-vite");
+    const outDir = isProduction ? "build/release" : "build/debug";
     const devRoot = "/viewer/";
     const devApiTarget = env.VITE_API_TARGET || "http://localhost:8080";
     const devHost = env.VITE_DEV_HOST || "0.0.0.0";
