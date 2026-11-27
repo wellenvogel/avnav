@@ -250,7 +250,8 @@ export default defineConfig(({command, mode}) => {
                     changeOrigin: true,
                     ws: true
                 }
-            }
+            },
+            open: false
         },
         build: {
             outDir,
