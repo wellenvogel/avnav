@@ -1,9 +1,18 @@
-import "core-js";
 import "regenerator-runtime/runtime";
-import "./util/polyfill";
 import "./util/maplibreWorker";
 import "./style/avnav_viewer_new.less";
 import main from "./avnav_viewer.js";
 
-main();
+const needLegacyPolyfills = () =>
+    typeof globalThis === "undefined" ||
+    typeof Promise.allSettled !== "function" ||
+    typeof Object.fromEntries !== "function";
 
+const bootstrap = async () => {
+    if (needLegacyPolyfills()) {
+        await import("./util/legacy-polyfills.js");
+    }
+    main();
+};
+
+bootstrap();
