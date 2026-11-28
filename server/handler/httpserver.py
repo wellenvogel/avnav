@@ -70,6 +70,34 @@ class StaticPathHandler:
             return AVNDownloadError(404,f"{file} is not a file")
 
 
+class UserPathHandler(StaticPathHandler):
+    def handlePathRequest(self, path, requestParam, server=None, handler=None):
+        file = os.path.join(self.baseDir, plainUrlToPath(path))
+        if not os.path.isdir(file):
+            return super().handlePathRequest(path, requestParam, server, handler)
+        # Keep relative links in index pages and directory listings working.
+        url = urllib.parse.urlsplit(handler.path)
+        if not url.path.endswith('/'):
+            handler.send_response(301)
+            handler.send_header("Location", urllib.parse.urlunsplit(
+                (url.scheme, url.netloc, url.path + '/', url.query, url.fragment)))
+            handler.send_header("Content-Length", "0")
+            handler.end_headers()
+            return True
+        for index in ("index.html", "index.htm"):
+            indexfile = os.path.join(file, index)
+            if os.path.isfile(indexfile):
+                return AVNFileDownload(indexfile)
+        stream = handler.list_directory(file)
+        if stream is not None:
+            try:
+                if handler.command != "HEAD":
+                    handler.copyfile(stream, handler.wfile)
+            finally:
+                stream.close()
+        return True
+
+
 #a HTTP server with threads for each request
 class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorker):
   webSocketHandlers: Dict[str, WebSocketHandler]
@@ -311,6 +339,12 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
         if path.startswith(FBPATH):
             path="/"+self.PATH_USER+"/images/"+path[len(FBPATH):]
             return self.doExternalMappings(path,query,handler)
+    userPrefix = "/" + self.PATH_USER
+    if rt is None and (path == userPrefix or path.startswith(userPrefix + "/")):
+        # The specialised viewer/images handlers and legacy icon fallback take
+        # precedence. Other user files retain their pre-20261102 HTTP access.
+        return UserPathHandler(userPrefix, self.pathmappings[self.PATH_USER]).handlePathRequest(
+            path[len(userPrefix):], urllib.parse.parse_qs(query, True), server=self, handler=handler)
     return rt
 
   def getWebSocketsHandler(self,path,query,handler):
