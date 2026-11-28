@@ -91,7 +91,7 @@ class UsbSerialHandler(USBInfoHandler):
       displayName=""
       if sourceName != self.param.get('defaultName'):
         displayName="({0}) ".format(sourceName)
-      if device is not None and self.type != self.T_IGNORE:
+      if device is not None and self.type not in (self.T_IGNORE, self.T_UNKNOWN):
         self.setInfo(INAME,"%s%s running %s"%(device,displayName,self.type),WorkerStatus.STARTED,
                      canDelete=self.param.get('childIndex',-1) >= 0)
         if self.type == self.T_WRITER or self.type == self.T_COMBINED:
@@ -364,7 +364,7 @@ class AVNUsbSerialReader(AVNWorker):
     try:
       for k,v in self.addrmap.items():
         dev=v.getDevice()
-        if dev is not None and v.param.get('type') != UsbSerialHandler.T_IGNORE:
+        if dev is not None and v.param.get('type') not in (UsbSerialHandler.T_IGNORE, UsbSerialHandler.T_UNKNOWN):
           if type is None or type == UsedResource.T_SERIAL:
             rt.append(UsedResource(UsedResource.T_SERIAL,self.id,dev))
           if type is None or type == UsedResource.T_USB:
